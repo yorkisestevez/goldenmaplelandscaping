@@ -79,7 +79,7 @@ export function resortEstateDesign():DeckData{
  const pool={...createPlanningPool({id:'lagoon',name:'Resort pool',type:'concrete',xIn:PC.x*12,zIn:PC.z*12,copingTopElevationIn:0,shape:'rounded-rectangle'}),...poolRoundedRectangle(30*12,14*12,78),rotationDeg:ROT,depthProfile:[{stationIn:0,depthIn:42},{stationIn:168,depthIn:60}]};
  const spa={...createPlanningPool({id:'spa',name:'Spa',type:'concrete',xIn:SC.x*12,zIn:SC.z*12,copingTopElevationIn:0,shape:'rounded-rectangle'}),...poolRoundedRectangle(8*12,8*12,30),rotationDeg:ROT,depthProfile:[{stationIn:0,depthIn:36},{stationIn:96,depthIn:36}]};
  const COPING={status:'planning' as const,widthIn:14,thicknessIn:2,overhangIn:1,jointIn:.125,transitionJointIn:.375,stockLengthIn:24,manufacturer:'Techo-Bloc',productId:'techo-piazzetta-coping',verifiedForPool:false,color:'#a9aaa8'};
- (pool as any).coping=COPING;(spa as any).coping=COPING;(pool as any).waterOffsetIn=1;(spa as any).waterOffsetIn=1; // 1in = the coping overhang: no exposed wall strip (it read as an orange line at night).
+ (pool as any).coping=COPING;(spa as any).coping=COPING;(pool as any).waterOffsetIn=.25;(spa as any).waterOffsetIn=.25; // 1in = the coping overhang: no exposed wall strip (it read as an orange line at night).
  data.pools=[pool,spa];
  // Cabana: its own patio east of the terrace, LOUSOL roof over kitchen and bar; dining on the open half.
  const cab=pave('cabana','Pool cabana',x1/12-0.3+12.5,tz-4,25,18);

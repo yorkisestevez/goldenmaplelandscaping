@@ -2,7 +2,7 @@ import asyncio, sys, time
 sys.path.insert(0,'/workspace/sage/recut')
 from harness import guard, BASE
 from playwright.async_api import async_playwright
-C={'hero':([984,132,792],[150,10,1060],60,'golden'),'nighteye':([984,132,792],[230,-70,1060],46,True),'overhead':([216,2000,744],[216,0,743],55,False),'eye':(None,None,0,False),'wall':([-24,66,1080],[-120,30,1250],55,False),'night':([216,2000,744],[216,0,743],55,True)}
+C={'hero':([984,132,792],[150,10,1060],60,'golden'),'nighteye':([984,132,792],[230,-130,1060],46,True),'overhead':([216,2000,744],[216,0,743],55,False),'eye':(None,None,0,False),'wall':([-24,66,1080],[-120,30,1250],55,False),'night':([216,2000,744],[216,0,743],55,True)}
 n=sys.argv[1];lo=len(sys.argv)>2;W,H=(520,400) if lo else (1300,1000)
 async def main():
     h=open('/workspace/sage/lit146/.scratch/resort-hash.txt').read().strip()
