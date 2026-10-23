@@ -1,6 +1,7 @@
 import { MapPin, Shield, CheckCircle, ArrowRight, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
+import QuickQuote from '../../components/QuickQuote';
 import { trackEngagement, trackCall } from '../../utils/analytics';
 import { BUSINESS, publicClaimCopy, publicContact } from '../../data/business';
 import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
@@ -38,11 +39,11 @@ const SERVICES = [
 ];
 
 const PRICING = [
-  { project: "Interlocking patio", range: "Project-specific scope" },
-  { project: "Full backyard transformation", range: "Project-specific scope" },
-  { project: "Composite deck", range: "Project-specific scope" },
-  { project: "Retaining wall", range: "Project-specific scope" },
-  { project: "Outdoor living space", range: "Project-specific scope" },
+  { project: "Interlocking patio (200-400 sq ft)", range: "$12,000 – $25,000" },
+  { project: "Full backyard transformation", range: "$35,000 – $90,000" },
+  { project: "Composite deck (200-350 sq ft)", range: "$15,000 – $35,000" },
+  { project: "Retaining wall (30-60 linear ft)", range: "$8,000 – $20,000" },
+  { project: "Premium outdoor living space", range: "$90,000 – $160,000+" },
 ];
 
 const FAQS = [
@@ -132,6 +133,7 @@ export default function BarrieLanding() {
                 <Phone size={18} /> Call {publicContact.phoneDisplay}
               </a>
             </div>
+            <QuickQuote source="location-barrie" />
           </div>
 
           {/* Why Choose Us */}
