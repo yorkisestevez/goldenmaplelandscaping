@@ -69,16 +69,18 @@ export function resortEstateDesign():DeckData{
  // Winding plank path: straight off the terrace, bends east, then back.
  pave('path-1','Garden path',tx,tz+6-0.3,6,12,0,90);
  pave('path-2','Garden path',tx+5.2,tz+15.2,6,13,325,55);
- pave('path-3','Garden path',tx+9.6,tz+25,6,10,0,90);
+ 
  // Resort pool court, turned 22°.
  const courtX=tx+12,courtZ=tz+43,ROT=22;
  const court=pave('court','Pool court',courtX,courtZ,50,36,ROT);
  // Lounge frame: one 24 in band of Industria Greyed Nickel framing a 20×9 ft lounge bay, centred on the pool axis.
  {const BAND={...FIELD!,colorId:'greyed-nickel'};
-  const cu=-7*12,cv=-12.5*12,band=(id:string,x:number,y:number,w:number,d:number)=>({id,name:'Lounge frame band',shape:'band' as const,xIn:x,yIn:y,widthIn:w,depthIn:d,rotationDeg:0,productId:SLAB,color:'#b0aea6',hardscape:BAND});
+  const cu=-7*12,cv=-12*12,band=(id:string,x:number,y:number,w:number,d:number)=>({id,name:'Lounge frame band',shape:'band' as const,xIn:x,yIn:y,widthIn:w,depthIn:d,rotationDeg:0,productId:SLAB,color:'#b0aea6',hardscape:BAND});
   court.inlays=[band('fr-n',cu,cv+48,240,24),band('fr-s',cu,cv-48,240,24),band('fr-w',cu-108,cv,24,72),band('fr-e',cu+108,cv,24,72),band('link',(9.17+14.33)/2*12,4*12,(14.33-9.17)*12,24)];}
  const t=ROT*Math.PI/180;
  const L=(u:number,v:number)=>({x:courtX+u*Math.cos(t)-v*Math.sin(t),z:courtZ+u*Math.sin(t)+v*Math.cos(t)});
+ // Last leg of the garden path turns square to the court and stops at its edge (keeps the lounge-frame band whole).
+ {const p3=L(-9.9,-20);pave('path-3','Garden path',p3.x,p3.z,6,4.6,ROT,90);}
  // Pool and spa on one axis (v=4), same coping; a 24 in Greyed Nickel band runs coping-to-coping between them (see court inlays).
  const PC=L(-7,4),SC=L(19.5,4);
  const pool={...createPlanningPool({id:'lagoon',name:'Resort pool',type:'concrete',xIn:PC.x*12,zIn:PC.z*12,copingTopElevationIn:0,shape:'rounded-rectangle'}),...poolRoundedRectangle(30*12,14*12,78),rotationDeg:ROT,depthProfile:[{stationIn:0,depthIn:42},{stationIn:168,depthIn:60}]};
@@ -169,11 +171,11 @@ export function resortEstateDesign():DeckData{
  furn('teak-dining-table','dining-table',dX,dZ,0,cab.id);
  for(const s of [-1,1])for(const dx of [-2.75,0,2.75])furn('woven-dining-chair',`dine-${s}-${dx}`,dX+dx,dZ+s*3.1,rotationDegFacing(0,-s),cab.id);
  // Pool loungers on the house-side deck of the court, feet to the water.
- for(const k of [-1,1]){const c=L(-7+k*3.2,-12.5);furn('lounge-chair',`chaise-${k}`,c.x,c.z,ROT);}
- const st=L(-7,-12.5);furn('side-table','chaise-table',st.x,st.z,ROT);
- const um=L(-11.6,-14.2);furn('cantilever-umbrella','umbrella',um.x,um.z,ROT);
+ for(const k of [-1,1]){const c=L(-7+k*3.2,-12);furn('lounge-chair',`chaise-${k}`,c.x,c.z,ROT);}
+ const st=L(-7,-12);furn('side-table','chaise-table',st.x,st.z,ROT);
+ const um=L(-11.6,-13.7);furn('cantilever-umbrella','umbrella',um.x,um.z,ROT);
  // Two black steel planters flank the lounge frame: native grasses and coneflower, 18 in raised.
- for(const [k,u] of [[0,-21.4],[1,7.4]] as const){const q=(du:number,dv:number)=>{const p=L(u+du,-12.5+dv);return [p.x,p.z] as [number,number];};
+ for(const [k,u] of [[0,-21.4],[1,7.4]] as const){const q=(du:number,dv:number)=>{const p=L(u+du,-12+dv);return [p.x,p.z] as [number,number];};
   bed(`planter-${k}`,'Steel planter',[q(-1.5,-3),q(1.5,-3),q(1.5,3),q(-1.5,3)],{raisedIn:18,edge:{kind:'steel'},...drift(['schizachyrium-scoparium','echinacea-purpurea','panicum-virgatum'],12,70+k)} as any);}
  data.landscapeObjects=objs;
  // Lighting: pool + spa niche lights, 2 step lights per tread, path lights in the meadow beds 8–10 ft staggered, tree uplights.
