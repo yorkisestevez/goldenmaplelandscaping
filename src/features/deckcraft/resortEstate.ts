@@ -140,7 +140,7 @@ export function resortEstateDesign():DeckData{
  bed('upper-garden','Upper garden',[[LX0-1.4,WZ+1.3],[SX-5.2,WZ+1.3],[SX-5.2,WZ+9.2],[SX+5.2,WZ+9.2],[SX+5.2,WZ+1.3],[LX1+1.4,WZ+1.3],[LX1+1.4,RZ+1.4],[LX0-1.4,RZ+1.4]],{raisedIn:UP,edge:{kind:'wall',wallFeatureId:wW.id},...drift(['monarda-fistulosa','echinacea-purpurea','hydrangea-arborescens-annabelle','rudbeckia-hirta','cornus-sericea','schizachyrium-scoparium','physocarpus-opulifolius','echinacea-purpurea'],18,21)} as any);
  // Layered: hedge at the back line, pines and maples, flowering trees, shrubs, perennials at the wall lip, boulders.
  for(let x=LX0;x<=LX1;x+=6)grow('thuja-occidentalis-smaragd',x,RZ);
- for(const [k,x] of [LX0+8,LX0+30,LX0+52,LX0+74,LX0+96,LX0+118].entries())grow(k%2?'acer-rubrum':'pinus-strobus',x,RZ-6);
+ for(const [k,x] of [LX0+8,LX0+30,LX0+52,LX0+74,LX0+96,LX0+118].entries())grow(k%2||k===2?'acer-rubrum':'pinus-strobus',x,RZ-6); // k=2 is a maple: the pine there blurred into the night camera's top edge under showcase DoF
  for(const [k,x] of [LX0+18,LX0+40,LX0+62,LX0+84,LX0+106].entries())grow(['cercis-canadensis','amelanchier-canadensis'][k%2],x,WZ+11);
  for(const [k,x] of [LX0+12,LX0+36,SX+9,LX0+92,LX0+120].entries())objs.push({...newLandscapeObject('natural-boulder',`boulder-${k}`,x*12,(WZ+6+(k%2)*5)*12),rotationDeg:k*41});
  // A bench-sofa on the overlook, turned to the pool.
@@ -176,7 +176,7 @@ export function resortEstateDesign():DeckData{
  const um=L(-11.6,-13.7);furn('cantilever-umbrella','umbrella',um.x,um.z,ROT);
  // Two black steel planters flank the lounge frame: native grasses and coneflower, 18 in raised.
  for(const [k,u] of [[0,-21.4],[1,7.4]] as const){const q=(du:number,dv:number)=>{const p=L(u+du,-12+dv);return [p.x,p.z] as [number,number];};
-  bed(`planter-${k}`,'Steel planter',[q(-1.5,-3),q(1.5,-3),q(1.5,3),q(-1.5,3)],{raisedIn:18,edge:{kind:'steel'},...drift(['schizachyrium-scoparium','echinacea-purpurea','panicum-virgatum'],12,70+k)} as any);}
+  bed(`planter-${k}`,'Steel planter',[q(-1.5,-3),q(1.5,-3),q(1.5,3),q(-1.5,3)],{raisedIn:12,edge:{kind:'steel'},...drift(['schizachyrium-scoparium','echinacea-purpurea','panicum-virgatum'],12,70+k)} as any);}
  data.landscapeObjects=objs;
  // Lighting: pool + spa niche lights, 2 step lights per tread, path lights in the meadow beds 8–10 ft staggered, tree uplights.
  const hr=houseOutline(data);
