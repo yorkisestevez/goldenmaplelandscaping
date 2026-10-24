@@ -153,7 +153,7 @@ export function resortEstateDesign():DeckData{
  bed('wall-foot-east','Wall-foot planting',[[SX+3.1,WZ-6.6],[LX1-5.4,WZ-6.6],[LX1-5.4,WZ-1.6],[SX+3.1,WZ-1.6]],drift(['rudbeckia-hirta','monarda-fistulosa','schizachyrium-scoparium','echinacea-purpurea'],16,32));
  bed('west-border','West border',[[LX0-1.4,14],[LX0+9.2,14],[LX0+9.2,WZ-1.6],[LX0-1.4,WZ-1.6]],drift(['hydrangea-arborescens-annabelle','cornus-sericea','echinacea-purpurea','physocarpus-opulifolius','monarda-fistulosa','schizachyrium-scoparium'],24,41));
  // The night camera stands at (82,66) ft inside this border: the border is notched 8 ft either side of it so no shrub sits at the lens.
- const EB=['hydrangea-paniculata','cornus-sericea','echinacea-purpurea','rudbeckia-hirta','physocarpus-opulifolius'];
+ const EB=['hydrangea-arborescens-annabelle','cornus-sericea','echinacea-purpurea','rudbeckia-hirta','physocarpus-opulifolius'];
  bed('east-border','East border',[[LX1-5,tz+6.4],[LX1+1.4,tz+6.4],[LX1+1.4,58],[LX1-5,58]],drift(EB,24,42));
  bed('east-border-n','East border',[[LX1-5,74],[LX1+1.4,74],[LX1+1.4,WZ-1.6],[LX1-5,WZ-1.6]],drift(EB,24,44));
  bed('cabana-garden','Cabana garden',[[tx+20.6,tz+6.4],[LX1-5.4,tz+6.4],[LX1-5.4,pE.z-1.2],[pW.x+1,pW.z-1.2],[tx+20.6,pW.z-1.2]],drift(MEADOW,13,43));

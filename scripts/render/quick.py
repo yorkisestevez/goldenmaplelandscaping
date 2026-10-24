@@ -22,12 +22,12 @@ async def main():
         if C[n][0]: cams=[{'id':'q','name':'q','positionIn':C[n][0],'targetIn':C[n][1],'fov':C[n][2]}]; act='q'
         else: act='eye'
         await ex([{'type':'design.patch','patch':{'sceneLighting':'Evening' if night else 'Daylight','lightingPreviewOn':night,'scenePresentation':{**d,'viewMode':'finished','cameras':cams,'activeCameraId':act}}}])
-        await pg.add_style_tag(content='#deck-live-preview{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:2147483000!important;margin:0!important;transform:none!important}#deck-live-preview canvas{width:100vw!important;height:100vh!important}*{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}')
+        await pg.add_style_tag(content='#deck-live-preview div[class*="aspect-video"]{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:2147483000!important;aspect-ratio:auto!important;max-width:none!important}#deck-live-preview div[class*="aspect-video"] div{width:100%!important;height:100%!important}#deck-live-preview div[class*="aspect-video"] canvas{width:100vw!important;height:100vh!important}*{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}')
         await pg.evaluate('window.dispatchEvent(new Event("resize"))')
         await pg.wait_for_timeout(60000 if lo else 150000)
         await pg.add_style_tag(content='#deck-live-preview *{visibility:hidden!important}#deck-live-preview canvas{visibility:visible!important}*{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}')
         c=pg.locator('#deck-live-preview canvas').first; await c.scroll_into_view_if_needed(); await pg.wait_for_timeout(3000)
         r=await c.bounding_box();print('over',await pg.evaluate('''([x,y])=>{const e=document.elementsFromPoint(x,y);return e.slice(0,4).map(n=>n.tagName+'.'+String(n.className).slice(0,60)+' '+getComputedStyle(n).visibility)}''',[r['x']+r['width']*0.28,r['y']+15]),flush=True)
-        await c.screenshot(path=f'/workspace/sage/paradise/resort/{n}{"-lo" if lo else ""}.png',timeout=1800000); print(time.strftime('%T'),'saved',n,flush=True)
+        await c.screenshot(path=f'/workspace/sage/paradise/resort/{n}{"-lo" if lo else ""}.png',timeout=1800000); print(time.strftime('%T'),'saved',n,await pg.evaluate('(()=>{const c=document.querySelector("#deck-live-preview canvas");return [c.width,c.height]})()'),flush=True)
         await b.close()
 asyncio.run(main())
