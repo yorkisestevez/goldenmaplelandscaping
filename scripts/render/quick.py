@@ -3,7 +3,7 @@ sys.path.insert(0,'/workspace/sage/recut')
 from harness import guard, BASE
 from playwright.async_api import async_playwright
 C={'hero':([984,132,792],[150,10,1060],60,'golden'),'nighteye':([984,132,792],[230,-130,1060],46,True),'overhead':([216,2000,744],[216,0,743],55,False),'eye':(None,None,0,False),'wall':([-24,66,1080],[-120,30,1250],55,False),'night':([216,2000,744],[216,0,743],55,True)}
-n=sys.argv[1];lo=len(sys.argv)>2;W,H=(520,400) if lo else (1300,1000)
+n=sys.argv[1];lo=len(sys.argv)>2;W,H=(960,540) if lo else (3840,2160)
 async def main():
     h=open('/workspace/sage/lit146/.scratch/resort-hash.txt').read().strip()
     async with async_playwright() as p:
@@ -22,9 +22,12 @@ async def main():
         if C[n][0]: cams=[{'id':'q','name':'q','positionIn':C[n][0],'targetIn':C[n][1],'fov':C[n][2]}]; act='q'
         else: act='eye'
         await ex([{'type':'design.patch','patch':{'sceneLighting':'Evening' if night else 'Daylight','lightingPreviewOn':night,'scenePresentation':{**d,'viewMode':'finished','cameras':cams,'activeCameraId':act}}}])
+        await pg.add_style_tag(content='#deck-live-preview{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:2147483000!important;margin:0!important;transform:none!important}#deck-live-preview canvas{width:100vw!important;height:100vh!important}*{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}')
+        await pg.evaluate('window.dispatchEvent(new Event("resize"))')
         await pg.wait_for_timeout(60000 if lo else 150000)
-        await pg.add_style_tag(content='#deck-live-preview *{visibility:hidden!important}#deck-live-preview canvas{visibility:visible!important}')
+        await pg.add_style_tag(content='#deck-live-preview *{visibility:hidden!important}#deck-live-preview canvas{visibility:visible!important}*{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}')
         c=pg.locator('#deck-live-preview canvas').first; await c.scroll_into_view_if_needed(); await pg.wait_for_timeout(3000)
+        r=await c.bounding_box();print('over',await pg.evaluate('''([x,y])=>{const e=document.elementsFromPoint(x,y);return e.slice(0,4).map(n=>n.tagName+'.'+String(n.className).slice(0,60)+' '+getComputedStyle(n).visibility)}''',[r['x']+r['width']*0.28,r['y']+15]),flush=True)
         await c.screenshot(path=f'/workspace/sage/paradise/resort/{n}{"-lo" if lo else ""}.png',timeout=1800000); print(time.strftime('%T'),'saved',n,flush=True)
         await b.close()
 asyncio.run(main())
