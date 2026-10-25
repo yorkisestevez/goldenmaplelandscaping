@@ -66,9 +66,9 @@ export function resortEstateDesign():DeckData{
  terrace=yardShapeEdit(terrace,[{x:x0,y:deckFront},{x:s0,y:deckFront},{x:s0,y:zN},{x:s1,y:zN},{x:s1,y:deckFront},{x:x1,y:deckFront},{x:x1,y:zF},{x:x0,y:zF}]);
  push({...terrace,color:CREMA});
  const tz=zF/12,tx=cx/12;
- // Winding plank path: straight off the terrace, bends east, then back.
- pave('path-1','Garden path',tx,tz+6-0.3,6,12,0,90);
- pave('path-2','Garden path',tx+5.2,tz+15.2,6,13,325,55);
+ // Stair-axis walk: same Industria field as the terrace and court, flush at grade, framed by 12 in Greyed Nickel edge bands (the court's band detail). Runs straight from the arrival terrace (and the stair) to the pool court.
+ {const w=pave('path-1','Garden walk',tx,tz+9.65,6,21.3,0);const WB={...FIELD!,colorId:'greyed-nickel'};
+  w.inlays=[-1,1].map(k=>({id:`edge-${k}`,name:'Walk edge band',shape:'band' as const,xIn:k*30,yIn:0,widthIn:12,depthIn:182,rotationDeg:0,productId:SLAB,color:'#b0aea6',hardscape:WB}));}
  
  // Resort pool court, turned 22°.
  const courtX=tx+12,courtZ=tz+43,ROT=22;
@@ -76,13 +76,11 @@ export function resortEstateDesign():DeckData{
  // Lounge frame: one 24 in band of Industria Greyed Nickel framing a 20×9 ft lounge bay, centred on the pool axis.
  {const BAND={...FIELD!,colorId:'greyed-nickel'};
   const cu=-7*12,cv=-12*12,band=(id:string,x:number,y:number,w:number,d:number)=>({id,name:'Lounge frame band',shape:'band' as const,xIn:x,yIn:y,widthIn:w,depthIn:d,rotationDeg:0,productId:SLAB,color:'#b0aea6',hardscape:BAND});
-  court.inlays=[band('fr-n',cu,cv+48,240,24),band('fr-s',cu,cv-48,240,24),band('fr-w',cu-108,cv,24,72),band('fr-e',cu+108,cv,24,72),band('link',(9.17+14.33)/2*12,4*12,(14.33-9.17)*12,24)];}
+  court.inlays=[band('fr-n',cu,cv+48,240,24),band('fr-s',cu,cv-48,240,24),band('fr-w',cu-108,cv,24,72),band('fr-e',cu+108,cv,24,72),band('link',(9.17+12.83)/2*12,4*12,(12.83-9.17)*12,24)];}
  const t=ROT*Math.PI/180;
  const L=(u:number,v:number)=>({x:courtX+u*Math.cos(t)-v*Math.sin(t),z:courtZ+u*Math.sin(t)+v*Math.cos(t)});
- // Last leg of the garden path turns square to the court and stops at its edge (keeps the lounge-frame band whole).
- {const p3=L(-9.9,-20);pave('path-3','Garden path',p3.x,p3.z,6,4.6,ROT,90);}
  // Pool and spa on one axis (v=4), same coping; a 24 in Greyed Nickel band runs coping-to-coping between them (see court inlays).
- const PC=L(-7,4),SC=L(19.5,4);
+ const PC=L(-7,4),SC=L(18,4);
  const pool={...createPlanningPool({id:'lagoon',name:'Resort pool',type:'concrete',xIn:PC.x*12,zIn:PC.z*12,copingTopElevationIn:0,shape:'rounded-rectangle'}),...poolRoundedRectangle(30*12,14*12,78),rotationDeg:ROT,depthProfile:[{stationIn:0,depthIn:42},{stationIn:168,depthIn:60}]};
  const spa={...createPlanningPool({id:'spa',name:'Spa',type:'concrete',xIn:SC.x*12,zIn:SC.z*12,copingTopElevationIn:0,shape:'rounded-rectangle'}),...poolRoundedRectangle(8*12,8*12,30),rotationDeg:ROT,depthProfile:[{stationIn:0,depthIn:36},{stationIn:96,depthIn:36}]};
  const COPING={status:'planning' as const,widthIn:14,thicknessIn:2,overhangIn:1,jointIn:.125,transitionJointIn:.375,stockLengthIn:24,manufacturer:'Techo-Bloc',productId:'techo-piazzetta-coping',verifiedForPool:false,color:'#a9aaa8'};
@@ -114,13 +112,14 @@ export function resortEstateDesign():DeckData{
  const grow=(sp:string,x:number,z:number)=>{const o=newLandscapePlant(sp,`p${n++}`,x*12,z*12);objs.push({...o,rotationDeg:(n*53)%360,speciesRecord:structuredClone(o.speciesRecord!)});};
  const furn=(a:LandscapeAssetId,id:string,x:number,z:number,rot:number,sup?:string)=>objs.push({...newLandscapeObject(a,id,x*12,z*12),rotationDeg:rot,...(sup?{supportFeatureId:sup}:{})});
  // Meadow beds either side of the winding path, planted as dense native drifts (one object each).
- const MEADOW=['matteuccia-struthiopteris','echinacea-purpurea','hydrangea-arborescens-annabelle','rudbeckia-hirta','panicum-virgatum','monarda-fistulosa','matteuccia-struthiopteris','schizachyrium-scoparium'];
+ // Restrained Ontario palette: Annabelle hydrangea massed as the hero shrub, boxwood for structure, a little bluestem.
+ const MEADOW=['hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','buxus-microphylla','schizachyrium-scoparium'];
  const drift=(species:string[],spacingIn:number,seed:number)=>({drift:{species,spacingIn,seed}}) as Partial<LandscapeObject>;
- bed('meadow-west','Native meadow',[[tx-27,tz+3.2],[tx-3.3,tz+3.2],[tx-3.3,tz+12],[tx+1.4,tz+21.4],[tx+6.4,tz+28],[tx-27,tz+28]],drift(MEADOW,13,11));
- bed('meadow-east','Native meadow',[[tx+3.4,tz+0.3],[x1/12-0.6,tz+0.3],[x1/12-0.6,tz+6],[tx+20,tz+6],[tx+20,tz+17],[tx+13,tz+19],[tx+13,tz+20],[tx+8.3,tz+12]],drift(MEADOW,13,12));
- for(const [sp,x,z] of [['cercis-canadensis',tx-14,tz+16],['acer-rubrum',tx-24,tz+25],['amelanchier-canadensis',tx+16,tz+14]] as const)grow(sp,x,z);
+ bed('meadow-west','Native meadow',[[tx-27,tz+3.2],[tx-3.3,tz+3.2],[tx-3.3,tz+12],[tx+1.4,tz+21.4],[tx+6.4,tz+28],[tx-27,tz+28]],drift(MEADOW,30,11));
+ bed('meadow-east','Native meadow',[[tx+3.4,tz+0.3],[x1/12-0.6,tz+0.3],[x1/12-0.6,tz+6],[tx+20,tz+6],[tx+20,tz+17],[tx+13,tz+19],[tx+13,tz+20],[tx+8.3,tz+12]],drift(MEADOW,30,12));
+ for(const [sp,x,z] of [['amelanchier-canadensis',tx-14,tz+16],['acer-rubrum',tx-24,tz+25],['amelanchier-canadensis',tx+16,tz+14]] as const)grow(sp,x,z);
  // Cutting garden: three raised cedar beds west of the fire circle, rows of coneflower and black-eyed Susan.
- for(let k=0;k<3;k++){const bx=fc.xFt-17,bz=fc.zFt-7+k*7;bed(`cut-${k}`,'Cutting garden bed',[[bx-2,bz-2.5],[bx+2,bz-2.5],[bx+2,bz+2.5],[bx-2,bz+2.5]],{raisedIn:18,edge:{kind:'timber'}} as any);for(const dz of [-1.5,0,1.5])grow(k%2?'rudbeckia-hirta':'echinacea-purpurea',bx,bz+dz);}
+ // (Cutting garden removed: open lawn west of the fire circle.)
  // Screening: cedar hedge along the rear and both sides; pines and maples behind.
  const hl=Math.min(...houseOutline(data).flat().map(p=>p.x))/12,LX0=hl-30+1.5,LX1=hl-30+128-1.5,RZ=data.permitSite.rearYardFt-1.5;
  // Rear terrace: an armour-stone wall across the yard holds the back 3 ft up. Two runs leave a gap for natural
@@ -137,31 +136,31 @@ export function resortEstateDesign():DeckData{
  // The walk from the fire circle to the step foot, through the rear meadow.
  pave('rear-walk','Meadow walk',SX,(fc.zFt+11+WZ-RISERS*RUN/12+1.2)/2,5.5,(WZ-RISERS*RUN/12+1.2)-(fc.zFt+11)+0.6,0,90);
  const upper=(x:number,z:number)=>!(Math.abs(x-SX)<6.5&&z<WZ+10);
- bed('upper-garden','Upper garden',[[LX0-1.4,WZ+1.3],[SX-5.2,WZ+1.3],[SX-5.2,WZ+9.2],[SX+5.2,WZ+9.2],[SX+5.2,WZ+1.3],[LX1+1.4,WZ+1.3],[LX1+1.4,RZ+1.4],[LX0-1.4,RZ+1.4]],{raisedIn:UP,edge:{kind:'wall',wallFeatureId:wW.id},...drift(['monarda-fistulosa','echinacea-purpurea','hydrangea-arborescens-annabelle','rudbeckia-hirta','cornus-sericea','schizachyrium-scoparium','physocarpus-opulifolius','echinacea-purpurea'],18,21)} as any);
+ bed('upper-garden','Upper garden',[[LX0-1.4,WZ+1.3],[SX-5.2,WZ+1.3],[SX-5.2,WZ+9.2],[SX+5.2,WZ+9.2],[SX+5.2,WZ+1.3],[LX1+1.4,WZ+1.3],[LX1+1.4,RZ+1.4],[LX0-1.4,RZ+1.4]],{raisedIn:UP,edge:{kind:'wall',wallFeatureId:wW.id},...drift(['buxus-microphylla','hydrangea-arborescens-annabelle','buxus-microphylla'],54,21)} as any);
  // Layered: hedge at the back line, pines and maples, flowering trees, shrubs, perennials at the wall lip, boulders.
  for(let x=LX0;x<=LX1;x+=6)grow('thuja-occidentalis-smaragd',x,RZ);
  for(const [k,x] of [LX0+8,LX0+30,LX0+52,LX0+74,LX0+96,LX0+118].entries())grow(k%2||k===2?'acer-rubrum':'pinus-strobus',x,RZ-6); // k=2 is a maple: the pine there blurred into the night camera's top edge under showcase DoF
- for(const [k,x] of [LX0+18,LX0+40,LX0+62,LX0+84,LX0+106].entries())grow(['cercis-canadensis','amelanchier-canadensis'][k%2],x,WZ+11);
+ for(const x of [LX0+18,LX0+62,LX0+106])grow('amelanchier-canadensis',x,WZ+11);
  for(const [k,x] of [LX0+12,LX0+36,SX+9,LX0+92,LX0+120].entries())objs.push({...newLandscapeObject('natural-boulder',`boulder-${k}`,x*12,(WZ+6+(k%2)*5)*12),rotationDeg:k*41});
  // A bench-sofa on the overlook, turned to the pool.
  furn('outdoor-sofa','overlook-bench',top.xFt,top.zFt+1.6,180,top.id);
  furn('outdoor-coffee-table','overlook-table',top.xFt,top.zFt-2.3,0,top.id);
  // Lower meadow along the wall foot, either side of the meadow walk; deep mixed borders down both sides; a lawn
  // panel (the open green west of the fire circle) is left clean between them.
- bed('meadow-rear','Rear meadow',[[LX0+9.6,WZ-13],[SX-3.1,WZ-13],[SX-3.1,WZ-1.6],[LX0+9.6,WZ-1.6]],drift(MEADOW,13,31));
+ // (meadow-rear removed: clean lawn.)
  const pE=L(23,-16.5),pW=L(0,-16.5);
- bed('wall-foot-east','Wall-foot planting',[[SX+3.1,WZ-6.6],[LX1-5.4,WZ-6.6],[LX1-5.4,WZ-1.6],[SX+3.1,WZ-1.6]],drift(['rudbeckia-hirta','monarda-fistulosa','schizachyrium-scoparium','echinacea-purpurea'],16,32));
- bed('west-border','West border',[[LX0-1.4,14],[LX0+9.2,14],[LX0+9.2,WZ-1.6],[LX0-1.4,WZ-1.6]],drift(['hydrangea-arborescens-annabelle','cornus-sericea','echinacea-purpurea','physocarpus-opulifolius','monarda-fistulosa','schizachyrium-scoparium'],24,41));
+ // (wall-foot-east removed: clean lawn.)
+ bed('west-border','West border',[[LX0-1.4,14],[LX0+9.2,14],[LX0+9.2,WZ-1.6],[LX0-1.4,WZ-1.6]],drift(['taxus-media','hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','buxus-microphylla'],40,41));
  // The night camera stands at (82,66) ft inside this border: the border is notched 8 ft either side of it so no shrub sits at the lens.
- const EB=['hydrangea-arborescens-annabelle','cornus-sericea','echinacea-purpurea','rudbeckia-hirta','physocarpus-opulifolius'];
- bed('east-border','East border',[[LX1-5,tz+6.4],[LX1+1.4,tz+6.4],[LX1+1.4,58],[LX1-5,58]],drift(EB,24,42));
- bed('east-border-n','East border',[[LX1-5,74],[LX1+1.4,74],[LX1+1.4,WZ-1.6],[LX1-5,WZ-1.6]],drift(EB,24,44));
- bed('cabana-garden','Cabana garden',[[tx+20.6,tz+6.4],[LX1-5.4,tz+6.4],[LX1-5.4,pE.z-1.2],[pW.x+1,pW.z-1.2],[tx+20.6,pW.z-1.2]],drift(MEADOW,13,43));
- bed('house-west','Foundation planting',[[hl+0.5,1.5],[-0.8,1.5],[-0.8,tz-6.4-0.5-6],[hl+0.5,tz-6.4-0.5-6]],drift(['hydrangea-arborescens-annabelle','echinacea-purpurea','hosta','monarda-fistulosa'],20,51));
+ const EB=['taxus-media','hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','buxus-microphylla'];
+ bed('east-border','East border',[[LX1-5,tz+6.4],[LX1+1.4,tz+6.4],[LX1+1.4,58],[LX1-5,58]],drift(EB,40,42));
+ bed('east-border-n','East border',[[LX1-5,74],[LX1+1.4,74],[LX1+1.4,WZ-1.6],[LX1-5,WZ-1.6]],drift(EB,40,44));
+ // (cabana-garden removed: clean lawn.)
+ bed('house-west','Foundation planting',[[hl+0.5,1.5],[-0.8,1.5],[-0.8,tz-6.4-0.5-6],[hl+0.5,tz-6.4-0.5-6]],drift(['hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','buxus-microphylla'],26,51));
  // Fire-to-pool garden: closes the lawn between the fire circle, the west meadow and the pool court.
  const g1=L(-23.6,-6),g2=L(-23.6,16.6),g3=L(5,16.6);
- bed('fire-pool-garden','Fire-to-pool garden',[[-6.9,fc.zFt+11.6],[tx-27.6,fc.zFt+11.6],[tx-27.6,tz+28.6],[g1.x,g1.z],[g2.x,g2.z],[g3.x,g3.z],[g3.x,WZ-7.2],[-6.9,WZ-7.2]],drift(MEADOW,13,61));
- grow('acer-rubrum',4,72);grow('cercis-canadensis',14,86);grow('amelanchier-canadensis',-1,60);
+ // (fire-pool-garden removed: clean lawn.)
+ grow('acer-rubrum',4,72);grow('amelanchier-canadensis',14,86);grow('amelanchier-canadensis',-1,60);
  for(let z=22;z<=WZ-4;z+=8){grow('thuja-occidentalis-smaragd',LX0+0.6,z);if(Math.abs(z-66)>14)grow('thuja-occidentalis-smaragd',LX1-0.6,z);}
  // Cabana: kitchen island along its back under the roof, stools facing it; dining on the open east half.
  const kx=data.pergola!.xFt!,kz=cab.zFt-3;
@@ -174,9 +173,11 @@ export function resortEstateDesign():DeckData{
  for(const k of [-1,1]){const c=L(-7+k*3.2,-12);furn('lounge-chair',`chaise-${k}`,c.x,c.z,ROT);}
  const st=L(-7,-12);furn('side-table','chaise-table',st.x,st.z,ROT);
  const um=L(-11.6,-13.7);furn('cantilever-umbrella','umbrella',um.x,um.z,ROT);
+ // Annabelle bank along the far (wall-side) edge of the court, boxwood dots for winter structure: the hero shrub mass behind the pool.
+ {const q=(u:number,v:number)=>{const p=L(u,v);return [p.x,p.z] as [number,number];};bed('hydrangea-bank','Annabelle hydrangea bank',[q(-24,18.3),q(24,18.3),q(24,23),q(-24,23)],drift(['hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','buxus-microphylla'],28,81));}
  // Two black steel planters flank the lounge frame: native grasses and coneflower, 18 in raised.
  for(const [k,u] of [[0,-21.4],[1,7.4]] as const){const q=(du:number,dv:number)=>{const p=L(u+du,-12+dv);return [p.x,p.z] as [number,number];};
-  bed(`planter-${k}`,'Steel planter',[q(-1.5,-3),q(1.5,-3),q(1.5,3),q(-1.5,3)],{raisedIn:12,edge:{kind:'steel'},...drift(['schizachyrium-scoparium','echinacea-purpurea','panicum-virgatum'],12,70+k)} as any);}
+  bed(`planter-${k}`,'Steel planter',[q(-1.5,-3),q(1.5,-3),q(1.5,3),q(-1.5,3)],{raisedIn:12,edge:{kind:'steel'},...drift(['hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','schizachyrium-scoparium'],16,70+k)} as any);}
  data.landscapeObjects=objs;
  // Lighting: pool + spa niche lights, 2 step lights per tread, path lights in the meadow beds 8–10 ft staggered, tree uplights.
  const hr=houseOutline(data);
