@@ -129,13 +129,13 @@ export function resortEstateDesign():DeckData{
  const WZ=104,SX=-10,GAP=2.6,UP=36;
  const armour=(id:string,xa:number,xb:number)=>{const run=xb-xa,pts=[{x:-run*6,y:0},{x:-run*2,y:9},{x:run*2,y:-6},{x:run*6,y:0}];
   let len=0;for(let k=1;k<pts.length;k++)len+=Math.hypot(pts[k].x-pts[k-1].x,pts[k].y-pts[k-1].y);
-  return push({id,kind:'retaining-wall',name:'Terrace retaining wall',enabled:true,xFt:(xa+xb)/2,zFt:WZ,widthFt:len/12,depthFt:1.5,heightIn:UP,rotationDeg:0,productId:'segmental-concrete',color:'#b8ab98',wallPath:pts} as YardFeature);};
+  return push({id,kind:'retaining-wall',name:'Terrace retaining wall',enabled:true,xFt:(xa+xb)/2,zFt:WZ,widthFt:len/12,depthFt:249/304.8,heightIn:UP,rotationDeg:0,productId:'techo-raffinato-wall',color:'#c9bfae',hardscape:{finishId:'smooth',colorId:'beige-cream',unitId:'double-sided-397-249-180',patternId:'running-bond',angleDeg:0,jointMm:0},wallPath:pts} as YardFeature);};
  const wW=armour('armour-west',LX0-1,SX-GAP),wE=armour('armour-east',SX+GAP,LX1+1);
  const RISERS=6,RUN=17;
- push({id:'stone-steps',name:'Stone slab steps',kind:'patio',enabled:true,xFt:SX,zFt:WZ-((RISERS-1)*RUN+RUN+2)/24+1.2,widthFt:5,depthFt:((RISERS-1)*RUN+RUN+2)/12,heightIn:0,rotationDeg:180,productId:SLAB,hardscape:FIELD,color:'#a9aaa8',finishedElevationIn:UP,
-  stoneSteps:{lowerElevationIn:0,riserCount:RISERS,treadRunIn:RUN,stockWidthIn:60,stockDepthIn:RUN+2,stockThicknessIn:6,baseDepthIn:6,settingBedIn:1,jointIn:0,productName:'Precast stone slab steps (coping grey)'}} as YardFeature);
- const top=push({...createYardFeature(data,{kind:'patio',id:'overlook',name:'Overlook',xFt:SX,zFt:WZ+5.5,widthFt:16,depthFt:8,heightIn:0,productId:SLAB,hardscape:FIELD}),finishedElevationIn:UP,color:CREMA});
- top.inlays=[-1,1].map(k=>({id:`ov-${k}`,name:'Overlook band',shape:'band' as const,xIn:0,yIn:k*36,widthIn:168,depthIn:12,rotationDeg:0,productId:SLAB,color:'#b0aea6',hardscape:{...FIELD!,colorId:'greyed-nickel'}}));
+ push({id:'stone-steps',name:'Stone slab steps',kind:'patio',enabled:true,xFt:SX,zFt:WZ-((RISERS-1)*RUN+RUN)/24+1.2,widthFt:5,depthFt:((RISERS-1)*RUN+RUN)/12,heightIn:0,rotationDeg:0,productId:SLAB,hardscape:FIELD,color:'#a9aaa8',finishedElevationIn:UP,
+  stoneSteps:{lowerElevationIn:0,riserCount:RISERS,treadRunIn:RUN,stockWidthIn:60,stockDepthIn:RUN,stockThicknessIn:6,baseDepthIn:6,settingBedIn:1,jointIn:0,support:{kind:'full-step',courses:[0,1,2,3,4,5]},productName:'Precast stone slab steps (coping grey)'}} as YardFeature);
+ const top=push({...createYardFeature(data,{kind:'patio',id:'overlook',name:'Overlook',xFt:SX,zFt:WZ+5.6,widthFt:16.8,depthFt:8.8,heightIn:0,productId:SLAB,hardscape:FIELD}),finishedElevationIn:UP,color:CREMA});
+ top.inlays=[-1,1].map(k=>({id:`ov-${k}`,name:'Overlook band',shape:'band' as const,xIn:0,yIn:k*36,widthIn:176,depthIn:12,rotationDeg:0,productId:SLAB,color:'#b0aea6',hardscape:{...FIELD!,colorId:'greyed-nickel'}}));
  // The walk from the fire circle to the step foot, through the rear meadow.
  {const len=(WZ-RISERS*RUN/12+1.2)-(fc.zFt+11)+0.6,rw=pave('rear-walk','Garden walk',SX,(fc.zFt+11+WZ-RISERS*RUN/12+1.2)/2,5.5,len,0);
   rw.inlays=[-1,1].map(k=>({id:`rw-${k}`,name:'Walk edge band',shape:'band' as const,xIn:k*27,yIn:0,widthIn:12,depthIn:Math.min(240,len*12-36),rotationDeg:0,productId:SLAB,color:'#b0aea6',hardscape:{...FIELD!,colorId:'greyed-nickel'}}));}
@@ -164,7 +164,7 @@ export function resortEstateDesign():DeckData{
  // Fire-to-pool garden: closes the lawn between the fire circle, the west meadow and the pool court.
  const g1=L(-23.6,-6),g2=L(-23.6,16.6),g3=L(5,16.6);
  // (fire-pool-garden removed: clean lawn.)
- grow('acer-rubrum',tx-32,tz+48);grow('amelanchier-canadensis',tx-31,tz+64);
+ grow('acer-rubrum',tx-46,tz+48);grow('amelanchier-canadensis',tx-31,tz+64);
  for(let z=22;z<=WZ-4;z+=3.5){cedar(LX0+0.6,z);if(Math.abs(z-66)>14)cedar(LX1-0.6,z);}
  // Cabana: kitchen island along its back under the roof, stools facing it; dining on the open east half.
  const kx=cab.xFt-5.5,kz=cab.zFt-3;
