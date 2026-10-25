@@ -75,7 +75,9 @@ export function resortEstateDesign():DeckData{
  // Two lounge bays either side of the walk landing, each framed by a 24 in Greyed Nickel band (20×9 ft bay), loungers 43 in off the coping.
  {const BAND={...FIELD!,colorId:'greyed-nickel'};
   const band=(id:string,x:number,y:number,w:number,d:number)=>({id,name:'Lounge frame band',shape:'band' as const,xIn:x,yIn:y,widthIn:w,depthIn:d,rotationDeg:0,productId:SLAB,color:'#b0aea6',hardscape:BAND});
-  court.inlays=[-1,1].flatMap(k=>{const cu=k*12*12,cv=-12*12;return [band(`fr-n${k}`,cu,cv+48,240,24),band(`fr-s${k}`,cu,cv-48,240,24),band(`fr-w${k}`,cu-108,cv,24,72),band(`fr-e${k}`,cu+108,cv,24,72)];});}
+  court.inlays=[-1,1].flatMap(k=>{const cu=k*15*12,cv=-12*12;return [band(`fr-n${k}`,cu,cv+48,192,24),band(`fr-s${k}`,cu,cv-48,192,24),band(`fr-w${k}`,cu-84,cv,24,72),band(`fr-e${k}`,cu+84,cv,24,72)];});
+  // Centre fire bay on the stair/pool axis between the lounge bays: 12×13 ft framed inlay, no floor lights.
+  court.inlays.push(band('fire-n',0,-84,144,24),band('fire-s',0,-216,144,24),band('fire-w',-60,-150,24,108),band('fire-e',60,-150,24,108));}
  const t=ROT*Math.PI/180;
  const L=(u:number,v:number)=>({x:courtX+u*Math.cos(t)-v*Math.sin(t),z:courtZ+u*Math.sin(t)+v*Math.cos(t)});
  // One 40×18 ft rectangular pool on the axis, crisp straight coping.
@@ -104,7 +106,7 @@ export function resortEstateDesign():DeckData{
  }
  const pg=newPergola('lousol-custom','custom');
  // Full-width black louvered pergola over the upper deck, warm dimmable LED in the louvers.
- data.pergola={...pg,frameFinish:'black',roofFinish:'black',accessories:[],lighting:'perimeter-led',customSize:{widthFt:30,depthFt:14,heightFt:9},target:{kind:'deck',level:0},xFt:20,zFt:8,rotationDeg:0,louverDeg:70} as any;
+ data.pergola={...pg,frameFinish:'black',roofFinish:'black',accessories:[],lighting:'perimeter-led',customSize:{widthFt:30,depthFt:14,heightFt:9},target:{kind:'deck',level:0},xFt:20,zFt:8,rotationDeg:0,louverDeg:30} as any;
  // Objects.
  const objs:LandscapeObject[]=[];let n=0;
  const bed=(id:string,name:string,pts:[number,number][],extra:Partial<LandscapeObject>={})=>{const xs=pts.map(p=>p[0]),zs=pts.map(p=>p[1]);const o=newLandscapeObject('black-mulch-bed',id,(Math.min(...xs)+Math.max(...xs))*6,(Math.min(...zs)+Math.max(...zs))*6);objs.push({...o,name,widthIn:(Math.max(...xs)-Math.min(...xs))*12,depthIn:(Math.max(...zs)-Math.min(...zs))*12,polygon:pts.map(([x,z])=>({x:x*12,z:z*12})),...extra} as LandscapeObject);};
@@ -173,10 +175,12 @@ export function resortEstateDesign():DeckData{
  for(const sd of [-1,1])for(const dx of [-2.75,0,2.75])furn('woven-dining-chair',`dine-${sd}-${dx}`,20+dx,8.1+sd*3.1,rotationDegFacing(0,-sd));
  for(const sd of [-1,1])furn('woven-dining-chair',`dine-end-${sd}`,20+sd*5.1,8.1,rotationDegFacing(-sd,0));
  // Pool loungers on the house-side deck of the court, feet to the water.
- for(const b of [-1,1]){const cu=b*12;for(const k of [-1,1]){const c=L(cu+k*3.2,-12);furn('lounge-chair',`chaise-${b}-${k}`,c.x,c.z,ROT);}
+ for(const b of [-1,1]){const cu=b*15;for(const k of [-1,1]){const c=L(cu+k*3.2,-12);furn('lounge-chair',`chaise-${b}-${k}`,c.x,c.z,ROT);}
   const st=L(cu,-12);furn('side-table',`chaise-table-${b}`,st.x,st.z,ROT);if(b<0){const um=L(cu-4.6,-13.7);furn('cantilever-umbrella','umbrella',um.x,um.z,ROT);}}
  // Annabelle bank along the open east side of the court, boxwood dots for winter structure.
  {const q=(u:number,v:number)=>{const p=L(u,v);return [p.x,p.z] as [number,number];};bed('hydrangea-bank','Annabelle hydrangea bank',[q(25.6,-17),q(31,-17),q(31,17),q(25.6,17)],drift(['hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','buxus-microphylla'],28,81));}
+ {const fc=L(0,-10);push({...createYardFeature(data,{kind:'fire-feature',id:'court-fire',name:'Low gas fire bowl',xFt:fc.x,zFt:fc.z,widthFt:3.5,depthFt:3.5,productId:'fire-gas-sculptural',supportFeatureId:court.id}),color:'#a9aaa8'});
+  for(const k of [-1,1]){const p=L(k*2.5,-15.9);furn('swivel-lounge-chair',`fire-swivel-${k}`,p.x,p.z,rotationDegFacing(fc.x-p.x,fc.z-p.z),court.id);}}
  data.landscapeObjects=objs;
  // Lighting: pool + spa niche lights, 2 step lights per tread, path lights in the meadow beds 8–10 ft staggered, tree uplights.
  const hr=houseOutline(data);
