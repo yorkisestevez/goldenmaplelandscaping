@@ -44,8 +44,8 @@ export function resortEstateDesign():DeckData{
    {id:'u2',type:'Window',facade:'Front',wallId:'main-front',style:'Picture',offsetPct:75,bottomIn:160,widthIn:72,heightIn:60},
   ]},look);
  const data:DeckData={...DEFAULT_DECK,customerName:'Paradise Resort',projectAddress:'Barrie, Ontario',
-  width:36,length:15,height:40,deckType:'Freestanding',foundationDepthIn:48,houseCantileverIn:16,
-  levels:2,level2Position:'Front',level2Offset:50,width2:28,length2:12,height2:18,level2FullStep:true,
+  width:40,length:16,height:40,deckType:'Freestanding',foundationDepthIn:48,houseCantileverIn:16,
+  levels:2,level2Position:'Front',level2Offset:50,width2:32,length2:12,height2:18,level2FullStep:true,
   deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk',deckFinishes:{border:'tt_prime_plus:Dark Cocoa'},boardWidth:5.5,pictureFrameRows:1,railingType:'Glass Panels',
   stairFlights:1,stairWidth:120,stairType:'Straight',stairPosition:'Front',stairOffset:50,stairRiserCount:3,stairTreadDepthIn:11,
   houseVisible:true,houseConfig:house,housePlacement:{anchor:'center',offsetIn:-60},
@@ -65,13 +65,12 @@ export function resortEstateDesign():DeckData{
  terrace=yardShapeEdit(terrace,[{x:x0,y:deckFront},{x:s0,y:deckFront},{x:s0,y:zN},{x:s1,y:zN},{x:s1,y:deckFront},{x:x1,y:deckFront},{x:x1,y:zF},{x:x0,y:zF}]);
  push({...terrace,color:CREMA});
  const tz=zF/12,tx=cx/12;
- // Stair-axis walk: same Industria field as the terrace and court, flush at grade, framed by 12 in Greyed Nickel edge bands (the court's band detail). Runs straight from the arrival terrace (and the stair) to the pool court.
- {const w=pave('path-1','Garden walk',tx,tz+9.15,6,20.3,0);const WB={...FIELD!,colorId:'greyed-nickel'};
-  w.inlays=[-1,1].map(k=>({id:`edge-${k}`,name:'Walk edge band',shape:'band' as const,xIn:k*30,yIn:0,widthIn:12,depthIn:200,rotationDeg:0,productId:SLAB,color:'#b0aea6',hardscape:WB}));}
+ // Stair-axis connector: a 24 ft run of the same Industria field, terrace to pool court, so the stair landing paves straight through to the pool.
+ pave('path-1','Axis connector',tx,tz+2.6,52,7.2,0);
  
  // Resort pool court, turned 22°.
  // Pool court square to the house, centred on the stair/house axis.
- const courtX=tx,courtZ=tz+38,ROT=0;
+ const courtX=tx,courtZ=tz+25,ROT=0;
  const court=pave('court','Pool court',courtX,courtZ,50,38,ROT);
  // Two lounge bays either side of the walk landing, each framed by a 24 in Greyed Nickel band (20×9 ft bay), loungers 43 in off the coping.
  {const BAND={...FIELD!,colorId:'greyed-nickel'};
@@ -86,7 +85,7 @@ export function resortEstateDesign():DeckData{
  (pool as any).coping=COPING;(pool as any).waterOffsetIn=.25; // 1in = the coping overhang: no exposed wall strip.
  data.pools=[pool];
  // Cabana: its own patio east of the terrace, LOUSOL roof over kitchen and bar; dining on the open half.
- const cab=pave('cabana','Pool cabana',x1/12-0.3+12.5,tz-4,25,18);
+ const cab=pave('cabana','Pool cabana',tx+37.5,tz-3,26,20); // runs on to meet the pool court's corner
  // Fire circle in the west, linked by a plank walk from the terrace.
  pave('fire-walk','Fire walk',tx-22,tz-3,22,6,0,0);
  const fc=pave('fire-circle','Fire circle',tx-40,tz+6,22,22);
@@ -105,7 +104,7 @@ export function resortEstateDesign():DeckData{
  }
  const pg=newPergola('lousol-custom','custom');
  // Full-width black louvered pergola over the upper deck, warm dimmable LED in the louvers.
- data.pergola={...pg,frameFinish:'black',roofFinish:'black',accessories:[],lighting:'perimeter-led',customSize:{widthFt:30,depthFt:12.5,heightFt:9},target:{kind:'deck',level:0},xFt:18,zFt:7.5,rotationDeg:0,louverDeg:0} as any;
+ data.pergola={...pg,frameFinish:'black',roofFinish:'black',accessories:[],lighting:'perimeter-led',customSize:{widthFt:30,depthFt:14,heightFt:9},target:{kind:'deck',level:0},xFt:20,zFt:8,rotationDeg:0,louverDeg:70} as any;
  // Objects.
  const objs:LandscapeObject[]=[];let n=0;
  const bed=(id:string,name:string,pts:[number,number][],extra:Partial<LandscapeObject>={})=>{const xs=pts.map(p=>p[0]),zs=pts.map(p=>p[1]);const o=newLandscapeObject('black-mulch-bed',id,(Math.min(...xs)+Math.max(...xs))*6,(Math.min(...zs)+Math.max(...zs))*6);objs.push({...o,name,widthIn:(Math.max(...xs)-Math.min(...xs))*12,depthIn:(Math.max(...zs)-Math.min(...zs))*12,polygon:pts.map(([x,z])=>({x:x*12,z:z*12})),...extra} as LandscapeObject);};
@@ -116,9 +115,9 @@ export function resortEstateDesign():DeckData{
  // Restrained Ontario palette: Annabelle hydrangea massed as the hero shrub, boxwood for structure, a little bluestem.
  const MEADOW=['hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','buxus-microphylla','schizachyrium-scoparium'];
  const drift=(species:string[],spacingIn:number,seed:number)=>({drift:{species,spacingIn,seed}}) as Partial<LandscapeObject>;
- bed('meadow-west','Native meadow',[[tx-27,tz+3.2],[tx-3.3,tz+3.2],[tx-3.3,tz+18],[tx-27,tz+18]],drift(MEADOW,30,11));
- bed('meadow-east','Native meadow',[[tx+3.4,tz+0.3],[x1/12-0.6,tz+0.3],[x1/12-0.6,tz+6],[tx+24,tz+6],[tx+24,tz+18],[tx+3.4,tz+18]],drift(MEADOW,30,12));
- for(const [sp,x,z] of [['amelanchier-canadensis',tx-14,tz+12],['acer-rubrum',tx-23,tz+15],['amelanchier-canadensis',tx+16,tz+12]] as const)grow(sp,x,z);
+ // (removed: clean lawn beside the axis paving)
+ // (removed: clean lawn beside the axis paving)
+ // (removed: clean lawn beside the axis paving)
  // Cutting garden: three raised cedar beds west of the fire circle, rows of coneflower and black-eyed Susan.
  // (Cutting garden removed: open lawn west of the fire circle.)
  // Screening: cedar hedge along the rear and both sides; pines and maples behind.
@@ -163,19 +162,19 @@ export function resortEstateDesign():DeckData{
  // Fire-to-pool garden: closes the lawn between the fire circle, the west meadow and the pool court.
  const g1=L(-23.6,-6),g2=L(-23.6,16.6),g3=L(5,16.6);
  // (fire-pool-garden removed: clean lawn.)
- grow('acer-rubrum',tx-32,tz+48);grow('amelanchier-canadensis',tx+32,tz+56);grow('amelanchier-canadensis',tx-31,tz+64);
+ grow('acer-rubrum',tx-32,tz+48);grow('amelanchier-canadensis',tx-31,tz+64);
  for(let z=22;z<=WZ-4;z+=3.5){cedar(LX0+0.6,z);if(Math.abs(z-66)>14)cedar(LX1-0.6,z);}
  // Cabana: kitchen island along its back under the roof, stools facing it; dining on the open east half.
  const kx=cab.xFt-5.5,kz=cab.zFt-3;
  furn('kitchen-island','kitchen-island',kx,kz,180,cab.id);
  for(const dx of [-3.25,-1.1,1.1,3.25])furn('bar-stool',`stool-${dx}`,kx+dx,kz+3.2,180,cab.id);
  // 8-seat dining centred under the pergola on the upper deck.
- furn('teak-dining-table','dining-table',18,7.6,0);
- for(const sd of [-1,1])for(const dx of [-2.75,0,2.75])furn('woven-dining-chair',`dine-${sd}-${dx}`,18+dx,7.6+sd*3.1,rotationDegFacing(0,-sd));
- for(const sd of [-1,1])furn('woven-dining-chair',`dine-end-${sd}`,18+sd*5.1,7.6,rotationDegFacing(-sd,0));
+ furn('teak-dining-table','dining-table',20,8.1,0);
+ for(const sd of [-1,1])for(const dx of [-2.75,0,2.75])furn('woven-dining-chair',`dine-${sd}-${dx}`,20+dx,8.1+sd*3.1,rotationDegFacing(0,-sd));
+ for(const sd of [-1,1])furn('woven-dining-chair',`dine-end-${sd}`,20+sd*5.1,8.1,rotationDegFacing(-sd,0));
  // Pool loungers on the house-side deck of the court, feet to the water.
  for(const b of [-1,1]){const cu=b*12;for(const k of [-1,1]){const c=L(cu+k*3.2,-12);furn('lounge-chair',`chaise-${b}-${k}`,c.x,c.z,ROT);}
-  const st=L(cu,-12);furn('side-table',`chaise-table-${b}`,st.x,st.z,ROT);const um=L(cu+b*4.6,-13.7);furn('cantilever-umbrella',`umbrella-${b}`,um.x,um.z,ROT);}
+  const st=L(cu,-12);furn('side-table',`chaise-table-${b}`,st.x,st.z,ROT);if(b<0){const um=L(cu-4.6,-13.7);furn('cantilever-umbrella','umbrella',um.x,um.z,ROT);}}
  // Annabelle bank along the open east side of the court, boxwood dots for winter structure.
  {const q=(u:number,v:number)=>{const p=L(u,v);return [p.x,p.z] as [number,number];};bed('hydrangea-bank','Annabelle hydrangea bank',[q(25.6,-17),q(31,-17),q(31,17),q(25.6,17)],drift(['hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','buxus-microphylla'],28,81));}
  data.landscapeObjects=objs;
@@ -187,10 +186,9 @@ export function resortEstateDesign():DeckData{
  const trees=[pin(tx-14,tz+10.2,Math.PI),pin(tx-23,tz+13,Math.PI),pin(tx+16,tz+10.2,Math.PI)];
  data.lightingSystem={wireDistance:80,selectedItems:syncAutoLighting({...data,lightingSystem:{wireDistance:80,selectedItems:[
   {productId:POOL_LIGHT_ID,qty:pl.length,zone:'pool',places:pl},
-  {productId:'big_scope_narrow',qty:trees.length,zone:'accent-trees',places:trees},
-  {productId:'hub100',qty:1},
+    {productId:'hub100',qty:1},
  ]}} as DeckData,{posts:tk.quantities.railingPosts,stairs:tk.treads.length,privacy:0})} as any;
- void allDeck;void _path;
+ void allDeck;void _path;void trees;
  const shot=(id:string,name:string,p:number[],tg:number[],fov:number)=>({id,name,fov,positionIn:p.map(v=>v*12) as [number,number,number],targetIn:tg.map(v=>v*12) as [number,number,number]});
  data.scenePresentation={viewMode:'finished',poolEdgeWarmth:0,activeCameraId:'overhead',cameras:[
   shot('overhead','Overhead',[12,190,72],[12,0,71.9],55),
