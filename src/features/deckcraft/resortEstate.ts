@@ -177,7 +177,7 @@ export function resortEstateDesign():DeckData{
  {const q=(u:number,v:number)=>{const p=L(u,v);return [p.x,p.z] as [number,number];};bed('hydrangea-bank','Annabelle hydrangea bank',[q(-24,18.3),q(24,18.3),q(24,23),q(-24,23)],drift(['hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','buxus-microphylla'],28,81));}
  // Two black steel planters flank the lounge frame: native grasses and coneflower, 18 in raised.
  for(const [k,u] of [[0,-21.4],[1,7.4]] as const){const q=(du:number,dv:number)=>{const p=L(u+du,-12+dv);return [p.x,p.z] as [number,number];};
-  bed(`planter-${k}`,'Steel planter',[q(-1.5,-3),q(1.5,-3),q(1.5,3),q(-1.5,3)],{raisedIn:12,edge:{kind:'steel'},...drift(['hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','schizachyrium-scoparium'],16,70+k)} as any);}
+  bed(`planter-${k}`,'Steel planter',[q(-1.5,-3),q(1.5,-3),q(1.5,3),q(-1.5,3)],{raisedIn:12,edge:{kind:'steel'},...drift(['hydrangea-arborescens-annabelle'],18,70+k)} as any);}
  data.landscapeObjects=objs;
  // Lighting: pool + spa niche lights, 2 step lights per tread, path lights in the meadow beds 8–10 ft staggered, tree uplights.
  const hr=houseOutline(data);

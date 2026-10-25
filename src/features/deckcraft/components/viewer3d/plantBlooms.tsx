@@ -15,7 +15,7 @@ const BLOOMS:Record<string,BloomSpec>={
  'echinacea-purpurea':{petals:'#7a3d8c',center:'#d06a18',count:7,y0:.62,y1:.9,spread:.26,size:.12,head:'daisy',stems:true},
  'rudbeckia-hirta':{petals:'#e2a010',center:'#24180c',count:6,y0:.58,y1:.88,spread:.24,size:.11,head:'daisy',stems:true},
  'monarda-fistulosa':{petals:'#c6a8dc',center:'#7d5c98',count:10,y0:.55,y1:.9,spread:.32,size:.11,head:'whorl'},
- 'hydrangea-arborescens-annabelle':{petals:'#f6f3ec',center:'#f6f3ec',count:6,y0:.48,y1:.74,spread:.3,size:.1,head:'mop'},
+ 'hydrangea-arborescens-annabelle':{petals:'#f6f3ec',center:'#f6f3ec',count:12,y0:.72,y1:.96,spread:.36,size:.17,head:'mop'},
  'hydrangea-paniculata':{petals:'#f4f0e4',center:'#efe4c4',count:5,y0:.52,y1:.8,spread:.26,size:.08,head:'cone'},
  'hemerocallis':{petals:'#e39a22',center:'#c46a12',count:5,y0:.5,y1:.82,spread:.28,size:.13,head:'daisy',stems:true},
  'nepeta-faassenii':{petals:'#b7a6dc',center:'#8e78b8',count:12,y0:.4,y1:.86,spread:.4,size:.07,head:'whorl'},
