@@ -129,13 +129,14 @@ export function resortEstateDesign():DeckData{
  const WZ=96,SX=-10,UP=36;
  const armour=(id:string,xa:number,xb:number)=>{const run=xb-xa,pts=[{x:-run*6,y:0},{x:-run*2,y:9},{x:run*2,y:-6},{x:run*6,y:0}];
   let len=0;for(let k=1;k<pts.length;k++)len+=Math.hypot(pts[k].x-pts[k-1].x,pts[k].y-pts[k-1].y);
-  return push({id,kind:'retaining-wall',name:'Terrace retaining wall',enabled:true,xFt:(xa+xb)/2,zFt:WZ,widthFt:len/12,depthFt:249/304.8,heightIn:UP,rotationDeg:0,productId:'techo-raffinato-wall',color:'#c9bfae',hardscape:{finishId:'smooth',colorId:'beige-cream',unitId:'double-sided-397-249-180',patternId:'running-bond',angleDeg:0,jointMm:0},wallPath:pts} as YardFeature);};
+  return push({id,kind:'retaining-wall',name:'Terrace retaining wall',enabled:true,xFt:(xa+xb)/2,zFt:WZ,widthFt:len/12,depthFt:249/304.8,heightIn:UP,rotationDeg:0,productId:'techo-raffinato-wall',color:'#ddd4c3',hardscape:{finishId:'smooth',colorId:'beige-cream',unitId:'double-sided-397-249-180',patternId:'running-bond',angleDeg:0,jointMm:0,capUnitId:'cap:techo-raffinato-cap:smooth:shale-grey:raffinato-711-356-60'},wallPath:pts} as YardFeature);};
  const wW=armour('terrace-wall',LX0-1,LX1+1);
- bed('upper-garden','Cedar screen terrace',[[LX0-1.4,WZ+1.3],[LX1+1.4,WZ+1.3],[LX1+1.4,RZ+1.4],[LX0-1.4,RZ+1.4]],{raisedIn:UP,edge:{kind:'wall',wallFeatureId:wW.id}} as any);
- for(let x=LX0+6;x<=LX1-6;x+=6)grow('hydrangea-arborescens-annabelle',x,WZ+3.5); // a loose line of Annabelles at the wall lip
+ bed('upper-garden','Annabelle drift at the wall lip',[[LX0-1.4,WZ+1.3],[LX1+1.4,WZ+1.3],[LX1+1.4,WZ+6.5],[LX0-1.4,WZ+6.5]],{assetId:'mulch-bed',raisedIn:UP,edge:{kind:'wall',wallFeatureId:wW.id},...drift(['hydrangea-arborescens-annabelle'],30,71)} as any);
+ bed('cedar-screen','Cedar screen terrace',[[LX0-1.4,WZ+6.5],[LX1+1.4,WZ+6.5],[LX1+1.4,RZ+1.4],[LX0-1.4,RZ+1.4]],{assetId:'mulch-bed',raisedIn:UP} as any);
+ for(let x=LX0+0.5;x<=LX1-0.5;x+=2.5)grow('buxus-microphylla',x,WZ+2); // low boxwood edge at the wall lip
  // Layered: hedge at the back line, pines and maples, flowering trees, shrubs, perennials at the wall lip, boulders.
  // Privacy screen: tight staggered double row of Smaragd cedars, 9 ft, across the full terrace.
- for(let x=LX0;x<=LX1;x+=3){cedar(x,RZ-0.5);if(x+1.5<=LX1)cedar(x+1.5,RZ-3);}
+ for(let x=LX0;x<=LX1;x+=2.2){cedar(x,RZ-0.6);if(x+1.1<=LX1)cedar(x+1.1,RZ-2.4);} // tight staggered hedge wall
  // (Boulders removed from the upper level.)
  // Lower meadow along the wall foot, either side of the meadow walk; deep mixed borders down both sides; a lawn
  // panel (the open green west of the fire circle) is left clean between them.

@@ -240,7 +240,7 @@ function boxCorners(b:FinishBox){
 
 }
 
-function BoardBatch({items,material,pick}:{items:FinishBox[];material:THREE.Material;pick?:BoardPick}){
+function BoardBatch({items,material,pick,noRecv}:{items:FinishBox[];material:THREE.Material;pick?:BoardPick;noRecv?:boolean}){
 
   const ref=useRef<THREE.InstancedMesh>(null),invalidate=useThree(s=>s.invalidate);
 
@@ -280,25 +280,26 @@ function BoardBatch({items,material,pick}:{items:FinishBox[];material:THREE.Mate
 
     ref.current.instanceMatrix.needsUpdate=true;if(ref.current.instanceColor)ref.current.instanceColor.needsUpdate=true;ref.current.computeBoundingSphere();invalidate();},[items,geometry,invalidate]);
 
-  return <instancedMesh userData={{pickBoards:items.map(b=>b.ref),pickPartIds:items.map(b=>b.partId)}} ref={ref} args={[geometry,material,items.length]} castShadow receiveShadow {...pickHandlers(pick,e=>items[e.instanceId??-1])}/>;
+  return <instancedMesh userData={{pickBoards:items.map(b=>b.ref),pickPartIds:items.map(b=>b.partId)}} ref={ref} args={[geometry,material,items.length]} castShadow receiveShadow={!noRecv} frustumCulled={!noRecv} {...pickHandlers(pick,e=>items[e.instanceId??-1])}/>;
 
 }
 
-function PolygonBoard({item,material,pick}:{item:FinishBox;material:THREE.Material;pick?:BoardPick}){
+function PolygonBoard({item,material,pick,noRecv}:{item:FinishBox;material:THREE.Material;pick?:BoardPick;noRecv?:boolean}){
 
   const geometry=useMemo(()=>{const shape=new THREE.Shape();item.polygon!.forEach((p,i)=>i?shape.lineTo(p.x,p.y):shape.moveTo(p.x,p.y));shape.closePath();const minEdge=Math.min(...item.polygon!.map((p,i)=>{const q=item.polygon![(i+1)%item.polygon!.length];return Math.hypot(q.x-p.x,q.y-p.y);})),c=Math.min(.065,item.h/6,minEdge/8);const g=new THREE.ExtrudeGeometry(shape,{depth:item.h-2*c,bevelEnabled:true,bevelThickness:c,bevelSize:c,bevelOffset:-c,bevelSegments:1,curveSegments:1});g.rotateX(Math.PI/2);g.translate(0,item.y+item.h/2-c,0);const pos=g.getAttribute('position'),uv=g.getAttribute('uv'),a=item.angle||0,cu=item.x*Math.cos(a)-item.z*Math.sin(a),cv=item.x*Math.sin(a)+item.z*Math.cos(a);for(let i=0;i<uv.count;i++)uv.setXY(i,(pos.getX(i)*Math.cos(a)-pos.getZ(i)*Math.sin(a)-cu+item.w/2)/48,(pos.getX(i)*Math.sin(a)+pos.getZ(i)*Math.cos(a)-cv+item.d/2)/item.d);const variation=boardVariation(item.x,item.z);g.setAttribute('aVar',new THREE.Float32BufferAttribute(Array.from({length:uv.count},()=>variation).flat(),4));return g;},[item]);
 
   useEffect(()=>()=>geometry.dispose(),[geometry]);
 
-  return <mesh userData={{pickBoard:item.ref,pickPartId:item.partId}} geometry={geometry} material={material} castShadow receiveShadow {...pickHandlers(pick,()=>item)}/>;
+  return <mesh userData={{pickBoard:item.ref,pickPartId:item.partId}} geometry={geometry} material={material} castShadow receiveShadow={!noRecv} {...pickHandlers(pick,()=>item)}/>;
 
 }
 
-function FinishedBoards({items,material,pick}:{items:FinishBox[];material:THREE.Material;pick?:BoardPick}){
+function FinishedBoards({items,material,pick,noRecv}:{items:FinishBox[];material:THREE.Material;pick?:BoardPick;noRecv?:boolean}){
 
   const layout=useMemo(()=>{const groups=new Map<string,FinishBox[]>(),polygons:FinishBox[]=[];for(const b of items){const area=b.polygon?Math.abs(b.polygon.reduce((s,p,i)=>{const q=b.polygon![(i+1)%b.polygon!.length];return s+p.x*q.y-q.x*p.y;},0))/2:0;if(b.polygon&&(b.polygon.length!==4||Math.abs(area-b.w*b.d)>.01)){polygons.push(b);continue;}const key=[b.w,b.h,b.d].map(n=>n.toFixed(4)).join(':');const group=groups.get(key);if(group)group.push(b);else groups.set(key,[b]);}return {groups:[...groups.entries()],polygons};},[items]);
 
-  return <group name="installed-deck-board-pieces">{layout.groups.map(([key,items])=><BoardBatch key={key} items={items} material={material} pick={pick}/>)}{layout.polygons.map((item,i)=><PolygonBoard key={i} item={item} material={material} pick={pick}/>)}</group>;
+  if(noRecv)return <group name="installed-deck-board-pieces">{items.map((b,i)=><mesh key={i} position={[b.x,b.y,b.z]} rotation={[0,b.angle||0,0]} material={material} castShadow frustumCulled={false}><boxGeometry args={[b.w,b.h,b.d]}/></mesh>)}</group>;
+  return <group name="installed-deck-board-pieces">{layout.groups.map(([key,items])=><BoardBatch key={key} items={items} material={material} pick={pick} noRecv={noRecv}/>)}{layout.polygons.map((item,i)=><PolygonBoard key={i} item={item} material={material} pick={pick} noRecv={noRecv}/>)}</group>;
 
 }
 
@@ -536,7 +537,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
     <FinishedBoards items={stairBoards.filter(b=>!stairBorder||b.role!=='border')} material={treadMat}/>{stairBorder&&<FinishedBoards items={stairBoards.filter(b=>b.role==='border')} material={borderMaterial}/>}
 
-    {!structure&&<group name="closed-stair-riser-boards"><FinishedBoards items={drawnRisers} material={riserMat}/></group>}
+    {!structure&&<group name="closed-stair-riser-boards"><FinishedBoards items={drawnRisers} material={riserMat} noRecv/></group>}
 
     {!structure&&<Cladding3D data={data} model={model} material={fasciaMat} finished={!cutaway}/>}
 
