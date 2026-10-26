@@ -15,6 +15,14 @@ export interface BlogPostMeta {
 }
 
 export const BLOG_POSTS: BlogPostMeta[] = [
+    {
+    slug: "outdoor-kitchen-gas-electrical-ontario",
+    title: "Outdoor Kitchen Gas & Electrical in Ontario: TSSA, ESA and Who Does What",
+    excerpt: "In Ontario, outdoor kitchen gas lines require a TSSA-licensed Gas Technician G2 and electrical needs an ESA permit — here is who does what and in what sequence.",
+    category: "Regulations",
+    readTime: "10 min",
+    image: "/images/projects/patio-pergola.jpg",
+  },
   {
     slug: 'geogrid-retaining-wall-explained',
     title: 'What Geogrid Does in a Retaining Wall (and When Your Wall Needs It)',
