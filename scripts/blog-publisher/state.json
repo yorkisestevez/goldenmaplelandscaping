@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-10-19T12:55:00.000Z",
+  "lastRunAt": "2026-10-26T13:20:00.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -27,10 +27,11 @@
     "auto-023",
     "auto-024",
     "auto-025",
-    "auto-026"
+    "auto-026",
+    "auto-027"
   ],
   "publishedSlugs": [],
-  "currentDraft": "backyard-entertaining-wasaga-beach",
+  "currentDraft": "outdoor-kitchen-gas-electrical-ontario",
   "history": [
     {
       "topicId": "auto-001",
@@ -386,6 +387,21 @@
         "ok": true
       },
       "generatedBy": "muse-autopilot"
+    },
+    {
+      "topicId": "auto-027",
+      "slug": "outdoor-kitchen-gas-electrical-ontario",
+      "at": "2026-10-26T13:20:00.000Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 2411,
+        "linkCount": 7,
+        "hasTable": true,
+        "numericCount": 15
+      },
+      "generatedBy": "claude-cloud-routine",
+      "mode": "draft-pr"
     }
   ]
 }
