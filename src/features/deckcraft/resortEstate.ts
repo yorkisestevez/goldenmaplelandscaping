@@ -24,7 +24,7 @@ import {arcGeometry} from './circularArcs';
  * - an Industria arrival terrace at the stair foot and a banded walk on the axis to the pool court;
  * - one 40×18 ft rectangular pool centred on the axis, two framed lounge bays on its house side;
  * - an open-air kitchen on the cabana patio; a gas fire circle with curved seat walls in the west;
- * - a terrace wall with stone steps up to a paved overlook; restrained Ontario planting: Annabelle hydrangea, boxwood,
+ * - a continuous terrace wall holding a deep mulched cedar-screen terrace (double staggered Smaragd row, Annabelles at the lip); restrained Ontario planting: Annabelle hydrangea, boxwood,
  *   yew, little bluestem, red maple, serviceberry, white pine, a clipped cedar hedge.
  */
 const CREMA='#d0bca4';
@@ -46,7 +46,7 @@ export function resortEstateDesign():DeckData{
  const data:DeckData={...DEFAULT_DECK,customerName:'Paradise Resort',projectAddress:'Barrie, Ontario',
   width:40,length:16,height:40,deckType:'Freestanding',foundationDepthIn:48,houseCantileverIn:16,
   levels:2,level2Position:'Front',level2Offset:50,width2:32,length2:12,height2:18,level2FullStep:true,
-  deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk',deckFinishes:{border:'tt_prime_plus:Dark Cocoa'},boardWidth:5.5,pictureFrameRows:1,railingType:'Glass Panels',
+  deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk',deckFinishes:{border:'tt_prime_plus:Dark Cocoa',fascia:'tt_prime_plus:Dark Cocoa',risers:'tt_prime_plus:Dark Cocoa',railingColor:'Matte Black'},skirting:{style:'Horizontal boards',colour:'tt_prime_plus:Dark Cocoa',clearanceIn:1,accessPanels:1},boardWidth:5.5,pictureFrameRows:1,railingType:'Glass Panels',
   stairFlights:1,stairWidth:120,stairType:'Straight',stairPosition:'Front',stairOffset:50,stairRiserCount:3,stairTreadDepthIn:11,
   houseVisible:true,houseConfig:house,housePlacement:{anchor:'center',offsetIn:-60},
   terrainConfig:{widthFt:200,depthFt:250,elevationIn:0,slopePct:0},
@@ -75,9 +75,9 @@ export function resortEstateDesign():DeckData{
  // Two lounge bays either side of the walk landing, each framed by a 24 in Greyed Nickel band (20×9 ft bay), loungers 43 in off the coping.
  {const BAND={...FIELD!,colorId:'greyed-nickel'};
   const band=(id:string,x:number,y:number,w:number,d:number)=>({id,name:'Lounge frame band',shape:'band' as const,xIn:x,yIn:y,widthIn:w,depthIn:d,rotationDeg:0,productId:SLAB,color:'#b0aea6',hardscape:BAND});
-  court.inlays=[-1,1].flatMap(k=>{const cu=k*15*12,cv=-12*12;return [band(`fr-n${k}`,cu,cv+48,192,24),band(`fr-s${k}`,cu,cv-48,192,24),band(`fr-w${k}`,cu-84,cv,24,72),band(`fr-e${k}`,cu+84,cv,24,72)];});
-  // Centre fire bay on the stair/pool axis between the lounge bays: 12×13 ft framed inlay, no floor lights.
-  court.inlays.push(band('fire-n',0,-84,144,24),band('fire-s',0,-216,144,24),band('fire-w',-60,-150,24,108),band('fire-e',60,-150,24,108));}
+  court.inlays=[-1,1].flatMap(k=>{const cu=k*12*12,cv=-12*12;return [band(`fr-n${k}`,cu,cv+48,240,24),band(`fr-s${k}`,cu,cv-48,240,24),band(`fr-w${k}`,cu-108,cv,24,72),band(`fr-e${k}`,cu+108,cv,24,72)];});
+  // Axis runner: a framed Greyed Nickel band from the stair landing to the coping, tying the deck stair to the pool.
+  court.inlays.push(band('axis-runner',0,-150,36,156));}
  const t=ROT*Math.PI/180;
  const L=(u:number,v:number)=>({x:courtX+u*Math.cos(t)-v*Math.sin(t),z:courtZ+u*Math.sin(t)+v*Math.cos(t)});
  // One 40×18 ft rectangular pool on the axis, crisp straight coping.
@@ -110,7 +110,7 @@ export function resortEstateDesign():DeckData{
  // Objects.
  const objs:LandscapeObject[]=[];let n=0;
  const bed=(id:string,name:string,pts:[number,number][],extra:Partial<LandscapeObject>={})=>{const xs=pts.map(p=>p[0]),zs=pts.map(p=>p[1]);const o=newLandscapeObject('black-mulch-bed',id,(Math.min(...xs)+Math.max(...xs))*6,(Math.min(...zs)+Math.max(...zs))*6);objs.push({...o,name,widthIn:(Math.max(...xs)-Math.min(...xs))*12,depthIn:(Math.max(...zs)-Math.min(...zs))*12,polygon:pts.map(([x,z])=>({x:x*12,z:z*12})),...extra} as LandscapeObject);};
- const cedar=(x:number,z:number)=>{const o=newLandscapePlant('thuja-occidentalis-smaragd',`p${n++}`,x*12,z*12);objs.push({...o,assetId:'evergreen-shrub',heightIn:84,widthIn:44,depthIn:40,rotationDeg:(n*53)%360,speciesRecord:structuredClone(o.speciesRecord!)});};
+ const cedar=(x:number,z:number)=>{const o=newLandscapePlant('thuja-occidentalis-smaragd',`p${n++}`,x*12,z*12);objs.push({...o,assetId:'evergreen-shrub',heightIn:108,widthIn:44,depthIn:40,rotationDeg:(n*53)%360,speciesRecord:structuredClone(o.speciesRecord!)});};
  const grow=(sp:string,x:number,z:number)=>{const o=newLandscapePlant(sp,`p${n++}`,x*12,z*12);objs.push({...o,rotationDeg:(n*53)%360,speciesRecord:structuredClone(o.speciesRecord!)});};
  const furn=(a:LandscapeAssetId,id:string,x:number,z:number,rot:number,sup?:string)=>objs.push({...newLandscapeObject(a,id,x*12,z*12),rotationDeg:rot,...(sup?{supportFeatureId:sup}:{})});
  // Meadow beds either side of the winding path, planted as dense native drifts (one object each).
@@ -125,30 +125,18 @@ export function resortEstateDesign():DeckData{
  // Screening: cedar hedge along the rear and both sides; pines and maples behind.
  const hl=Math.min(...houseOutline(data).flat().map(p=>p.x))/12,LX0=hl-30+1.5,LX1=hl-30+128-1.5,RZ=data.permitSite.rearYardFt-1.5;
  // Rear terrace: an armour-stone wall across the yard holds the back 3 ft up. Two runs leave a gap for natural
- // stone slab steps; a Borealis overlook landing sits on the upper level at the top of the steps.
- const WZ=104,SX=-10,GAP=2.6,UP=36;
+ // (steps and overlook removed: the wall runs continuous.)
+ const WZ=96,SX=-10,UP=36;
  const armour=(id:string,xa:number,xb:number)=>{const run=xb-xa,pts=[{x:-run*6,y:0},{x:-run*2,y:9},{x:run*2,y:-6},{x:run*6,y:0}];
   let len=0;for(let k=1;k<pts.length;k++)len+=Math.hypot(pts[k].x-pts[k-1].x,pts[k].y-pts[k-1].y);
   return push({id,kind:'retaining-wall',name:'Terrace retaining wall',enabled:true,xFt:(xa+xb)/2,zFt:WZ,widthFt:len/12,depthFt:249/304.8,heightIn:UP,rotationDeg:0,productId:'techo-raffinato-wall',color:'#c9bfae',hardscape:{finishId:'smooth',colorId:'beige-cream',unitId:'double-sided-397-249-180',patternId:'running-bond',angleDeg:0,jointMm:0},wallPath:pts} as YardFeature);};
- const wW=armour('armour-west',LX0-1,SX-GAP),wE=armour('armour-east',SX+GAP,LX1+1);
- const RISERS=6,RUN=17;
- push({id:'stone-steps',name:'Stone slab steps',kind:'patio',enabled:true,xFt:SX,zFt:WZ-((RISERS-1)*RUN+RUN)/24+1.2,widthFt:5,depthFt:((RISERS-1)*RUN+RUN)/12,heightIn:0,rotationDeg:0,productId:SLAB,hardscape:FIELD,color:'#a9aaa8',finishedElevationIn:UP,
-  stoneSteps:{lowerElevationIn:0,riserCount:RISERS,treadRunIn:RUN,stockWidthIn:60,stockDepthIn:RUN,stockThicknessIn:6,baseDepthIn:6,settingBedIn:1,jointIn:0,support:{kind:'full-step',courses:[0,1,2,3,4,5]},productName:'Precast stone slab steps (coping grey)'}} as YardFeature);
- const top=push({...createYardFeature(data,{kind:'patio',id:'overlook',name:'Overlook',xFt:SX,zFt:WZ+5.6,widthFt:16.8,depthFt:8.8,heightIn:0,productId:SLAB,hardscape:FIELD}),finishedElevationIn:UP,color:CREMA});
- top.inlays=[-1,1].map(k=>({id:`ov-${k}`,name:'Overlook band',shape:'band' as const,xIn:0,yIn:k*36,widthIn:176,depthIn:12,rotationDeg:0,productId:SLAB,color:'#b0aea6',hardscape:{...FIELD!,colorId:'greyed-nickel'}}));
- // The walk from the fire circle to the step foot, through the rear meadow.
- {const len=(WZ-RISERS*RUN/12+1.2)-(fc.zFt+11)+0.6,rw=pave('rear-walk','Garden walk',SX,(fc.zFt+11+WZ-RISERS*RUN/12+1.2)/2,5.5,len,0);
-  rw.inlays=[-1,1].map(k=>({id:`rw-${k}`,name:'Walk edge band',shape:'band' as const,xIn:k*27,yIn:0,widthIn:12,depthIn:Math.min(240,len*12-36),rotationDeg:0,productId:SLAB,color:'#b0aea6',hardscape:{...FIELD!,colorId:'greyed-nickel'}}));}
- const upper=(x:number,z:number)=>!(Math.abs(x-SX)<6.5&&z<WZ+10);
- bed('upper-garden','Upper garden',[[LX0-1.4,WZ+1.3],[SX-8.4,WZ+1.3],[SX-8.4,WZ+9.9],[SX+8.4,WZ+9.9],[SX+8.4,WZ+1.3],[LX1+1.4,WZ+1.3],[LX1+1.4,RZ+1.4],[LX0-1.4,RZ+1.4]],{raisedIn:UP,edge:{kind:'wall',wallFeatureId:wW.id},...drift(['hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','buxus-microphylla'],34,21)} as any);
+ const wW=armour('terrace-wall',LX0-1,LX1+1);
+ bed('upper-garden','Cedar screen terrace',[[LX0-1.4,WZ+1.3],[LX1+1.4,WZ+1.3],[LX1+1.4,RZ+1.4],[LX0-1.4,RZ+1.4]],{raisedIn:UP,edge:{kind:'wall',wallFeatureId:wW.id}} as any);
+ for(let x=LX0+6;x<=LX1-6;x+=6)grow('hydrangea-arborescens-annabelle',x,WZ+3.5); // a loose line of Annabelles at the wall lip
  // Layered: hedge at the back line, pines and maples, flowering trees, shrubs, perennials at the wall lip, boulders.
- for(let x=LX0;x<=LX1;x+=3)cedar(x,RZ); // one clipped cedar hedge line
- for(const [k,x] of [LX0+8,LX0+30,LX0+52,LX0+74,LX0+96,LX0+118].entries())grow(k%2||k===2?'acer-rubrum':'pinus-strobus',x,RZ-6); // k=2 is a maple: the pine there blurred into the night camera's top edge under showcase DoF
- for(const x of [LX0+18,LX0+62,LX0+106])grow('amelanchier-canadensis',x,WZ+11);
+ // Privacy screen: tight staggered double row of Smaragd cedars, 9 ft, across the full terrace.
+ for(let x=LX0;x<=LX1;x+=3){cedar(x,RZ-0.5);if(x+1.5<=LX1)cedar(x+1.5,RZ-3);}
  // (Boulders removed from the upper level.)
- // A bench-sofa on the overlook, turned to the pool.
- furn('outdoor-sofa','overlook-bench',top.xFt,top.zFt+1.6,180,top.id);
- furn('outdoor-coffee-table','overlook-table',top.xFt,top.zFt-2.3,0,top.id);
  // Lower meadow along the wall foot, either side of the meadow walk; deep mixed borders down both sides; a lawn
  // panel (the open green west of the fire circle) is left clean between them.
  // (meadow-rear removed: clean lawn.)
@@ -164,7 +152,7 @@ export function resortEstateDesign():DeckData{
  // Fire-to-pool garden: closes the lawn between the fire circle, the west meadow and the pool court.
  const g1=L(-23.6,-6),g2=L(-23.6,16.6),g3=L(5,16.6);
  // (fire-pool-garden removed: clean lawn.)
- grow('acer-rubrum',tx-46,tz+48);grow('amelanchier-canadensis',tx-31,tz+64);
+ 
  for(let z=22;z<=WZ-4;z+=3.5){cedar(LX0+0.6,z);if(Math.abs(z-66)>14)cedar(LX1-0.6,z);}
  // Cabana: kitchen island along its back under the roof, stools facing it; dining on the open east half.
  const kx=cab.xFt-5.5,kz=cab.zFt-3;
@@ -175,12 +163,12 @@ export function resortEstateDesign():DeckData{
  for(const sd of [-1,1])for(const dx of [-2.75,0,2.75])furn('woven-dining-chair',`dine-${sd}-${dx}`,20+dx,8.1+sd*3.1,rotationDegFacing(0,-sd));
  for(const sd of [-1,1])furn('woven-dining-chair',`dine-end-${sd}`,20+sd*5.1,8.1,rotationDegFacing(-sd,0));
  // Pool loungers on the house-side deck of the court, feet to the water.
- for(const b of [-1,1]){const cu=b*15;for(const k of [-1,1]){const c=L(cu+k*3.2,-12);furn('lounge-chair',`chaise-${b}-${k}`,c.x,c.z,ROT);}
+ for(const b of [-1,1]){const cu=b*12;for(const k of [-1,1]){const c=L(cu+k*3.2,-12);furn('lounge-chair',`chaise-${b}-${k}`,c.x,c.z,ROT);}
   const st=L(cu,-12);furn('side-table',`chaise-table-${b}`,st.x,st.z,ROT);if(b<0){const um=L(cu-4.6,-13.7);furn('cantilever-umbrella','umbrella',um.x,um.z,ROT);}}
  // Annabelle bank along the open east side of the court, boxwood dots for winter structure.
  {const q=(u:number,v:number)=>{const p=L(u,v);return [p.x,p.z] as [number,number];};bed('hydrangea-bank','Annabelle hydrangea bank',[q(25.6,-17),q(31,-17),q(31,17),q(25.6,17)],drift(['hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','buxus-microphylla'],28,81));}
- {const fc=L(0,-10);push({...createYardFeature(data,{kind:'fire-feature',id:'court-fire',name:'Low gas fire bowl',xFt:fc.x,zFt:fc.z,widthFt:3.5,depthFt:3.5,productId:'fire-gas-sculptural',supportFeatureId:court.id}),color:'#a9aaa8'});
-  for(const k of [-1,1]){const p=L(k*2.5,-15.9);furn('swivel-lounge-chair',`fire-swivel-${k}`,p.x,p.z,rotationDegFacing(fc.x-p.x,fc.z-p.z),court.id);}}
+ // Planter pair flanking the stair landing on the axis: low framed Annabelle/boxwood planters on the paving.
+ for(const k of [-1,1])bed(`landing-planter-${k}`,'Landing planter',[[tx+k*10-2.5,tz-14.5],[tx+k*10+2.5,tz-14.5],[tx+k*10+2.5,tz-8.5],[tx+k*10-2.5,tz-8.5]],{raisedIn:18,...drift(['hydrangea-arborescens-annabelle','buxus-microphylla'],30,60+k)} as any);
  data.landscapeObjects=objs;
  // Lighting: pool + spa niche lights, 2 step lights per tread, path lights in the meadow beds 8–10 ft staggered, tree uplights.
  const hr=houseOutline(data);
