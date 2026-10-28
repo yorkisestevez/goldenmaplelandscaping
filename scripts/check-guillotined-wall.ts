@@ -202,6 +202,11 @@ const recoursed=await agent.execute({id:'gw-agent-course',commands:[{type:'yard.
 ok(recoursed.ok&&gw2()?.wallStone?.stoneId==='carr-orillia-grey'&&gw2()?.wallStone?.courseIn===20,`yard.update changes a guillotined wall's stone and course (${JSON.stringify(recoursed).slice(0,200)})`);
 const stray=await agent.preview({id:'gw-agent-stray',commands:[{type:'yard.update',id:'gw',wallStone:{stoneId:'carr-dark-grey',courseIn:10}}]});
 ok(!stray.ok,'A stone choice on a wall that is not guillotined is refused');
+// A deeper course deepens the wall, so a stone change is placed again: 10 in courses clear the deck here, 20 in ones do not.
+const nearDeck=await agent.execute({id:'gw-agent-near-deck',commands:[{type:'yard.create',kind:'retaining-wall',id:'gw3',productId:GUILLOTINED_WALL,wallStone:{stoneId:'carr-orillia-grey',courseIn:10},xFt:0,zFt:12.75,widthFt:8,depthFt:10/12,heightIn:20}]});
+ok(nearDeck.ok,`A 10 in guillotined wall fits just clear of the deck (${JSON.stringify(nearDeck).slice(0,200)})`);
+const deepened=await agent.preview({id:'gw-agent-deepen',commands:[{type:'yard.update',id:'gw3',wallStone:{stoneId:'carr-orillia-grey',courseIn:20}}]});
+ok(!deepened.ok&&/would stand on the deck/.test(JSON.stringify(deepened)),`A course change that would push the wall onto the deck is refused (${JSON.stringify(deepened).slice(0,200)})`);
 ok(parseAssistantPlan({kind:'edit',message:'Use Dark Grey in 16 in courses.',assumptions:[],commands:[{type:'yard.update',id:'gw2',wallStone:{stoneId:'carr-dark-grey',courseIn:16}}]}).ok,'The assistant can plan a stone and course change');
 
 // 10. The stone looks real (render only): flat top and bed, a split face with relief, crisp arrises broken by chips, its own

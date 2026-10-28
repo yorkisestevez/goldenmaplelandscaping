@@ -97,7 +97,9 @@ function apply(data:DeckData,base:YardFeature,c:YardFields,created:boolean,unset
   if(fire){if(!inside({x:f.xFt*12,y:f.zFt*12},ring))throw Error(`Place it on ${patio.name}: its centre is off the patio.`);f.supportFeatureId=patio.id;}
   else{if(!f.wallConstruction?.freestanding)throw Error('Only a seat (freestanding) wall stands on a patio.');if(!yardShapeCurveWorldPoints(f).every(p=>inside(p,ring)))throw Error(`Keep the seat wall inside ${patio.name} so it stands on the paving.`);}
  }
- const moved=created||unset||GEOMETRY.some(k=>c[k]!==undefined)||c.supportFeatureId!==undefined||c.freestanding!==undefined||c.heightIn!==undefined;
+ // A stone and course can deepen the wall (its depth is one course), so they reshape it like a size does.
+ const reshaped=GEOMETRY.some(k=>c[k]!==undefined)||c.wallStone!==undefined;
+ const moved=created||unset||reshaped||c.supportFeatureId!==undefined||c.freestanding!==undefined||c.heightIn!==undefined;
  if(moved&&fire){
   // On a patio the whole body stands on its paving (else the yard model sets it on a pad of its own, half over the
   // patio); on its own pad it keeps clear of every patio.
@@ -114,7 +116,7 @@ function apply(data:DeckData,base:YardFeature,c:YardFields,created:boolean,unset
    if(off>.01)throw Error(`Keep the seat wall wholly inside ${on.name}: ${off.toFixed(1)} sq ft of its ${Math.round(f.depthFt*12+2)} in cap would hang past the patio's edge over the ground. Move it in from the edge or off the patio.`);
    if(c.finishedElevationIn===undefined)delete f.finishedElevationIn;}
  }
- if(data.siteModel&&(created||GEOMETRY.some(k=>c[k]!==undefined))){
+ if(data.siteModel&&(created||reshaped)){
   const surface=designSiteSurface(data),ring=outline(f);
   if(!surface||(wall?![...ring,{x:f.xFt*12,y:f.zFt*12}].every(p=>Number.isFinite(surface.sample(p.x,p.y,'existing')??NaN)):!surface.extrema([ring],'existing').complete))throw Error(`${f.name} would stand off the measured survey. Place it inside the surveyed ground (siteBrief.coverage) or extend the survey.`);
  }
