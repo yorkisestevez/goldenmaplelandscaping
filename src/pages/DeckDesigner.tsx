@@ -264,7 +264,9 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
     if(id===homeTab&&[...open].every(s=>tab.sections.includes(s)))return;
     showTab(id);
     const first=id==='send'?undefined:tab.sections[0];
+    // Price & send opens no section, yet it is the estimate step of the closed funnel (docs/deckcraft/funnel-report.md).
     if(first)trackSection(first);
+    else trackDeck('deckcraft_step',stepLabel(SECTION_BY_ID.proposal.legacyStep));
     setOpen(new Set(first?[first]:[]));
   }
   /** Hide panel: the focus goes back to the open tab. */

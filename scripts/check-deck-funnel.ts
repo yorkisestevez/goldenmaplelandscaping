@@ -117,6 +117,7 @@ ok(!designFeatures(design({customerName:'Jane Q Customer',projectAddress:'12 Exa
   const share=readFileSync(new URL('../src/features/deckcraft/ShareDesignLink.tsx',import.meta.url),'utf8');
   ok(/setDeckAnalyticsSink\(\(event,label\)=>trackEngagement\(event,label\)\)/.test(page),'The page sends DeckCraft events through the site analytics');
   ok(page.includes("trackDeck('deckcraft_step',stepLabel(0));},[]);")&&page.includes("trackDeck('deckcraft_step',stepLabel(section.legacyStep))")&&page.includes("trackDeck('deckcraft_view',`deck_view_${mode}`)")&&page.includes('designFeatures(data)'),'The page load and each section opened report their step; views and features are reported');
+  ok(page.includes("const first=id==='send'?undefined:tab.sections[0];")&&/if\(first\)trackSection\(first\);\s*else trackDeck\('deckcraft_step',stepLabel\(SECTION_BY_ID\.proposal\.legacyStep\)\);/.test(page),'The Price & send tab opens no section but still reports the estimate step, so its senders stay in the funnel');
   ok(page.includes("const [mode,setMode]=useState<PreviewMode>('plan');"),'The page opens on the site plan, so deck_view_plan is the view counted on load');
   for(const label of ['deck_plan_drag','deck_plan_typed','deck_plan_shortcut','deck_plan_stairs','deck_plan_outline','deck_plan_house'])ok(page.includes(`trackDeck('deckcraft_plan','${label}')`),`The site plan reports ${label}`);
   const report=readFileSync(new URL('../docs/deckcraft/funnel-report.md',import.meta.url),'utf8');
