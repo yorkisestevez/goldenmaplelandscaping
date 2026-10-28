@@ -21,3 +21,7 @@ const all=[...new Set([...flags,...lc.warnings,...e.quoteRequired])];
 const iss=designIssues(all);
 const block=designIssues([...flags,...lc.warnings]);console.log('BLOCKING',block.length);for(const b of block)console.log('-',b);
 console.log('ISSUES',iss.length);
+// Standing rule H-WALL-CAP (deckcraft-knowledge): every non-natural-stone wall carries a cap.
+const NATURAL=new Set(['armour-stone','natural-stone','boulder-wall']);
+const uncapped=(d.yardFeatures??[]).filter((f:any)=>f.enabled!==false&&f.kind==='retaining-wall'&&!NATURAL.has(f.productId)&&f.productId!=='segmental-concrete'&&!f.hardscape?.capUnitId);
+console.log('WALL-CAP',uncapped.length?'FAIL '+uncapped.map((f:any)=>f.id).join(', '):'ok');

@@ -92,8 +92,10 @@ export function resortEstateDesign():DeckData{
  pave('fire-walk','Fire walk',tx-22,tz-3,22,6,0,0);
  const fc=pave('fire-circle','Fire circle',tx-40,tz+6,22,22);
  push({...createYardFeature(data,{kind:'fire-feature',id:'fire-bowl',name:'Fire bowl',xFt:fc.xFt,zFt:fc.zFt,widthFt:3.5,depthFt:3.5,productId:'fire-gas-sculptural',supportFeatureId:fc.id}),color:'#a69c8f'});
- // Two curved seat walls on a 7 ft radius round the bowl, facing it.
- const R=7*12;for(const [k,a0,a1] of [[0,200,320],[1,20,140]] as const){
+ // Two curved seat walls on an 8.75 ft radius (Raffinato minimum 8.5 ft) round the bowl, facing it.
+ const RAF_CAP='cap:techo-raffinato-cap:hd2-smooth:silver-granite:raffinato-812-356-60'; // house rule: every non-natural-stone wall is capped in one cool silver-granite coping
+ const RAF={productId:'techo-raffinato-wall',color:'#ddd4c3',depthFt:249/304.8,hardscape:{finishId:'smooth',colorId:'beige-cream',unitId:'double-sided-397-249-180',patternId:'running-bond',angleDeg:0,jointMm:0,capUnitId:RAF_CAP}};
+ const R=8.75*12;for(const [k,a0,a1] of [[0,200,320],[1,20,140]] as const){
   const pa={x:fc.xFt*12+R*Math.cos(a0*Math.PI/180),y:fc.zFt*12+R*Math.sin(a0*Math.PI/180)},pb={x:fc.xFt*12+R*Math.cos(a1*Math.PI/180),y:fc.zFt*12+R*Math.sin(a1*Math.PI/180)};
   const mid=(a0+a1)/2*Math.PI/180,chord=Math.hypot(pb.x-pa.x,pb.y-pa.y),sag=R-R*Math.cos((a1-a0)/2*Math.PI/180);
   const mx=(pa.x+pb.x)/2,mz=(pa.y+pb.y)/2,rot=Math.atan2(pb.y-pa.y,pb.x-pa.x)*180/Math.PI;
@@ -101,7 +103,7 @@ export function resortEstateDesign():DeckData{
   const curves=[{edge:0,bulgeIn:-sag}];
   const local=[{x:-chord/2,y:0},{x:chord/2,y:0}];
   const len=arcGeometry(local[0],local[1],sag).lengthIn/12;
-  const w:YardFeature={id:`seat-wall-${k}`,kind:'retaining-wall',name:'Curved seat wall',enabled:true,xFt:mx/12,zFt:mz/12,widthFt:len,depthFt:1,heightIn:18,rotationDeg:Math.round(((rot%360)+360)%360*100)/100,productId:'segmental-concrete',color:'#b8ab98',wallPath:local,curves,wallConstruction:{freestanding:true}} as YardFeature;
+  const w:YardFeature={id:`seat-wall-${k}`,kind:'retaining-wall',name:'Curved seat wall',enabled:true,xFt:mx/12,zFt:mz/12,widthFt:len,heightIn:18,rotationDeg:Math.round(((rot%360)+360)%360*100)/100,...RAF,wallPath:local,curves,wallConstruction:{freestanding:true}} as YardFeature;
   void mid;push(w);
  }
  const pg=newPergola('lousol-custom','custom');
@@ -129,10 +131,10 @@ export function resortEstateDesign():DeckData{
  const WZ=96,SX=-10,UP=36;
  const armour=(id:string,xa:number,xb:number)=>{const run=xb-xa,pts=[{x:-run*6,y:0},{x:-run*2,y:9},{x:run*2,y:-6},{x:run*6,y:0}];
   let len=0;for(let k=1;k<pts.length;k++)len+=Math.hypot(pts[k].x-pts[k-1].x,pts[k].y-pts[k-1].y);
-  return push({id,kind:'retaining-wall',name:'Terrace retaining wall',enabled:true,xFt:(xa+xb)/2,zFt:WZ,widthFt:len/12,depthFt:249/304.8,heightIn:UP,rotationDeg:0,productId:'techo-raffinato-wall',color:'#ddd4c3',hardscape:{finishId:'smooth',colorId:'beige-cream',unitId:'double-sided-397-249-180',patternId:'running-bond',angleDeg:0,jointMm:0,capUnitId:'cap:techo-raffinato-cap:smooth:shale-grey:raffinato-711-356-60'},wallPath:pts} as YardFeature);};
+  return push({id,kind:'retaining-wall',name:'Terrace retaining wall',enabled:true,xFt:(xa+xb)/2,zFt:WZ,widthFt:len/12,depthFt:249/304.8,heightIn:UP,rotationDeg:0,productId:'techo-raffinato-wall',color:'#ddd4c3',hardscape:{finishId:'smooth',colorId:'beige-cream',unitId:'double-sided-397-249-180',patternId:'running-bond',angleDeg:0,jointMm:0,capUnitId:RAF_CAP},wallPath:pts} as YardFeature);};
  const wW=armour('terrace-wall',LX0-1,LX1+1);
  bed('upper-garden','Annabelle drift at the wall lip',[[LX0-1.4,WZ+1.3],[LX1+1.4,WZ+1.3],[LX1+1.4,WZ+6.5],[LX0-1.4,WZ+6.5]],{assetId:'mulch-bed',raisedIn:UP,edge:{kind:'wall',wallFeatureId:wW.id},...drift(['hydrangea-arborescens-annabelle'],30,71)} as any);
- bed('cedar-screen','Cedar screen terrace',[[LX0-1.4,WZ+6.5],[LX1+1.4,WZ+6.5],[LX1+1.4,RZ+1.4],[LX0-1.4,RZ+1.4]],{assetId:'mulch-bed',raisedIn:UP} as any);
+ bed('cedar-screen','Cedar screen terrace',[[LX0-1.4,WZ+6.5],[LX1+1.4,WZ+6.5],[LX1+1.4,RZ+1.4],[LX0-1.4,RZ+1.4]],{assetId:'mulch-bed',raisedIn:UP,edge:{kind:'wall',wallFeatureId:wW.id}} as any);
  for(let x=LX0+0.5;x<=LX1-0.5;x+=2.5)grow('buxus-microphylla',x,WZ+2); // low boxwood edge at the wall lip
  // Layered: hedge at the back line, pines and maples, flowering trees, shrubs, perennials at the wall lip, boulders.
  // Privacy screen: tight staggered double row of Smaragd cedars, 9 ft, across the full terrace.
@@ -169,7 +171,9 @@ export function resortEstateDesign():DeckData{
  // Annabelle bank along the open east side of the court, boxwood dots for winter structure.
  {const q=(u:number,v:number)=>{const p=L(u,v);return [p.x,p.z] as [number,number];};bed('hydrangea-bank','Annabelle hydrangea bank',[q(25.6,-17),q(31,-17),q(31,17),q(25.6,17)],drift(['hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','hydrangea-arborescens-annabelle','buxus-microphylla'],28,81));}
  // Planter pair flanking the stair landing on the axis: low framed Annabelle/boxwood planters on the paving.
- for(const k of [-1,1])bed(`landing-planter-${k}`,'Landing planter',[[tx+k*10-2.5,tz-14.5],[tx+k*10+2.5,tz-14.5],[tx+k*10+2.5,tz-8.5],[tx+k*10-2.5,tz-8.5]],{raisedIn:18,...drift(['hydrangea-arborescens-annabelle','buxus-microphylla'],30,60+k)} as any);
+ for(const k of [-1,1]){const L=(h:number,path:{x:number,y:number}[])=>push({id:`landing-planter-wall-${k}${h}`,kind:'retaining-wall',name:'Landing planter wall',enabled:true,xFt:tx+k*10,zFt:tz-11.5,widthFt:Math.hypot(path[1].x-path[0].x,path[1].y-path[0].y)/12,heightIn:18,rotationDeg:0,...RAF,wallPath:path,wallConstruction:{freestanding:true}} as YardFeature);
+ const pw=L(0,[{x:-30,y:-36},{x:30,y:-36}]);L(1,[{x:30,y:-31},{x:30,y:31}]);L(2,[{x:30,y:36},{x:-30,y:36}]);L(3,[{x:-30,y:31},{x:-30,y:-31}]);
+ bed(`landing-planter-${k}`,'Landing planter',[[tx+k*10-2.3,tz-14.3],[tx+k*10+2.3,tz-14.3],[tx+k*10+2.3,tz-8.7],[tx+k*10-2.3,tz-8.7]],{raisedIn:18,edge:{kind:'wall',wallFeatureId:pw.id},...drift(['hydrangea-arborescens-annabelle','buxus-microphylla'],30,60+k)} as any);}
  data.landscapeObjects=objs;
  // Lighting: pool + spa niche lights, 2 step lights per tread, path lights in the meadow beds 8–10 ft staggered, tree uplights.
  const hr=houseOutline(data);
