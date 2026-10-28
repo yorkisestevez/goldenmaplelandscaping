@@ -16,6 +16,9 @@ test.beforeEach(async({context})=>{
  await context.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//,r=>r.fulfill({status:200,contentType:'text/css',body:''}));
 });
 test('pergola catalog, costs, autosave, public JSON, undo and 3D',async({page,browser},info)=>{
+ // Five trips to the Extras panel over three page loads, each loading the panel, the section and the 3D view: on the first
+ // four-tab build it ran past the 90 s default. CI keeps its own, longer limit for slow WebGL (playwright.config.ts).
+ test.setTimeout(process.env.CI?300_000:150_000);
  const problems:string[]=[];page.on('pageerror',e=>problems.push(String(e)));
  await page.goto('/deck-designer/');await openExtras(page);
  await panel(page).getByLabel('Pergola supplier',{exact:true}).selectOption('costco');

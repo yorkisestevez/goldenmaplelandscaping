@@ -1,7 +1,8 @@
 import {readFileSync} from 'node:fs';
-import {openDesignerMode,savedConfiguration} from './nav';
+import {openDesignTask,openDesignerMode,savedConfiguration,showTabTools} from './nav';
 import {expect,test,type Locator,type Page} from '@playwright/test';
 import {newLandscapeObject,newLandscapePlant} from '../src/features/deckcraft/landscapeCatalogue';
+import {publicContact} from '../src/data/business';
 
 /**
  * DeckCraft smoke tests on the production build: the paths a customer takes, end to end. Each test starts
@@ -73,10 +74,9 @@ const shortcuts=(page:Page)=>page.getByRole('group',{name:'Shape shortcuts'});
 const planStatus=(page:Page)=>preview(page).locator('.dd-plan-status');
 /** The plan's tools (R5): Deck size, Draw outline, Stairs and House, one at a time. Picks one. */
 async function planTool(page:Page,name:'Deck size'|'Shape & points'|'Stairs'|'House'){
-  const inspector=page.getByRole('dialog',{name:'Design inspector',exact:true});
-  if(await inspector.isVisible())await inspector.getByRole('button',{name:'Done · back to drawing',exact:true}).click();
+  await showCanvas(page);
   const tool=page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name,exact:true});
-  if(!await tool.isVisible())await page.getByRole('tablist',{name:'Tool categories'}).getByRole('tab',{name:'Building',exact:true}).click();
+  if(!await tool.isVisible())await page.getByRole('tablist',{name:'Design',exact:true}).getByRole('tab',{name:'Draw',exact:true}).click();
   await tool.click();
   await expect(tool).toHaveAttribute('aria-checked','true');
 }
@@ -111,13 +111,10 @@ const openingCount=async(page:Page)=>Number(/(\d+) of/.exec((await openingsBar(p
 /** The header's "Send my design" button, and the send dialog (named by a heading that changes once sent). */
 const sendButton=(page:Page)=>page.locator('.dd-send-top');
 const sendDialog=(page:Page)=>page.locator('[role=dialog].dd-send-panel');
-/** The canvas-first workspace opens in drawing focus, which hides the task menus (and, on a phone, the price bar). Its
- * toggle (mounted with the drawing, so waited for) reads "Show all options" while pressed; one tap shows them, and they stay. */
+/** The homeowner's four tabs replaced the "All options" task menus, and the price bar shows on every screen size; waits
+ * for the tabs, which are mounted with the drawing. */
 async function showProjectControls(page:Page){
-  const focus=page.locator('.dd-drawing-focus-toggle');
-  await expect(focus).toHaveAttribute('aria-pressed',/^(true|false)$/);
-  if(await focus.getAttribute('aria-pressed')==='true')await focus.click();
-  await expect(focus).toHaveAttribute('aria-pressed','false');
+  await expect(page.getByRole('tablist',{name:'Design',exact:true})).toBeVisible();
 }
 /** The workspace bar that keeps the price available on all screen sizes, with the project controls showing. */
 const phoneBar=async(page:Page)=>{await showProjectControls(page);return page.getByRole('region',{name:'Live price'});};
@@ -158,19 +155,17 @@ async function undoFromHeader(page:Page){
   if(section)await openSection(page,section);
 }
 async function closeFiles(page:Page){const details=fileTools(page).locator('details.dd-workspace-files');if(await details.evaluate(el=>(el as HTMLDetailsElement).open))await details.locator('summary').first().click();}
-/** Back to the drawing: a section opens over it as a modal inspector, closed by its own "Done" button. */
+/** Back to the drawing: the tab panel is put away (on phones it is a drawer over the foot of the screen). */
 async function showCanvas(page:Page){
-  const inspector=page.getByRole('dialog',{name:'Design inspector'});
-  if(await inspector.isVisible())await inspector.getByRole('button',{name:'Done · back to drawing',exact:true}).click();
-  await expect(inspector).toBeHidden();
+  const panel=page.locator('#dd-home-panel');
+  if(await panel.isVisible())await panel.getByRole('button',{name:'Hide panel',exact:true}).click();
+  await expect(panel).toBeHidden();
   await expect(preview(page)).toBeVisible();
 }
-/** The open section's inspector is modal and covers the header and the price bar. Leaves it for the drawing, as a
- * visitor would, and names the section left so it can be reopened. */
+/** Puts the tab panel away for the drawing, as a visitor would, and names the open section so it can be reopened. */
 async function leaveSection(page:Page):Promise<Section|undefined>{
-  const inspector=page.getByRole('dialog',{name:'Design inspector'});
-  if(!await inspector.isVisible())return undefined;
-  const name=(await inspector.locator('.dd-inspector-top h2').textContent())?.trim() as Section;
+  const open=page.locator('#dd-home-panel .dd-home-row[aria-expanded=true] strong');
+  const name=await page.locator('#dd-home-panel').isVisible()&&await open.count()?(await open.textContent())?.trim() as Section:undefined;
   await showCanvas(page);
   return name;
 }
@@ -181,30 +176,13 @@ async function withSchedule<T>(page:Page,read:()=>Promise<T>):Promise<T>{
   if(!wasOpen){await (await phoneBar(page)).getByRole('button',{name:'Price schedule',exact:true}).click();await expect(dialog).toBeVisible();}
   try{return await read();}finally{if(!wasOpen&&await dialog.isVisible())await dialog.getByRole('button',{name:'Close',exact:true}).click();if(section)await openSection(page,section);}
 }
-/** The section rows; a section's row button (named by the section alone); its body, once open. The button sits in a
- * task menu that closes itself once a task is chosen, so it is found shown or not; openSection asserts it is shown
- * before choosing it. */
-const sectionList=(page:Page)=>page.getByRole('region',{name:'Deck configuration'});
-const sectionButton=(page:Page,name:Section)=>sectionList(page).getByRole('button',{name,exact:true,includeHidden:true});
+/** A section's row in the open tab's panel (named by the section, then its summary and price) and its body, once open. */
+const sectionButton=(page:Page,name:Section)=>page.locator('#dd-home-panel .dd-home-row').filter({has:page.locator('strong').getByText(name,{exact:true})});
 const sectionBody=(page:Page,name:Section)=>page.getByRole('region',{name,exact:true});
-/** The canvas-first workspace hides the section menus: leave any open (modal) section for the drawing, show the
- * project controls, then open the button's menu group. */
-async function revealSectionButton(page:Page,button:Locator,name:string){
-  if(await button.isVisible())return;
-  await showCanvas(page);
-  await showProjectControls(page);
-  if(!await button.isVisible())await page.locator('nav[aria-label="Design tasks"] details').filter({has:page.locator(`button[aria-label="${name}"]`)}).locator('summary').click();
-}
-/** Opens a section of the designer and waits for its body to load. An open section stays open. */
+const openRows=(page:Page)=>page.locator('#dd-home-panel .dd-home-row[aria-expanded=true] strong');
+/** Opens a section in its tab's panel and waits for its body to load. An open section stays open. */
 async function openSection(page:Page,name:Section){
-  const button=sectionButton(page,name),state=page.locator(`nav[aria-label="Design tasks"] button[aria-label="${name}"]`);
-  // An open section stays open: its body is already showing, so leave the menus alone.
-  if(await state.count()&&await state.getAttribute('aria-expanded')==='true'){await expect(sectionBody(page,name).getByRole('button',{name:/: open /})).toBeVisible();return;}
-  await revealSectionButton(page,button,name);
-  await expect(button,`"${name}" is a section of the designer`).toBeVisible();
-  if(await button.getAttribute('aria-expanded')==='false')await button.click();
-  // Choosing a task closes its menu, which hides the button from role queries; read its state directly.
-  await expect(page.locator(`nav[aria-label="Design tasks"] button[aria-label="${name}"]`)).toHaveAttribute('aria-expanded','true');
+  await openDesignTask(page,name);
   // Every body ends with a link to a related section, shown once the body has loaded.
   await expect(sectionBody(page,name).getByRole('button',{name:/: open /})).toBeVisible();
 }
@@ -368,7 +346,7 @@ test('reaches every feature of the designer',async({page})=>{
     await openSection(page,'Proposal & files');
     await reach('Design summary',summary(page));
     await reach('Proposal',page.getByRole('button',{name:'Print proposal'}));
-    await reach('PDF',page.getByRole('button',{name:'Download PDF'}));
+    await reach('PDF',sectionBody(page,'Proposal & files').getByRole('button',{name:'Download PDF'}));
     await reach('Summary download',page.getByRole('button',{name:'Download summary'}));
     const files=await contractorFiles(page);
     await reach('DXF export',files.getByRole('button',{name:'Download DXF'}));
@@ -426,7 +404,7 @@ test('reaches every feature of the designer',async({page})=>{
   expect(problems).toEqual([]);
 });
 
-test('opens tasks in any order, keeps one focused inspector, preserves choices and supports keyboard navigation',async({page})=>{
+test('opens tasks in any order, keeps one section open in the panel, preserves choices and supports keyboard navigation',async({page})=>{
   const problems=await openDesigner(page);
   await expect(page.getByRole('button',{name:/^(← )?Back$|^Continue|^Review my estimate/})).toHaveCount(0);
   await expand(preview(page),'Drawing details & construction notes');
@@ -442,12 +420,12 @@ test('opens tasks in any order, keeps one focused inspector, preserves choices a
   await expect(sectionButton(page,'Lighting')).toHaveAttribute('aria-expanded','true');
   await expect(page.getByRole('group',{name:'Deck lighting',exact:true})).toBeVisible();
   await openSection(page,'Stairs & railings');await expect(page.getByLabel('Number of stair flights',{exact:true})).toHaveValue('2');
-  // From the keyboard: back to the drawing, Enter on the task's menu, then Enter on the task.
-  await showCanvas(page);await showProjectControls(page);
-  await page.locator('nav[aria-label="Design tasks"] details').filter({has:page.locator('button[aria-label="Site & foundation"]')}).locator('summary').focus();
+  // From the keyboard: back to the drawing, Enter on the section's tab, then Enter on the section's row.
+  await showCanvas(page);
+  await page.getByRole('tablist',{name:'Design',exact:true}).getByRole('tab',{name:'Price & send',exact:true}).focus();
   await page.keyboard.press('Enter');
   await sectionButton(page,'Site & foundation').focus();await page.keyboard.press('Enter');
-  await expect(sectionBody(page,'Site & foundation')).toBeFocused();
+  await expect(sectionBody(page,'Site & foundation')).toBeVisible();await expect(sectionButton(page,'Site & foundation')).toHaveAttribute('aria-expanded','true');
   await expect(page.getByLabel('Project area',{exact:true})).toBeVisible();
   expect(problems).toEqual([]);
 });
@@ -456,13 +434,11 @@ test('@phone keeps one section open at a time',async({page})=>{
   const problems=await openDesigner(page);
   await openSection(page,'Deck shape & size');
   await openSection(page,'Boards & finish');
-  await expect(sectionButton(page,'Deck shape & size')).toHaveAttribute('aria-expanded','false');
+  await expect(openRows(page)).toHaveText(['Boards & finish']);
   await expect(page.getByLabel('Deck width',{exact:true})).toHaveCount(0);
   await openSection(page,'House');
   await openSection(page,'Proposal & files');
-  const expanded:string[]=[];
-  for(const name of SECTION_NAMES)if(await sectionButton(page,name).getAttribute('aria-expanded')==='true')expanded.push(name);
-  expect(expanded).toEqual(['Proposal & files']);
+  await expect(openRows(page)).toHaveText(['Proposal & files']);
   // The section just opened is on screen, although the long House section above it closed.
   expect(await sectionButton(page,'Proposal & files').evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.top<window.innerHeight;})).toBe(true);
   expect(problems).toEqual([]);
@@ -526,16 +502,21 @@ const toolRow=(page:Page)=>page.getByRole('radiogroup',{name:'Plan tools'}).eval
   });
   return {height:box.height,rows:new Set(tools.map(t=>t.top)).size,scrolls:row.scrollWidth>row.clientWidth,pageFits:document.documentElement.scrollWidth<=innerWidth,tools};
 });
-/** The category ribbon. Select parts is a Designer Mode tool. Sketch is a button beside the radios, not one of them. */
+/** The plan tools of each homeowner tab. Select parts is a Designer Mode tool. Sketch and Deck settings are buttons
+ * beside the radios, not among them. */
 const PLAN_RIBBONS=[
-  ['Building',['Deck size','Shape & points','Stairs','House','Rails & screens']],
-  ['Landscape',['Landscape','Patios & walls']],
+  ['Draw',['Deck size','Shape & points','Stairs','House','Rails & screens']],
+  ['Extras',['Landscape','Patios & walls']],
   ['Materials',['Board layout','Inlays']],
 ] as const;
-async function showToolCategory(page:Page,name:string){
-  const tab=page.getByRole('tablist',{name:'Tool categories'}).getByRole('tab',{name,exact:true});
-  if(await tab.getAttribute('aria-selected')!=='true')await tab.click();
+/** Shows a tab's tools on the plan (nav.ts showTabTools: Extras and Materials come forward as a link brings them, with
+ * their panel, and the view stays on the plan). */
+async function showToolCategory(page:Page,name:'Draw'|'Materials'|'Extras'){
+  const tab=page.getByRole('tablist',{name:'Design',exact:true}).getByRole('tab',{name,exact:true});
+  if(await tab.getAttribute('aria-selected')!=='true')await showTabTools(page,name);
   await expect(tab).toHaveAttribute('aria-selected','true');
+  await showCanvas(page);
+  if(!await page.getByRole('radiogroup',{name:'Plan tools'}).isVisible())await viewTab(page,'Plan');
 }
 /** Every tool is a 44 px target whose label fits and is in view, without the page scrolling sideways.
  * On a desktop the category is one row. On a phone the same tools sit in the category grid. */
@@ -956,7 +937,7 @@ test('lists what each change does to the price, tags quotes and never shows $0 f
   await undoFromHeader(page);
   await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^\u2212\$[\d,]+ Undo$/); });
   await openFiles(page);await expand(fileTools(page),'Start over');
-  await fileTools(page).getByRole('button',{name:'Start a new design'}).click();
+  await fileTools(page).getByRole('button',{name:'Start a new design'}).click();await closeFiles(page);
   await withSchedule(page,async()=>{ await expect(changes(page)).toHaveText(['New design loaded']); });
   // The full price list in Proposal & files lists every item, the unpriced ones tagged.
   await withSchedule(page,async()=>{ await schedule(page).getByRole('button',{name:'Full price list'}).click(); });
@@ -1231,7 +1212,8 @@ test('changes the shape from the shortcuts on the plan, and says what a wrap-aro
   // A wrap-around on diagonal boards: the same fix as the Deck section, named in the drawing's status line.
   await openSection(page,'Boards & finish');
   await page.getByLabel('Board layout',{exact:true}).selectOption('Diagonal');
-  await showCanvas(page);
+  // Boards & finish shows the deck in 3D; the shape shortcuts are on the plan.
+  await showCanvas(page);await viewTab(page,'Plan');await expand(preview(page),'Start with a shape');
   await shortcuts(page).getByRole('button',{name:'Wrap left',exact:true}).click();
   await expect(planStatus(page)).toHaveText('Wrapped round the left house corner. Switched to a rectangle, straight boards so the corner can be mitred.');
   await expect(shortcuts(page).getByRole('button',{name:'Wrap left',exact:true})).toHaveAttribute('aria-pressed','true');
@@ -1473,6 +1455,10 @@ test('finishes one wall with its own cladding and a wainscot, dresses the house 
   await wallTiles(studio).getByRole('button',{name:'Ledgestone',exact:true}).click();
   await expect(wallTiles(studio).getByRole('button',{name:'Ledgestone',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(studio.getByText('This wall has its own finish.',{exact:true})).toBeVisible();
+  // Stone on the wall the deck fastens to means no ledger (2026-10-21): the house side becomes a beam on posts, so the
+  // price moves. The wainscot, the look and the reload below leave that new price alone.
+  await expect((await price(page))).not.toHaveText(before??'');
+  const walled=await (await price(page)).textContent();
   await studio.getByRole('checkbox',{name:'A band of another cladding along the bottom, under a trim cap',exact:true}).check();
   await studio.getByLabel('Wainscot cladding',{exact:true}).selectOption('Fieldstone');
   await studio.getByLabel('Wainscot height',{exact:true}).selectOption('42');
@@ -1483,7 +1469,7 @@ test('finishes one wall with its own cladding and a wainscot, dresses the house 
   await expect(studio.getByRole('button',{name:'Coastal look',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(studio.getByText(/^1 wall, block, door or window keeps its own finish over the look\./)).toBeVisible();
   await expect(viewer3d(page)).toBeVisible();
-  await expect((await price(page))).toHaveText(before??'');
+  await expect((await price(page))).toHaveText(walled??'');
   await page.waitForTimeout(800);// autosave runs 450 ms after the last change
   await page.reload();
   const again=await openExterior(page);
@@ -1495,7 +1481,7 @@ test('finishes one wall with its own cladding and a wainscot, dresses the house 
   await expect(wallTiles(again).getByRole('button',{name:'Ledgestone',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(again.getByLabel('Wainscot cladding',{exact:true})).toHaveValue('Fieldstone');
   await expect(again.getByLabel('Wainscot height',{exact:true})).toHaveValue('42');
-  await expect((await price(page))).toHaveText(before??'');
+  await expect((await price(page))).toHaveText(walled??'');
   expect(problems).toEqual([]);
 });
 
@@ -1628,7 +1614,7 @@ test('opens the proposal: a 3D cover and views, features, finishes, the site pla
   await expect(invest).toContainText('Planning estimate before HST');
   // Every numbered sheet has the running head and the contact footer with its page number.
   await expect(invest.locator('.dd-proposal-runhead')).toContainText('Golden Maple Landscaping');
-  await expect(invest.locator('.dd-proposal-foot')).toContainText('(705) 300-8015');
+  await expect(invest.locator('.dd-proposal-foot')).toContainText(publicContact.phoneDisplay);
   await expect(invest.locator('.dd-proposal-pageno')).toHaveText(/^Page 0\d$/);
   await expect(invest).toContainText('Not a final quote: measurements, connections and engineering are confirmed on site.');
   const subtotal=invest.getByRole('row').filter({has:page.getByRole('rowheader',{name:/^Priced subtotal/})}).getByRole('cell');
@@ -1637,7 +1623,7 @@ test('opens the proposal: a 3D cover and views, features, finishes, the site pla
   const words=await dialog.textContent();
   expect(words).not.toMatch(ZERO);
   expect(words).not.toContain('Not provided');
-  await expect(proposalSheet(page,'Next steps')).toContainText('Call or text Sophie, our AI receptionist, at (705) 300-8015');
+  await expect(proposalSheet(page,'Next steps')).toContainText(`Call or text Sophie, our AI receptionist, at ${publicContact.phoneDisplay}`);
   for(const part of ['Confirm before construction','Construction plan','Material and hardware list'])await expect(proposalSheet(page,'Appendix')).toContainText(part);
   // Printed: only the sheets, each exactly one Letter page.
   await page.emulateMedia({media:'print'});
@@ -1777,7 +1763,7 @@ test('downloads the proposal as a multi-page PDF, from Proposal & files and from
   test.setTimeout(240_000*PROPOSAL_WAIT);
   await openDesigner(page);
   await openSection(page,'Proposal & files');
-  const [download]=await Promise.all([page.waitForEvent('download',{timeout:120_000*PROPOSAL_WAIT}),page.getByRole('button',{name:'Download PDF'}).click()]);
+  const [download]=await Promise.all([page.waitForEvent('download',{timeout:120_000*PROPOSAL_WAIT}),sectionBody(page,'Proposal & files').getByRole('button',{name:'Download PDF'}).click()]);
   expect(download.suggestedFilename()).toBe('golden-maple-deck-proposal.pdf');
   const file=info.outputPath('proposal.pdf');await download.saveAs(file);
   const bytes=readFileSync(file);
@@ -1828,10 +1814,10 @@ test('@phone keeps the price visible while editing and returns to the canvas wit
   // This workspace flow uses the new default editor; the shared legacy helper chooses Deck size for its sizing tests.
   await planTool(page,'Shape & points');
   await openSection(page,'Deck shape & size');await setNumber(page,'Deck width',20);
-  const inspector=page.getByRole('dialog',{name:'Design inspector',exact:true});
+  const panel=page.locator('#dd-home-panel');
   await expect((await price(page))).not.toHaveText(before??'');
-  // The section opens over the drawing. The plan stays on screen, and the price stays in the bar.
-  await expect(inspector.getByRole('heading',{level:2,name:'Deck shape & size',exact:true})).toBeVisible();
+  // The section opens in a drawer over the foot of the screen. The plan stays on screen, and the price stays in the bar.
+  await expect(panel.getByRole('region',{name:'Deck shape & size',exact:true})).toBeVisible();
   await expect(preview(page)).toBeVisible();
   await expect(plan(page)).toBeVisible();
   // The bar stays a strip at the foot of the screen: the amount beside the price schedule, the items still to quote and
@@ -1861,7 +1847,7 @@ test('@phone fits the screen, with the send button in reach',async({page})=>{
 test('@phone keeps the price and "Send my design" on screen in drawing focus',async({page})=>{
   // Phones hide the header's Send, so the price bar carries it, even in the drawing focus the designer opens in.
   await page.goto('/deck-designer/');
-  await expect(page.locator('.dd-drawing-focus-toggle')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('.deck-designer')).toHaveAttribute('data-drawing-focus','true');
   const bar=page.getByRole('region',{name:'Live price',exact:true}),navigation=page.getByRole('group',{name:'Drawing navigation',exact:true});
   await expect(bar.getByRole('status',{name:'Priced subtotal'})).toContainText('$');
   await expect(bar).toBeInViewport({ratio:1});await expect(navigation).toBeVisible();

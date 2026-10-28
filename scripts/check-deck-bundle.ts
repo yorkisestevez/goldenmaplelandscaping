@@ -134,17 +134,19 @@ ok(cssKB<=BUDGET_KB.routeCss,`Deck designer route CSS is ${cssKB.toFixed(1)} KB 
 // the Project controls button, the plan's frame and zoom bar) and each lazy piece of it is preloaded before hydration
 // (designer/hydrationLazy.ts). React streams those pieces as Suspense boundaries; a new one must join the preload list
 // (DeckDesigner.tsx piecesReady, PreviewPanel.tsx partsReady) or it is thrown away and redrawn on a slow load.
+// October 21 (P1, four tabs): the homeowner's tab strip took the Project controls button's place, which only Designer Mode
+// shows now; the tab panel is its own chunk, loaded when a tab first opens it.
 {
   const routeCss=css.map(f=>readFileSync(new URL(f,assets),'utf8')).join('\n');
-  ok(routeCss.includes('.dd-simple-tools{')&&routeCss.includes('.dd-drawing-focus-toggle{position:absolute')&&routeCss.includes('.dd-plan-navigation{'),"The tools ribbon, the Project controls button and the plan's zoom bar are styled by the route's stylesheet");
+  ok(routeCss.includes('.dd-ribbon-tabs{')&&routeCss.includes('.dd-simple-tools{')&&routeCss.includes('.dd-plan-navigation{'),"The four tabs, the tools ribbon and the plan's zoom bar are styled by the route's stylesheet");
   ok(!files.some(f=>/^PlanToolPicker-.*\.css$/.test(f)),'The tools ribbon has no stylesheet of its own to land after the first paint');
   const streamed=readFileSync(new URL('../deck-designer/index.html',assets),'utf8').match(/\$RC\("B:\d+"/g)?.length??0;
-  ok(streamed===7,`The prerendered designer streams ${streamed} Suspense boundaries; 7 expected (the drawing, the Deck section body, the Project controls, the tools ribbon, the plan, and React Router's two data handoffs). Preload any new one before hydration, then update this count.`);
+  ok(streamed===6,`The prerendered designer streams ${streamed} Suspense boundaries; 6 expected (the drawing, the Project controls, the four tabs and tools, the plan, and React Router's two data handoffs; the tab panel opens after the page). Preload any new one before hydration, then update this count.`);
 }
-for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^ProposalDialog-/,/^proposalPdf-/,/^pdfAssets-/,/^proposalModel-/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/,/^optionDeltas-/,/^useOptionDeltas-/,/^splitFaceStone-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
+for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^ProposalDialog-/,/^proposalPdf-/,/^pdfAssets-/,/^proposalModel-/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/,/^optionDeltas-/,/^useOptionDeltas-/,/^splitFaceStone-/,/^HomePanel-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
 // Each section body, and the site plan's editor, is a chunk of its own (one merged into the route would pass the test
 // above unseen).
-for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep','SiteExtrasStep','BackyardStep','EstimateStep','PlanEditor','BoardLayoutEditor','HardscapePicker','YardShapeEditor','optionDeltas','useOptionDeltas','ProposalDialog','proposalPdf']){
+for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep','SiteExtrasStep','BackyardStep','EstimateStep','PlanEditor','BoardLayoutEditor','HardscapePicker','YardShapeEditor','optionDeltas','useOptionDeltas','ProposalDialog','proposalPdf','HomePanel']){
   ok(files.some(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')),`${body} is its own chunk`);
   if(body==='BoardLayoutEditor')ok(!initial.some(f=>f.startsWith(`${body}-`)),'Board-layout interaction controls stay outside the first estimate');
   if(body==='HardscapePicker'||body==='YardShapeEditor'){ok(!initial.some(f=>f.startsWith(`${body}-`)),`${body} stays outside the first estimate`);ok(files.filter(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')).reduce((n,f)=>n+gz(f),0)<=BUDGET_KB.contractorTool,`${body} stays within the optional-tool budget`);}

@@ -14,6 +14,8 @@ import {internalModeOn} from './internalMode';
  * since R5 also the plan's tools: stairs placed or slid (`deck_plan_stairs`), a custom outline drawn or reshaped
  * (`deck_plan_outline`) and the house resized from its wall ends (`deck_plan_house`).
  * Since R4 the page opens on the site plan, so `deck_view_plan` fires on load; `deck_view_drawing` is the 2D framing plan.
+ * Since the homeowner's four tabs replaced the section list, `deckcraft_section` also counts each tab opened
+ * (`deck_home_tab_<id>`: draw, materials, extras, send); a section opened from a tab still counts as `deck_section_<id>`.
  */
 export type DeckEvent='deckcraft_step'|'deckcraft_section'|'deckcraft_plan'|'deckcraft_feature'|'deckcraft_view'|'deckcraft_output'|'deckcraft_link'|'deckcraft_send';
 export const DECK_LABEL=/^deck_[a-z0-9_]{1,36}$/;

@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import type {DeckData} from '../src/features/deckcraft/types';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
 import type {DesignerAiRequest,DesignerAiResponse} from '../src/features/deckcraft/designer/siteDesignerAiContract';
-import {openDesignerMode,showProjectControls} from './nav';
+import {openDesignTask,openDesignerMode} from './nav';
 
 /**
  * S5 "Design from my ground" on Craighurst extended: the real U-Level shots under the 12 × 5 ft deck plus SYNTHETIC
@@ -77,10 +77,7 @@ test.beforeEach(async({page,context})=>{
 
 /** Backyard → "Design from my ground" → the panel. */
 async function openSiteDesigner(page:Page){
- await showProjectControls(page);
- const nav=page.getByRole('navigation',{name:'Design tasks'}),open=nav.getByRole('button',{name:'Backyard',exact:true});
- if(!await open.isVisible())await nav.locator('details').filter({has:page.locator('button[aria-label="Backyard"]')}).locator('summary').click();
- await open.click();
+ await openDesignTask(page,'Backyard');
  const entry=page.locator('.dd-yard-editor').getByRole('button',{name:'Design from my ground',exact:true});
  await entry.scrollIntoViewIfNeeded();await entry.click();await expect(entry).toHaveAttribute('aria-expanded','true');
  const panel=page.getByRole('region',{name:'Design from my ground',exact:true});

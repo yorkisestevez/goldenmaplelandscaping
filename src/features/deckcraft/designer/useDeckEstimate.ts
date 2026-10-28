@@ -14,10 +14,10 @@ type PlacementRules=typeof import('../lightingPlacementRules');
 /**
  * What re-prices the design: the design without its appearance (house looks and openings, screen positions, scene
  * lighting, the proposal's name and address, a backyard feature's concept colour, the permit site plan's lot). House size, attached blocks and floor
- * heights stay in it, because they can move the ledger. Whole-house cladding stays in it too: brick or stone
- * can block that ledger. The option deltas (R6) are keyed by it too.
+ * heights stay in it, because they can move the ledger. Whole-house cladding stays in it too, and each wall's and
+ * block's own cladding (never their colours): brick or stone can block that ledger. The option deltas (R6) are keyed by it too.
  */
-export const estimateKeyOf=(data:DeckData)=>data.quoteResolutions?.length?JSON.stringify({...data,generatedImageUrl:undefined,isGeneratingImage:undefined,houseVisible:undefined,sceneLighting:undefined,lightingPreviewOn:undefined,boundaryLocks:undefined,permitSite:undefined}):JSON.stringify({...data,privacyScreens:data.privacyScreens?.map(({side:_side,offsetPct:_offset,...screen})=>screen),houseFit:data.houseConfig&&[data.houseConfig.widthFt,data.houseConfig.depthFt,data.houseConfig.floorHeightIn,data.houseConfig.footprint?.rects.map(b=>[b.kind,b.wall,b.offsetFt,b.widthFt,b.depthFt,b.floorHeightIn])],houseCladding:data.houseConfig?.cladding,houseConfig:undefined,houseVisible:undefined,customerName:undefined,projectAddress:undefined,scopeOfWork:undefined,yardFeatures:data.yardFeatures?.map(({color:_color,...feature})=>feature),houseWallHeightIn:undefined,houseDoorOffset:undefined,houseDoorWidthIn:undefined,sceneLighting:undefined,lightingPreviewOn:undefined,permitSite:undefined});
+export const estimateKeyOf=(data:DeckData)=>data.quoteResolutions?.length?JSON.stringify({...data,generatedImageUrl:undefined,isGeneratingImage:undefined,houseVisible:undefined,sceneLighting:undefined,lightingPreviewOn:undefined,boundaryLocks:undefined,permitSite:undefined}):JSON.stringify({...data,privacyScreens:data.privacyScreens?.map(({side:_side,offsetPct:_offset,...screen})=>screen),houseFit:data.houseConfig&&[data.houseConfig.widthFt,data.houseConfig.depthFt,data.houseConfig.floorHeightIn,data.houseConfig.footprint?.rects.map(b=>[b.kind,b.wall,b.offsetFt,b.widthFt,b.depthFt,b.floorHeightIn])],houseCladding:data.houseConfig?.cladding,houseWallCladdings:data.houseConfig&&[Object.entries(data.houseConfig.wallFinishes??{}).map(([wall,finish])=>[wall,finish.cladding]),data.houseConfig.footprint?.rects.map(b=>b.finish?.cladding)],houseConfig:undefined,houseVisible:undefined,customerName:undefined,projectAddress:undefined,scopeOfWork:undefined,yardFeatures:data.yardFeatures?.map(({color:_color,...feature})=>feature),houseWallHeightIn:undefined,houseDoorOffset:undefined,houseDoorWidthIn:undefined,sceneLighting:undefined,lightingPreviewOn:undefined,permitSite:undefined});
 
 /**
  * The live estimate and what hangs off it. The estimate key decides what re-prices: appearance never
@@ -28,7 +28,7 @@ export function useDeckEstimate(data:DeckData,setData:Dispatch<SetStateAction<De
   // Appearance-only gestures must not rebuild every deck cut and stock group.
   // Installation zones remain part of this key; house appearance does not affect deck pricing.
   // Where a screen sits on its edge never changes the price, so dragging one does not re-run the estimate.
-  // House size, attached blocks, floor heights and whole-house cladding can move the ledger; colours and openings do not.
+  // House size, attached blocks, floor heights and claddings (whole house, block, wall) can move the ledger; colours and openings do not.
   // Backyard features and terrain price; a feature's concept colour never does.
   const {quote,revision}=usePergolaQuote(data,undefined,context=>setData(prev=>prev.pergola&&pergolaQuoteKey(prev)===context.key&&JSON.stringify(prev.pergolaQuoteCosts)!==JSON.stringify(context)?deckReleaseData({...prev,pergolaQuoteCosts:context}):prev));
   const designKey=estimateKeyOf(data);
