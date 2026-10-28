@@ -118,7 +118,8 @@ export interface Wainscot {cladding:HouseCladding;color:string;
 /** A different cladding on a gable triangle, such as shakes in the gable over siding (appearance only). */
 export interface GableAccent {cladding:HouseCladding;color:string}
 /**
- * How a wall (or a block, or the whole house) is finished, appearance only and never priced. A wall resolves
+ * How a wall (or a block, or the whole house) is finished: appearance only, except that brick or stone on a wall the
+ * deck fastens to blocks its ledger (structuralReview.ts, new designs). A wall resolves
  * its own finish first, then its block's, then the whole house's (houseFinishes.ts `houseFinishFor`).
  */
 export interface HouseFinish {cladding:HouseCladding;color:string;wainscot?:Wainscot;
@@ -350,7 +351,7 @@ export interface DeckData {
   catalogueAccessories?: string[];
   borderFinish?: 'Matching'|'Dark Slate';
   pictureFrameOverhangIn?: number;
-  /** Takeoff rules: absent or 'legacy' for designs saved before 2026-10-06, '2026-10' for the takeoff after that, '2026-10-struct' with the structural review, '2026-10-piers' for a new design (see buildRules.ts). */
+  /** Takeoff rules: absent or 'legacy' for designs saved before 2026-10-06, '2026-10' for the takeoff after that, '2026-10-struct' with the structural review, '2026-10-piers' with sized piers, '2026-10-walls' for a new design (see buildRules.ts). */
   buildRules?: import('./buildRules').BuildRules;
   houseVisible?: boolean;
   houseWallHeightIn?: number;

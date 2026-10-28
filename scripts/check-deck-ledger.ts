@@ -185,7 +185,7 @@ for(const [label,e] of estimates){
 }
 {
   const plain=priceLedger(calculateDeckReleaseEstimate(design()));
-  ok(sectionPriceEffect(SECTION_BY_ID.house,plain)?.text==='Looks never priced; size can move the ledger'&&sectionPriceEffect(SECTION_BY_ID.proposal,plain)===null,'The House row says looks are never priced; the proposal has no price of its own');
+  ok(sectionPriceEffect(SECTION_BY_ID.house,plain)?.text==='Colours never priced; size, brick or stone can move the ledger'&&sectionPriceEffect(SECTION_BY_ID.proposal,plain)===null,'The House row says looks are never priced; the proposal has no price of its own');
   ok(plain.stamp===`${priceBookLabel()} · CAD · before HST`,'The stamp names the price book, the currency and that HST is extra');
 }
 
