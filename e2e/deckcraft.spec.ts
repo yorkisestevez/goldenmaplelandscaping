@@ -2,6 +2,7 @@ import {readFileSync} from 'node:fs';
 import {openDesignerMode,savedConfiguration} from './nav';
 import {expect,test,type Locator,type Page} from '@playwright/test';
 import {newLandscapeObject,newLandscapePlant} from '../src/features/deckcraft/landscapeCatalogue';
+import {publicContact} from '../src/data/business';
 
 /**
  * DeckCraft smoke tests on the production build: the paths a customer takes, end to end. Each test starts
@@ -1632,7 +1633,7 @@ test('opens the proposal: a 3D cover and views, features, finishes, the site pla
   await expect(invest).toContainText('Planning estimate before HST');
   // Every numbered sheet has the running head and the contact footer with its page number.
   await expect(invest.locator('.dd-proposal-runhead')).toContainText('Golden Maple Landscaping');
-  await expect(invest.locator('.dd-proposal-foot')).toContainText('(705) 300-8015');
+  await expect(invest.locator('.dd-proposal-foot')).toContainText(publicContact.phoneDisplay);
   await expect(invest.locator('.dd-proposal-pageno')).toHaveText(/^Page 0\d$/);
   await expect(invest).toContainText('Not a final quote: measurements, connections and engineering are confirmed on site.');
   const subtotal=invest.getByRole('row').filter({has:page.getByRole('rowheader',{name:/^Priced subtotal/})}).getByRole('cell');
@@ -1641,7 +1642,7 @@ test('opens the proposal: a 3D cover and views, features, finishes, the site pla
   const words=await dialog.textContent();
   expect(words).not.toMatch(ZERO);
   expect(words).not.toContain('Not provided');
-  await expect(proposalSheet(page,'Next steps')).toContainText('Call or text Sophie, our AI receptionist, at (705) 300-8015');
+  await expect(proposalSheet(page,'Next steps')).toContainText(`Call or text Sophie, our AI receptionist, at ${publicContact.phoneDisplay}`);
   for(const part of ['Confirm before construction','Construction plan','Material and hardware list'])await expect(proposalSheet(page,'Appendix')).toContainText(part);
   // Printed: only the sheets, each exactly one Letter page.
   await page.emulateMedia({media:'print'});
