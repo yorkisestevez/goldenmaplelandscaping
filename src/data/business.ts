@@ -110,11 +110,11 @@ export const BUSINESS = {
 
   contact: {
     primaryPhone: {
-      value: { display: '(705) 300-8015', tel: '+17053008015' },
+      value: { display: '(705) 500-3581', tel: '+17055003581' },
       status: 'confirmed' as const,
-      lastVerified: '2026-09-05',
-      source: 'Owner instruction in Telegram: publish Sophie voice agent number instead of the owner’s personal number.',
-      notes: 'Approved public contact for Sophie, the voice agent. Ownership and call routing were not independently tested; no telephony changes authorized or performed.',
+      lastVerified: '2026-10-25',
+      source: 'Owner instruction 2026-10-25: changed the public number back to (705) 500-3581.',
+      notes: 'Public Golden Maple number is (705) 500-3581. Sophie Telnyx number 705-300-8015 is retained for texts/AI only, not public.',
     },
     legacyPhone: {
       value: { display: '(705) 790-3838', tel: '+17057903838' },

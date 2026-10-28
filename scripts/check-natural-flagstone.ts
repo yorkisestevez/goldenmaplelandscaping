@@ -116,6 +116,13 @@ for(const [name,outline] of outlines)for(const jointIn of [1.5,2.5]){
  ok(!both.sections.some(s=>s.id.startsWith('unknown-')&&!!s.featureIds?.includes('flag-patio')),'No generic paving line for flagstone');
  eq(both.materials,alone.materials,'The paver patio\'s materials are unchanged by a flagstone patio beside it');
  const flagLines=JSON.stringify(both).match(/"flag-patio-flagstone[^"]*"/g)??[];ok(flagLines.length>=5,'The flagstone lines reach the takeoff');
+ // Flagstone set in chips holds its edge with the base and backfill (owner, 2026-10-21): no snap-edge around it. A
+ // paver patio keeps its own, including the edge where it meets flagstone, which does not restrain pavers.
+ eq(buildYardTakeoff(design(patio())).quantities.patioPerimeterLf,0,'A flagstone patio alone takes no snap-edge restraint');
+ eq(both.quantities.patioPerimeterLf,alone.quantities.patioPerimeterLf,'A flagstone patio beside a paver patio adds no snap-edge');
+ const touching:YardFeature={...paver,xFt:24},joined=buildYardModel(design(touching,patio()));
+ eq(yardClip(joined.features.filter(f=>f.config.kind==='patio').flatMap(f=>f.footprints)).length,1,'The test patios share an edge');
+ near(joined.quantities.patioPerimeterLf,buildYardModel(design(touching)).quantities.patioPerimeterLf,.01,'A paver patio meeting flagstone keeps snap-edge along its whole outline, the shared edge included');
 }
 
 // 5. The agent API and the assistant carry the spec.

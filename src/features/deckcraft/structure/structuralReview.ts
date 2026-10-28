@@ -1,11 +1,11 @@
 /**
- * Structural review for designs on the current build rules (buildRules.ts, '2026-10-struct' and '2026-10-piers').
+ * Structural review for designs on the current build rules (buildRules.ts, '2026-10-struct', '2026-10-piers' and '2026-10-walls').
  * Saved '2026-10' and legacy designs do not call this. Planning checks for the office, not a permit approval.
  * Thresholds that are not a published OBC table are named as DeckCraft planning values.
  */
-import {usesSizedPiers,usesStructuralReview} from '../buildRules';
+import {usesSizedPiers,usesStructuralReview,usesWallLedgerRule} from '../buildRules';
 import {FROST_DEPTH_IN,GUARD_REQUIRED_ABOVE_IN,STONE_STEPS} from '../designRules';
-import {deckAttachesToHouse} from '../houseContact';
+import {deckAttachesToHouse,getHouseContact} from '../houseContact';
 import {getHouseConfig} from '../houseSettings';
 import type {DeckData,Municipality,SoilCondition} from '../types';
 
@@ -66,8 +66,23 @@ export function footingDiameterIn(areaSqft:number,footingCount:number,data:Pick<
   return Math.max(12,Math.ceil(inches/2-1e-9)*2);
 }
 
+const isMasonry=(cladding:string)=>(MASONRY_CLADDINGS as readonly string[]).includes(cladding);
+
+/**
+ * The masonry cladding that blocks a ledger, if any. Saves before '2026-10-walls' read the whole house's cladding. A new
+ * design reads each wall the main level fastens to ('main-front' when it meets none): the wall's own finish, then its
+ * block's, then the house's, as houseFinishFor resolves it (inlined to keep the appearance modules off the pricing path).
+ */
+function blockingCladding(data:DeckData):{cladding:string;wall:boolean}|undefined{
+  const h=getHouseConfig(data),rects=h.footprint?.rects??[];
+  if(!usesWallLedgerRule(data)||!h.wallFinishes&&!rects.some(b=>b.finish))return isMasonry(h.cladding)?{cladding:h.cladding,wall:false}:undefined;
+  const walls=getHouseContact(data).contacts.map(c=>c.wall.includes('-')?c.wall:c.blockId+'-'+(c.wall==='far'?'back':c.wall));
+  const cladding=(walls.length?walls:['main-front']).map(id=>h.wallFinishes?.[id]?.cladding??rects.find(b=>b.id===id.split('-')[0])?.finish?.cladding??h.cladding).find(isMasonry);
+  return cladding&&{cladding,wall:true};
+}
+
 export function masonryCladding(data:DeckData):boolean{
-  return (MASONRY_CLADDINGS as readonly string[]).includes(getHouseConfig(data).cladding);
+  return !!blockingCladding(data);
 }
 
 /** Attached or add-on deck on brick veneer or stone: do not frame a ledger. */
@@ -108,8 +123,9 @@ export function structuralReviewIssues(data:DeckData,input:StructuralReviewInput
   if(data.intendedLoad==='Heavy'){
     issues.push('Heavy point or area load: a professional design is required for a hot tub, large planter or outdoor kitchen. Framing under that zone is a layout only and is not sized from the Part 9 span tables.');
   }
-  if(ledgerBlocked(data)){
-    issues.push(`Ledger blocked: the house cladding is ${getHouseConfig(data).cladding}. Do not fasten a ledger to brick veneer or stone. The house side is framed as a freestanding beam; use that or a professional attachment detail.`);
+  const blocking=ledgerBlocked(data)?blockingCladding(data):undefined;
+  if(blocking){
+    issues.push(`Ledger blocked: ${blocking.wall?'the wall the deck meets':'the house cladding'} is ${blocking.cladding}. Do not fasten a ledger to brick veneer or stone. The house side is framed as a freestanding beam; use that or a professional attachment detail.`);
   }
   if(input.clearPostIn>POST_KNEE_BRACE_ABOVE_IN){
     issues.push(`Knee bracing or a professional lateral design: clear post height is ${Math.round(input.clearPostIn)} in, over the ${POST_KNEE_BRACE_ABOVE_IN} in DeckCraft planning threshold. OBC 9.17.4.1 sets a minimum post of 140×140 mm and does not publish a deck post-height table.`);

@@ -115,6 +115,7 @@ export default [
   route('resources/best-pavers-ontario-winters', 'pages/blog/BestPaversOntarioWinters.tsx'),
   route('resources/front-steps-heaving-barrie', 'pages/blog/FrontStepsHeavingBarrie.tsx'),
   route('resources/geogrid-retaining-wall-explained', 'pages/blog/GeogridRetainingWallExplained.tsx'),
+    route('resources/outdoor-kitchen-gas-electrical-ontario', 'pages/blog/OutdoorKitchenGasElectricalOntario.tsx'),
 
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),

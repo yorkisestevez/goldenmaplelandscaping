@@ -84,7 +84,7 @@ export interface PriceEffect{kind:'amount'|'quote'|'none'|'note';text:string}
  * owns no price of its own (null).
  */
 export function sectionPriceEffect(section:DesignSection,ledger:Ledger):PriceEffect|null{
-  if(section.id==='house')return {kind:'note',text:'Looks never priced; size can move the ledger'};
+  if(section.id==='house')return {kind:'note',text:'Colours never priced; size, brick or stone can move the ledger'};
   if(!section.ledger.length)return null;
   const owned=ledger.lines.filter(l=>l.section===section.id),total=owned.reduce((n,l)=>n+l.amount,0),kinds=[...new Set(owned.flatMap(l=>l.quotes))];
   if(!kinds.length)return total>=.5?{kind:'amount',text:dollars(total)}:{kind:'none',text:'Adds nothing yet'};
