@@ -1,5 +1,5 @@
 import {test,expect,type Page,type Locator} from '@playwright/test';
-import {openDesignTask,savedConfiguration} from './nav';
+import {dismissDesignInspector,openDesignTask,savedConfiguration} from './nav';
 import '../src/features/deckcraft/lib/inlayGeometryRuntime';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
@@ -14,7 +14,7 @@ const state=(page:Page)=>page.evaluate(()=>(window as unknown as {deckcraft:Deck
 const controls=(page:Page)=>page.getByLabel('Inlay plan controls',{exact:true});
 async function ready(page:Page){await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);return state(page);}
 async function activate(el:Locator,touch:boolean){if(touch)await el.tap();else await el.click();}
-async function open(page:Page,touch:boolean){if(!await page.getByRole('radio',{name:'Inlays',exact:true}).isVisible())await activate(page.getByRole('tab',{name:'Materials',exact:true}),touch);await activate(page.getByRole('radio',{name:'Inlays',exact:true}),touch);await expect(controls(page)).toBeVisible();}
+async function open(page:Page,touch:boolean){const radio=page.getByRole('radio',{name:'Inlays',exact:true});if(!await radio.isVisible()){await activate(page.getByRole('tablist',{name:'Design',exact:true}).getByRole('tab',{name:'Materials',exact:true}),touch);await expect(page.locator('#dd-home-panel')).toBeVisible();await dismissDesignInspector(page);if(!await radio.isVisible())await activate(page.getByRole('tablist',{name:'Drawing sheets'}).getByRole('tab',{name:'Plan',exact:true}),touch);}await activate(page.getByRole('radio',{name:'Inlays',exact:true}),touch);await expect(controls(page)).toBeVisible();}
 async function point(page:Page,p:{x:number;y:number},touch:boolean){
  const surface=page.getByLabel('Inlay placement surface',{exact:true});
  // Native scrolling can move the canvas after the button's actionability scroll. Let that layout settle before CTM.

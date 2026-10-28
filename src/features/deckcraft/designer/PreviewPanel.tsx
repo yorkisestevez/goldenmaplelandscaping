@@ -38,6 +38,7 @@ import TitleBlock from './TitleBlock';
 
 import PlanViewport from './PlanViewport';
 import type {AgentRequest} from './deckAgentController';
+import type {HomeTab,HomeTabId} from './homeTabs';
 const AssistantTargets=lazy(()=>import('./AssistantTargets'));
 
 
@@ -205,6 +206,12 @@ export interface PreviewPanelProps{
 
   exteriorOpen:boolean;setExteriorOpen:(open:boolean)=>void;
 
+  /** The homeowner's open tab, the tabs on offer and how to pick one (homeTabs.ts); Designer Mode passes none. */
+
+  homeTab?:HomeTabId;homeTabs?:readonly HomeTab[];onHomeTab?:(tab:HomeTabId)=>void;
+  /** Draw's "Deck settings": its panel at Deck shape & size (height, levels, wrap). */
+  onHomeSettings?:()=>void;
+
 }
 
 
@@ -217,7 +224,7 @@ export interface PreviewPanelProps{
 
  */
 
-export default function PreviewPanel({pro,previewData,onPreviewData,data,update,applyComponent=update,estimate,mode,setMode,mounted,hasWebGL,setHasWebGL,retryWebGL,hasFixtures,autoCounts,houseOpen,pickedHouseOpeningId,effectiveHouseOpeningId,selectHouseOpening,moveHouseOpening,editHouseOpening,setScreen,onSnapshotReady,snapshotLighting=null,tool,setTool,stairEdges,onOpenSection,docked=false,boardPaint,setBoardPaint,onPaintBoard,exteriorOpen,setExteriorOpen,onSketch,sketchReady=true,onSelectionChange,externalSelection,assistantTargets,pendingInlay,onPendingInlay,selectedFeatureId,onSelectFeature,onSelectYardTarget}:PreviewPanelProps){
+export default function PreviewPanel({pro,previewData,onPreviewData,data,update,applyComponent=update,estimate,mode,setMode,mounted,hasWebGL,setHasWebGL,retryWebGL,hasFixtures,autoCounts,houseOpen,pickedHouseOpeningId,effectiveHouseOpeningId,selectHouseOpening,moveHouseOpening,editHouseOpening,setScreen,onSnapshotReady,snapshotLighting=null,tool,setTool,stairEdges,onOpenSection,docked=false,boardPaint,setBoardPaint,onPaintBoard,exteriorOpen,setExteriorOpen,onSketch,sketchReady=true,onSelectionChange,externalSelection,assistantTargets,pendingInlay,onPendingInlay,selectedFeatureId,onSelectFeature,onSelectYardTarget,homeTab,homeTabs,onHomeTab,onHomeSettings}:PreviewPanelProps){
 
   const [selection,setSelection]=useState<SelectionState>({partIds:[],boards:[]}),[pickingOn,setPicking]=useState(false),[addSelection,setAddSelection]=useState(false);
   // Selecting objects in 3D is a Designer Mode tool. A located part elsewhere must not leave homeowners in a picking mode
@@ -333,7 +340,7 @@ export default function PreviewPanel({pro,previewData,onPreviewData,data,update,
 
       {elevationsOpen&&!snapshotLighting&&<div id="dd-elevation-tools"><Suspense fallback={<p role="status">Loading elevations &amp; build…</p>}><ElevationWorkspace initialArea={elevationArea} data={data} estimate={estimate} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})} selectedFeatureId={selectedFeatureId} onSelectFeature={onSelectFeature} onOpenSection={onOpenSection} onClose={()=>setElevationsOpen(false)}/></Suspense></div>}
       <Suspense fallback={null}><ArchitectShortcuts pro={!!pro}/></Suspense>{mounted&&!snapshotLighting&&<Suspense fallback={null}><CanvasContextMenu data={data} model={estimate.model} selection={selection} onSelect={selectObjects} onTool={setTool} onSection={onOpenSection} onBoundary={setBoundaryLevel} onApply={applyComponent}/></Suspense>}
-      {!pro&&onPlan&&<Suspense fallback={null}><PlanToolPicker tool={tool} onPick={pickTool} hint={COACH[tool](data.shape==='Custom')} onSketch={onSketch} sketchReady={sketchReady}/></Suspense>}
+      {!pro&&homeTab&&homeTabs&&onHomeTab&&<Suspense fallback={null}><PlanToolPicker tool={tool} onPick={pickTool} hint={COACH[tool](data.shape==='Custom')} onSketch={onSketch} sketchReady={sketchReady} tab={homeTab} tabs={homeTabs} onTab={onHomeTab} onPlan={onPlan} onSettings={onHomeSettings}/></Suspense>}
 
 
 

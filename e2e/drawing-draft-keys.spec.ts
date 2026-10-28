@@ -22,7 +22,8 @@ async function patioSurface(page:Page){
 async function applyDrawn(page:Page){await expect(page.getByRole('button',{name:'Apply preview',exact:true})).toHaveCount(0);await expect.poll(async()=>(await read(page)).design.yardFeatures?.length??0).toBe(1);}
 test('Ctrl+Z removes the last patio point without touching the design, and C finishes the patio',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
- const before=await read(page),{surface,square}=await patioSurface(page),dots=surface.locator('.dd-yard-shape-draft-point');
+ // Read after choosing the tool: changing the tab and the sheet moves the agent snapshot's revision, not the design.
+ const {surface,square}=await patioSurface(page),before=await read(page),dots=surface.locator('.dd-yard-shape-draft-point');
  for(const p of square)await page.mouse.click(p.x,p.y);await expect(dots).toHaveCount(4);
  await page.keyboard.press('Control+z');await expect(dots).toHaveCount(3);
  const during=await read(page);expect(during.design).toEqual(before.design);expect(during.revision).toBe(before.revision);
