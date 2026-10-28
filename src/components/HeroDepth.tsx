@@ -21,10 +21,10 @@ export default function HeroDepth() {
               Barrie &amp; Simcoe County · Residential landscape construction
             </p>
             <h1 className="font-display font-normal text-brand-ink mb-8">
-              Interlock, walls<br />and decks<br /><span className="italic text-brand-gold-dark">built to live on.</span>
+              The backyard<br />you’ve always<br /><span className="italic text-brand-gold-dark">pictured.</span>
             </h1>
-            <p className="text-base text-brand-muted leading-relaxed max-w-md mb-7">
-              Golden Maple builds interlocking patios and driveways, retaining walls, and composite decks for homeowners in Barrie and Simcoe County. Yorkis Estevez, founder and lead builder, writes the scope for your property before the crew starts.
+            <p className="text-base text-brand-muted leading-relaxed max-w-sm mb-7">
+              Thoughtfully planned patios, decks and outdoor spaces. Built around your home, and the way you want to live.
             </p>
             <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
               <Link to="/contact" onClick={() => trackEngagement('cta_click', 'home_start_project')} className="btn-primary gap-5">
@@ -34,7 +34,7 @@ export default function HeroDepth() {
                 See the work <ArrowRight size={15} aria-hidden="true" />
               </a>
             </div>
-            <p className="hidden md:block text-xs text-brand-muted mt-9">Interlock <span className="mx-2 text-brand-gold-dark">/</span> Walls <span className="mx-2 text-brand-gold-dark">/</span> Decks</p>
+            <p className="hidden md:block text-xs text-brand-muted mt-9">Patios &amp; interlock <span className="mx-2 text-brand-gold-dark">/</span> Decks <span className="mx-2 text-brand-gold-dark">/</span> Landscape design</p>
           </div>
 
           <figure className="min-w-0">
