@@ -18,7 +18,7 @@ const flags=(patch:Partial<DeckData>={})=>estimate(patch).flags.join('\n');
 const has=(patch:Partial<DeckData>,text:string)=>ok(flags(patch).includes(text),`flags include ${text}`);
 const lacks=(patch:Partial<DeckData>,text:string)=>ok(!flags(patch).includes(text),`flags omit ${text}`);
 
-ok(CURRENT_BUILD_RULES==='2026-10-walls'&&usesCurrentBuildRules(DEFAULT_DECK)&&usesStructuralReview(DEFAULT_DECK)&&usesSizedPiers(DEFAULT_DECK)&&usesWallLedgerRule(DEFAULT_DECK),'New designs use the structural review, with sized piers and the wall ledger rule, on top of the 2026-10 takeoff');
+ok(CURRENT_BUILD_RULES==='2026-10-frame'&&usesCurrentBuildRules(DEFAULT_DECK)&&usesStructuralReview(DEFAULT_DECK)&&usesSizedPiers(DEFAULT_DECK)&&usesWallLedgerRule(DEFAULT_DECK),'New designs use the structural review, with sized piers and the wall ledger rule, on top of the 2026-10 takeoff');
 ok(usesStructuralReview({buildRules:'2026-10-piers'})&&usesSizedPiers({buildRules:'2026-10-piers'})&&!usesWallLedgerRule({buildRules:'2026-10-piers'}),'A 2026-10-piers save keeps its review and piers, and the whole-house ledger rule');
 ok(usesStructuralReview({buildRules:'2026-10-struct'})&&!usesSizedPiers({buildRules:'2026-10-struct'}),'A 2026-10-struct save keeps the structural review and its price-book pier rate');
 ok(usesCurrentBuildRules({buildRules:'2026-10'})&&!usesStructuralReview({buildRules:'2026-10'}),'A 2026-10 save keeps the takeoff and skips the structural review');

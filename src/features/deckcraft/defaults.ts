@@ -39,8 +39,8 @@ export const DEFAULT_DECK: DeckData = {
     boardWidth: 5.5,
     joistSpacing: 16,
     fasteningSystem: 'Face',
+    // No pictureFrameOverhangIn: the frame overhangs the fascia by the most its board allows (finishedFootprint.ts).
     pictureFrameRows: 1,
-    pictureFrameOverhangIn: 0,
     buildRules: CURRENT_BUILD_RULES,
     hasInlay: false,
     inlayLf: 0,

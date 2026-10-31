@@ -105,7 +105,7 @@ export function validateDesign(input:unknown):DeckData {
   // A two-corner wrap derives its width (left wing + house + right wing), which may exceed the input range.
   const derivedWidth=record(input.wrap)&&record(input.wrap.left)&&record(input.wrap.right);
   for(const [key,[min,max]] of Object.entries(ranges))if(Object.hasOwn(input,key)){
-    if((key==='stairRiserCount'||key==='stairTreadDepthIn')&&input[key]===undefined)continue;
+    if((key==='stairRiserCount'||key==='stairTreadDepthIn'||key==='pictureFrameOverhangIn')&&input[key]===undefined)continue;
     if(record(input.deckOutlines)&&((key==='width'||key==='length')&&input.deckOutlines.main||(key==='width2'||key==='length2')&&input.deckOutlines.second))continue;
     if(key==='width'&&derivedWidth&&!(typeof input.width==='number'&&input.width>=min&&input.width<=max))continue;
     target[key]=numeric(input[key],min,max,key);
@@ -116,7 +116,8 @@ export function validateDesign(input:unknown):DeckData {
   clean.buildRules=input.buildRules===undefined?'legacy':input.buildRules as BuildRules;
   // A border key left out means the default of those rules. Legacy (production) never wrote the overhang and priced a
   // missing one at 1.5 in, and before the flush one-row default (2026-10-04) missing rows meant no frame; both are written
-  // explicitly for the same reason. Current-rules input (an in-app edit) keeps DEFAULT_DECK's one flush row.
+  // explicitly for the same reason. Current-rules input (an in-app edit) keeps DEFAULT_DECK's one row, and its overhang
+  // follows the rules it was saved under (finishedFootprint.ts pictureFrameOverhang).
   if(clean.buildRules==='legacy'){if(!Object.hasOwn(input,'pictureFrameOverhangIn'))clean.pictureFrameOverhangIn=PICTURE_FRAME_OVERHANG_IN;if(!Object.hasOwn(input,'pictureFrameRows'))clean.pictureFrameRows=0;}
   for(const key of booleans)if(Object.hasOwn(input,key)){
     if(typeof input[key]!=='boolean')throw new Error(`${key} must be true or false.`);
