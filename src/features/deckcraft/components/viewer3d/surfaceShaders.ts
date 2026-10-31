@@ -21,7 +21,7 @@ export const SURFACE_PROGRAM='dc-surface-v1';
 const GUTTER=8/128,BODY=112/128;
 
 export interface SurfaceMaps{map:THREE.Texture;normalMap:THREE.Texture;roughnessMap:THREE.Texture}
-interface Surface{box:boolean;strips:{value:number};variants:THREE.MeshStandardMaterial[];maps:SurfaceMaps|null;fallback:THREE.Color;standIn:SurfaceMaps;relief:{value:boolean}}
+interface Surface{box:boolean;strips:{value:number};grain:{value:number};variants:THREE.MeshStandardMaterial[];maps:SurfaceMaps|null;fallback:THREE.Color;standIn:SurfaceMaps;relief:{value:boolean}}
 const surfaceOf=(m:THREE.Material)=>m.userData.surface as Surface|undefined;
 
 const VERTEX_HEAD=/* glsl */`
@@ -99,7 +99,7 @@ export function edgeShade(across:number,px:number){
 /** A JS number as a GLSL float literal: an integer gets its decimal point, or GLSL reads it as an int. */
 const glslFloat=(n:number)=>Number.isInteger(n)?n.toFixed(1):String(n);
 const FRAGMENT_HEAD=/* glsl */`
-uniform float uStrips;
+uniform float uStrips,uGrainScale;
 varying vec2 vDcUv;
 flat varying vec2 vDcVar;
 flat varying float vDcBoard;
@@ -122,10 +122,11 @@ export function reliefWeight(facing:number){
 const FRAGMENT_HEAD_RELIEF=/* glsl */`${FRAGMENT_HEAD}
 float dcKeep;`;
 const FRAGMENT_PICK=/* glsl */`
+    float gs=vDcBoard>1.5?uGrainScale:1.,gu=vDcUv.x*gs;
     float course=floor(vDcUv.y),across=vDcUv.y-course,dcV=${GUTTER}+clamp(across,0.,1.)*${BODY};
     vec2 seed=vec2(fract(vDcVar.x+course*.6180339),vDcVar.y+course*.37);
-    if(vDcBoard>${glslFloat(BOARD_PIECE-.5)}){float tile=floor(vDcUv.x);vec2 pA=dcPick(seed,tile),pB=dcPick(seed,tile+1.);dcUvA=vec2(vDcUv.x+pA.y,(pA.x+dcV)/uStrips);dcUvB=vec2(vDcUv.x+pB.y,(pB.x+dcV)/uStrips);dcW=smoothstep(${glslFloat(1-GRAIN_BLEND)},1.,vDcUv.x-tile);}else{dcUvA=dcUvB=vec2(vDcUv.x+seed.y,(min(floor(seed.x*uStrips),uStrips-1.)+dcV)/uStrips);dcW=0.;}
-    vec2 scale=vec2(1.,${BODY}/uStrips);dcDx=dFdx(vDcUv)*scale;dcDy=dFdy(vDcUv)*scale;`;
+    if(vDcBoard>${glslFloat(BOARD_PIECE-.5)}){float tile=floor(gu);vec2 pA=dcPick(seed,tile),pB=dcPick(seed,tile+1.);dcUvA=vec2(gu+pA.y,(pA.x+dcV)/uStrips);dcUvB=vec2(gu+pB.y,(pB.x+dcV)/uStrips);dcW=smoothstep(${glslFloat(1-GRAIN_BLEND)},1.,gu-tile);}else{dcUvA=dcUvB=vec2(vDcUv.x+seed.y,(min(floor(seed.x*uStrips),uStrips-1.)+dcV)/uStrips);dcW=0.;}
+    vec2 scale=vec2(gs,${BODY}/uStrips);dcDx=dFdx(vDcUv)*scale;dcDy=dFdy(vDcUv)*scale;`;
 const FRAGMENT_UV=/* glsl */`
   {${FRAGMENT_PICK}
   }`;
@@ -151,7 +152,7 @@ function patch(material:THREE.MeshStandardMaterial,surface:Surface){
   material.userData.snow='dust';
   material.customProgramCacheKey=()=>`${SURFACE_PROGRAM}:${surface.box?'box':'mesh'}:${surface.relief.value?'relief':''}`;
   material.onBeforeCompile=shader=>{
-    shader.uniforms.uStrips=surface.strips;
+    shader.uniforms.uStrips=surface.strips;shader.uniforms.uGrainScale=surface.grain;
     if(surface.box)shader.defines={...shader.defines,DC_BOX_UV:''};
     shader.vertexShader=shader.vertexShader.replace('#include <common>',`#include <common>\n${VERTEX_HEAD}`).replace('#include <uv_vertex>','#include <uv_vertex>\n  dcBoard();');
     const relief=surface.relief.value;
@@ -183,7 +184,7 @@ function standIns(fallback:THREE.Color):SurfaceMaps{
 /** A swatch material that samples its atlas per board ("mesh" mode); the solid fallback colour until maps arrive. */
 export function surfaceMaterial(color:THREE.ColorRepresentation,relief=false){
   const fallback=new THREE.Color(color),material=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:1,metalness:0});
-  const surface:Surface={box:false,strips:{value:1},variants:[],maps:null,fallback,standIn:standIns(fallback),relief:{value:relief}};
+  const surface:Surface={box:false,strips:{value:1},grain:{value:1},variants:[],maps:null,fallback,standIn:standIns(fallback),relief:{value:relief}};
   Object.assign(material,surface.standIn);
   return patch(material,surface);
 }
@@ -195,14 +196,15 @@ export function boxVariant(material:THREE.Material):THREE.Material{
   const existing=surface.variants[0];if(existing)return existing;
   // clone() copies userData through JSON, so the surface (materials and textures) is lifted off first.
   const source=material as THREE.MeshStandardMaterial,userData=source.userData;source.userData={};
-  const box=patch(source.clone(),{box:true,strips:surface.strips,variants:[],maps:null,fallback:surface.fallback,standIn:surface.standIn,relief:surface.relief});source.userData=userData;
+  const box=patch(source.clone(),{box:true,strips:surface.strips,grain:surface.grain,variants:[],maps:null,fallback:surface.fallback,standIn:surface.standIn,relief:surface.relief});source.userData=userData;
   surface.variants.push(box);return box;
 }
 
 /** Puts an atlas's maps on a swatch material and its box variant: a texture swap, never a recompile. */
-export function setSurfaceMaps(material:THREE.MeshStandardMaterial,maps:SurfaceMaps,strips:number){
+/** `grain` scales finished boards' 48 in UVs to the swatch's own repeat (48 / its repeat in inches). */
+export function setSurfaceMaps(material:THREE.MeshStandardMaterial,maps:SurfaceMaps,strips:number,grain=1){
   const surface=surfaceOf(material);if(!surface)return;
-  clearSurfaceMaps(material);surface.maps=maps;surface.strips.value=strips;
+  clearSurfaceMaps(material);surface.maps=maps;surface.strips.value=strips;surface.grain.value=grain;
   for(const m of [material,...surface.variants])Object.assign(m,maps);
 }
 /** Takes the maps off again (disposing them), back to the one-pixel stand-ins in the fallback colour. */
@@ -210,7 +212,7 @@ export function clearSurfaceMaps(material:THREE.MeshStandardMaterial){
   const surface=surfaceOf(material);if(!surface?.maps)return;
   for(const t of Object.values(surface.maps))t.dispose();
   for(const m of [material,...surface.variants])Object.assign(m,surface.standIn);
-  surface.maps=null;surface.strips.value=1;
+  surface.maps=null;surface.strips.value=1;surface.grain.value=1;
 }
 /** Disposes a swatch material with its variants, maps and its own stand-in colour. */
 export function disposeSurface(material:THREE.MeshStandardMaterial){

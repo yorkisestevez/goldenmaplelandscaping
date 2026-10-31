@@ -7,7 +7,8 @@
 import { useEffect, useMemo } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { ATLAS_WIDTH, buildSwatchMaps, type SwatchImage, type SwatchMaps } from './swatchMaps';
+import type { SwatchImage, SwatchMaps } from './swatchMaps';
+import { ATLAS_WIDTH } from './atlasWidth';
 import { showcaseDetail } from '../../showcaseMode';
 import { useRenderQuality } from './SceneRenderQuality';
 import type { SwatchResult } from './swatchMaps.worker';
@@ -76,7 +77,8 @@ const isWood = (url: string) => /(^|\/)wood-[^/]*$/.test(url.split('?')[0]);
 type Kind = 'composite' | 'wood';
 const pending = new Map<number, { resolve: (maps: SwatchMaps | null) => void; image: SwatchImage; kind: Kind; width: number }>();
 let worker: Worker | null | undefined, nextId = 0;
-const onMainThread = (image: SwatchImage, kind: Kind, width = ATLAS_WIDTH) => buildSwatchMaps(image, kind, () => new Promise(resolve => setTimeout(resolve, 0)), width);
+// The builder loads here only when no worker can start, so it stays out of the viewer's own chunk.
+const onMainThread = (image: SwatchImage, kind: Kind, width = ATLAS_WIDTH) => import('./swatchMaps').then(m => m.buildSwatchMaps(image, kind, () => new Promise(resolve => setTimeout(resolve, 0)), width));
 // The worker lives for the page, so its listeners are module functions: written inline, the build folds this code into
 // the hook's effect and the listener kept the first 3D view's renderer, canvas and context alive.
 function onWorkerMessage(event: MessageEvent<SwatchResult>) { pending.get(event.data.id)?.resolve(event.data.maps); pending.delete(event.data.id); }
@@ -152,7 +154,7 @@ export function useSwatchTexture(url: string, fallbackColor: string): THREE.Mesh
         map: atlasTexture(maps.albedo, maps, THREE.SRGBColorSpace, anisotropy),
         normalMap: atlasTexture(maps.normal, maps, THREE.NoColorSpace, anisotropy),
         roughnessMap: atlasTexture(maps.roughness, maps, THREE.NoColorSpace, anisotropy),
-      }, maps.strips);
+      }, maps.strips, 48 / maps.repeatIn);
       invalidate();
       // Decode/worker completion alone is insufficient: all three maps and box variants must be swapped first.
       application.applied(true);

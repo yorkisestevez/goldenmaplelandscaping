@@ -9,7 +9,7 @@ import {buildSurfaceDetail,type DetailKind} from '../src/features/deckcraft/comp
 import {cameraSetback} from '../src/features/deckcraft/components/viewer3d/cameraFraming';
 import {railGeometry} from '../src/features/deckcraft/components/viewer3d/EasedRails';
 import {fitSun,shadowKey} from '../src/features/deckcraft/components/viewer3d/shadowCache';
-import {ATLAS_WIDTH,STRIP_ROWS,buildSwatchMaps,deltaE,grainIsVertical,rotate90} from '../src/features/deckcraft/components/viewer3d/swatchMaps';
+import {ATLAS_WIDTH,BOARD_FACE_IN,STRIP_ROWS,buildSwatchMaps,deltaE,grainIsVertical,rotate90} from '../src/features/deckcraft/components/viewer3d/swatchMaps';
 import {BOARD_PIECE,EDGE_SHADE,GRAIN_BLEND,PATCHED_CHUNKS,edgeShade,RELIEF_EDGE,RELIEF_FULL,boardVariation,boxVariant,grainBlend,grainPick,reliefWeight,surfaceMaterial} from '../src/features/deckcraft/components/viewer3d/surfaceShaders';
 import {BOARD_EASE_IN,GAP_UNDERLAY,boardPieceGeometry,gapUnderlayOutlines,outlineGeometry} from '../src/features/deckcraft/components/viewer3d/boardPieces';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
@@ -182,6 +182,10 @@ for(const file of files){
   const seam=wrap/Math.max(rows,inner);worstSeam=Math.max(worstSeam,seam);
   ok(seam<2.5,`${file}: no seam where the grain repeats (${seam.toFixed(2)}× an ordinary step)`);
   ok(maps.normal.every((v,i)=>i%4!==2||v>=128),`${file}: every normal faces out of the board`);
+  // Real-scale grain: a photo of whole boards repeats over the length of board it shows (its boards are BOARD_FACE_IN
+  // wide); a close-up of one surface, with no board to measure, keeps the 48 in repeat.
+  if(maps.layout.kind==='boards'){const s=maps.layout.strips[0],whole=Math.max(...maps.layout.strips.map(t=>t.y1-t.y0)),shown=BOARD_FACE_IN*(s.x1-s.x0)*.875/(whole/.8);ok(Math.abs(maps.repeatIn-shown)<.01&&maps.repeatIn>=8&&maps.repeatIn<=24,`${file}: the grain repeats over the ${maps.repeatIn.toFixed(1)} in of board the photo shows`);}
+  else ok(maps.repeatIn===48,`${file}: a one-surface close-up keeps the 48 in repeat`);
 }
 ok(grainIsVertical(rotate90({width:2,height:2,data:new Uint8Array(16)}))===false,'A flat picture has no grain to turn');
 {
@@ -207,6 +211,7 @@ for(const file of files){
 const SOURCES=JSON.parse(read(`${SWATCHES}sources.json`)).swatches as Record<string,{url:string;retrieved:string;edit:string}>,UNCITED=new Set(['dk-venture-shoreline.jpg']);
 ok(files.filter(f=>!LOW_RES_SWATCHES.has(f)&&!UNCITED.has(f)).every(f=>/^https:\/\/(www\.deckorators\.com\/cdn\/shop\/files|shop\.timbertech\.com\/wp-content\/uploads)\//.test(SOURCES[f]?.url??'')&&SOURCES[f].retrieved&&SOURCES[f].edit)&&Object.keys(SOURCES).every(f=>files.includes(f)&&!LOW_RES_SWATCHES.has(f)),'Every sharper swatch cites its manufacturer photo, and every citation is a swatch on disk');
 ok([...LOW_RES_SWATCHES].every(f=>files.includes(f))&&LOW_RES_SWATCHES.size<=44,'Every low-resolution swatch listed is still on disk, and the list never grows');
+{const hook=read(`${VIEWER}useSwatchTexture.ts`);ok(!/import\s*\{[^}]*buildSwatchMaps/.test(hook)&&hook.includes("import('./swatchMaps').then(m => m.buildSwatchMaps("),'The atlas builder stays out of the 3D viewer chunk: the worker runs it, and the main thread loads it only when no worker can start');}
 ok(/HIGH_READ_EDGE\s*=\s*2048/.test(read(`${VIEWER}useSwatchTexture.ts`))&&read(`${VIEWER}useSwatchTexture.ts`).includes('width > ATLAS_WIDTH ? HIGH_READ_EDGE : READ_EDGE'),'The high tier reads the photo at up to 2048 px for its 2048 atlas');
 
 // Repetition along a long board: every 48 in tile of a board takes its own strip and offset (the shader's grainPick),
@@ -247,9 +252,10 @@ let repeatMean=0;
   const compile=(m:THREE.Material)=>{const s={uniforms:{} as Record<string,THREE.IUniform>,defines:{} as Record<string,string>,vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};m.onBeforeCompile(s as unknown as THREE.WebGLProgramParametersWithUniforms,undefined as never);return s;};
   const material=surfaceMaterial('#886644'),mesh=compile(material),box=compile(boxVariant(material));
   ok(mesh.fragmentShader.includes('if(vDcBoard<1.5||px<=')&&mesh.fragmentShader.includes(',band=max(0.045,px)')&&mesh.vertexShader.includes('vDcBoard=aVar.w;')&&box.vertexShader.includes('vDcBoard=0.;'),'Only finished board pieces shade their edges; box-projected rim and framing do not');
+  ok(mesh.fragmentShader.includes('float gs=vDcBoard>1.5?uGrainScale:1.,gu=vDcUv.x*gs;')&&'uGrainScale' in mesh.uniforms,'Finished boards take their swatch’s real grain scale; every other piece keeps the 48 in repeat');
   ok(mesh.fragmentShader.includes('if(vDcBoard>1.5){')&&mesh.fragmentShader.includes('dcUvA=dcUvB=vec2(vDcUv.x+seed.y,(min(floor(seed.x*uStrips),uStrips-1.)+dcV)/uStrips);dcW=0.;'),'Fascia, cladding, skirting, timbers and box-projected framing keep one strip and offset over the piece, as before');
   ok(mesh.fragmentShader.includes('highp uint dcMix(highp uint h)')&&mesh.fragmentShader.includes('+uint(int(tile))')&&!/sin\([^)]*tile/.test(mesh.fragmentShader),'The per-tile pick is an integer hash, so both sides of a tile boundary agree exactly on every GPU');
-  ok(mesh.fragmentShader.includes(`smoothstep(${EDGE_SHADE.fadeFrom},${EDGE_SHADE.fadeTo},px)`)&&mesh.fragmentShader.includes(`smoothstep(${1-GRAIN_BLEND},1.,vDcUv.x-tile)`)&&mesh.fragmentShader.includes('uint(s.x*65536.0)'),'Shader constants are written as GLSL floats');
+  ok(mesh.fragmentShader.includes(`smoothstep(${EDGE_SHADE.fadeFrom},${EDGE_SHADE.fadeTo},px)`)&&mesh.fragmentShader.includes(`smoothstep(${1-GRAIN_BLEND},1.,gu-tile)`)&&mesh.fragmentShader.includes('uint(s.x*65536.0)'),'Shader constants are written as GLSL floats');
   const flat=boardVariation(3,4),board=boardVariation(3,4,true),viewer3=read(`${VIEWER}Deck3DViewer.tsx`);
   ok(flat[3]===0&&board[3]===BOARD_PIECE&&BOARD_PIECE>1.5&&flat.slice(0,3).every((v,i)=>v===board[i])&&(viewer3.match(/boardVariation\([^)]*,true\)/g)??[]).length===2&&!/boardVariation\([^)]*true/.test(read(`${VIEWER}slabGeometry.ts`)+read(`${VIEWER}raisedBedTimber.ts`)),'Deck board batches and cut pieces are marked as finished boards; skirting, raised-bed timbers and geometry with no grain attribute (notched stringers read WebGL’s default w=1) are not');
 }

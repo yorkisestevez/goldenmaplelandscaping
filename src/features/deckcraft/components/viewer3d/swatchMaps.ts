@@ -18,8 +18,14 @@ export interface SwatchMaps{
   layout:SwatchLayout;
   /** Mean sRGB colour (0–255) of the photo's strips, and of the atlas. */
   sourceMean:[number,number,number];atlasMean:[number,number,number];
+  /** Inches of board one atlas repeat shows: measured from a photo of whole boards, 48 for a one-surface close-up. */
+  repeatIn:number;
 }
-export const ATLAS_WIDTH=1024,STRIP_ROWS=128,STRIP_GUTTER=8,STRIP_BODY=STRIP_ROWS-2*STRIP_GUTTER;
+/** The width of the boards in the swatch photos, the yardstick for how much board a photo shows. */
+export const BOARD_FACE_IN=5.5;
+import {ATLAS_WIDTH} from './atlasWidth';
+export {ATLAS_WIDTH};
+export const STRIP_ROWS=128,STRIP_GUTTER=8,STRIP_BODY=STRIP_ROWS-2*STRIP_GUTTER;
 /** Roughness of a composite's capped surface and of real wood; raised grain is a little smoother than its grooves. */
 export const BOARD_ROUGHNESS={composite:.48,wood:.75,relief:.08,detail:.22};
 /** How much of the photo's board-to-board tone difference each strip keeps. Multi-tone lines (Tigerwood) differ a lot
@@ -165,5 +171,8 @@ export async function buildSwatchMaps(input:SwatchImage,kind:'composite'|'wood',
   });
   const atlasSum=[0,0,0];for(let i=0;i<albedo.length;i+=4){atlasSum[0]+=albedo[i];atlasSum[1]+=albedo[i+1];atlasSum[2]+=albedo[i+2];}
   const atlasMean=atlasSum.map(v=>v/(albedo.length/4)) as [number,number,number];
-  return {width:W,height,strips:n,albedo,normal,roughness,layout,sourceMean,atlasMean};
+  // A strip spans 0.8 of its board's face (a tenth trimmed off each edge) and repeats over 0.875 of its length. The
+  // tallest strip is a whole board; the photo's edges can cut the first and last ones short.
+  const s0=layout.strips[0],repeatIn=layout.kind==='boards'?Math.min(48,Math.max(8,BOARD_FACE_IN*(s0.x1-s0.x0)*.875*.8/Math.max(...layout.strips.map(t=>t.y1-t.y0)))):48;
+  return {width:W,height,strips:n,albedo,normal,roughness,layout,sourceMean,atlasMean,repeatIn};
 }
