@@ -90,6 +90,7 @@ import FixtureGlows from './FixtureGlows';
 import {FixtureLightContext,createFixtureLighting,useFixtureLit} from './fixtureLighting';
 
 import {packFixtureLights} from '../../fixtureLight';
+import {POOL_LIGHT_ID} from '../../poolLightSpec';
 
 import {castsPreviewLight} from '../../lightingPreview';
 
@@ -449,6 +450,8 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
   const fx=useContext(FixtureLightContext),invalidate=useThree(s=>s.invalidate);
 
+  // Underwater lights glow in the night water (Pool3D); off by day and with the preview lights off.
+  const poolLamps=useMemo(()=>evening&&lightsOn?extras.fixtures.filter(f=>f.productId===POOL_LIGHT_ID).map(f=>({x:f.x,z:f.z,angle:f.angle})):[],[extras.fixtures,evening,lightsOn]);
   useLayoutEffect(()=>{if(!fx)return;fx.update(packFixtureLights(extras.fixtures,{evening,enabled:lightsOn}));invalidate();},[fx,extras.fixtures,evening,lightsOn,invalidate]);
 
   const catalogueExtras=useMemo(()=>catalogueAccessoryLayout(data,model),[data,model]);
@@ -592,7 +595,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
     <LightingFixtures items={extras.fixtures} evening={evening} enabled={lightsOn}/>
 
-    </group>{data.pools?.some(p=>p.enabled)&&<Suspense fallback={null}><Pool3D pools={getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))} inspection={inspection||cutaway} evening={evening}/></Suspense>}<Yard3D model={visibleYard} inspection={inspection||cutaway} plantingBeds={plantingBeds}/>{yard.features.some(f=>f.config.kind==='fire-feature')&&<Suspense fallback={null}><Fire3D yard={yard} data={data} inspection={inspection||cutaway}/></Suspense>}
+    </group>{data.pools?.some(p=>p.enabled)&&<Suspense fallback={null}><Pool3D pools={getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))} inspection={inspection||cutaway} evening={evening} lamps={poolLamps}/></Suspense>}<Yard3D model={visibleYard} inspection={inspection||cutaway} plantingBeds={plantingBeds}/>{yard.features.some(f=>f.config.kind==='fire-feature')&&<Suspense fallback={null}><Fire3D yard={yard} data={data} inspection={inspection||cutaway}/></Suspense>}
 
     <Environment3D data={environmentData} footprint={model.levels[0].footprint} topY={data.height} planKey={planKey} cutaway={cutaway} finished={!inspection} yard={yard} {...interaction}/>
 
