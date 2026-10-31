@@ -31,7 +31,9 @@ async function applyRegion(page:Page,context:BrowserContext,angle:number,free=fa
 async function navigationClear(page:Page){
  await showProjectControls(page);
  const navigation=page.getByRole('group',{name:'Drawing navigation',exact:true});await navigation.scrollIntoViewIfNeeded();
- const box=await navigation.boundingBox(),price=await page.getByRole('region',{name:'Live price',exact:true}).boundingBox();expect(box&&price).toBeTruthy();expect(box!.y+box!.height).toBeLessThanOrEqual(price!.y);
+ const box=await navigation.boundingBox(),price=await page.getByRole('region',{name:'Live price',exact:true}).boundingBox();expect(box&&price).toBeTruthy();
+ // Phones and tablets: the price is the bar at the foot of the screen. Desktop: it sits in the sheet-tab row above the drawing.
+ if(page.viewportSize()!.width<=800)expect(box!.y+box!.height).toBeLessThanOrEqual(price!.y);else expect(box!.y+box!.height<=price!.y+.5||price!.y+price!.height<=box!.y+.5,'the zoom bar and the price do not overlap').toBe(true);
  expect(await navigation.evaluate(el=>[...el.querySelectorAll('button')].every(button=>{const r=button.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !!hit&&button.contains(hit);}))).toBe(true);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)).toBe(0);
  for(const name of ['Select board','Select area','Add breaker']){const b=await page.getByRole('button',{name,exact:true}).boundingBox();expect(b!.height).toBeGreaterThanOrEqual(44);expect(b!.width).toBeGreaterThanOrEqual(44);}

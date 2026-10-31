@@ -37,7 +37,8 @@ test('agent previews leave autosave untouched; validated batch is acknowledged a
   expect((await page.evaluate(()=>window.deckcraft!.read())).design).toEqual(before.snapshot.design);
   const changed=good(await execute(page,[{type:'design.patch',patch:{width:20}},{type:'design.patch',patch:{length:18}}],'atomic-edit'));
   expect(changed.snapshot.design.width).toBe(20);expect(changed.snapshot.design.length).toBe(18);expect(changed.snapshot.history.canUndo).toBe(true);
-  await showProjectControls(page);await expect(page.getByRole('heading',{level:2}).filter({hasText:/20 × 18/}).first()).toBeVisible();
+  // The homeowner page stays in drawing focus, which leaves the drawing's heading out of view; its text is still checked.
+  await showProjectControls(page);await expect(page.locator('.dd-preview-head h2').filter({hasText:/20 × 18/}).first()).toBeAttached();
   const repeated=good(await execute(page,[{type:'design.patch',patch:{width:20}},{type:'design.patch',patch:{length:18}}],'atomic-edit'));expect(repeated.replayed).toBe(true);
   const undo=good(await execute(page,[{type:'history.undo'}]));expect(undo.snapshot.design).toEqual(before.snapshot.design);
   good(await execute(page,[{type:'history.redo'}]));

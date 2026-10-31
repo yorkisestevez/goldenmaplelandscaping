@@ -2,7 +2,7 @@ import {test,expect,type Page,type Locator} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import type {DeckData} from '../src/features/deckcraft/types';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
-import {showProjectControls} from './nav';
+import {openDesignTask} from './nav';
 
 /**
  * Ground fit (G3) on Craighurst: a real U-Level survey (no customer details) under a 12 × 5 ft deck at +30 in with four
@@ -26,10 +26,7 @@ test.beforeEach(async({page,context})=>{
 
 /** Backyard → the landing's "Fit to the ground…" → the Ground fit panel. Elevations & build is Designer Mode only. */
 async function openGroundFit(page:Page){
- await showProjectControls(page);
- const nav=page.getByRole('navigation',{name:'Design tasks'}),open=nav.getByRole('button',{name:'Backyard',exact:true});
- if(!await open.isVisible())await nav.locator('details').filter({has:page.locator('button[aria-label="Backyard"]')}).locator('summary').click();
- await open.click();
+ await openDesignTask(page,'Backyard');
  const entry=page.getByRole('button',{name:'Fit to the ground…',exact:true});
  await entry.scrollIntoViewIfNeeded();await entry.click();await expect(entry).toHaveAttribute('aria-expanded','true');
  const panel=page.getByRole('region',{name:'Ground fit',exact:true});

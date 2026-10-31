@@ -32,7 +32,8 @@ const seeded=(seed:number)=>()=>{seed=(seed*16807)%2147483647;return (seed-1)/21
 // 1. Legacy boulders are byte-identical to production.
 {
  const golden=JSON.parse(readFileSync('scripts/fixtures/legacy-boulders-golden.json','utf8')),fixture=JSON.parse(readFileSync('scripts/fixtures/legacy-boulders-design.json','utf8'));
- const design={...DEFAULT_DECK,terrainConfig:{widthFt:80,depthFt:80,elevationIn:6,slopePct:4},landscapeObjects:fixture.landscapeObjects} as DeckData;
+ // The golden was saved at 3e94257, when new designs were priced on '2026-10-piers' with a flush (0 in) frame.
+ const design={...DEFAULT_DECK,buildRules:'2026-10-piers',pictureFrameOverhangIn:0,terrainConfig:{widthFt:80,depthFt:80,elevationIn:6,slopePct:4},landscapeObjects:fixture.landscapeObjects} as DeckData;
  await ensureLiveDesignExtensions(design);
  const saved=serializeDesign(parseDesign(serializeDesign(design))),reopened=parseDesign(saved);
  eq(saved,golden.saved,'A saved legacy boulder design serializes exactly as before');

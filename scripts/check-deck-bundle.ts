@@ -104,6 +104,12 @@ import {basename} from 'node:path';
 // October 22 (estate outdoor rooms, PR 183, on top of the seasons and guillotined stone): the evening paver grade that
 // keeps Caffè Crema and Greyed Nickel warm at night rides with the 3D view; the kitchen downlights load on their own.
 // The viewer measures 340.0 KB. Raised to 341 KB with the owner's approval.
+// October 31 (estate lighting meets the faster 3D view, PR 207): together the viewer measured 340.3 KB. The catalogue light
+// housings (CatalogueFixture.tsx, with the pool niche and the well light's louvre) are now a chunk of their own (2.2 KB),
+// fetched with the first catalogue light, so the viewer is 338.9 KB within its unchanged budget (guarded below).
+// October 31 (picture-frame overhang follows the board, PR 209): the board's overhang limit and the finished-fascia
+// offset ride with the first estimate — option-deltas worker 213.0 KB gzip, 15 bytes over. Raised to 213.5 KB with the
+// owner's approval.
 const BUDGET_KB={routeInitial:278,routeCss:12,viewer:341,pdf:150,deltaWorker:214,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35,splitStone:6.5};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
@@ -140,17 +146,19 @@ ok(cssKB<=BUDGET_KB.routeCss,`Deck designer route CSS is ${cssKB.toFixed(1)} KB 
 // the Project controls button, the plan's frame and zoom bar) and each lazy piece of it is preloaded before hydration
 // (designer/hydrationLazy.ts). React streams those pieces as Suspense boundaries; a new one must join the preload list
 // (DeckDesigner.tsx piecesReady, PreviewPanel.tsx partsReady) or it is thrown away and redrawn on a slow load.
+// October 21 (P1, four tabs): the homeowner's tab strip took the Project controls button's place, which only Designer Mode
+// shows now; the tab panel is its own chunk, loaded when a tab first opens it.
 {
   const routeCss=css.map(f=>readFileSync(new URL(f,assets),'utf8')).join('\n');
-  ok(routeCss.includes('.dd-simple-tools{')&&routeCss.includes('.dd-drawing-focus-toggle{position:absolute')&&routeCss.includes('.dd-plan-navigation{'),"The tools ribbon, the Project controls button and the plan's zoom bar are styled by the route's stylesheet");
+  ok(routeCss.includes('.dd-ribbon-tabs{')&&routeCss.includes('.dd-simple-tools{')&&routeCss.includes('.dd-plan-navigation{'),"The four tabs, the tools ribbon and the plan's zoom bar are styled by the route's stylesheet");
   ok(!files.some(f=>/^PlanToolPicker-.*\.css$/.test(f)),'The tools ribbon has no stylesheet of its own to land after the first paint');
   const streamed=readFileSync(new URL('../deck-designer/index.html',assets),'utf8').match(/\$RC\("B:\d+"/g)?.length??0;
-  ok(streamed===7,`The prerendered designer streams ${streamed} Suspense boundaries; 7 expected (the drawing, the Deck section body, the Project controls, the tools ribbon, the plan, and React Router's two data handoffs). Preload any new one before hydration, then update this count.`);
+  ok(streamed===6,`The prerendered designer streams ${streamed} Suspense boundaries; 6 expected (the drawing, the Project controls, the four tabs and tools, the plan, and React Router's two data handoffs; the tab panel opens after the page). Preload any new one before hydration, then update this count.`);
 }
-for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^ProposalDialog-/,/^proposalPdf-/,/^pdfAssets-/,/^proposalModel-/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/,/^optionDeltas-/,/^useOptionDeltas-/,/^splitFaceStone-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
+for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^ProposalDialog-/,/^proposalPdf-/,/^pdfAssets-/,/^proposalModel-/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/,/^optionDeltas-/,/^useOptionDeltas-/,/^splitFaceStone-/,/^HomePanel-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
 // Each section body, and the site plan's editor, is a chunk of its own (one merged into the route would pass the test
 // above unseen).
-for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep','SiteExtrasStep','BackyardStep','EstimateStep','PlanEditor','BoardLayoutEditor','HardscapePicker','YardShapeEditor','optionDeltas','useOptionDeltas','ProposalDialog','proposalPdf']){
+for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep','SiteExtrasStep','BackyardStep','EstimateStep','PlanEditor','BoardLayoutEditor','HardscapePicker','YardShapeEditor','optionDeltas','useOptionDeltas','ProposalDialog','proposalPdf','HomePanel']){
   ok(files.some(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')),`${body} is its own chunk`);
   if(body==='BoardLayoutEditor')ok(!initial.some(f=>f.startsWith(`${body}-`)),'Board-layout interaction controls stay outside the first estimate');
   if(body==='HardscapePicker'||body==='YardShapeEditor'){ok(!initial.some(f=>f.startsWith(`${body}-`)),`${body} stays outside the first estimate`);ok(files.filter(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')).reduce((n,f)=>n+gz(f),0)<=BUDGET_KB.contractorTool,`${body} stays within the optional-tool budget`);}
@@ -163,6 +171,7 @@ for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep',
   ok(permitKB<=BUDGET_KB.permitSet,`The permit set is ${permitKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.permitSet} KB): ${permit.join(', ')}`);
 }
 const viewer=files.find(f=>/^Deck3DViewer-.*\.js$/.test(f)),pdf=files.find(f=>/^jspdf.*\.js$/.test(f)),deltaWorker=files.find(f=>/^optionDeltas\.worker-.*\.js$/.test(f));
+ok(files.some(f=>/^CatalogueFixture-.*\.js$/.test(f))&&viewer&&!readFileSync(new URL(viewer,assets),'utf8').includes('pool-niche-housing'),'The catalogue light housings are a chunk of their own, outside the 3D viewer');
 ok(viewer&&gz(viewer)<=BUDGET_KB.viewer,`3D viewer chunk is ${viewer?gz(viewer).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.viewer} KB)`);
 const splitStone=files.find(f=>/^splitFaceStone-.*\.js$/.test(f));
 ok(splitStone&&gz(splitStone)<=BUDGET_KB.splitStone,`The guillotined wall's split stones are a chunk of their own, ${splitStone?gz(splitStone).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.splitStone} KB)`);

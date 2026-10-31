@@ -199,7 +199,7 @@ export function ontarioShowcaseDesign({palette='trend-2026'}:{palette?:ShowcaseP
   customerName:'Showcase sample',projectAddress:'Barrie, Ontario',
   width:30,length:16,height:36,deckType:'Freestanding',foundationDepthIn:48,houseCantileverIn:16,
   deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk',boardWidth:5.5,
-  pictureFrameRows:1,pictureFrameOverhangIn:0,railingType:'Aluminum',
+  pictureFrameRows:1,railingType:'Aluminum',
   catalogueRailingId:'dk_contemporary',
   deckFinishes:{border:'tt_prime_plus:Dark Cocoa',railingColor:'Textured Black'},
   stairFlights:1,stairWidth:96,stairType:'Straight',stairPosition:'Front',stairOffset:50,

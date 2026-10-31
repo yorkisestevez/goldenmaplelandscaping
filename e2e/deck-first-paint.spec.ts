@@ -11,7 +11,7 @@ import {test,expect,type BrowserContext} from '@playwright/test';
 const PIECES=/\/assets\/(PreviewPanel|ArchitectShortcuts|PlanToolPicker|PlanEditingWorkspace|DimensionsStep|EasyEditTools)-/;
 /** First-painted nodes that must survive hydration, and whether their height must hold too (the drawing's own height
  *  includes what is below the fold). */
-const KEPT:[string,boolean][]=[['#deck-live-preview',false],['.dd-drawing-focus-toggle',true],['section.dd-simple-tools',true],['.dd-canvas>.dd-plan-viewport',true],['.dd-plan-navigation',true],['#dd-section-deck-body>:first-child',false]];
+const KEPT:[string,boolean][]=[['#deck-live-preview',false],['.dd-home-tabs',true],['section.dd-simple-tools',true],['.dd-canvas>.dd-plan-viewport',true],['.dd-plan-navigation',true]];
 
 async function slowLoad(context:BrowserContext){
  await context.addInitScript('window.__name=(target,value)=>target;');
@@ -67,7 +67,7 @@ test('the cost estimator opens the whole designer at once, never piece by piece'
  // slowed load it reports a hydration mismatch, React #418, before the studio opens).
  await context.addInitScript(()=>{const w=window as any,seen={fallback:false,partial:false},has=(s:string)=>!!document.querySelector(s);w.__studio=seen;w.__studioErrors=[];
   let open=false;addEventListener('error',e=>{if(open)w.__studioErrors.push(String(e.message).slice(0,200));});
-  new MutationObserver(()=>{if(!open&&(has('#deck-live-preview')||[...document.querySelectorAll('[role=status]')].some(n=>/Opening the 3D deck designer/.test(n.textContent??''))))open=true;if(has('.dd-preview[role=status]'))seen.fallback=true;if(has('#deck-live-preview')&&!['section.dd-simple-tools','.dd-canvas>.dd-plan-viewport','.dd-drawing-focus-toggle'].every(has))seen.partial=true;}).observe(document,{childList:true,subtree:true});});
+  new MutationObserver(()=>{if(!open&&(has('#deck-live-preview')||[...document.querySelectorAll('[role=status]')].some(n=>/Opening the 3D deck designer/.test(n.textContent??''))))open=true;if(has('.dd-preview[role=status]'))seen.fallback=true;if(has('#deck-live-preview')&&!['section.dd-simple-tools','.dd-canvas>.dd-plan-viewport','.dd-home-tabs'].every(has))seen.partial=true;}).observe(document,{childList:true,subtree:true});});
  await page.goto('/cost-estimator/?studio=deck');
  await expect(page.locator('section.dd-simple-tools')).toBeVisible({timeout:30_000});
  await expect(page.locator('.dd-plan-stage>.dd-plan-editor')).toBeAttached();

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {pictureFrameOverhang} from '../src/features/deckcraft/lib/finishedFootprint';
 import {DEFAULT_DECK,DECK_SETTINGS} from '../src/features/deckcraft/defaults';
 import {deckingStock,designStockLength,designStockLengths,productStock,STOCK_TRIM_IN} from '../src/features/deckcraft/deckingStock';
 import type {DeckData} from '../src/features/deckcraft/types';
@@ -10,7 +11,7 @@ import {levelInlayContext} from '../src/features/deckcraft/lib/inlayGeometry';
 import {inlayPlanLevel} from '../src/features/deckcraft/designer/inlayActions';
 import {stockRowId} from '../src/features/deckcraft/schedule';
 let checks=0;const ok=(cond:unknown,msg:string)=>{assert(cond,msg);checks++;};
-ok(DEFAULT_DECK.pictureFrameOverhangIn===0,'New decks do not assume an unsupported border overhang');
+ok(!('pictureFrameOverhangIn' in DEFAULT_DECK)&&pictureFrameOverhang(DEFAULT_DECK)===.5,'New decks overhang only as far as the board allows (0.5 in on Harvest)');
 ok(JSON.stringify(deckingStock('tt_prime_plus').lengthsIn)==='[192,240]','Prime+ lists 16 and 20 ft');
 ok(!deckingStock('unknown').confirmed,'An unknown product stays an allowance');
 ok(!deckingStock('tt_prime_plus',3.5).confirmed,'A narrow board is not covered by the standard-width listing');

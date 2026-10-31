@@ -30,7 +30,7 @@ const scenarios=legacyScenarios();
 // live default needs its own saved-design decision, so the frozen base may differ from it only in these keys.
 // 2026-10-15 (owner): new designs start on square-edge Harvest in Brownstone. Every save since the designer launched
 // (033ee5e, 2026-09-10) writes its board and colour, so no saved design falls back to the new default; checked below.
-assert.equal(DEFAULT_DECK.pictureFrameRows,1);assert.equal(DEFAULT_DECK.pictureFrameOverhangIn,0);assert.equal(DEFAULT_DECK.buildRules,'2026-10-piers');
+assert.equal(DEFAULT_DECK.pictureFrameRows,1);assert.ok(!('pictureFrameOverhangIn' in DEFAULT_DECK));assert.equal(DEFAULT_DECK.buildRules,'2026-10-frame');
 assert.equal(DEFAULT_DECK.deckingMaterial,'tt_harvest');assert.equal(DEFAULT_DECK.deckingColor,'Brownstone');
 assert.equal(LEGACY_DEFAULT_DECK.deckingMaterial,'tt_prime_plus');assert.equal(LEGACY_DEFAULT_DECK.deckingColor,'Coconut Husk');
 {const saved=JSON.parse(serializeDesign(legacyBaseDeck())).configuration;assert.equal(saved.deckingMaterial,'tt_prime_plus');assert.equal(saved.deckingColor,'Coconut Husk');}

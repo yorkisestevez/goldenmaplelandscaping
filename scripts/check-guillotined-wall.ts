@@ -21,7 +21,7 @@ import {STONE_JOINT_IN,STONE_JOINT_CLEARANCE_IN,STONE_LENGTH_IN,stoneCourseJoint
 import WallStoneEditor,{wallProductPatch,withoutStaleStone} from '../src/features/deckcraft/WallStoneEditor';
 import baseline from '../src/data/engine-baseline.json';
 import {createDeckAgentController,type DeckAgentHostState} from '../src/features/deckcraft/designer/deckAgentController';
-import {buildAssistantContext,validateAssistantContext} from '../src/features/deckcraft/designer/assistantPlan';
+import {buildAssistantContext,parseAssistantPlan,validateAssistantContext} from '../src/features/deckcraft/designer/assistantPlan';
 import * as THREE from 'three';
 import {drawnSplit,edgeBreak,mergeStonePieces,nextStoneCacheRound,splitFaceFeatures,splitFaceStoneGeometry,splitFaceStoneMesh,splitStoneMaterial,stoneCache,stoneNeighbours,stoneOutlines} from '../src/features/deckcraft/components/viewer3d/splitFaceStone';
 
@@ -194,6 +194,20 @@ ok(inspected.ok,`A material-picker change moves a guillotined wall to a supplier
 ok(!('wallStone' in wallProductPatch(wall(),'segmental-concrete'))||wallProductPatch(wall(),'segmental-concrete').wallStone===undefined,'Picking another product from the list drops the stone choice');
 const switched=await agent.execute({id:'gw-agent-switch',commands:[{type:'yard.update',id:'gw',productId:'segmental-concrete'}]});
 ok(switched.ok&&state.data.yardFeatures?.[0].productId==='segmental-concrete'&&state.data.yardFeatures[0].wallStone===undefined,`An agent can move a guillotined wall to another product (${JSON.stringify(switched).slice(0,160)})`);
+// The yard commands (yard.create, yard.update, the assistant's plans) choose the stone and course too, not only design.patch.
+const created=await agent.execute({id:'gw-agent-create',commands:[{type:'yard.create',kind:'retaining-wall',id:'gw2',productId:GUILLOTINED_WALL,wallStone:{stoneId:'carr-dark-grey',courseIn:10},xFt:0,zFt:40,widthFt:12,depthFt:10/12,heightIn:30}]});
+const gw2=()=>state.data.yardFeatures?.find(f=>f.id==='gw2');
+ok(created.ok&&gw2()?.wallStone?.stoneId==='carr-dark-grey'&&gw2()?.wallStone?.courseIn===10,`yard.create builds a guillotined wall in the stone and course asked for (${JSON.stringify(created).slice(0,200)})`);
+const recoursed=await agent.execute({id:'gw-agent-course',commands:[{type:'yard.update',id:'gw2',wallStone:{stoneId:'carr-orillia-grey',courseIn:20}}]});
+ok(recoursed.ok&&gw2()?.wallStone?.stoneId==='carr-orillia-grey'&&gw2()?.wallStone?.courseIn===20,`yard.update changes a guillotined wall's stone and course (${JSON.stringify(recoursed).slice(0,200)})`);
+const stray=await agent.preview({id:'gw-agent-stray',commands:[{type:'yard.update',id:'gw',wallStone:{stoneId:'carr-dark-grey',courseIn:10}}]});
+ok(!stray.ok,'A stone choice on a wall that is not guillotined is refused');
+// A deeper course deepens the wall, so a stone change is placed again: 10 in courses clear the deck here, 20 in ones do not.
+const nearDeck=await agent.execute({id:'gw-agent-near-deck',commands:[{type:'yard.create',kind:'retaining-wall',id:'gw3',productId:GUILLOTINED_WALL,wallStone:{stoneId:'carr-orillia-grey',courseIn:10},xFt:0,zFt:12.75,widthFt:8,depthFt:10/12,heightIn:20}]});
+ok(nearDeck.ok,`A 10 in guillotined wall fits just clear of the deck (${JSON.stringify(nearDeck).slice(0,200)})`);
+const deepened=await agent.preview({id:'gw-agent-deepen',commands:[{type:'yard.update',id:'gw3',wallStone:{stoneId:'carr-orillia-grey',courseIn:20}}]});
+ok(!deepened.ok&&/would stand on the deck/.test(JSON.stringify(deepened)),`A course change that would push the wall onto the deck is refused (${JSON.stringify(deepened).slice(0,200)})`);
+ok(parseAssistantPlan({kind:'edit',message:'Use Dark Grey in 16 in courses.',assumptions:[],commands:[{type:'yard.update',id:'gw2',wallStone:{stoneId:'carr-dark-grey',courseIn:16}}]}).ok,'The assistant can plan a stone and course change');
 
 // 10. The stone looks real (render only): flat top and bed, a split face with relief, crisp arrises broken by chips, its own
 // shade of the limestone. It is carved inward from its laid stone, so nothing leaves the stone's footprint or course except,

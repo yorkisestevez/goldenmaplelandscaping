@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {calculateEstimate} from '../src/features/deckcraft/calculations';
-import {CURRENT_BUILD_RULES,usesCurrentBuildRules,usesSizedPiers,usesStructuralReview} from '../src/features/deckcraft/buildRules';
+import {CURRENT_BUILD_RULES,usesCurrentBuildRules,usesSizedPiers,usesStructuralReview,usesWallLedgerRule} from '../src/features/deckcraft/buildRules';
 import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
 import {CODE_REFERENCES} from '../src/features/deckcraft/drawings/codeReferences';
 import {buildPermitSet} from '../src/features/deckcraft/drawings/permitSheets';
@@ -18,7 +18,8 @@ const flags=(patch:Partial<DeckData>={})=>estimate(patch).flags.join('\n');
 const has=(patch:Partial<DeckData>,text:string)=>ok(flags(patch).includes(text),`flags include ${text}`);
 const lacks=(patch:Partial<DeckData>,text:string)=>ok(!flags(patch).includes(text),`flags omit ${text}`);
 
-ok(CURRENT_BUILD_RULES==='2026-10-piers'&&usesCurrentBuildRules(DEFAULT_DECK)&&usesStructuralReview(DEFAULT_DECK)&&usesSizedPiers(DEFAULT_DECK),'New designs use the structural review, with sized piers, on top of the 2026-10 takeoff');
+ok(CURRENT_BUILD_RULES==='2026-10-frame'&&usesCurrentBuildRules(DEFAULT_DECK)&&usesStructuralReview(DEFAULT_DECK)&&usesSizedPiers(DEFAULT_DECK)&&usesWallLedgerRule(DEFAULT_DECK),'New designs use the structural review, with sized piers and the wall ledger rule, on top of the 2026-10 takeoff');
+ok(usesStructuralReview({buildRules:'2026-10-piers'})&&usesSizedPiers({buildRules:'2026-10-piers'})&&!usesWallLedgerRule({buildRules:'2026-10-piers'}),'A 2026-10-piers save keeps its review and piers, and the whole-house ledger rule');
 ok(usesStructuralReview({buildRules:'2026-10-struct'})&&!usesSizedPiers({buildRules:'2026-10-struct'}),'A 2026-10-struct save keeps the structural review and its price-book pier rate');
 ok(usesCurrentBuildRules({buildRules:'2026-10'})&&!usesStructuralReview({buildRules:'2026-10'}),'A 2026-10 save keeps the takeoff and skips the structural review');
 
@@ -59,6 +60,21 @@ has({houseConfig:brickHouse},'Ledger blocked');
 ok(estimate({houseConfig:brickHouse}).model.levels[0].reference.beamRows.some(row=>row.kind==='house'),'Brick veneer frames a house-side beam instead of a ledger');
 ok(!estimate({houseConfig:brickHouse}).sections.flatMap(s=>s.items).find(i=>i.name==='Ledger Flashing'),'A blocked ledger is not priced for flashing');
 lacks({houseConfig:brickHouse,buildRules:'2026-10'},'Ledger blocked');
+// 2026-10-21 (owner): the wall the deck fastens to decides, not the whole house. A new design reads that wall's own
+// finish, then its block's, then the house's; a save from before keeps the whole-house rule and its price.
+{
+ const BRICK_WALL={cladding:'Brick' as const,color:'#9a4b3a'},SIDING_WALL={cladding:'Siding' as const,color:'#e8e1d2'},sided=getHouseConfig(design());
+ const flashed=(patch:Partial<DeckData>)=>estimate(patch).sections.flatMap(s=>s.items).some(i=>i.name==='Ledger Flashing'),houseBeam=(patch:Partial<DeckData>)=>estimate(patch).model.levels[0].reference.beamRows.some(row=>row.kind==='house');
+ const sidingDeckWall={...brickHouse,wallFinishes:{'main-front':SIDING_WALL}},brickDeckWall={...sided,wallFinishes:{'main-front':BRICK_WALL}},brickOtherWall={...sided,wallFinishes:{'main-back':BRICK_WALL}};
+ lacks({houseConfig:sidingDeckWall},'Ledger blocked');ok(flashed({houseConfig:sidingDeckWall})&&!houseBeam({houseConfig:sidingDeckWall}),'A brick house whose deck wall is siding takes a ledger and its flashing');
+ has({houseConfig:brickDeckWall},'Ledger blocked: the wall the deck meets is Brick');ok(houseBeam({houseConfig:brickDeckWall})&&!flashed({houseConfig:brickDeckWall}),'A sided house whose deck wall is brick frames a house-side beam, with no ledger flashing');
+ lacks({houseConfig:brickOtherWall},'Ledger blocked');ok(estimate({houseConfig:brickOtherWall}).total===standard.total,'Brick on a wall the deck does not meet keeps the price');
+ const brickBump={...sided,footprint:{rects:[{id:'bump1',kind:'house' as const,wall:'Front' as const,offsetFt:4,widthFt:8,depthFt:3,finish:BRICK_WALL}]}};
+ has({houseConfig:brickBump},'Ledger blocked');ok(!flags({houseConfig:{...brickBump,footprint:{rects:brickBump.footprint.rects.map(({finish:_finish,...b})=>b)}}}).includes('Ledger blocked'),'A brick bump-out the deck meets blocks the ledger through its block finish; the same bump-out in siding does not');
+ const piers=(h:typeof sided)=>estimate({houseConfig:h,buildRules:'2026-10-piers'});
+ lacks({houseConfig:brickDeckWall,buildRules:'2026-10-piers'},'Ledger blocked');ok(piers(brickDeckWall).total===estimate({buildRules:'2026-10-piers'}).total,'A 2026-10-piers save with a brick deck wall keeps its price');
+ has({houseConfig:sidingDeckWall,buildRules:'2026-10-piers'},'Ledger blocked: the house cladding is Brick');
+}
 
 has({height:144,framingSize:'2x8'},'Knee bracing');
 has({height:144,framingSize:'2x8'},'6x6 posts are inadequate');

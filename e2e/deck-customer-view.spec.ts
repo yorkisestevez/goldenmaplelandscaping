@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {openDesignTask} from './nav';
 
 /**
  * The customer view (?view=customer), opened straight from its link. The page is prerendered without the query, so the
@@ -13,9 +14,7 @@ test('a direct customer-view link hides the contractor details',async({page,cont
  await page.goto('/deck-designer/?view=customer');
  await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
  await expect(page.locator('.deck-designer')).toHaveAttribute('data-customer','true');
- await page.getByRole('button',{name:'Show all options',exact:true}).click();
- const nav=page.getByRole('navigation',{name:'Design tasks'});
- await nav.locator('summary').filter({hasText:/^Build & landscape$/}).click();await nav.getByRole('button',{name:'Privacy, skirting & extras',exact:true}).click();
+ await openDesignTask(page,'Privacy, skirting & extras');
  const advanced=page.locator('#dd-section-extras-body .dd-advanced');
  await expect(advanced.first()).toBeAttached();
  for(const details of await advanced.all())await expect(details).toBeHidden();
@@ -28,8 +27,6 @@ test('the designer without the customer view keeps the contractor details',async
  await page.goto('/deck-designer/');
  await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
  await expect(page.locator('.deck-designer')).not.toHaveAttribute('data-customer');
- await page.getByRole('button',{name:'Show all options',exact:true}).click();
- const nav=page.getByRole('navigation',{name:'Design tasks'});
- await nav.locator('summary').filter({hasText:/^Build & landscape$/}).click();await nav.getByRole('button',{name:'Privacy, skirting & extras',exact:true}).click();
+ await openDesignTask(page,'Privacy, skirting & extras');
  await expect(page.locator('#dd-section-extras-body .dd-advanced').first()).toBeVisible();
 });

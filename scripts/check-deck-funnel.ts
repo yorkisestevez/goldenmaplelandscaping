@@ -70,7 +70,7 @@ ok(!designFeatures(design({width:22,length:12,houseConfig:{...house,widthFt:26,d
 // The border (owner 2026-10-04): new designs start with one row, so only a departure from it is a choice. A save from
 // before the default (legacy build rules, rows 0) was never given the border and is not counted as removing it;
 // `deck_border_rows` (one or more rows) is retired so its GA4 history keeps that meaning.
-ok(DEFAULT_DECK.pictureFrameRows===1&&DEFAULT_DECK.buildRules==='2026-10-piers','New designs start with a one-row picture frame under the current rules (structural review, sized piers)');
+ok(DEFAULT_DECK.pictureFrameRows===1&&DEFAULT_DECK.buildRules==='2026-10-frame','New designs start with a one-row picture frame under the current rules (structural review, sized piers, wall ledger rule, fascia and board-maximum overhang)');
 {
   const legacy=design({pictureFrameRows:0,buildRules:'legacy'}),unmarked=design({pictureFrameRows:0});delete unmarked.buildRules;
   ok(designFeatures(legacy).every(f=>!f.startsWith('deck_border'))&&designFeatures(unmarked).every(f=>!f.startsWith('deck_border')),`A legacy unframed save reports no border label (got ${designFeatures(legacy).join(', ')||'none'})`);
@@ -117,6 +117,7 @@ ok(!designFeatures(design({customerName:'Jane Q Customer',projectAddress:'12 Exa
   const share=readFileSync(new URL('../src/features/deckcraft/ShareDesignLink.tsx',import.meta.url),'utf8');
   ok(/setDeckAnalyticsSink\(\(event,label\)=>trackEngagement\(event,label\)\)/.test(page),'The page sends DeckCraft events through the site analytics');
   ok(page.includes("trackDeck('deckcraft_step',stepLabel(0));},[]);")&&page.includes("trackDeck('deckcraft_step',stepLabel(section.legacyStep))")&&page.includes("trackDeck('deckcraft_view',`deck_view_${mode}`)")&&page.includes('designFeatures(data)'),'The page load and each section opened report their step; views and features are reported');
+  ok(page.includes("const first=id==='send'?undefined:tab.sections[0];")&&/if\(first\)trackSection\(first\);\s*else trackDeck\('deckcraft_step',stepLabel\(SECTION_BY_ID\.proposal\.legacyStep\)\);/.test(page),'The Price & send tab opens no section but still reports the estimate step, so its senders stay in the funnel');
   ok(page.includes("const [mode,setMode]=useState<PreviewMode>('plan');"),'The page opens on the site plan, so deck_view_plan is the view counted on load');
   for(const label of ['deck_plan_drag','deck_plan_typed','deck_plan_shortcut','deck_plan_stairs','deck_plan_outline','deck_plan_house'])ok(page.includes(`trackDeck('deckcraft_plan','${label}')`),`The site plan reports ${label}`);
   const report=readFileSync(new URL('../docs/deckcraft/funnel-report.md',import.meta.url),'utf8');
