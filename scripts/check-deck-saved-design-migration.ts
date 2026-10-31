@@ -62,7 +62,7 @@ ok(validateDesign({...bare,buildRules:undefined}).buildRules==='legacy','An expl
 const {pictureFrameRows:_bareRows,...bareNoBorder}=bare;
 for(const [label,run] of [['validateDesign',(c:Record<string,unknown>)=>validateDesign(c)],['parseDesign',(c:Record<string,unknown>)=>parseDesign(fileOf(c))]] as const){
   const current=run({...bareNoBorder,buildRules:CURRENT_BUILD_RULES}),legacy=run({...bareNoBorder,buildRules:'legacy'});
-  ok(current.buildRules===CURRENT_BUILD_RULES&&current.pictureFrameRows===DEFAULT_DECK.pictureFrameRows&&current.pictureFrameOverhangIn===DEFAULT_DECK.pictureFrameOverhangIn,`${label}: current-rules input that leaves out the border keys keeps the new-design defaults (one flush row)`);
+  ok(current.buildRules===CURRENT_BUILD_RULES&&current.pictureFrameRows===DEFAULT_DECK.pictureFrameRows&&current.pictureFrameOverhangIn===DEFAULT_DECK.pictureFrameOverhangIn,`${label}: current-rules input that leaves out the border keys keeps the new-design defaults (one row, board-maximum overhang)`);
   ok(legacy.pictureFrameRows===0&&legacy.pictureFrameOverhangIn===1.5,`${label}: legacy input that leaves them out gets the production defaults (no frame, 1.5 in)`);
 }
 for(const value of ['bogus','LEGACY',null,2026,true])for(const run of [()=>parseDesign(fileOf({...old,buildRules:value})),()=>validateDesign({...bare,buildRules:value})])assert.throws(run,/Unsupported buildRules/,`buildRules ${String(value)} is refused`),checks++;
@@ -71,9 +71,9 @@ ok(parseDesign(fileOf({...old,buildRules:'legacy'})).buildRules==='legacy'&&pars
 // 2. A new design starts on the current rules and keeps them through a file, a link and a job revision.
 const fresh=deckReleaseData(structuredClone(DEFAULT_DECK)),freshTotal=total(fresh),freshFile=configOf(serializeDesign(fresh));
 ok(DEFAULT_DECK.buildRules===CURRENT_BUILD_RULES&&usesCurrentBuildRules(fresh),'A new design starts on the current takeoff rules');
-ok(freshFile.buildRules===CURRENT_BUILD_RULES&&freshFile.pictureFrameOverhangIn===0&&freshFile.pictureFrameRows===1,'A new design file writes the current rules, a flush overhang and its one-row frame');
+ok(freshFile.buildRules===CURRENT_BUILD_RULES&&!('pictureFrameOverhangIn' in freshFile)&&freshFile.pictureFrameRows===1,'A new design file writes the current rules and its one-row frame, and leaves the overhang to the board');
 const freshBack=await openFile(serializeDeckReleaseDesign(fresh));
-ok(freshBack.buildRules===CURRENT_BUILD_RULES&&freshBack.pictureFrameOverhangIn===0&&same(total(freshBack),freshTotal),'A new design file reopens on the current rules at the same price');
+ok(freshBack.buildRules===CURRENT_BUILD_RULES&&freshBack.pictureFrameOverhangIn===undefined&&same(total(freshBack),freshTotal),'A new design file reopens on the current rules at the same price');
 ok(serializeDeckReleaseDesign(freshBack)===serializeDeckReleaseDesign(fresh),'Saving a reopened new design writes the same file');
 const freshLink=await openLink(designLinkJson(fresh));
 ok(freshLink.buildRules===CURRENT_BUILD_RULES&&same(total(freshLink),freshTotal),'A new design share link reopens on the current rules at the same price');
