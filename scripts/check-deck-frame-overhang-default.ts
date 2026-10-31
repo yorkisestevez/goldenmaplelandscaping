@@ -5,6 +5,9 @@ import {CURRENT_BUILD_RULES} from '../src/features/deckcraft/buildRules';
 import {boardMaxOverhangIn,finishedFasciaOffset,pictureFrameCompatibility,pictureFrameOverhang} from '../src/features/deckcraft/lib/finishedFootprint';
 import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
+import {exposedRim} from '../src/features/deckcraft/houseContact';
+import {fasciaSlabs} from '../src/features/deckcraft/components/viewer3d/fasciaSlabs';
+import {FASCIA_PROUD_IN} from '../src/features/deckcraft/lib/finishedFootprint';
 
 // Owner 2026-10-30: the picture frame on a new deck overhangs the fascia by the most its board's install guide allows
 // (TimberTech Advanced PVC 0.5 in; TimberTech Composite and Deckorators Surestone 1 in), and the fascia has its own
@@ -28,6 +31,11 @@ ok(finishedFasciaOffset(fresh({buildRules:'2026-10-walls',pictureFrameOverhangIn
 {const d=fresh({deckType:'Freestanding',width:16,length:12}),l=buildDeckTakeoff(d).levels[0],xs=l.deckingFootprint!.outline.map(p=>p.x),ys=l.deckingFootprint!.outline.map(p=>p.y),s=l.footprint.outline;
   const grow=Math.min(...s.map(p=>p.x))-Math.min(...xs);
   ok(Math.abs(grow-2.025)<1e-6&&Math.abs(Math.max(...ys)-Math.max(...s.map(p=>p.y))-2.025)<1e-6,`A freestanding Harvest deck's frame edge sits 1.525 + 0.5 in past the rim centre line (got ${grow})`);}
+
+// The 3D fascia stands proud only where a fascia goes: the rim the house does not cover. Along the ledger it stays the rim.
+{const d=fresh({deckType:'Attached',width:16,length:12}),m=buildDeckTakeoff(d),exposed=new Set(exposedRim(d,m)),rim=m.levels[0].rim??[],slabs=fasciaSlabs(m,FASCIA_PROUD_IN,exposed);
+  ok(rim.length>exposed.size&&exposed.size>0,'The attached deck has a house-side rim and exposed rim');
+  ok(slabs.every((s,i)=>Math.abs(s.thick-(rim[i].width+(exposed.has(rim[i])?FASCIA_PROUD_IN:0)))<1e-9),'Exposed rim slabs carry the fascia thickness; house-side rim slabs keep the rim thickness');}
 
 // Saving and reopening.
 const back=parseDesign(serializeDesign(fresh()));

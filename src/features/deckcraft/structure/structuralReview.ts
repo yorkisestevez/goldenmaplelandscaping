@@ -1,5 +1,5 @@
 /**
- * Structural review for designs on the current build rules (buildRules.ts, '2026-10-struct', '2026-10-piers' and '2026-10-walls').
+ * Structural review for designs on the current build rules (buildRules.ts, '2026-10-struct', '2026-10-piers', '2026-10-walls' and '2026-10-frame').
  * Saved '2026-10' and legacy designs do not call this. Planning checks for the office, not a permit approval.
  * Thresholds that are not a published OBC table are named as DeckCraft planning values.
  */

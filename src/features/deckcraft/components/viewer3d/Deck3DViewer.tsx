@@ -126,6 +126,7 @@ import Skirting3D,{Slabs} from './Skirting3D';
 import {fasciaSlabs,accessoryFasciaSlabs} from './fasciaSlabs';
 import {FASCIA_PROUD_IN} from '../../lib/finishedFootprint';
 import {usesFinishedFascia} from '../../buildRules';
+import {exposedRim} from '../../houseContact';
 
 import Cladding3D from './Cladding3D';
 
@@ -497,7 +498,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
   const edgeMembers:Member[]=model.levels.flatMap(l=>l.rim??[]);
 
-  const fasciaProud=usesFinishedFascia(data)&&!catalogueExtras.fascia.length?FASCIA_PROUD_IN:0,finishedFascia=useMemo(()=>fasciaSlabs(model,fasciaProud),[model,fasciaProud]);
+  const fasciaProud=usesFinishedFascia(data)&&!catalogueExtras.fascia.length?FASCIA_PROUD_IN:0,finishedFascia=useMemo(()=>fasciaSlabs(model,fasciaProud,fasciaProud?new Set(exposedRim(data,model)):undefined),[data,model,fasciaProud]);
 
   const accessoryFascia=useMemo(()=>accessoryFasciaSlabs(catalogueExtras.fascia),[catalogueExtras.fascia]);
 

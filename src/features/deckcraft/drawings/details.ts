@@ -6,7 +6,7 @@ import {getHardwareLayout} from '../hardwareLayout';
 import {catalogueAccessoryLayout} from '../catalogueAccessories';
 import {usesFinishedFascia} from '../buildRules';
 import {hasPictureFrame} from '../borderLighting';
-import {pictureFrameOverhang} from '../lib/finishedFootprint';
+import {FASCIA_PROUD_IN,pictureFrameOverhang} from '../lib/finishedFootprint';
 import {stringerCutProfile} from '../components/viewer3d/stringerProfile';
 import {ACTUAL_DEPTH_IN,type JoistSize} from '../structure/spanTables';
 import {DETAIL_SCALES,SCALES,SHEET,type DrawItem,type LayerId,type Pt,drawnExtents,feetInches,fitScale} from './drawingTypes';
@@ -149,14 +149,16 @@ function footingDetail(c:Ctx):Detail{
 function guardDetail(c:Ctx):Detail{
   const k=pen(),{jd,size,data,model}=c,h=model.railing.height,jt=-1,W=12,g=-c.guardInset,list:[number,number,string][]=[];
   k.rect('S-FRMG',-1.5,jt-jd,0,jt,true);joistBeyond(k,c,-1.5,-W,jt);
-  if(c.fascia)k.rect('A-DECK-FNSH',0,jt-jd,.625,jt);
+  // The drawn fascia: a new design's board at the thickness the model gives it; older saves keep the drawn 5/8 in.
+  const ft=c.fascia?usesFinishedFascia(data)?FASCIA_PROUD_IN:.625:0;
+  if(c.fascia)k.rect('A-DECK-FNSH',0,jt-jd,ft,jt);
   // A new design's picture frame overhangs the fascia face by its own overhang; older saves draw as they were quoted.
-  decking(k,c,-W,usesFinishedFascia(data)&&hasPictureFrame(data)?(c.fascia?.625:0)+pictureFrameOverhang(data):c.fascia?1.25:.75,jt,0);
+  decking(k,c,-W,usesFinishedFascia(data)&&hasPictureFrame(data)?ft+pictureFrameOverhang(data):c.fascia?1.25:.75,jt,0);
   list.push([-.75,jt-jd*.6,`${size} rim joist${c.fascia?' and fascia':''}`]);
   const frameless=model.railing.frameless;
   if(frameless){
     // Where the glass starts follows the mount (framelessGlass.ts): top shoe 0.5 in up, fascia shoe 4.75 in down, spigots 2 in up.
-    if(frameless.mount==='Fascia-mount base shoe'){k.rect('A-RAIL',c.fascia?.625:0,-7.5,(c.fascia?.625:0)+2.5,-.5);k.rect('A-RAIL',(c.fascia?.625:0)+1,-4.75,(c.fascia?.625:0)+1.5,h);list.push([(c.fascia?.625:0)+2.5,-4,'Fascia-mount base shoe']);}
+    if(frameless.mount==='Fascia-mount base shoe'){k.rect('A-RAIL',ft,-7.5,ft+2.5,-.5);k.rect('A-RAIL',ft+1,-4.75,ft+1.5,h);list.push([ft+2.5,-4,'Fascia-mount base shoe']);}
     else if(frameless.mount==='Spigots'){k.rect('A-RAIL',g-1,0,g+1,8);k.rect('A-RAIL',g-.25,2,g+.25,h);list.push([g+1,5,'Spigot']);}
     else{k.rect('A-RAIL',g-1.5,0,g+1.5,4);k.rect('A-RAIL',g-.25,.5,g+.25,h);list.push([g+1.5,2,'Top-mount base shoe']);}
     list.push([g+.25,h*.6,'Glass panel']);

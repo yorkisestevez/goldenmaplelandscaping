@@ -5,7 +5,7 @@ import type {ZoneReference} from '../zoneFraming';
 import {catalogueAccessoryLayout} from '../catalogueAccessories';
 import {usesFinishedFascia} from '../buildRules';
 import {hasPictureFrame} from '../borderLighting';
-import {pictureFrameOverhang} from '../lib/finishedFootprint';
+import {FASCIA_PROUD_IN,pictureFrameOverhang} from '../lib/finishedFootprint';
 import {getHardwareLayout} from '../hardwareLayout';
 import {ACTUAL_DEPTH_IN,DESIGN,type JoistSize} from '../structure/spanTables';
 import {type DrawItem,type LayerId,type Pt,feetInches} from './drawingTypes';
@@ -51,7 +51,7 @@ export function typicalSection(data:DeckData,model:DeckTakeoff,names:{materialNa
   const fascia=catalogueAccessoryLayout(data,model).fascia.length>0||usesFinishedFascia(data);
   // Where the decking ends past the rim's outer face: a new design's picture frame overhangs the fascia face by its own
   // overhang; older saves draw as they were quoted.
-  const deckEnd=d+(usesFinishedFascia(data)&&hasPictureFrame(data)?(fascia?.625:0)+pictureFrameOverhang(data):0);
+  const ft=fascia?usesFinishedFascia(data)?FASCIA_PROUD_IN:.625:0,deckEnd=d+(usesFinishedFascia(data)&&hasPictureFrame(data)?ft+pictureFrameOverhang(data):0);
   const items:DrawItem[]=[];
   // The cut, in plan: between two joists a third of the way across the zone, clear of the labels centred on S-2.
   // The level's own joists (build-ups at breakers and borders included), in the zone's x.
@@ -90,7 +90,7 @@ export function typicalSection(data:DeckData,model:DeckTakeoff,names:{materialNa
     rect('S-FRMG',1.5,joistTop-jd-.1,3.1,joistTop-jd+Math.min(6,jd-1));
   }else if(rim)rect('S-FRMG',0,joistTop-jd,1.5,joistTop,true);
   if(rim)rect('S-FRMG',d-1.5,joistTop-jd,d,joistTop,true);
-  if(fascia)rect('A-DECK-FNSH',d,joistTop-jd,d+.625,joistTop);
+  if(fascia)rect('A-DECK-FNSH',d,joistTop-jd,d+ft,joistTop);
   // The joist beyond: continuous over drop beams, or hung between flush beams.
   const bearings=ref.beamMount==='flush'?rows.map(r=>r.z).filter(z=>z-half>uStart&&z+half<uEnd):[];
   let from=uStart;for(const z of bearings){rect('S-FRMG',from,joistTop-jd,z-half,joistTop);from=z+half;}
