@@ -57,9 +57,10 @@ void dcBoard(){
  * board looks below; every other user of a swatch material (fascia, cladding, skirting, timbers, the box-projected framing)
  * keeps one strip and offset over the piece, as before.
  *
- * Along a board the grain changes strip and offset every 48 in tile, handing over to the next tile's grain across the
- * last GRAIN_BLEND of each tile, so a 16 ft board never shows one stretch of grain four times. The pick is an integer
- * hash, so a tile boundary's two lookups agree exactly on every GPU; grainPick is the same hash for check-deck-realism.
+ * A board keeps one strip (one tone) its whole length; at every repeat of its photo (uGrainScale, the swatch's real
+ * scale) the grain slides to a new offset, handing over across the last GRAIN_BLEND of each tile, so a long board never
+ * shows one stretch of grain twice running. The offset is an integer hash, so a tile boundary's two lookups agree
+ * exactly on every GPU; grainPick is the same pick for check-deck-realism.
  */
 /** 2, not 1: a mesh with no aVar attribute (the notched stringers) reads WebGL's default generic attribute (0,0,0,1). */
 export const BOARD_PIECE=2;
@@ -67,11 +68,11 @@ export const GRAIN_BLEND=.12;
 /** Seeds are quantised to 1/SEED_STEPS, so the shader's float32 seed and the check's float64 one almost always hash alike. */
 const SEED_STEPS=65536,HASH_KEY=0x9e3779b9;
 const mix32=(h:number)=>{h=(h^(h>>>16))>>>0;h=Math.imul(h,0x7feb352d)>>>0;h=(h^(h>>>15))>>>0;h=Math.imul(h,0x846ca68b)>>>0;return (h^(h>>>16))>>>0;};
-/** The strip (0 to strips-1) and offset along it (0–1) of tile `tile` of a board whose seed is (x 0–1, y). */
+/** The strip (0 to strips-1, the board's own) and offset along it (0–1) of tile `tile` of a board whose seed is (x 0–1, y). */
 export function grainPick(x:number,y:number,tile:number,strips:number):[number,number]{
   const a=Math.floor(x*SEED_STEPS)>>>0,b=Math.floor((y-Math.floor(y))*SEED_STEPS)>>>0;
   const h=mix32((mix32((a^mix32((b+HASH_KEY)>>>0))>>>0)+(tile|0))>>>0);
-  return [Math.min(Math.floor((h>>>8)/16777216*strips),strips-1),(mix32(h)>>>8)/16777216];
+  return [Math.min(Math.floor(x*strips),strips-1),(h>>>8)/16777216];
 }
 /** How far a point `f` (0–1) along its tile has handed over to the next tile's grain. */
 export function grainBlend(f:number){
@@ -105,7 +106,7 @@ flat varying vec2 vDcVar;
 flat varying float vDcBoard;
 vec2 dcUvA;vec2 dcUvB;float dcW;vec2 dcDx;vec2 dcDy;
 highp uint dcMix(highp uint h){h^=h>>16u;h*=0x7feb352du;h^=h>>15u;h*=0x846ca68bu;h^=h>>16u;return h;}
-vec2 dcPick(vec2 s,float tile){highp uint a=uint(s.x*${glslFloat(SEED_STEPS)}),b=uint(fract(s.y)*${glslFloat(SEED_STEPS)}),h=dcMix(dcMix(a^dcMix(b+${HASH_KEY}u))+uint(int(tile)));return vec2(min(floor(float(h>>8u)/16777216.*uStrips),uStrips-1.),float(dcMix(h)>>8u)/16777216.);}
+float dcPick(vec2 s,float tile){highp uint a=uint(s.x*${glslFloat(SEED_STEPS)}),b=uint(fract(s.y)*${glslFloat(SEED_STEPS)}),h=dcMix(dcMix(a^dcMix(b+${HASH_KEY}u))+uint(int(tile)));return float(h>>8u)/16777216.;}
 vec4 dcTex(sampler2D t){vec4 a=textureGrad(t,dcUvA,dcDx,dcDy);return dcW>0.?mix(a,textureGrad(t,dcUvB,dcDx,dcDy),dcW):a;}
 float dcEdgeShade(float v){float px=fwidth(v);if(vDcBoard<${glslFloat(BOARD_PIECE-.5)}||px<=${EDGE_SHADE.sideFace.toExponential()}*max(1.,abs(v)))return 1.;float e=min(fract(v),1.-fract(v)),band=max(${glslFloat(EDGE_SHADE.band)},px),depth=${glslFloat(1-EDGE_SHADE.dark)}*(1.-smoothstep(${glslFloat(EDGE_SHADE.fadeFrom)},${glslFloat(EDGE_SHADE.fadeTo)},px));return(1.-depth*(1.-smoothstep(0.,band,e)))/(1.-depth*band);}`;
 /** Finished board pieces shade their long edges; everything else is left as it was. */
@@ -122,10 +123,10 @@ export function reliefWeight(facing:number){
 const FRAGMENT_HEAD_RELIEF=/* glsl */`${FRAGMENT_HEAD}
 float dcKeep;`;
 const FRAGMENT_PICK=/* glsl */`
-    float gs=vDcBoard>1.5?uGrainScale:1.,gu=vDcUv.x*gs;
+    float gs=vDcBoard>${glslFloat(BOARD_PIECE-.5)}?uGrainScale:1.,gu=vDcUv.x*gs;
     float course=floor(vDcUv.y),across=vDcUv.y-course,dcV=${GUTTER}+clamp(across,0.,1.)*${BODY};
-    vec2 seed=vec2(fract(vDcVar.x+course*.6180339),vDcVar.y+course*.37);
-    if(vDcBoard>${glslFloat(BOARD_PIECE-.5)}){float tile=floor(gu);vec2 pA=dcPick(seed,tile),pB=dcPick(seed,tile+1.);dcUvA=vec2(gu+pA.y,(pA.x+dcV)/uStrips);dcUvB=vec2(gu+pB.y,(pB.x+dcV)/uStrips);dcW=smoothstep(${glslFloat(1-GRAIN_BLEND)},1.,gu-tile);}else{dcUvA=dcUvB=vec2(vDcUv.x+seed.y,(min(floor(seed.x*uStrips),uStrips-1.)+dcV)/uStrips);dcW=0.;}
+    vec2 seed=vec2(fract(vDcVar.x+course*.6180339),vDcVar.y+course*.37);float st=(min(floor(seed.x*uStrips),uStrips-1.)+dcV)/uStrips;
+    if(vDcBoard>${glslFloat(BOARD_PIECE-.5)}){float tile=floor(gu);dcUvA=vec2(gu+dcPick(seed,tile),st);dcUvB=vec2(gu+dcPick(seed,tile+1.),st);dcW=smoothstep(${glslFloat(1-GRAIN_BLEND)},1.,gu-tile);}else{dcUvA=dcUvB=vec2(vDcUv.x+seed.y,st);dcW=0.;}
     vec2 scale=vec2(gs,${BODY}/uStrips);dcDx=dFdx(vDcUv)*scale;dcDy=dFdy(vDcUv)*scale;`;
 const FRAGMENT_UV=/* glsl */`
   {${FRAGMENT_PICK}

@@ -56,8 +56,8 @@ const median=(v:number[])=>{const s=[...v].sort((a,b)=>a-b);return s[Math.floor(
  * Where the boards are. Gaps between boards are near-black rows (under 0.6 of the photo's median brightness, across the
  * left half, which is boards in every photo); a dark grain streak never gets that dark. Along those gap rows the gap
  * stays dark until it meets the board that runs across the others on the right: the strips stop short of that seam.
- * The boards between gaps (a tenth trimmed off each edge, where the photo shows the eased edge) are the strips. A photo
- * with fewer than two boards is a close-up of one surface, cut into three bands.
+ * The whole boards between gaps (a tenth trimmed off each edge, where the photo shows the eased edge) are the strips. A
+ * photo with fewer than two whole boards is a close-up of one surface, cut into three bands.
  */
 export function detectLayout(input:SwatchImage):SwatchLayout{
   const rotated=grainIsVertical(input),img=rotated?rotate90(input):input,{width:w,height:h,data}=img,L=(x:number,y:number)=>lumaAt(data,(y*w+x)*4);
@@ -72,7 +72,9 @@ export function detectLayout(input:SwatchImage):SwatchLayout{
     const run=Math.max(2,Math.round(w*.02));
     for(let x=Math.floor(w*.5);x<w*.95;x++){let m=0;for(let k=0;k<run;k++)m+=dark[x+k];if(m/run<.4){x1=Math.max(x0+8,Math.floor(x-w*.015));break;}}
   }
-  if(between.length>=2)return {rotated,kind:'boards',strips:between.map(([top,bottom])=>{const trim=Math.round((bottom-top)*.1);return {x0,x1,y0:top+trim,y1:bottom-trim};})};
+  // Boards the photo's edge cuts short would be stretched across a whole board: keep the whole ones when two remain.
+  const tallest=Math.max(0,...between.map(([top,bottom])=>bottom-top)),whole=between.filter(([top,bottom])=>bottom-top>=tallest*.8);
+  if(whole.length>=2)return {rotated,kind:'boards',strips:whole.map(([top,bottom])=>{const trim=Math.round((bottom-top)*.1);return {x0,x1,y0:top+trim,y1:bottom-trim};})};
   const y0=Math.floor(h*.03),band=(h*.94)/3;
   return {rotated,kind:'surface',strips:[0,1,2].map(k=>({x0,x1,y0:Math.round(y0+band*k+band*.03),y1:Math.round(y0+band*(k+1)-band*.03)}))};
 }

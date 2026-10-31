@@ -168,7 +168,7 @@ for(const file of files){
   // stop before the board across them on the right.
   if(file.startsWith('tt-')&&Math.abs(info.width/info.height-1)<.35&&file!=='tt-premierplus-natural-oak.jpg')ok(maps.layout.kind==='boards'&&maps.strips===4&&maps.layout.strips.every(s=>s.x1<info.width*.82),`${file}: four boards, clear of the board across them`);
   // Deckorators' installed close-ups (sources.json) are four boards with one across them, mirrored so it is on the right.
-  else if(file.startsWith('dk-')&&SWATCH_SOURCES[file])ok(maps.layout.kind==='boards'&&maps.strips===4&&maps.layout.strips.every(s=>s.x1<info.width*.82),`${file}: four boards, clear of the board across them`);
+  else if(file.startsWith('dk-')&&SWATCH_SOURCES[file])ok(maps.layout.kind==='boards'&&maps.strips>=2&&Math.min(...maps.layout.strips.map(s=>s.y1-s.y0))>=.8*Math.max(...maps.layout.strips.map(s=>s.y1-s.y0))&&maps.layout.strips.every(s=>s.x1<info.width*.82),`${file}: whole boards only (none the photo's edge cuts short), clear of the board across them`);
   else ok(maps.strips>=3,`${file}: at least three strips`);
   ok(maps.width===ATLAS_WIDTH&&maps.height===maps.strips*STRIP_ROWS&&maps.albedo.length===maps.width*maps.height*4,`${file}: the atlas is ${ATLAS_WIDTH} wide with ${STRIP_ROWS} rows a strip`);
   const delta=deltaE(maps.sourceMean,maps.atlasMean);worstDelta=Math.max(worstDelta,delta);
@@ -237,6 +237,9 @@ let repeatMean=0;
   ok(steps<inner*2.5,`No seam where one tile's grain hands over to the next (${(steps/Math.max(inner,1e-9)).toFixed(2)}× an ordinary step)`);
   const pick=grainPick(.25,.5,3,4),again=grainPick(.25,.5,3,4);
   ok(pick[0]===again[0]&&pick[1]===again[1]&&Number.isInteger(pick[0])&&pick[0]>=0&&pick[0]<4&&pick[1]>=0&&pick[1]<1,'A tile keeps its strip and offset while the board stays put');
+  // A board keeps one strip (one tone) its whole length; only the offset changes tile to tile. Strips differ in tone on
+  // purpose, so a strip per tile read as foot-long patches once the grain repeated at real scale.
+  ok(Array.from({length:12},(_,t)=>grainPick(.4,.7,t,4)[0]).every(s=>s===grainPick(.4,.7,0,4)[0])&&new Set(Array.from({length:12},(_,t)=>grainPick(.4,.7,t,4)[1].toFixed(3))).size>=10,'A board keeps one strip along its length and changes only the offset');
   ok(grainBlend(0)===0&&grainBlend(.5)===0&&grainBlend(1)===1,'A tile is its own grain until the handover at its end');
 }
 // Board lines that hold at a distance: each board's long edges shade over about a quarter inch, never thinner than a
@@ -253,7 +256,7 @@ let repeatMean=0;
   const material=surfaceMaterial('#886644'),mesh=compile(material),box=compile(boxVariant(material));
   ok(mesh.fragmentShader.includes('if(vDcBoard<1.5||px<=')&&mesh.fragmentShader.includes(',band=max(0.045,px)')&&mesh.vertexShader.includes('vDcBoard=aVar.w;')&&box.vertexShader.includes('vDcBoard=0.;'),'Only finished board pieces shade their edges; box-projected rim and framing do not');
   ok(mesh.fragmentShader.includes('float gs=vDcBoard>1.5?uGrainScale:1.,gu=vDcUv.x*gs;')&&'uGrainScale' in mesh.uniforms,'Finished boards take their swatch’s real grain scale; every other piece keeps the 48 in repeat');
-  ok(mesh.fragmentShader.includes('if(vDcBoard>1.5){')&&mesh.fragmentShader.includes('dcUvA=dcUvB=vec2(vDcUv.x+seed.y,(min(floor(seed.x*uStrips),uStrips-1.)+dcV)/uStrips);dcW=0.;'),'Fascia, cladding, skirting, timbers and box-projected framing keep one strip and offset over the piece, as before');
+  ok(mesh.fragmentShader.includes('if(vDcBoard>1.5){')&&mesh.fragmentShader.includes('float st=(min(floor(seed.x*uStrips),uStrips-1.)+dcV)/uStrips;')&&mesh.fragmentShader.includes('dcUvA=dcUvB=vec2(vDcUv.x+seed.y,st);dcW=0.;'),'Fascia, cladding, skirting, timbers and box-projected framing keep one strip and offset over the piece, as before');
   ok(mesh.fragmentShader.includes('highp uint dcMix(highp uint h)')&&mesh.fragmentShader.includes('+uint(int(tile))')&&!/sin\([^)]*tile/.test(mesh.fragmentShader),'The per-tile pick is an integer hash, so both sides of a tile boundary agree exactly on every GPU');
   ok(mesh.fragmentShader.includes(`smoothstep(${EDGE_SHADE.fadeFrom},${EDGE_SHADE.fadeTo},px)`)&&mesh.fragmentShader.includes(`smoothstep(${1-GRAIN_BLEND},1.,gu-tile)`)&&mesh.fragmentShader.includes('uint(s.x*65536.0)'),'Shader constants are written as GLSL floats');
   const flat=boardVariation(3,4),board=boardVariation(3,4,true),viewer3=read(`${VIEWER}Deck3DViewer.tsx`);
