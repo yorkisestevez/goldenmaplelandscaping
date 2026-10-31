@@ -2,7 +2,7 @@ import {landscapeSurfaceCells,landscapeCellTriangles,raisedBedTop} from '../../l
 import {landscapeSurfaceDepth,puttingCupWorld} from '../../landscapeSurfaces';
 import {createLandscapeSurfaceMaterial} from './landscapeSurfaceMaterial';
 import {getPoolModels} from '../../poolModel';
-import {lazy,Suspense,useEffect,useLayoutEffect,useMemo,useRef,useState,useSyncExternalStore} from 'react';
+import {lazy,Suspense,useEffect,useLayoutEffect,useMemo,useRef,useState,useSyncExternalStore,memo} from 'react';
 import {useFrame,useThree} from '@react-three/fiber';
 import {useGLTF,useTexture} from '@react-three/drei';
 import * as THREE from 'three';
@@ -160,7 +160,7 @@ function useStableDesign(data:DeckData){
  * load only when selected. Instanced batches share geometry and local textures. */
 /** source, model and yard: the view's own design (Landscape3D draws a copy with its visible objects) and the deck and yard
  * models it built, so structure footprints reuse its cached pool and yard geometry instead of rebuilding them per copy. */
-export default function Landscape3D({data:fresh,showMatureSpread=false,source,model,yard}:{data:DeckData;showMatureSpread?:boolean;source?:DeckData;model?:DeckTakeoff;yard?:YardModel}){
+function Landscape3D({data:fresh,showMatureSpread=false,source,model,yard}:{data:DeckData;showMatureSpread?:boolean;source?:DeckData;model?:DeckTakeoff;yard?:YardModel}){
  const data=useStableDesign(fresh),objects=data.landscapeObjects??[],q=useRenderQuality(),camera=useThree(s=>s.camera),size=useThree(s=>s.size),invalidate=useThree(s=>s.invalidate),[lods,setLods]=useState(new Map<string,0|1|2>()),last=useRef(''),[mature,setMature]=useState(showMatureSpread),shown=useRef(typeof performance!=='undefined'?performance.now():0);
  const showcase=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().quality,()=>false),season=useSeason();
  // Bed areas, the drawn tops of plain beds and where each plant meets them: one pass, shared by beds, plants and rings.
@@ -176,3 +176,5 @@ export default function Landscape3D({data:fresh,showMatureSpread=false,source,mo
  const groups=new Map<string,{items:LandscapeObject[];lod:0|1|2;mode:SeasonMode}>();for(const o of others.filter(o=>o.enabled&&o.kind!=='bed'&&!landscapePlacement(data,o).pendingReason)){const lod=showcase?0:(lods.get(o.id)??2),mode=seasonMode(o,season),key=o.assetId+':'+lod+(mode==='summer'?'':':'+mode),g=groups.get(key)??{items:[],lod,mode};g.items.push(o);groups.set(key,g);}
  return <group name="landscape-designed-objects" userData={{designedObjectCount:objects.filter(o=>o.enabled).length,renderTier:q.tier,genericVisualProxies:true}}>{[...groups].map(([key,g])=><Suspense key={key} fallback={null}><AssetInstances data={data} items={g.items} lod={g.lod} seats={seats} season={season} mode={g.mode}/></Suspense>)}<PlantBlooms data={data} objects={others} lods={lods} seats={seats} season={season}/>{hydrangeas.length>0&&<Suspense fallback={null}><Hydrangeas3D data={data} objects={hydrangeas} lods={lods} seats={seats} season={season}/></Suspense>}{season!=='summer'&&<PlantStems data={data} objects={others} seats={seats} season={season}/>}{season==='fall'&&<FallenLeaves data={data} objects={objects}/>}<PlantShadeRings data={data} plants={seated}/>{objects.some(o=>o.enabled&&o.kind==='bed')&&<Suspense fallback={null}><Beds data={data} objects={objects} areas={areas} reliefs={reliefs} seats={seats}/></Suspense>}{(showMatureSpread||mature)&&<MatureSpread data={data} objects={objects} seats={seats}/>}</group>;
 }
+/** Memoised: the scene re-renders on hover and selection; the Landscape only redraws when its own props change. */
+export default memo(Landscape3D);
