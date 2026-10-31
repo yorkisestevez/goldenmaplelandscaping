@@ -105,20 +105,12 @@ flat varying vec2 vDcVar;
 flat varying float vDcBoard;
 vec2 dcUvA;vec2 dcUvB;float dcW;vec2 dcDx;vec2 dcDy;
 highp uint dcMix(highp uint h){h^=h>>16u;h*=0x7feb352du;h^=h>>15u;h*=0x846ca68bu;h^=h>>16u;return h;}
-vec2 dcPick(vec2 s,float tile){
-  highp uint a=uint(s.x*${glslFloat(SEED_STEPS)}),b=uint(fract(s.y)*${glslFloat(SEED_STEPS)}),h=dcMix(dcMix(a^dcMix(b+${HASH_KEY}u))+uint(int(tile)));
-  return vec2(min(floor(float(h>>8u)/16777216.*uStrips),uStrips-1.),float(dcMix(h)>>8u)/16777216.);
-}
+vec2 dcPick(vec2 s,float tile){highp uint a=uint(s.x*${glslFloat(SEED_STEPS)}),b=uint(fract(s.y)*${glslFloat(SEED_STEPS)}),h=dcMix(dcMix(a^dcMix(b+${HASH_KEY}u))+uint(int(tile)));return vec2(min(floor(float(h>>8u)/16777216.*uStrips),uStrips-1.),float(dcMix(h)>>8u)/16777216.);}
 vec4 dcTex(sampler2D t){vec4 a=textureGrad(t,dcUvA,dcDx,dcDy);return dcW>0.?mix(a,textureGrad(t,dcUvB,dcDx,dcDy),dcW):a;}
-float dcEdgeShade(float v){
-  float px=fwidth(v);if(vDcBoard<${glslFloat(BOARD_PIECE-.5)}||px<=${EDGE_SHADE.sideFace.toExponential()}*max(1.,abs(v)))return 1.;
-  float across=fract(v),edge=min(across,1.-across);
-  float band=max(${glslFloat(EDGE_SHADE.band)},px),depth=${glslFloat(1-EDGE_SHADE.dark)}*(1.-smoothstep(${glslFloat(EDGE_SHADE.fadeFrom)},${glslFloat(EDGE_SHADE.fadeTo)},px));
-  return (1.-depth*(1.-smoothstep(0.,band,edge)))/(1.-depth*band);
-}`;
+float dcEdgeShade(float v){float px=fwidth(v);if(vDcBoard<${glslFloat(BOARD_PIECE-.5)}||px<=${EDGE_SHADE.sideFace.toExponential()}*max(1.,abs(v)))return 1.;float e=min(fract(v),1.-fract(v)),band=max(${glslFloat(EDGE_SHADE.band)},px),depth=${glslFloat(1-EDGE_SHADE.dark)}*(1.-smoothstep(${glslFloat(EDGE_SHADE.fadeFrom)},${glslFloat(EDGE_SHADE.fadeTo)},px));return(1.-depth*(1.-smoothstep(0.,band,e)))/(1.-depth*band);}`;
 /** Finished board pieces shade their long edges; everything else is left as it was. */
 const EDGE_FRAGMENT=/* glsl */`
-  diffuseColor.rgb*=dcEdgeShade(vDcUv.y);`;
+diffuseColor.rgb*=dcEdgeShade(vDcUv.y);`;
 /** Edge-on surfaces (a stair tread in a wide hero) drop atlas relief. Face-on boards keep it. */
 export const RELIEF_EDGE=0.12,RELIEF_FULL=0.42;
 export function reliefWeight(facing:number){
@@ -132,13 +124,7 @@ float dcKeep;`;
 const FRAGMENT_PICK=/* glsl */`
     float course=floor(vDcUv.y),across=vDcUv.y-course,dcV=${GUTTER}+clamp(across,0.,1.)*${BODY};
     vec2 seed=vec2(fract(vDcVar.x+course*.6180339),vDcVar.y+course*.37);
-    if(vDcBoard>${glslFloat(BOARD_PIECE-.5)}){
-      float tile=floor(vDcUv.x);vec2 pickA=dcPick(seed,tile),pickB=dcPick(seed,tile+1.);
-      dcUvA=vec2(vDcUv.x+pickA.y,(pickA.x+dcV)/uStrips);dcUvB=vec2(vDcUv.x+pickB.y,(pickB.x+dcV)/uStrips);
-      dcW=smoothstep(${glslFloat(1-GRAIN_BLEND)},1.,vDcUv.x-tile);
-    }else{
-      dcUvA=dcUvB=vec2(vDcUv.x+seed.y,(min(floor(seed.x*uStrips),uStrips-1.)+dcV)/uStrips);dcW=0.;
-    }
+    if(vDcBoard>${glslFloat(BOARD_PIECE-.5)}){float tile=floor(vDcUv.x);vec2 pA=dcPick(seed,tile),pB=dcPick(seed,tile+1.);dcUvA=vec2(vDcUv.x+pA.y,(pA.x+dcV)/uStrips);dcUvB=vec2(vDcUv.x+pB.y,(pB.x+dcV)/uStrips);dcW=smoothstep(${glslFloat(1-GRAIN_BLEND)},1.,vDcUv.x-tile);}else{dcUvA=dcUvB=vec2(vDcUv.x+seed.y,(min(floor(seed.x*uStrips),uStrips-1.)+dcV)/uStrips);dcW=0.;}
     vec2 scale=vec2(1.,${BODY}/uStrips);dcDx=dFdx(vDcUv)*scale;dcDy=dFdy(vDcUv)*scale;`;
 const FRAGMENT_UV=/* glsl */`
   {${FRAGMENT_PICK}
