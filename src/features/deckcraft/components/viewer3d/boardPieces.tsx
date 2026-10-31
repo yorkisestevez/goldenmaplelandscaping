@@ -4,11 +4,10 @@ import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeomet
 import type {DeckLevel} from '../../deckTakeoff';
 import type {PlanPoint} from '../../lib/deckGeometry';
 
-/**
- * How a deck board reads as a board, not a slab: a real eased edge that turns into the light on its own, and the dark
- * cavity under the gaps between boards. Without the cavity the gaps show the sunlit joists and ground under the deck
- * and the field reads as one smooth surface.
- */
+// How a deck board reads as a board, not a slab: a real eased edge that turns into the light on its own, and the dark
+// cavity under the gaps between boards. Without the cavity the gaps show the sunlit joists and ground under the deck
+// and the field reads as one smooth surface.
+
 /** Capped composite and dressed decking have about a 1/8 in radius on their top edges. */
 export const BOARD_EASE_IN=.125;
 /** Segments round the ease: enough that the normals turn through the radius, so its highlight is a soft line. */
@@ -24,19 +23,24 @@ export function boardPieceGeometry(w:number,h:number,d:number){
   return g;
 }
 
-/** Each level's cavity: its decking outline, just under the boards. It follows the deck's own edge exactly, so it closes
- * every gap and joint and never shows past the outer boards, a mitre or a clipped corner. */
-export function gapUnderlayOutlines(levels:readonly Pick<DeckLevel,'top'|'offset'|'footprint'|'deckingFootprint'>[]):{y:number;points:PlanPoint[]}[]{
-  return levels.map(l=>({y:l.top-GAP_UNDERLAY.boardIn-GAP_UNDERLAY.dropIn,points:(l.deckingFootprint??l.footprint).outline.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z}))}));
+/** Each decked level's cavity: its decking outline, just under the boards. It follows the deck's own edge exactly, so
+ * it closes every gap and joint and never shows past the outer boards, a mitre or a clipped corner. Levels with no
+ * boards of their own (a winder, whose treads step down below its top) get none. */
+export function gapUnderlayOutlines(levels:readonly Pick<DeckLevel,'top'|'offset'|'footprint'|'deckingFootprint'|'boards'>[]):{y:number;points:PlanPoint[]}[]{
+  return levels.filter(l=>l.boards.length>0).map(l=>({y:l.top-GAP_UNDERLAY.boardIn-GAP_UNDERLAY.dropIn,points:(l.deckingFootprint??l.footprint).outline.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z}))}));
 }
 
-/** The cavities as one flat mesh, seen from above through the gaps. */
-function outlineGeometry(shapes:{y:number;points:PlanPoint[]}[]){
+/** The cavities as one flat mesh facing up: seen from above through the gaps, never from under the deck. */
+export function outlineGeometry(shapes:{y:number;points:PlanPoint[]}[]){
   const position:number[]=[],index:number[]=[];
   for(const {y,points} of shapes){
-    const base=position.length/3;
+    const base=position.length/3,triangles=THREE.ShapeUtils.triangulateShape(points.map(p=>new THREE.Vector2(p.x,p.y)),[]);
     for(const p of points)position.push(p.x,y,p.y);
-    for(const [a,b,c] of THREE.ShapeUtils.triangulateShape(points.map(p=>new THREE.Vector2(p.x,p.y)),[]))index.push(base+a,base+b,base+c);
+    // Plan y is the scene's z: wind every triangle so its normal points up (y of (b-a)×(c-a) in x,z is its sign).
+    for(const [a,b,c] of triangles){
+      const [p,q,r]=[points[a],points[b],points[c]],up=(r.x-p.x)*(q.y-p.y)-(q.x-p.x)*(r.y-p.y)>0;
+      index.push(base+a,...(up?[base+b,base+c]:[base+c,base+b]));
+    }
   }
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.Float32BufferAttribute(position,3));
@@ -49,7 +53,9 @@ function outlineGeometry(shapes:{y:number;points:PlanPoint[]}[]){
 export function GapUnderlay({levels}:{levels:readonly DeckLevel[]}){
   const geometry=useMemo(()=>outlineGeometry(gapUnderlayOutlines(levels)),[levels]);
   useEffect(()=>()=>geometry.dispose(),[geometry]);
-  const material=useMemo(()=>new THREE.MeshStandardMaterial({color:GAP_UNDERLAY.color,roughness:1,metalness:0,side:THREE.DoubleSide}),[]);
+  // Snow lies on the boards, not down in the gaps (seasonSnow.ts reads this; no import keeps the snow code out of here).
+  const material=useMemo(()=>{const m=new THREE.MeshStandardMaterial({color:GAP_UNDERLAY.color,roughness:1,metalness:0});m.userData.snow='none';return m;},[]);
   useEffect(()=>()=>material.dispose(),[material]);
-  return <mesh name="board-gap-underlay" geometry={geometry} material={material} receiveShadow/>;
+  // A click through a gap goes on to whatever is under the deck.
+  return <mesh name="board-gap-underlay" userData={{selectionPassthrough:true}} geometry={geometry} material={material} receiveShadow/>;
 }

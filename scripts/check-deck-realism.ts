@@ -11,7 +11,7 @@ import {railGeometry} from '../src/features/deckcraft/components/viewer3d/EasedR
 import {fitSun,shadowKey} from '../src/features/deckcraft/components/viewer3d/shadowCache';
 import {ATLAS_WIDTH,STRIP_ROWS,buildSwatchMaps,deltaE,grainIsVertical,rotate90} from '../src/features/deckcraft/components/viewer3d/swatchMaps';
 import {EDGE_SHADE,GRAIN_BLEND,PATCHED_CHUNKS,edgeShade,RELIEF_EDGE,RELIEF_FULL,boardVariation,boxVariant,grainBlend,grainPick,reliefWeight,surfaceMaterial} from '../src/features/deckcraft/components/viewer3d/surfaceShaders';
-import {BOARD_EASE_IN,GAP_UNDERLAY,boardPieceGeometry,gapUnderlayOutlines} from '../src/features/deckcraft/components/viewer3d/boardPieces';
+import {BOARD_EASE_IN,GAP_UNDERLAY,boardPieceGeometry,gapUnderlayOutlines,outlineGeometry} from '../src/features/deckcraft/components/viewer3d/boardPieces';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {insidePolygon} from '../src/features/deckcraft/lib/polygonCuts';
 import {DECKING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
@@ -200,7 +200,7 @@ for(const file of files){
   const {width=0,height=0}=await sharp(SWATCHES+file).metadata(),edge=Math.min(width,height);
   ok(LOW_RES_SWATCHES.has(file)?edge<MIN_SOURCE_EDGE:edge>=MIN_SOURCE_EDGE,LOW_RES_SWATCHES.has(file)?`${file}: replaced (${width}×${height}); take it off LOW_RES_SWATCHES`:`${file}: at least ${MIN_SOURCE_EDGE} px on its short side (${width}×${height})`);
 }
-ok([...LOW_RES_SWATCHES].every(f=>files.includes(f)),'Every low-resolution swatch listed is still on disk');
+ok([...LOW_RES_SWATCHES].every(f=>files.includes(f))&&LOW_RES_SWATCHES.size<=59,'Every low-resolution swatch listed is still on disk, and the list never grows');
 ok(/HIGH_READ_EDGE\s*=\s*2048/.test(read(`${VIEWER}useSwatchTexture.ts`))&&read(`${VIEWER}useSwatchTexture.ts`).includes('width > ATLAS_WIDTH ? HIGH_READ_EDGE : READ_EDGE'),'The high tier reads the photo at up to 2048 px for its 2048 atlas');
 
 // Repetition along a long board: every 48 in tile of a board takes its own strip and offset (the shader's grainPick),
@@ -231,14 +231,21 @@ let repeatMean=0;
 // Board lines that hold at a distance: each board's long edges shade over about a quarter inch, never thinner than a
 // pixel, and the shading fades out once a whole board is only a few pixels wide.
 {
-  const close=.02,far=.08,tiny=.5;
-  ok(edgeShade(.5,close)===1&&edgeShade(0,close)<=EDGE_SHADE.dark+1e-9&&edgeShade(.02,close)<edgeShade(.04,close),'Close up, a board is its own colour mid-face and darkens into its eased edges');
-  ok(edgeShade(.04,far)<1&&edgeShade(.04,close)>edgeShade(.04,far),'Further off the shaded line stays at least a pixel wide instead of vanishing');
+  const close=.02,far=.08,tiny=.5,mid=(px:number)=>edgeShade(.5,px);
+  ok(edgeShade(0,close)<mid(close)*(EDGE_SHADE.dark+1e-9)&&edgeShade(.02,close)<edgeShade(.04,close)&&mid(close)-1<.02,'Close up, a board is its own colour mid-face and darkens into its eased edges');
+  ok(edgeShade(.04,far)/mid(far)<.99&&edgeShade(.04,close)/mid(close)>edgeShade(.04,far)/mid(far),'Further off the shaded line stays at least a pixel wide instead of vanishing');
   ok(edgeShade(0,tiny)===1,'Boards a few pixels wide are not striped dark');
-  ok(edgeShade(0,0)===1&&edgeShade(1,0)===1,'A board’s sides and ends (one across value over the face) are not darkened: no fringe under a tread nosing or along the rim');
-  const material=surfaceMaterial('#886644'),mesh={uniforms:{} as Record<string,THREE.IUniform>,defines:{} as Record<string,string>,vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};
-  material.onBeforeCompile(mesh as unknown as THREE.WebGLProgramParametersWithUniforms,undefined as never);
-  ok(/#ifndef DC_BOX_UV\s*diffuseColor\.rgb\*=dcEdgeShade\(vDcUv\.y\);\s*#endif/.test(mesh.fragmentShader)&&mesh.fragmentShader.includes(`float band=max(${EDGE_SHADE.band},px)`),'Deck boards, treads and skirting shade their edges in the shader; box-projected rim and framing do not');
+  ok(edgeShade(0,0)===1&&edgeShade(1,0)===1,'A board’s long sides (one across value over the face) are not darkened: no fringe under a tread nosing or along the rim');
+  let worstMean=0;for(const px of [.002,.01,.02,.05,.1,.15,.2,.25,.3,.4]){let s=0;const n=4000;for(let i=0;i<n;i++)s+=edgeShade((i+.5)/n,px);worstMean=Math.max(worstMean,Math.abs(s/n-1));}
+  ok(worstMean<.003,`The edge shade keeps the board's mean colour at every distance (worst ${(worstMean*100).toFixed(2)}%)`);
+  const compile=(m:THREE.Material)=>{const s={uniforms:{} as Record<string,THREE.IUniform>,defines:{} as Record<string,string>,vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};m.onBeforeCompile(s as unknown as THREE.WebGLProgramParametersWithUniforms,undefined as never);return s;};
+  const material=surfaceMaterial('#886644'),mesh=compile(material),box=compile(boxVariant(material));
+  ok(mesh.fragmentShader.includes('if(vDcBoard<.5||px<=')&&mesh.fragmentShader.includes('float band=max(0.045,px)')&&mesh.vertexShader.includes('vDcBoard=aVar.w;')&&box.vertexShader.includes('vDcBoard=0.;'),'Only finished board pieces shade their edges; box-projected rim and framing do not');
+  ok(mesh.fragmentShader.includes('if(vDcBoard>.5){')&&mesh.fragmentShader.includes('dcUvA=dcUvB=vec2(vDcUv.x+seed.y,(min(floor(seed.x*uStrips),uStrips-1.)+dcV)/uStrips);dcW=0.;'),'Fascia, cladding, skirting, timbers and box-projected framing keep one strip and offset over the piece, as before');
+  ok(mesh.fragmentShader.includes('uint dcMix(uint h)')&&mesh.fragmentShader.includes('+uint(int(tile))')&&!/sin\([^)]*tile/.test(mesh.fragmentShader),'The per-tile pick is an integer hash, so both sides of a tile boundary agree exactly on every GPU');
+  ok(mesh.fragmentShader.includes(`smoothstep(${EDGE_SHADE.fadeFrom},${EDGE_SHADE.fadeTo},px)`)&&mesh.fragmentShader.includes(`smoothstep(${1-GRAIN_BLEND},1.,vDcUv.x-tile)`)&&mesh.fragmentShader.includes('uint(s.x*65536.0)'),'Shader constants are written as GLSL floats');
+  const flat=boardVariation(3,4),board=boardVariation(3,4,true),viewer3=read(`${VIEWER}Deck3DViewer.tsx`);
+  ok(flat[3]===0&&board[3]===1&&flat.slice(0,3).every((v,i)=>v===board[i])&&(viewer3.match(/boardVariation\([^)]*,true\)/g)??[]).length===2&&!/boardVariation\([^)]*true/.test(read(`${VIEWER}slabGeometry.ts`)+read(`${VIEWER}raisedBedTimber.ts`)),'Deck board batches and cut pieces are marked as finished boards; skirting and raised-bed timbers are not');
 }
 
 // Boards, not a slab: an eased top edge that catches its own highlight, and the dark cavity under the gaps.
@@ -257,12 +264,21 @@ let repeatMean=0;
   g.dispose();
   // The cavity: each level's decking outline just under its boards, so it closes every gap and joint and never shows
   // past the outer boards, a mitre or a clipped corner (a slab per board stuck out under tread nosings and the rim).
-  for(const design of [DEFAULT_DECK,{...structuredClone(DEFAULT_DECK),pattern:'Picture Frame',pictureFrameRows:2}] as DeckData[]){
-    const model=buildDeckTakeoff(design),cavities=gapUnderlayOutlines(model.levels);
-    ok(cavities.length===model.levels.length&&cavities.every((c,i)=>{const l=model.levels[i],o=(l.deckingFootprint??l.footprint).outline;return c.points.length===o.length&&c.points.every((p,k)=>p.x===o[k].x+l.offset.x&&p.y===o[k].y+l.offset.z)&&Math.abs(c.y-(l.top-1-GAP_UNDERLAY.dropIn))<1e-9;}),`${design.pattern}: each level's cavity is its own decking outline, just under the 1 in boards`);
-    ok(model.levels.every((l,i)=>l.boards.length>0&&l.boards.every(b=>insidePolygon({x:b.cx+l.offset.x,y:b.cy+l.offset.z},cavities[i].points))),`${design.pattern}: every board sits over its level's cavity`);
+  // A winder level has no boards of its own and its treads step down below its top, so it gets no cavity.
+  const designs:[string,DeckData][]=[['Straight',DEFAULT_DECK],['Picture Frame',{...structuredClone(DEFAULT_DECK),pattern:'Picture Frame',pictureFrameRows:2}],['Winder',{...structuredClone(DEFAULT_DECK),height:72,stairType:'Winder'}],['Landing',{...structuredClone(DEFAULT_DECK),height:72,stairType:'Landing'}]];
+  const area=(p:{x:number;y:number}[])=>Math.abs(p.reduce((s,a,i)=>{const b=p[(i+1)%p.length];return s+a.x*b.y-b.x*a.y;},0))/2;
+  for(const [name,design] of designs){
+    const model=buildDeckTakeoff(design),decked=model.levels.filter(l=>l.boards.length>0),cavities=gapUnderlayOutlines(model.levels);
+    ok(cavities.length===decked.length&&cavities.every((c,i)=>{const l=decked[i],o=(l.deckingFootprint??l.footprint).outline;return c.points.length===o.length&&c.points.every((p,k)=>p.x===o[k].x+l.offset.x&&p.y===o[k].y+l.offset.z)&&Math.abs(c.y-(l.top-1-GAP_UNDERLAY.dropIn))<1e-9;}),`${name}: each decked level's cavity is its own decking outline, just under the 1 in boards; boardless levels get none`);
+    ok(decked.every((l,i)=>l.boards.every(b=>insidePolygon({x:b.cx+l.offset.x,y:b.cy+l.offset.z},cavities[i].points))&&l.boards.reduce((s,b)=>s+(b.polygon?area(b.polygon):b.length*b.width),0)>=.85*area(cavities[i].points)),`${name}: boards cover their level's cavity, so it only shows through the gaps`);
+    if(name==='Winder')ok(model.levels.some(l=>l.boards.length===0),'The winder design has a boardless winder level to test against');
   }
+  const geometry=outlineGeometry(gapUnderlayOutlines(buildDeckTakeoff(DEFAULT_DECK).levels).concat([{y:0,points:[{x:0,y:0},{x:0,y:10},{x:10,y:10},{x:10,y:0}]}])),gp=geometry.getAttribute('position'),gi=geometry.getIndex()!;
+  let facesUp=true;for(let t=0;t<gi.count;t+=3){const [a,b,cc]=[0,1,2].map(k=>new THREE.Vector3().fromBufferAttribute(gp,gi.getX(t+k)));if(new THREE.Vector3().crossVectors(b.clone().sub(a),cc.clone().sub(a)).y<=0)facesUp=false;}
+  ok(facesUp&&gi.count>0,'The cavity faces up whichever way its outline winds, so it is never seen from under the deck');geometry.dispose();
   const c=new THREE.Color(GAP_UNDERLAY.color);ok(.2126*c.r+.7152*c.g+.0722*c.b<.01,'The cavity under a gap is near black');
+  const pieces=read(`${VIEWER}boardPieces.tsx`);
+  ok(pieces.includes("m.userData.snow='none'")&&pieces.includes('selectionPassthrough:true')&&!pieces.includes('DoubleSide'),'The cavity takes no snow, lets clicks through to what is under the deck, and is one-sided');
   const viewer=read(`${VIEWER}Deck3DViewer.tsx`);
   ok(viewer.includes('boardPieceGeometry(first.w,first.h,first.d)')&&viewer.includes('Math.min(BOARD_EASE_IN,item.h/6,minEdge/8)')&&(viewer.match(/<GapUnderlay /g)??[]).length===1&&/\{!structure&&<><GapUnderlay levels=\{model\.levels\}\/>/.test(viewer),'Deck boards use the eased board geometry and sit over the cavity; stairs have none');
 }
