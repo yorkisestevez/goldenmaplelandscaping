@@ -22,14 +22,12 @@ export const BUILD_RULES: readonly BuildRules[] = ['legacy', '2026-10', '2026-10
 export const CURRENT_BUILD_RULES: BuildRules = '2026-10-frame';
 /** True when the design uses the 2026-10 takeoff (picture frame, stair guards, stock lengths). Absent means legacy. */
 export const usesCurrentBuildRules = (d: { buildRules?: BuildRules }): boolean => !!d.buildRules && d.buildRules !== 'legacy';
-/** True for a design saved under `first` or any later rules: BUILD_RULES lists them oldest first. */
-const rulesFrom = (first: BuildRules) => (d: { buildRules?: BuildRules }): boolean => !!d.buildRules && BUILD_RULES.indexOf(d.buildRules) >= BUILD_RULES.indexOf(first);
 /** True only for a new design under the structural review. Saved '2026-10' and legacy designs stay on their old framing. */
-export const usesStructuralReview = rulesFrom('2026-10-struct');
+export const usesStructuralReview = (d: { buildRules?: BuildRules }): boolean => d.buildRules === '2026-10-struct' || d.buildRules === '2026-10-piers' || d.buildRules === '2026-10-walls' || d.buildRules === '2026-10-frame';
 /** True only for a new design: a pier the structural review sizes past the price book's pier is priced at that size. */
-export const usesSizedPiers = rulesFrom('2026-10-piers');
+export const usesSizedPiers = (d: { buildRules?: BuildRules }): boolean => d.buildRules === '2026-10-piers' || d.buildRules === '2026-10-walls' || d.buildRules === '2026-10-frame';
 /** True only for a new design: the walls the deck fastens to, not the whole house, decide whether brick or stone blocks the ledger. */
-export const usesWallLedgerRule = rulesFrom('2026-10-walls');
+export const usesWallLedgerRule = (d: { buildRules?: BuildRules }): boolean => d.buildRules === '2026-10-walls' || d.buildRules === '2026-10-frame';
 /** True only for a new design: the fascia over the rim has its own thickness, and a picture frame left at its default
  * overhangs that fascia by the most its board allows. Older saves keep the rim-face fascia and their saved overhang. */
-export const usesFinishedFascia = rulesFrom('2026-10-frame');
+export const usesFinishedFascia = (d: { buildRules?: BuildRules }): boolean => d.buildRules === '2026-10-frame';
