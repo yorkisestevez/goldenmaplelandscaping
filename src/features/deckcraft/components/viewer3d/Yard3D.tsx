@@ -1,5 +1,5 @@
 import {CONSTRUCTION_YARD_ROLES,jointSurfaceGeometry} from './finishedSurfaceGeometry';
-import {useEffect,useLayoutEffect,useMemo,useRef,useState,useSyncExternalStore} from 'react';
+import {useEffect,useLayoutEffect,useMemo,useRef,useState,useSyncExternalStore,memo} from 'react';
 import {useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -163,10 +163,12 @@ function WaterMotion({model}:{model:YardModel}){
  useEffect(()=>invalidate(),[model,invalidate]);
  return <group name="illustrative-fountain-streams">{jets.map((g,i)=><mesh key={i} geometry={g}><meshPhysicalMaterial color="#c4e5eb" transparent opacity={.64} transmission={.5} roughness={.12} ior={1.333} depthWrite={false}/></mesh>)}</group>;
 }
-export default function Yard3D({model,inspection=false,plantingBeds=[]}:{model:YardModel;inspection?:boolean;plantingBeds?:PlanPoint[][]}){
+function Yard3D({model,inspection=false,plantingBeds=[]}:{model:YardModel;inspection?:boolean;plantingBeds?:PlanPoint[][]}){
  const hidden=CONSTRUCTION_YARD_ROLES,split=useSplitFace(model),splitWalls=useMemo(()=>split?split.splitFaceFeatures(model):new Set<string>(),[split,model]);
  // Guillotined stones: a stone laid in pieces is made one, and its neighbours are found across every wall, before batching.
  const groups=useMemo(()=>{const map=new Map<string,YardBox[]>(),drawn:YardBox[]=[],add=(key:string,b:YardBox)=>{if(map.has(key))map.get(key)!.push(b);else map.set(key,[b]);};for(const box of yardPreviewBoxes(model,inspection)){if(!inspection&&(hidden.has(box.role)||GRADED_ROLES.includes(box.role)))continue;const b=inspection?box:seatOnLawn(box,model.terrain);if(split?.drawnSplit(b,splitWalls))drawn.push(b);else add(b.role+':'+b.color+':'+(b.surface?.swatchKey??'')+(b.illustrative?':simplified':'')+(b.naturalStone?':stone':''),b);}const stones=split?split.mergeStonePieces(drawn):[];for(const b of stones)add(b.role+':'+b.color+':'+(b.surface?.swatchKey??'')+':split',b);return {batches:[...map.entries()],neighbours:split?split.stoneNeighbours(stones):undefined};},[model,inspection,splitWalls,split]);
  const occlusion=useGroundOcclusion(),swatches=useSwatchMap();
  return <group name="combined-yard-features">{groups.batches.map(([key,items])=><YardBatch key={key} items={items} role={items[0].role} inspection={inspection} split={key.endsWith(':split')&&split?split:undefined} neighbours={key.endsWith(':split')?groups.neighbours:undefined} color={!inspection&&items[0].role==='bedding'?shade(items[0].color,JOINT_SHADE):items[0].color} occlusion={occlusion} supplierImage={swatchUrl(swatches,items[0].surface?.swatchKey)} sampleWindow={swatches?.sampleWindows?.[items[0].surface?.swatchKey??'']}/>)}{illustrativeBanksVisible(model,inspection)&&<RetainedBanks model={model} occlusion={occlusion} plantingBeds={plantingBeds}/>}<WaterMotion model={model}/>{inspection&&model.members.map(m=>{const a=new THREE.Vector3(m.a.x,m.a.y,m.a.z),b=new THREE.Vector3(m.b.x,m.b.y,m.b.z),q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());return <mesh key={m.id} position={a.clone().add(b).multiplyScalar(.5)} quaternion={q}><cylinderGeometry args={[m.width/2,m.width/2,a.distanceTo(b),10]}/><meshStandardMaterial color={m.color} roughness={.65}/></mesh>;})}</group>;
 }
+/** Memoised: the scene re-renders on hover and selection; the Yard only redraws when its own props change. */
+export default memo(Yard3D);

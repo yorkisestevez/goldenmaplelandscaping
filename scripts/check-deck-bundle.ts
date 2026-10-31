@@ -101,6 +101,9 @@ import {basename} from 'node:path';
 // October 22 (estate lighting meets guillotined armour stone): both raised the route to 277 KB on their own branches.
 // Together they measure 277.6 KB (option-deltas worker 213.4 KB, viewer 339.8 KB). Raised to 278 KB with the owner's
 // approval; perf/deckcraft-route-headroom (the lazy hardscape catalogue) is the planned way back down.
+// October 31 (estate lighting meets the faster 3D view, PR 207): together the viewer measured 340.3 KB. The catalogue light
+// housings (CatalogueFixture.tsx, with the pool niche and the well light's louvre) are now a chunk of their own (2.2 KB),
+// fetched with the first catalogue light, so the viewer is 338.9 KB within its unchanged budget (guarded below).
 const BUDGET_KB={routeInitial:278,routeCss:12,viewer:340,pdf:150,deltaWorker:214,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35,splitStone:6.5};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
@@ -159,6 +162,7 @@ for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep',
   ok(permitKB<=BUDGET_KB.permitSet,`The permit set is ${permitKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.permitSet} KB): ${permit.join(', ')}`);
 }
 const viewer=files.find(f=>/^Deck3DViewer-.*\.js$/.test(f)),pdf=files.find(f=>/^jspdf.*\.js$/.test(f)),deltaWorker=files.find(f=>/^optionDeltas\.worker-.*\.js$/.test(f));
+ok(files.some(f=>/^CatalogueFixture-.*\.js$/.test(f))&&viewer&&!readFileSync(new URL(viewer,assets),'utf8').includes('pool-niche-housing'),'The catalogue light housings are a chunk of their own, outside the 3D viewer');
 ok(viewer&&gz(viewer)<=BUDGET_KB.viewer,`3D viewer chunk is ${viewer?gz(viewer).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.viewer} KB)`);
 const splitStone=files.find(f=>/^splitFaceStone-.*\.js$/.test(f));
 ok(splitStone&&gz(splitStone)<=BUDGET_KB.splitStone,`The guillotined wall's split stones are a chunk of their own, ${splitStone?gz(splitStone).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.splitStone} KB)`);
