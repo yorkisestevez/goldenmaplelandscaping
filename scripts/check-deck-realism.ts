@@ -11,7 +11,9 @@ import {railGeometry} from '../src/features/deckcraft/components/viewer3d/EasedR
 import {fitSun,shadowKey} from '../src/features/deckcraft/components/viewer3d/shadowCache';
 import {ATLAS_WIDTH,STRIP_ROWS,buildSwatchMaps,deltaE,grainIsVertical,rotate90} from '../src/features/deckcraft/components/viewer3d/swatchMaps';
 import {EDGE_SHADE,GRAIN_BLEND,PATCHED_CHUNKS,edgeShade,RELIEF_EDGE,RELIEF_FULL,boardVariation,boxVariant,grainBlend,grainPick,reliefWeight,surfaceMaterial} from '../src/features/deckcraft/components/viewer3d/surfaceShaders';
-import {BOARD_EASE_IN,GAP_UNDERLAY,boardPieceGeometry,gapUnderlayBoxes,gapUnderlayPolygons} from '../src/features/deckcraft/components/viewer3d/boardPieces';
+import {BOARD_EASE_IN,GAP_UNDERLAY,boardPieceGeometry,gapUnderlayOutlines} from '../src/features/deckcraft/components/viewer3d/boardPieces';
+import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
+import {insidePolygon} from '../src/features/deckcraft/lib/polygonCuts';
 import {DECKING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
 import {HDRLoader} from 'three/examples/jsm/loaders/HDRLoader.js';
 import {SKY_DATA,skyStrength,skyYaw,sunDirection} from '../src/features/deckcraft/components/viewer3d/skyModel';
@@ -233,6 +235,7 @@ let repeatMean=0;
   ok(edgeShade(.5,close)===1&&edgeShade(0,close)<=EDGE_SHADE.dark+1e-9&&edgeShade(.02,close)<edgeShade(.04,close),'Close up, a board is its own colour mid-face and darkens into its eased edges');
   ok(edgeShade(.04,far)<1&&edgeShade(.04,close)>edgeShade(.04,far),'Further off the shaded line stays at least a pixel wide instead of vanishing');
   ok(edgeShade(0,tiny)===1,'Boards a few pixels wide are not striped dark');
+  ok(edgeShade(0,0)===1&&edgeShade(1,0)===1,'A board’s sides and ends (one across value over the face) are not darkened: no fringe under a tread nosing or along the rim');
   const material=surfaceMaterial('#886644'),mesh={uniforms:{} as Record<string,THREE.IUniform>,defines:{} as Record<string,string>,vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};
   material.onBeforeCompile(mesh as unknown as THREE.WebGLProgramParametersWithUniforms,undefined as never);
   ok(/#ifndef DC_BOX_UV\s*diffuseColor\.rgb\*=dcEdgeShade\(vDcUv\.y\);\s*#endif/.test(mesh.fragmentShader)&&mesh.fragmentShader.includes(`float band=max(${EDGE_SHADE.band},px)`),'Deck boards, treads and skirting shade their edges in the shader; box-projected rim and framing do not');
@@ -252,18 +255,16 @@ let repeatMean=0;
   ok(BOARD_EASE_IN===.125&&Math.abs(flatEdge-(2.75-BOARD_EASE_IN))<1e-6,`The flat face stops ${BOARD_EASE_IN} in short of the edge (${(2.75-flatEdge).toFixed(3)} in)`);
   ok([...tilts].some(t=>t>20&&t<70),'The ease turns through the radius, so the edge catches a highlight of its own');
   g.dispose();
-  const gap=.1875,boards=[{x:0,y:-.5,z:0,w:96,h:1,d:5.5},{x:0,y:-.5,z:5.5+gap,w:96,h:1,d:5.5},{x:96+gap,y:-.5,z:0,w:96,h:1,d:5.5}],under=gapUnderlayBoxes(boards,gap);
-  const covers=(x:number,z:number)=>under.some(u=>Math.abs(x-u.x)<=u.w/2&&Math.abs(z-u.z)<=u.d/2);
-  ok(covers(10,2.75+gap/2)&&covers(48+gap/2,0),'Dark underlay closes every gap between boards and every butt joint');
-  ok(under.every(u=>u.y+u.h/2<-1)&&under.every(u=>u.y+u.h/2>-1.2),'The underlay sits just under the board undersides');
-  // A board cut on a 45° corner: its cavity follows the cut, never a dark wedge past the deck edge.
-  const cut=[{x:0,y:0},{x:48,y:0},{x:42.5,y:5.5},{x:0,y:5.5}],clipped={x:24,y:-.5,z:2.75,w:48,h:1,d:5.5,polygon:cut};
-  const [shape]=gapUnderlayPolygons([clipped,boards[0]],gap),segment=(p:{x:number;y:number},a:{x:number;y:number},b:{x:number;y:number})=>{const dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy)));return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy);};
-  ok(gapUnderlayPolygons([boards[0]],gap).length===0&&gapUnderlayBoxes([clipped,boards[0]],gap).length===1,'Square boards take the instanced slabs; only cut pieces take an outline of their own');
-  ok(shape&&shape.y<-1&&shape.points.every(p=>Math.min(...cut.map((a,i)=>segment(p,a,cut[(i+1)%cut.length])))<=gap+.021),'A cut board’s cavity stays within the gap of its own outline');
+  // The cavity: each level's decking outline just under its boards, so it closes every gap and joint and never shows
+  // past the outer boards, a mitre or a clipped corner (a slab per board stuck out under tread nosings and the rim).
+  for(const design of [DEFAULT_DECK,{...structuredClone(DEFAULT_DECK),pattern:'Picture Frame',pictureFrameRows:2}] as DeckData[]){
+    const model=buildDeckTakeoff(design),cavities=gapUnderlayOutlines(model.levels);
+    ok(cavities.length===model.levels.length&&cavities.every((c,i)=>{const l=model.levels[i],o=(l.deckingFootprint??l.footprint).outline;return c.points.length===o.length&&c.points.every((p,k)=>p.x===o[k].x+l.offset.x&&p.y===o[k].y+l.offset.z)&&Math.abs(c.y-(l.top-1-GAP_UNDERLAY.dropIn))<1e-9;}),`${design.pattern}: each level's cavity is its own decking outline, just under the 1 in boards`);
+    ok(model.levels.every((l,i)=>l.boards.length>0&&l.boards.every(b=>insidePolygon({x:b.cx+l.offset.x,y:b.cy+l.offset.z},cavities[i].points))),`${design.pattern}: every board sits over its level's cavity`);
+  }
   const c=new THREE.Color(GAP_UNDERLAY.color);ok(.2126*c.r+.7152*c.g+.0722*c.b<.01,'The cavity under a gap is near black');
   const viewer=read(`${VIEWER}Deck3DViewer.tsx`);
-  ok(viewer.includes('boardPieceGeometry(first.w,first.h,first.d)')&&viewer.includes('Math.min(BOARD_EASE_IN,item.h/6,minEdge/8)')&&/<GapUnderlay boards=\{boards\} gap=\{model\.gap\}\/>/.test(viewer)&&/<GapUnderlay boards=\{stairBoards\} gap=\{model\.gap\}\/>/.test(viewer),'Deck and stair boards use the eased board geometry and sit over the gap underlay');
+  ok(viewer.includes('boardPieceGeometry(first.w,first.h,first.d)')&&viewer.includes('Math.min(BOARD_EASE_IN,item.h/6,minEdge/8)')&&(viewer.match(/<GapUnderlay /g)??[]).length===1&&/\{!structure&&<><GapUnderlay levels=\{model\.levels\}\/>/.test(viewer),'Deck boards use the eased board geometry and sit over the cavity; stairs have none');
 }
 
 // The shader patch rewrites chunks three still has, and every board's pick is stable and in range.

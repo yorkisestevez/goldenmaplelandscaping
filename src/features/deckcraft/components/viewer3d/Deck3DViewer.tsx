@@ -503,7 +503,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
   return <><group scale={1/12}><group visible={isObjectVisible(data.editorOrganization,'deck')}>
 
-    {!structure&&<><GapUnderlay boards={boards} gap={model.gap}/><FinishedBoards items={[...mainBoards,...ownLayoutBoards]} material={board} pick={pick}/><FinishedBoards items={boards.filter(b=>b.role==='inlay'&&!b.layoutColour)} material={materials.inlay}/>{darkBorder&&<FinishedBoards items={boards.filter(b=>b.role==='border'&&!b.layoutColour)} material={borderMaterial}/>}{finish?.groups.map(g=><AccentBoards key={g.ref} colour={g.ref} items={boards.filter(b=>b.accent===g.ref)} pick={pick}/>)}{painting&&<HoverOutline boards={boards} addresses={finish?.addresses} scope={boardPaint!.scope} register={registerHover}/>}</>}
+    {!structure&&<><GapUnderlay levels={model.levels}/><FinishedBoards items={[...mainBoards,...ownLayoutBoards]} material={board} pick={pick}/><FinishedBoards items={boards.filter(b=>b.role==='inlay'&&!b.layoutColour)} material={materials.inlay}/>{darkBorder&&<FinishedBoards items={boards.filter(b=>b.role==='border'&&!b.layoutColour)} material={borderMaterial}/>}{finish?.groups.map(g=><AccentBoards key={g.ref} colour={g.ref} items={boards.filter(b=>b.accent===g.ref)} pick={pick}/>)}{painting&&<HoverOutline boards={boards} addresses={finish?.addresses} scope={boardPaint!.scope} register={registerHover}/>}</>}
 
     <Members items={model.levels.flatMap(l=>l.joists)} material={materials.wood} name="joists"/>
 
@@ -529,7 +529,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
     <HardwareDetails data={data} model={model} inspection={inspection}/><FootingDetails data={data} model={model} cutaway={cutaway}/>
 
-    <GapUnderlay boards={stairBoards} gap={model.gap}/><FinishedBoards items={stairBoards.filter(b=>!stairBorder||b.role!=='border')} material={treadMat}/>{stairBorder&&<FinishedBoards items={stairBoards.filter(b=>b.role==='border')} material={borderMaterial}/>}
+    <FinishedBoards items={stairBoards.filter(b=>!stairBorder||b.role!=='border')} material={treadMat}/>{stairBorder&&<FinishedBoards items={stairBoards.filter(b=>b.role==='border')} material={borderMaterial}/>}
 
     {!structure&&<group name="closed-stair-riser-boards"><FinishedBoards items={drawnRisers} material={riserMat}/></group>}
 

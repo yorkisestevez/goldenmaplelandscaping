@@ -73,10 +73,13 @@ export function grainBlend(f:number){
  * reads as a slab. Each board's long edges shade into the gap over `band` of its width (about 1/4 in on a 5.5 in
  * board), never narrower than a pixel (`px`, its width per pixel), fading out once the whole board is a few pixels wide.
  */
-export const EDGE_SHADE={dark:.62,band:.045,fadeFrom:.12,fadeTo:.35};
+export const EDGE_SHADE={dark:.62,band:.045,fadeFrom:.12,fadeTo:.35,sideFace:1e-6};
 const smooth=(a:number,b:number,x:number)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t);};
-/** The shader's dcEdgeShade: the colour scale at `across` (0–1 over the board's width), `px` board widths a pixel. */
+/** The shader's dcEdgeShade: the colour scale at `across` (0–1 over the board's width), `px` board widths a pixel. A
+ * board's sides and ends carry one `across` value over the whole face (px 0): they are left alone, so a tread nosing or
+ * the outer board above the rim never grows a dark fringe. */
 export function edgeShade(across:number,px:number){
+  if(px<=EDGE_SHADE.sideFace)return 1;
   const edge=Math.min(across,1-across),band=Math.max(EDGE_SHADE.band,px),fade=1-smooth(EDGE_SHADE.fadeFrom,EDGE_SHADE.fadeTo,px);
   return 1-(1-EDGE_SHADE.dark)*(1-smooth(0,band,edge))*fade;
 }
@@ -90,7 +93,8 @@ float dcHash(vec2 s,float tile,vec3 k){return fract(sin(s.x*k.x+s.y*k.y+tile*k.z
 vec2 dcPick(vec2 s,float tile){return vec2(min(floor(dcHash(s,tile,${vec3(PICK_STRIP)})*uStrips),uStrips-1.),dcHash(s,tile,${vec3(PICK_OFFSET)}));}
 vec4 dcTex(sampler2D t){vec4 a=textureGrad(t,dcUvA,dcDx,dcDy);return dcW>0.?mix(a,textureGrad(t,dcUvB,dcDx,dcDy),dcW):a;}
 float dcEdgeShade(float v){
-  float across=fract(v),px=max(fwidth(v),1e-5),edge=min(across,1.-across);
+  float px=fwidth(v);if(px<=${EDGE_SHADE.sideFace.toExponential()})return 1.;
+  float across=fract(v),edge=min(across,1.-across);
   float band=max(${EDGE_SHADE.band},px),fade=1.-smoothstep(${EDGE_SHADE.fadeFrom},${EDGE_SHADE.fadeTo},px);
   return 1.-${(1-EDGE_SHADE.dark).toFixed(4)}*(1.-smoothstep(0.,band,edge))*fade;
 }`;
