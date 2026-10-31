@@ -517,6 +517,8 @@ export function ontarioShowcaseDesign({palette='trend-2026'}:{palette?:ShowcaseP
  const stairUp={position:[stairMid,5.2,foot/12+6] as [number,number,number],target:[stairMid,6.5,data.length*0.45] as [number,number,number]};
  const shot=(id:string,name:string,frame:{position:[number,number,number];target:[number,number,number]},fov:number)=>({id,name,fov,positionIn:frame.position.map(n=>n*12) as [number,number,number],targetIn:frame.target.map(n=>n*12) as [number,number,number]});
  data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,56),shot('terrace-eye','Terrace toward the pool',eye,55),shot('pool','Pool court',poolCam,42),shot('fire','Fire lounge',fireCam,42),shot('dining','Dining set',diningCam,66),shot('terrace-lounge','Terrace lounge',terraceLoungeCam,50),shot('kitchen','Terrace kitchen',kitchenCam,50),shot('overhead','Overhead plan',overhead,50),shot('stair-up','Up the stair',stairUp,48)]};
+ // Positions to a tenth of an inch, not float noise, so the estate share link stays inside MAX_PUBLIC_DESIGN_BYTES.
+ data.landscapeObjects=data.landscapeObjects?.map(o=>({...o,xIn:tenth(o.xIn),zIn:tenth(o.zIn)}));
  return data;
 }
 
