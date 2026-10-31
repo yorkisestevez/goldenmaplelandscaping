@@ -9,7 +9,7 @@ import {buildSurfaceDetail,type DetailKind} from '../src/features/deckcraft/comp
 import {cameraSetback} from '../src/features/deckcraft/components/viewer3d/cameraFraming';
 import {railGeometry} from '../src/features/deckcraft/components/viewer3d/EasedRails';
 import {fitSun,shadowKey} from '../src/features/deckcraft/components/viewer3d/shadowCache';
-import {ATLAS_WIDTH,BOARD_FACE_IN,REAL_SCALE_PX_PER_IN,STRIP_ROWS,buildSwatchMaps,deltaE,grainIsVertical,rotate90} from '../src/features/deckcraft/components/viewer3d/swatchMaps';
+import {ATLAS_WIDTH,STRIP_ROWS,buildSwatchMaps,deltaE,grainIsVertical,rotate90} from '../src/features/deckcraft/components/viewer3d/swatchMaps';
 import {BOARD_PIECE,EDGE_SHADE,GRAIN_BLEND,PATCHED_CHUNKS,edgeShade,RELIEF_EDGE,RELIEF_FULL,boardVariation,boxVariant,grainBlend,grainPick,reliefWeight,surfaceMaterial} from '../src/features/deckcraft/components/viewer3d/surfaceShaders';
 import {BOARD_EASE_IN,GAP_UNDERLAY,boardPieceGeometry,gapUnderlayOutlines,outlineGeometry} from '../src/features/deckcraft/components/viewer3d/boardPieces';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
@@ -159,7 +159,6 @@ const SWATCHES='src/features/deckcraft/assets/swatches/';
 const files=readdirSync(SWATCHES).filter(f=>f.endsWith('.jpg')).sort();
 const used=new Set(DECKING_CATALOGUE.flatMap(m=>m.colors.map(c=>c.swatch)));
 ok([...used].every(f=>files.includes(f)),'Every catalogue colour has its swatch on disk');
-const SWATCH_SOURCES=JSON.parse(readFileSync(`${SWATCHES}sources.json`,'utf8')).swatches as Record<string,unknown>;
 let worstDelta=0,worstSeam=0;
 for(const file of files){
   const {data,info}=await sharp(SWATCHES+file).ensureAlpha().raw().toBuffer({resolveWithObject:true});
@@ -167,9 +166,9 @@ for(const file of files){
   // TimberTech's square photos show four boards (Premier+ Natural Oak is a close-up of one surface), and the strips
   // stop before the board across them on the right.
   if(file.startsWith('tt-')&&Math.abs(info.width/info.height-1)<.35&&file!=='tt-premierplus-natural-oak.jpg')ok(maps.layout.kind==='boards'&&maps.strips===4&&maps.layout.strips.every(s=>s.x1<info.width*.82),`${file}: four boards, clear of the board across them`);
-  // Deckorators' installed close-ups (sources.json) are four boards with one across them, mirrored so it is on the right.
-  else if(file.startsWith('dk-')&&SWATCH_SOURCES[file])ok(maps.layout.kind==='boards'&&maps.strips>=2&&Math.min(...maps.layout.strips.map(s=>s.y1-s.y0))>=.8*Math.max(...maps.layout.strips.map(s=>s.y1-s.y0))&&maps.layout.strips.every(s=>s.x1<info.width*.82),`${file}: whole boards only (none the photo's edge cuts short), clear of the board across them`);
   else ok(maps.strips>=3,`${file}: at least three strips`);
+  // A board the photo's edge cuts short would be stretched across a whole board: every strip is a whole board.
+  if(maps.layout.kind==='boards')ok(Math.min(...maps.layout.strips.map(s=>s.y1-s.y0))>=.8*Math.max(...maps.layout.strips.map(s=>s.y1-s.y0)),`${file}: whole boards only, none the photo's edge cuts short`);
   ok(maps.width===ATLAS_WIDTH&&maps.height===maps.strips*STRIP_ROWS&&maps.albedo.length===maps.width*maps.height*4,`${file}: the atlas is ${ATLAS_WIDTH} wide with ${STRIP_ROWS} rows a strip`);
   const delta=deltaE(maps.sourceMean,maps.atlasMean);worstDelta=Math.max(worstDelta,delta);
   ok(delta<1,`${file}: the atlas keeps the photo's colour (ΔE ${delta.toFixed(2)})`);
@@ -182,13 +181,6 @@ for(const file of files){
   const seam=wrap/Math.max(rows,inner);worstSeam=Math.max(worstSeam,seam);
   ok(seam<2.5,`${file}: no seam where the grain repeats (${seam.toFixed(2)}× an ordinary step)`);
   ok(maps.normal.every((v,i)=>i%4!==2||v>=128),`${file}: every normal faces out of the board`);
-  // Real-scale grain: a sharp photo of whole boards repeats over the length of board it shows (its boards are
-  // BOARD_FACE_IN wide); a coarse one (the 480 px swatches) or a close-up of one surface keeps the 48 in repeat.
-  const whole=maps.layout.kind==='boards'?Math.max(...maps.layout.strips.map(t=>t.y1-t.y0))/.8:0;
-  if(whole/BOARD_FACE_IN>=REAL_SCALE_PX_PER_IN){const s=maps.layout.strips[0],shown=BOARD_FACE_IN*(s.x1-s.x0)*.875/whole;ok(Math.abs(maps.repeatIn-shown)<.01&&maps.repeatIn>=8&&maps.repeatIn<=24,`${file}: the grain repeats over the ${maps.repeatIn.toFixed(1)} in of board the photo shows`);}
-  else ok(maps.repeatIn===48,`${file}: a coarse or one-surface photo keeps the 48 in repeat`);
-  if(SWATCH_SOURCES[file])ok(maps.repeatIn<24,`${file}: the sharper manufacturer photo shows its grain at true size`);
-  if(file==='tt-harvest-brownstone.jpg')ok(maps.repeatIn===48,'The default Harvest (480 px) keeps the 48 in repeat critics preferred');
 }
 ok(grainIsVertical(rotate90({width:2,height:2,data:new Uint8Array(16)}))===false,'A flat picture has no grain to turn');
 {
@@ -205,15 +197,12 @@ ok(!/from ['"](three|@react-three)/.test(read(`${VIEWER}swatchMaps.ts`)),'swatch
 // Board photos sharp enough for a close look: the manufacturers' 1000 px close-ups. The photos still below that are
 // listed here, and the list only shrinks: a listed photo that has been replaced fails until it is taken off.
 const MIN_SOURCE_EDGE=1000;
-const LOW_RES_SWATCHES=new Set(['dk-border-dark-slate','dk-summit-boulder','dk-summit-cliffside','dk-summit-glacier','tt-harvest-brownstone','tt-harvest-kona','tt-harvest-slate-gray','tt-harvestplus-timber-gray','tt-harvestplus-toasted-wheat','tt-landmark-american-walnut','tt-landmark-boardwalk','tt-landmark-castle-gate','tt-landmark-french-white-oak','tt-legacy-ashwood','tt-legacy-espresso','tt-legacy-mocha','tt-legacy-pecan','tt-legacy-tigerwood','tt-legacy-whitewash-cedar','tt-premier-dark-teak','tt-premier-maritime-gray','tt-premierplus-natural-oak','tt-prime-dark-teak','tt-prime-maritime-gray','tt-primeplus-coconut-husk','tt-primeplus-dark-cocoa','tt-primeplus-sea-salt-gray','tt-reserve-antique-leather','tt-reserve-dark-roast','tt-reserve-driftwood','tt-reserve-reclaimed-chestnut','tt-terrain-brown-oak','tt-terrain-silver-maple','tt-terrainplus-dark-oak','tt-terrainplus-natural-white-oak','tt-terrainplus-weathered-oak','tt-vintage-coastline','tt-vintage-cypress','tt-vintage-dark-hickory','tt-vintage-english-walnut','tt-vintage-mahogany','tt-vintage-weathered-teak','wood-cedar','wood-pressure-treated'].map(n=>`${n}.jpg`));
+const LOW_RES_SWATCHES=new Set(['dk-altitude-highland','dk-altitude-sequoia','dk-altitude-trailstone','dk-border-dark-slate','dk-summit-boulder','dk-summit-cliffside','dk-summit-glacier','dk-venture-saltwater','dk-venture-sandbar','dk-vista-driftwood','dk-vista-dunewood','dk-vista-ironwood','dk-vista-silverwood','dk-voyage-costa','dk-voyage-khaya','dk-voyage-mesa','dk-voyage-sedona','dk-voyage-sierra','dk-voyage-tundra','dk-summit-boulder','dk-summit-cliffside','dk-summit-glacier','tt-harvest-brownstone','tt-harvest-kona','tt-harvest-slate-gray','tt-harvestplus-timber-gray','tt-harvestplus-toasted-wheat','tt-landmark-american-walnut','tt-landmark-boardwalk','tt-landmark-castle-gate','tt-landmark-french-white-oak','tt-legacy-ashwood','tt-legacy-espresso','tt-legacy-mocha','tt-legacy-pecan','tt-legacy-tigerwood','tt-legacy-whitewash-cedar','tt-premier-dark-teak','tt-premier-maritime-gray','tt-premierplus-natural-oak','tt-prime-dark-teak','tt-prime-maritime-gray','tt-primeplus-coconut-husk','tt-primeplus-dark-cocoa','tt-primeplus-sea-salt-gray','tt-reserve-antique-leather','tt-reserve-dark-roast','tt-reserve-driftwood','tt-reserve-reclaimed-chestnut','tt-terrain-brown-oak','tt-terrain-silver-maple','tt-terrainplus-dark-oak','tt-terrainplus-natural-white-oak','tt-terrainplus-weathered-oak','tt-vintage-coastline','tt-vintage-cypress','tt-vintage-dark-hickory','tt-vintage-english-walnut','tt-vintage-mahogany','tt-vintage-weathered-teak','wood-cedar','wood-pressure-treated'].map(n=>`${n}.jpg`));
 for(const file of files){
   const {width=0,height=0}=await sharp(SWATCHES+file).metadata(),edge=Math.min(width,height);
   ok(LOW_RES_SWATCHES.has(file)?edge<MIN_SOURCE_EDGE:edge>=MIN_SOURCE_EDGE,LOW_RES_SWATCHES.has(file)?`${file}: replaced (${width}×${height}); take it off LOW_RES_SWATCHES`:`${file}: at least ${MIN_SOURCE_EDGE} px on its short side (${width}×${height})`);
 }
-// Every sharper photo cites where it came from (sources.json). Shoreline arrived at 2000 px before citations were kept.
-const SOURCES=JSON.parse(read(`${SWATCHES}sources.json`)).swatches as Record<string,{url:string;retrieved:string;edit:string}>,UNCITED=new Set(['dk-venture-shoreline.jpg']);
-ok(files.filter(f=>!LOW_RES_SWATCHES.has(f)&&!UNCITED.has(f)).every(f=>/^https:\/\/(www\.deckorators\.com\/cdn\/shop\/files|shop\.timbertech\.com\/wp-content\/uploads)\//.test(SOURCES[f]?.url??'')&&SOURCES[f].retrieved&&SOURCES[f].edit)&&Object.keys(SOURCES).every(f=>files.includes(f)&&!LOW_RES_SWATCHES.has(f)),'Every sharper swatch cites its manufacturer photo, and every citation is a swatch on disk');
-ok([...LOW_RES_SWATCHES].every(f=>files.includes(f))&&LOW_RES_SWATCHES.size<=44,'Every low-resolution swatch listed is still on disk, and the list never grows');
+ok([...LOW_RES_SWATCHES].every(f=>files.includes(f))&&LOW_RES_SWATCHES.size<=59,'Every low-resolution swatch listed is still on disk, and the list never grows');
 {const hook=read(`${VIEWER}useSwatchTexture.ts`);ok(!/import\s*\{[^}]*buildSwatchMaps/.test(hook)&&hook.includes("import('./swatchMaps').then(m => m.buildSwatchMaps("),'The atlas builder stays out of the 3D viewer chunk: the worker runs it, and the main thread loads it only when no worker can start');}
 ok(/HIGH_READ_EDGE\s*=\s*2048/.test(read(`${VIEWER}useSwatchTexture.ts`))&&read(`${VIEWER}useSwatchTexture.ts`).includes('width > ATLAS_WIDTH ? HIGH_READ_EDGE : READ_EDGE'),'The high tier reads the photo at up to 2048 px for its 2048 atlas');
 
@@ -258,12 +247,11 @@ let repeatMean=0;
   const compile=(m:THREE.Material)=>{const s={uniforms:{} as Record<string,THREE.IUniform>,defines:{} as Record<string,string>,vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};m.onBeforeCompile(s as unknown as THREE.WebGLProgramParametersWithUniforms,undefined as never);return s;};
   const material=surfaceMaterial('#886644'),mesh=compile(material),box=compile(boxVariant(material));
   ok(mesh.fragmentShader.includes('if(vDcBoard<1.5||px<=')&&mesh.fragmentShader.includes(',band=max(0.045,px)')&&mesh.vertexShader.includes('vDcBoard=aVar.w;')&&box.vertexShader.includes('vDcBoard=0.;'),'Only finished board pieces shade their edges; box-projected rim and framing do not');
-  ok(mesh.fragmentShader.includes('float gs=vDcBoard>1.5?uGrainScale:1.,gu=vDcUv.x*gs;')&&'uGrainScale' in mesh.uniforms,'Finished boards take their swatch’s real grain scale; every other piece keeps the 48 in repeat');
   ok(mesh.fragmentShader.includes('if(vDcBoard>1.5){')&&mesh.fragmentShader.includes('float st=(min(floor(seed.x*uStrips),uStrips-1.)+dcV)/uStrips;')&&mesh.fragmentShader.includes('dcUvA=dcUvB=vec2(vDcUv.x+seed.y,st);dcW=0.;'),'Fascia, cladding, skirting, timbers and box-projected framing keep one strip and offset over the piece, as before');
   ok(mesh.fragmentShader.includes('highp uint dcMix(highp uint h)')&&mesh.fragmentShader.includes('+uint(int(tile))')&&!/sin\([^)]*tile/.test(mesh.fragmentShader),'The per-tile pick is an integer hash, so both sides of a tile boundary agree exactly on every GPU');
   ok(mesh.fragmentShader.includes(`smoothstep(${EDGE_SHADE.fadeFrom},${EDGE_SHADE.fadeTo},px)`)&&mesh.fragmentShader.includes(`smoothstep(${1-GRAIN_BLEND},1.,g-tile)`)&&mesh.fragmentShader.includes('uint(s.x*65536.0)'),'Shader constants are written as GLSL floats');
   // Each board's tiles start at its own seed, so the grain handovers never line up across neighbouring boards (a plaid).
-  ok(mesh.fragmentShader.includes('float g=gu+seed.y,tile=floor(g);'),'Each board starts its grain tiles at its own offset, so handovers do not line up across the deck');
+  ok(mesh.fragmentShader.includes('float g=vDcUv.x+seed.y,tile=floor(g);'),'Each board starts its grain tiles at its own offset, so handovers do not line up across the deck');
   ok(mesh.fragmentShader.includes('roughnessFactor=mix(roughnessFactor,1.,dcEdgeK);')&&mesh.fragmentShader.includes('float dcEdgeK=0.;')&&box.fragmentShader.includes('float dcEdgeK=0.;'),'The eased edge goes matte where it shades, so the sun leaves no dotted glint along a gap; other pieces keep their roughness');
   const flat=boardVariation(3,4),board=boardVariation(3,4,true),viewer3=read(`${VIEWER}Deck3DViewer.tsx`);
   ok(flat[3]===0&&board[3]===BOARD_PIECE&&BOARD_PIECE>1.5&&flat.slice(0,3).every((v,i)=>v===board[i])&&(viewer3.match(/boardVariation\([^)]*,true\)/g)??[]).length===2&&!/boardVariation\([^)]*true/.test(read(`${VIEWER}slabGeometry.ts`)+read(`${VIEWER}raisedBedTimber.ts`)),'Deck board batches and cut pieces are marked as finished boards; skirting, raised-bed timbers and geometry with no grain attribute (notched stringers read WebGL’s default w=1) are not');

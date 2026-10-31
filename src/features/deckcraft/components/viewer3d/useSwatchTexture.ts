@@ -154,7 +154,7 @@ export function useSwatchTexture(url: string, fallbackColor: string): THREE.Mesh
         map: atlasTexture(maps.albedo, maps, THREE.SRGBColorSpace, anisotropy),
         normalMap: atlasTexture(maps.normal, maps, THREE.NoColorSpace, anisotropy),
         roughnessMap: atlasTexture(maps.roughness, maps, THREE.NoColorSpace, anisotropy),
-      }, maps.strips, 48 / maps.repeatIn);
+      }, maps.strips);
       invalidate();
       // Decode/worker completion alone is insufficient: all three maps and box variants must be swapped first.
       application.applied(true);
