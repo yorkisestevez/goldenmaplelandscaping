@@ -7,7 +7,8 @@ import * as THREE from 'three';
  * Two ways to find a board's place on the grain:
  * - Its own UVs ("mesh"): u runs along the grain at 48 in per repeat and v across the board, as FinishedBoards,
  *   PolygonBoard and the skirting build them. Each whole unit of v is another board course (skirting). The attribute
- *   aVar = (strip seed, offset, flip, 0) says which strip, how far along and which way round.
+ *   aVar = (strip seed, offset seed, flip, 0) seeds which strip and how far along each 48 in tile samples, and says
+ *   which way round.
  * - Box projection ("box"), for the unit boxes of Members and Boxes (rim, fascia, framing, benches, pickets): the grain
  *   runs along the piece's longest side at 48 in per repeat, across each face, with the strip and offset hashed from
  *   where the piece is.
@@ -48,12 +49,56 @@ void dcBoard(){
   vDcVar=aVar.xy;
 #endif
 }`;
+/**
+ * Along a board the grain changes strip and offset every 48 in tile, handing over to the next tile's grain across the
+ * last GRAIN_BLEND of each tile, so a 16 ft board never shows one stretch of grain four times. grainPick and grainBlend
+ * are the shader's dcPick and handover, for check-deck-realism; the hash keys are shared so the two cannot drift.
+ */
+export const GRAIN_BLEND=.12;
+const PICK_STRIP=[127.1,311.7,74.7],PICK_OFFSET=[269.5,183.3,246.1];
+/** The strip (0 to strips-1) and offset along it (0–1) of tile `tile` of a board whose seed is (x, y). */
+export function grainPick(x:number,y:number,tile:number,strips:number):[number,number]{
+  const hash=([a,b,c]:number[])=>{const s=Math.sin(x*a+y*b+tile*c)*43758.5453;return s-Math.floor(s);};
+  return [Math.min(Math.floor(hash(PICK_STRIP)*strips),strips-1),hash(PICK_OFFSET)];
+}
+/** How far a point `f` (0–1) along its tile has handed over to the next tile's grain. */
+export function grainBlend(f:number){
+  if(f<=1-GRAIN_BLEND)return 0;
+  if(f>=1)return 1;
+  const t=(f-(1-GRAIN_BLEND))/GRAIN_BLEND;
+  return t*t*(3-2*t);
+}
+/**
+ * Board lines that hold at a distance. A 3/16 in gap and a 1/8 in ease are under a pixel a few metres off, so the deck
+ * reads as a slab. Each board's long edges shade into the gap over `band` of its width (about 1/4 in on a 5.5 in
+ * board), never narrower than a pixel (`px`, its width per pixel), fading out once the whole board is a few pixels wide.
+ */
+export const EDGE_SHADE={dark:.62,band:.045,fadeFrom:.12,fadeTo:.35};
+const smooth=(a:number,b:number,x:number)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t);};
+/** The shader's dcEdgeShade: the colour scale at `across` (0–1 over the board's width), `px` board widths a pixel. */
+export function edgeShade(across:number,px:number){
+  const edge=Math.min(across,1-across),band=Math.max(EDGE_SHADE.band,px),fade=1-smooth(EDGE_SHADE.fadeFrom,EDGE_SHADE.fadeTo,px);
+  return 1-(1-EDGE_SHADE.dark)*(1-smooth(0,band,edge))*fade;
+}
+const vec3=(k:number[])=>`vec3(${k.join(',')})`;
 const FRAGMENT_HEAD=/* glsl */`
 uniform float uStrips;
 varying vec2 vDcUv;
 flat varying vec2 vDcVar;
-vec2 dcUv;vec2 dcDx;vec2 dcDy;
-vec4 dcTex(sampler2D t){return textureGrad(t,dcUv,dcDx,dcDy);}`;
+vec2 dcUvA;vec2 dcUvB;float dcW;vec2 dcDx;vec2 dcDy;
+float dcHash(vec2 s,float tile,vec3 k){return fract(sin(s.x*k.x+s.y*k.y+tile*k.z)*43758.5453);}
+vec2 dcPick(vec2 s,float tile){return vec2(min(floor(dcHash(s,tile,${vec3(PICK_STRIP)})*uStrips),uStrips-1.),dcHash(s,tile,${vec3(PICK_OFFSET)}));}
+vec4 dcTex(sampler2D t){vec4 a=textureGrad(t,dcUvA,dcDx,dcDy);return dcW>0.?mix(a,textureGrad(t,dcUvB,dcDx,dcDy),dcW):a;}
+float dcEdgeShade(float v){
+  float across=fract(v),px=max(fwidth(v),1e-5),edge=min(across,1.-across);
+  float band=max(${EDGE_SHADE.band},px),fade=1.-smoothstep(${EDGE_SHADE.fadeFrom},${EDGE_SHADE.fadeTo},px);
+  return 1.-${(1-EDGE_SHADE.dark).toFixed(4)}*(1.-smoothstep(0.,band,edge))*fade;
+}`;
+/** Mesh-mode boards (deck, treads, skirting courses) shade their long edges; box-projected rim and framing do not. */
+const EDGE_FRAGMENT=/* glsl */`
+#ifndef DC_BOX_UV
+  diffuseColor.rgb*=dcEdgeShade(vDcUv.y);
+#endif`;
 /** Edge-on surfaces (a stair tread in a wide hero) drop atlas relief. Face-on boards keep it. */
 export const RELIEF_EDGE=0.12,RELIEF_FULL=0.42;
 export function reliefWeight(facing:number){
@@ -64,22 +109,20 @@ export function reliefWeight(facing:number){
 }
 const FRAGMENT_HEAD_RELIEF=/* glsl */`${FRAGMENT_HEAD}
 float dcKeep;`;
+const FRAGMENT_PICK=/* glsl */`
+    float course=floor(vDcUv.y),across=vDcUv.y-course,tile=floor(vDcUv.x),dcV=${GUTTER}+clamp(across,0.,1.)*${BODY};
+    vec2 seed=vec2(fract(vDcVar.x+course*.6180339),vDcVar.y+course*.37),pickA=dcPick(seed,tile),pickB=dcPick(seed,tile+1.);
+    dcUvA=vec2(vDcUv.x+pickA.y,(pickA.x+dcV)/uStrips);dcUvB=vec2(vDcUv.x+pickB.y,(pickB.x+dcV)/uStrips);
+    dcW=smoothstep(${1-GRAIN_BLEND},1.,vDcUv.x-tile);
+    vec2 scale=vec2(1.,${BODY}/uStrips);dcDx=dFdx(vDcUv)*scale;dcDy=dFdy(vDcUv)*scale;`;
 const FRAGMENT_UV=/* glsl */`
-  {
-    float course=floor(vDcUv.y),across=vDcUv.y-course;
-    float strip=min(floor(fract(vDcVar.x+course*.6180339)*uStrips),uStrips-1.);
-    dcUv=vec2(vDcUv.x+vDcVar.y+course*.37,(strip+${GUTTER}+clamp(across,0.,1.)*${BODY})/uStrips);
-    vec2 scale=vec2(1.,${BODY}/uStrips);dcDx=dFdx(vDcUv)*scale;dcDy=dFdy(vDcUv)*scale;
+  {${FRAGMENT_PICK}
   }`;
 const FRAGMENT_UV_RELIEF=/* glsl */`
-  {
-    float course=floor(vDcUv.y),across=vDcUv.y-course;
-    float strip=min(floor(fract(vDcVar.x+course*.6180339)*uStrips),uStrips-1.);
-    dcUv=vec2(vDcUv.x+vDcVar.y+course*.37,(strip+${GUTTER}+clamp(across,0.,1.)*${BODY})/uStrips);
-    vec2 scale=vec2(1.,${BODY}/uStrips);dcDx=dFdx(vDcUv)*scale;dcDy=dFdy(vDcUv)*scale;
+  {${FRAGMENT_PICK}
     float dcHeight=dcTex(normalMap).a;vec3 dcView=normalize(vViewPosition);
     dcKeep=smoothstep(${RELIEF_EDGE},${RELIEF_FULL},abs(dot(normalize(vNormal),dcView)));
-    dcUv+=dcView.xy*(dcHeight-.5)*.03*dcKeep;
+    vec2 dcShift=dcView.xy*(dcHeight-.5)*.03*dcKeep;dcUvA+=dcShift;dcUvB+=dcShift;
   }`;
 
 /** The standard chunks with their map lookups sent through the board's atlas coordinates. Throws if three renamed them. */
@@ -103,7 +146,7 @@ function patch(material:THREE.MeshStandardMaterial,surface:Surface){
     const relief=surface.relief.value;
     shader.fragmentShader=shader.fragmentShader
       .replace('#include <common>',`#include <common>\n${relief?FRAGMENT_HEAD_RELIEF:FRAGMENT_HEAD}`)
-      .replace('#include <map_fragment>',`${relief?FRAGMENT_UV_RELIEF:FRAGMENT_UV}\n${chunk('map_fragment','texture2D( map, vMapUv )','dcTex( map )')}`)
+      .replace('#include <map_fragment>',`${relief?FRAGMENT_UV_RELIEF:FRAGMENT_UV}\n${chunk('map_fragment','texture2D( map, vMapUv )','dcTex( map )')}${EDGE_FRAGMENT}`)
       .replace('#include <roughnessmap_fragment>',chunk('roughnessmap_fragment','texture2D( roughnessMap, vRoughnessMapUv )','dcTex( roughnessMap )'))
       .replace('#include <normal_fragment_begin>',chunk('normal_fragment_begin','vNormalMapUv','vDcUv'))
       .replace('#include <normal_fragment_maps>',chunk('normal_fragment_maps','texture2D( normalMap, vNormalMapUv )','dcTex( normalMap )')+(relief?'\nnormal=normalize(mix(nonPerturbedNormal,normal,dcKeep));':''));

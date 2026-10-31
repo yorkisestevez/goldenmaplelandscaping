@@ -59,7 +59,7 @@ import {OrbitControls} from '@react-three/drei';
 
 import * as THREE from 'three';
 
-import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import {BOARD_EASE_IN,GapUnderlay,boardPieceGeometry} from './boardPieces';
 
 import {type DeckData} from '../../types';
 
@@ -249,13 +249,9 @@ function BoardBatch({items,material,pick}:{items:FinishBox[];material:THREE.Mate
 
   const geometry=useMemo(()=>{
 
-    // A small milled edge catches light without making the capped board look inflated.
+    // The real 1/8 in ease and grain UVs in inches, along the board rather than stretching a photo per piece.
 
-    const g=new RoundedBoxGeometry(first.w,first.h,first.d,1,.065),pos=g.getAttribute('position'),uv=g.getAttribute('uv');
-
-    // Consistent grain scale in inches, along the board rather than stretching a photo per piece.
-
-    for(let i=0;i<uv.count;i++)uv.setXY(i,(pos.getX(i)+first.w/2)/48,first.h>first.d?(pos.getY(i)+first.h/2)/first.h:(pos.getZ(i)+first.d/2)/first.d);
+    const g=boardPieceGeometry(first.w,first.h,first.d);
 
     // A mounted attribute owns one GPU buffer. Replacing it during each edit
 
@@ -287,7 +283,7 @@ function BoardBatch({items,material,pick}:{items:FinishBox[];material:THREE.Mate
 
 function PolygonBoard({item,material,pick}:{item:FinishBox;material:THREE.Material;pick?:BoardPick}){
 
-  const geometry=useMemo(()=>{const shape=new THREE.Shape();item.polygon!.forEach((p,i)=>i?shape.lineTo(p.x,p.y):shape.moveTo(p.x,p.y));shape.closePath();const minEdge=Math.min(...item.polygon!.map((p,i)=>{const q=item.polygon![(i+1)%item.polygon!.length];return Math.hypot(q.x-p.x,q.y-p.y);})),c=Math.min(.065,item.h/6,minEdge/8);const g=new THREE.ExtrudeGeometry(shape,{depth:item.h-2*c,bevelEnabled:true,bevelThickness:c,bevelSize:c,bevelOffset:-c,bevelSegments:1,curveSegments:1});g.rotateX(Math.PI/2);g.translate(0,item.y+item.h/2-c,0);const pos=g.getAttribute('position'),uv=g.getAttribute('uv'),a=item.angle||0,cu=item.x*Math.cos(a)-item.z*Math.sin(a),cv=item.x*Math.sin(a)+item.z*Math.cos(a);for(let i=0;i<uv.count;i++)uv.setXY(i,(pos.getX(i)*Math.cos(a)-pos.getZ(i)*Math.sin(a)-cu+item.w/2)/48,(pos.getX(i)*Math.sin(a)+pos.getZ(i)*Math.cos(a)-cv+item.d/2)/item.d);const variation=boardVariation(item.x,item.z);g.setAttribute('aVar',new THREE.Float32BufferAttribute(Array.from({length:uv.count},()=>variation).flat(),4));return g;},[item]);
+  const geometry=useMemo(()=>{const shape=new THREE.Shape();item.polygon!.forEach((p,i)=>i?shape.lineTo(p.x,p.y):shape.moveTo(p.x,p.y));shape.closePath();const minEdge=Math.min(...item.polygon!.map((p,i)=>{const q=item.polygon![(i+1)%item.polygon!.length];return Math.hypot(q.x-p.x,q.y-p.y);})),c=Math.min(BOARD_EASE_IN,item.h/6,minEdge/8);const g=new THREE.ExtrudeGeometry(shape,{depth:item.h-2*c,bevelEnabled:true,bevelThickness:c,bevelSize:c,bevelOffset:-c,bevelSegments:2,curveSegments:1});g.rotateX(Math.PI/2);g.translate(0,item.y+item.h/2-c,0);const pos=g.getAttribute('position'),uv=g.getAttribute('uv'),a=item.angle||0,cu=item.x*Math.cos(a)-item.z*Math.sin(a),cv=item.x*Math.sin(a)+item.z*Math.cos(a);for(let i=0;i<uv.count;i++)uv.setXY(i,(pos.getX(i)*Math.cos(a)-pos.getZ(i)*Math.sin(a)-cu+item.w/2)/48,(pos.getX(i)*Math.sin(a)+pos.getZ(i)*Math.cos(a)-cv+item.d/2)/item.d);const variation=boardVariation(item.x,item.z);g.setAttribute('aVar',new THREE.Float32BufferAttribute(Array.from({length:uv.count},()=>variation).flat(),4));return g;},[item]);
 
   useEffect(()=>()=>geometry.dispose(),[geometry]);
 
@@ -507,7 +503,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
   return <><group scale={1/12}><group visible={isObjectVisible(data.editorOrganization,'deck')}>
 
-    {!structure&&<><FinishedBoards items={[...mainBoards,...ownLayoutBoards]} material={board} pick={pick}/><FinishedBoards items={boards.filter(b=>b.role==='inlay'&&!b.layoutColour)} material={materials.inlay}/>{darkBorder&&<FinishedBoards items={boards.filter(b=>b.role==='border'&&!b.layoutColour)} material={borderMaterial}/>}{finish?.groups.map(g=><AccentBoards key={g.ref} colour={g.ref} items={boards.filter(b=>b.accent===g.ref)} pick={pick}/>)}{painting&&<HoverOutline boards={boards} addresses={finish?.addresses} scope={boardPaint!.scope} register={registerHover}/>}</>}
+    {!structure&&<><GapUnderlay boards={boards} gap={model.gap}/><FinishedBoards items={[...mainBoards,...ownLayoutBoards]} material={board} pick={pick}/><FinishedBoards items={boards.filter(b=>b.role==='inlay'&&!b.layoutColour)} material={materials.inlay}/>{darkBorder&&<FinishedBoards items={boards.filter(b=>b.role==='border'&&!b.layoutColour)} material={borderMaterial}/>}{finish?.groups.map(g=><AccentBoards key={g.ref} colour={g.ref} items={boards.filter(b=>b.accent===g.ref)} pick={pick}/>)}{painting&&<HoverOutline boards={boards} addresses={finish?.addresses} scope={boardPaint!.scope} register={registerHover}/>}</>}
 
     <Members items={model.levels.flatMap(l=>l.joists)} material={materials.wood} name="joists"/>
 
@@ -533,7 +529,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
     <HardwareDetails data={data} model={model} inspection={inspection}/><FootingDetails data={data} model={model} cutaway={cutaway}/>
 
-    <FinishedBoards items={stairBoards.filter(b=>!stairBorder||b.role!=='border')} material={treadMat}/>{stairBorder&&<FinishedBoards items={stairBoards.filter(b=>b.role==='border')} material={borderMaterial}/>}
+    <GapUnderlay boards={stairBoards} gap={model.gap}/><FinishedBoards items={stairBoards.filter(b=>!stairBorder||b.role!=='border')} material={treadMat}/>{stairBorder&&<FinishedBoards items={stairBoards.filter(b=>b.role==='border')} material={borderMaterial}/>}
 
     {!structure&&<group name="closed-stair-riser-boards"><FinishedBoards items={drawnRisers} material={riserMat}/></group>}
 

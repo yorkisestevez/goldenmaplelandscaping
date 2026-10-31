@@ -14,8 +14,9 @@ import type { SwatchResult } from './swatchMaps.worker';
 import { clearSurfaceMaps, disposeSurface, setSurfaceMaps, surfaceMaterial } from './surfaceShaders';
 import { useFixtureLit } from './fixtureLighting';
 
-/** The photo is read at up to this many pixels on its longer side (one swatch is 2000 px square). */
-const READ_EDGE = 900;
+/** The photo is read at up to this many pixels on its longer side (one swatch is 2000 px square); the high tier's
+ * 2048 atlas reads up to 2048, so a sharp photo keeps its detail. */
+const READ_EDGE = 900, HIGH_READ_EDGE = 2048;
 /** Processed swatches kept for re-use (a colour picked again, or the same colour on a part): newest last. */
 const cache = new Map<string, Promise<SwatchMaps | null>>();
 const CACHE_SIZE = 6;
@@ -102,7 +103,7 @@ function swatchMaps(url: string, width = ATLAS_WIDTH): Promise<SwatchMaps | null
     img.decoding = 'async';
     img.src = url;
     await img.decode();
-    const edge = width > ATLAS_WIDTH ? 1800 : READ_EDGE;
+    const edge = width > ATLAS_WIDTH ? HIGH_READ_EDGE : READ_EDGE;
     const scale = Math.min(1, edge / Math.max(img.naturalWidth, img.naturalHeight));
     const readW = Math.round(img.naturalWidth * scale), readH = Math.round(img.naturalHeight * scale);
     const canvas = document.createElement('canvas');
