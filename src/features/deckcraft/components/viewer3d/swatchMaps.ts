@@ -23,6 +23,8 @@ export interface SwatchMaps{
 }
 /** The width of the boards in the swatch photos, the yardstick for how much board a photo shows. */
 export const BOARD_FACE_IN=5.5;
+/** The photo detail (pixels per inch of board) at which a photo's grain is shown at its true size. */
+export const REAL_SCALE_PX_PER_IN=32;
 import {ATLAS_WIDTH} from './atlasWidth';
 export {ATLAS_WIDTH};
 export const STRIP_ROWS=128,STRIP_GUTTER=8,STRIP_BODY=STRIP_ROWS-2*STRIP_GUTTER;
@@ -175,6 +177,9 @@ export async function buildSwatchMaps(input:SwatchImage,kind:'composite'|'wood',
   const atlasMean=atlasSum.map(v=>v/(albedo.length/4)) as [number,number,number];
   // A strip spans 0.8 of its board's face (a tenth trimmed off each edge) and repeats over 0.875 of its length. The
   // tallest strip is a whole board; the photo's edges can cut the first and last ones short.
-  const s0=layout.strips[0],repeatIn=layout.kind==='boards'?Math.min(48,Math.max(8,BOARD_FACE_IN*(s0.x1-s0.x0)*.875*.8/Math.max(...layout.strips.map(t=>t.y1-t.y0)))):48;
+  // A photo too coarse for its grain to hold up at true size (the 480 px swatches show four boards at about 20 px an
+  // inch) keeps the 48 in repeat: at real scale its few strips showed the same cathedrals board after board.
+  const s0=layout.strips[0],board=Math.max(...layout.strips.map(t=>t.y1-t.y0))/.8;
+  const repeatIn=layout.kind==='boards'&&board/BOARD_FACE_IN>=REAL_SCALE_PX_PER_IN?Math.min(48,Math.max(8,BOARD_FACE_IN*(s0.x1-s0.x0)*.875/board)):48;
   return {width:W,height,strips:n,albedo,normal,roughness,layout,sourceMean,atlasMean,repeatIn};
 }

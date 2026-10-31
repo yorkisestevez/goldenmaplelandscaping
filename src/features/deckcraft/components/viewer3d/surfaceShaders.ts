@@ -104,12 +104,13 @@ uniform float uStrips,uGrainScale;
 varying vec2 vDcUv;
 flat varying vec2 vDcVar;
 flat varying float vDcBoard;
-vec2 dcUvA;vec2 dcUvB;float dcW;vec2 dcDx;vec2 dcDy;
+vec2 dcUvA;vec2 dcUvB;float dcW;vec2 dcDx;vec2 dcDy;float dcEdgeK=0.;
 highp uint dcMix(highp uint h){h^=h>>16u;h*=0x7feb352du;h^=h>>15u;h*=0x846ca68bu;h^=h>>16u;return h;}
 float dcPick(vec2 s,float tile){highp uint a=uint(s.x*${glslFloat(SEED_STEPS)}),b=uint(fract(s.y)*${glslFloat(SEED_STEPS)}),h=dcMix(dcMix(a^dcMix(b+${HASH_KEY}u))+uint(int(tile)));return float(h>>8u)/16777216.;}
 vec4 dcTex(sampler2D t){vec4 a=textureGrad(t,dcUvA,dcDx,dcDy);return dcW>0.?mix(a,textureGrad(t,dcUvB,dcDx,dcDy),dcW):a;}
-float dcEdgeShade(float v){float px=fwidth(v);if(vDcBoard<${glslFloat(BOARD_PIECE-.5)}||px<=${EDGE_SHADE.sideFace.toExponential()}*max(1.,abs(v)))return 1.;float e=min(fract(v),1.-fract(v)),band=max(${glslFloat(EDGE_SHADE.band)},px),depth=${glslFloat(1-EDGE_SHADE.dark)}*(1.-smoothstep(${glslFloat(EDGE_SHADE.fadeFrom)},${glslFloat(EDGE_SHADE.fadeTo)},px));return(1.-depth*(1.-smoothstep(0.,band,e)))/(1.-depth*band);}`;
-/** Finished board pieces shade their long edges; everything else is left as it was. */
+float dcEdgeShade(float v){float px=fwidth(v);if(vDcBoard<${glslFloat(BOARD_PIECE-.5)}||px<=${EDGE_SHADE.sideFace.toExponential()}*max(1.,abs(v)))return 1.;float e=min(fract(v),1.-fract(v)),band=max(${glslFloat(EDGE_SHADE.band)},px),f=1.-smoothstep(${glslFloat(EDGE_SHADE.fadeFrom)},${glslFloat(EDGE_SHADE.fadeTo)},px);dcEdgeK=(1.-smoothstep(0.,band,e))*f;return(1.-${glslFloat(1-EDGE_SHADE.dark)}*dcEdgeK)/(1.-${glslFloat(1-EDGE_SHADE.dark)}*band*f);}`;
+/** Finished board pieces shade their long edges, and the eased edge goes matte there: a sub-pixel sun glint on a 1/8 in
+ * radius only shows as a dotted line. Everything else is left as it was. */
 const EDGE_FRAGMENT=/* glsl */`
 diffuseColor.rgb*=dcEdgeShade(vDcUv.y);`;
 /** Edge-on surfaces (a stair tread in a wide hero) drop atlas relief. Face-on boards keep it. */
@@ -126,7 +127,7 @@ const FRAGMENT_PICK=/* glsl */`
     float gs=vDcBoard>${glslFloat(BOARD_PIECE-.5)}?uGrainScale:1.,gu=vDcUv.x*gs;
     float course=floor(vDcUv.y),across=vDcUv.y-course,dcV=${GUTTER}+clamp(across,0.,1.)*${BODY};
     vec2 seed=vec2(fract(vDcVar.x+course*.6180339),vDcVar.y+course*.37);float st=(min(floor(seed.x*uStrips),uStrips-1.)+dcV)/uStrips;
-    if(vDcBoard>${glslFloat(BOARD_PIECE-.5)}){float tile=floor(gu);dcUvA=vec2(gu+dcPick(seed,tile),st);dcUvB=vec2(gu+dcPick(seed,tile+1.),st);dcW=smoothstep(${glslFloat(1-GRAIN_BLEND)},1.,gu-tile);}else{dcUvA=dcUvB=vec2(vDcUv.x+seed.y,st);dcW=0.;}
+    if(vDcBoard>${glslFloat(BOARD_PIECE-.5)}){float g=gu+seed.y,tile=floor(g);dcUvA=vec2(g+dcPick(seed,tile),st);dcUvB=vec2(g+dcPick(seed,tile+1.),st);dcW=smoothstep(${glslFloat(1-GRAIN_BLEND)},1.,g-tile);}else{dcUvA=dcUvB=vec2(vDcUv.x+seed.y,st);dcW=0.;}
     vec2 scale=vec2(gs,${BODY}/uStrips);dcDx=dFdx(vDcUv)*scale;dcDy=dFdy(vDcUv)*scale;`;
 const FRAGMENT_UV=/* glsl */`
   {${FRAGMENT_PICK}
@@ -160,7 +161,7 @@ function patch(material:THREE.MeshStandardMaterial,surface:Surface){
     shader.fragmentShader=shader.fragmentShader
       .replace('#include <common>',`#include <common>\n${relief?FRAGMENT_HEAD_RELIEF:FRAGMENT_HEAD}`)
       .replace('#include <map_fragment>',`${relief?FRAGMENT_UV_RELIEF:FRAGMENT_UV}\n${chunk('map_fragment','texture2D( map, vMapUv )','dcTex( map )')}${EDGE_FRAGMENT}`)
-      .replace('#include <roughnessmap_fragment>',chunk('roughnessmap_fragment','texture2D( roughnessMap, vRoughnessMapUv )','dcTex( roughnessMap )'))
+      .replace('#include <roughnessmap_fragment>',chunk('roughnessmap_fragment','texture2D( roughnessMap, vRoughnessMapUv )','dcTex( roughnessMap )')+'\nroughnessFactor=mix(roughnessFactor,1.,dcEdgeK);')
       .replace('#include <normal_fragment_begin>',chunk('normal_fragment_begin','vNormalMapUv','vDcUv'))
       .replace('#include <normal_fragment_maps>',chunk('normal_fragment_maps','texture2D( normalMap, vNormalMapUv )','dcTex( normalMap )')+(relief?'\nnormal=normalize(mix(nonPerturbedNormal,normal,dcKeep));':''));
   };
