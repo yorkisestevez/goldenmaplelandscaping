@@ -35,7 +35,10 @@ ok(finishedFasciaOffset(fresh({buildRules:'2026-10-walls',pictureFrameOverhangIn
 // The 3D fascia stands proud only where a fascia goes: the rim the house does not cover. Along the ledger it stays the rim.
 {const d=fresh({deckType:'Attached',width:16,length:12}),m=buildDeckTakeoff(d),exposed=new Set(exposedRim(d,m)),rim=m.levels[0].rim??[],slabs=fasciaSlabs(m,FASCIA_PROUD_IN,exposed);
   ok(rim.length>exposed.size&&exposed.size>0,'The attached deck has a house-side rim and exposed rim');
-  ok(slabs.every((s,i)=>Math.abs(s.thick-(rim[i].width+(exposed.has(rim[i])?FASCIA_PROUD_IN:0)))<1e-9),'Exposed rim slabs carry the fascia thickness; house-side rim slabs keep the rim thickness');}
+  // Each rim run can be several fascia boards (fasciaSlabs splits it into its 12 ft stock): match each slab to the rim
+  // member whose line it lies on (shifted out by at most half the stand-off) and between whose ends it sits.
+  const owner=(s:typeof slabs[number])=>rim.find(r=>{const L=Math.hypot(r.b.x-r.a.x,r.b.z-r.a.z),ux=(r.b.x-r.a.x)/L,uz=(r.b.z-r.a.z)/L,mid={x:(s.a.x+s.b.x)/2,y:(s.a.y+s.b.y)/2},along=(mid.x-r.a.x)*ux+(mid.y-r.a.z)*uz,off=Math.abs((mid.x-r.a.x)*uz-(mid.y-r.a.z)*ux);return along>0&&along<L&&off<=FASCIA_PROUD_IN/2+1e-6;});
+  ok(slabs.every(s=>{const r=owner(s);return !!r&&Math.abs(s.thick-(r.width+(exposed.has(r)?FASCIA_PROUD_IN:0)))<1e-9;})&&rim.every(r=>slabs.some(s=>owner(s)===r)),'Exposed rim slabs carry the fascia thickness; house-side rim slabs keep the rim thickness');}
 
 // Saving and reopening.
 const back=parseDesign(serializeDesign(fresh()));

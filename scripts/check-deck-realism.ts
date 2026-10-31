@@ -10,7 +10,10 @@ import {cameraSetback} from '../src/features/deckcraft/components/viewer3d/camer
 import {railGeometry} from '../src/features/deckcraft/components/viewer3d/EasedRails';
 import {fitSun,shadowKey} from '../src/features/deckcraft/components/viewer3d/shadowCache';
 import {ATLAS_WIDTH,STRIP_ROWS,buildSwatchMaps,deltaE,grainIsVertical,rotate90} from '../src/features/deckcraft/components/viewer3d/swatchMaps';
-import {PATCHED_CHUNKS,RELIEF_EDGE,RELIEF_FULL,boardVariation,boxVariant,reliefWeight,surfaceMaterial} from '../src/features/deckcraft/components/viewer3d/surfaceShaders';
+import {BOARD_PIECE,EDGE_SHADE,GRAIN_BLEND,PATCHED_CHUNKS,edgeShade,RELIEF_EDGE,RELIEF_FULL,boardVariation,boxVariant,grainBlend,grainPick,reliefWeight,surfaceMaterial} from '../src/features/deckcraft/components/viewer3d/surfaceShaders';
+import {BOARD_EASE_IN,GAP_UNDERLAY,boardPieceGeometry,gapUnderlayOutlines,outlineGeometry} from '../src/features/deckcraft/components/viewer3d/boardPieces';
+import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
+import {insidePolygon} from '../src/features/deckcraft/lib/polygonCuts';
 import {DECKING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
 import {HDRLoader} from 'three/examples/jsm/loaders/HDRLoader.js';
 import {SKY_DATA,skyStrength,skyYaw,sunDirection} from '../src/features/deckcraft/components/viewer3d/skyModel';
@@ -164,6 +167,8 @@ for(const file of files){
   // stop before the board across them on the right.
   if(file.startsWith('tt-')&&Math.abs(info.width/info.height-1)<.35&&file!=='tt-premierplus-natural-oak.jpg')ok(maps.layout.kind==='boards'&&maps.strips===4&&maps.layout.strips.every(s=>s.x1<info.width*.82),`${file}: four boards, clear of the board across them`);
   else ok(maps.strips>=3,`${file}: at least three strips`);
+  // A board the photo's edge cuts short would be stretched across a whole board: every strip is a whole board.
+  if(maps.layout.kind==='boards')ok(Math.min(...maps.layout.strips.map(s=>s.y1-s.y0))>=.8*Math.max(...maps.layout.strips.map(s=>s.y1-s.y0)),`${file}: whole boards only, none the photo's edge cuts short`);
   ok(maps.width===ATLAS_WIDTH&&maps.height===maps.strips*STRIP_ROWS&&maps.albedo.length===maps.width*maps.height*4,`${file}: the atlas is ${ATLAS_WIDTH} wide with ${STRIP_ROWS} rows a strip`);
   const delta=deltaE(maps.sourceMean,maps.atlasMean);worstDelta=Math.max(worstDelta,delta);
   ok(delta<1,`${file}: the atlas keeps the photo's colour (ΔE ${delta.toFixed(2)})`);
@@ -189,6 +194,107 @@ ok(grainIsVertical(rotate90({width:2,height:2,data:new Uint8Array(16)}))===false
 }
 ok(!/from ['"](three|@react-three)/.test(read(`${VIEWER}swatchMaps.ts`)),'swatchMaps.ts stays free of three.js');
 
+// Board photos sharp enough for a close look: the manufacturers' 1000 px close-ups. The photos still below that are
+// listed here, and the list only shrinks: a listed photo that has been replaced fails until it is taken off.
+const MIN_SOURCE_EDGE=1000;
+const LOW_RES_SWATCHES=new Set(['dk-altitude-highland','dk-altitude-sequoia','dk-altitude-trailstone','dk-border-dark-slate','dk-summit-boulder','dk-summit-cliffside','dk-summit-glacier','dk-venture-saltwater','dk-venture-sandbar','dk-vista-driftwood','dk-vista-dunewood','dk-vista-ironwood','dk-vista-silverwood','dk-voyage-costa','dk-voyage-khaya','dk-voyage-mesa','dk-voyage-sedona','dk-voyage-sierra','dk-voyage-tundra','dk-summit-boulder','dk-summit-cliffside','dk-summit-glacier','tt-harvest-brownstone','tt-harvest-kona','tt-harvest-slate-gray','tt-harvestplus-timber-gray','tt-harvestplus-toasted-wheat','tt-landmark-american-walnut','tt-landmark-boardwalk','tt-landmark-castle-gate','tt-landmark-french-white-oak','tt-legacy-ashwood','tt-legacy-espresso','tt-legacy-mocha','tt-legacy-pecan','tt-legacy-tigerwood','tt-legacy-whitewash-cedar','tt-premier-dark-teak','tt-premier-maritime-gray','tt-premierplus-natural-oak','tt-prime-dark-teak','tt-prime-maritime-gray','tt-primeplus-coconut-husk','tt-primeplus-dark-cocoa','tt-primeplus-sea-salt-gray','tt-reserve-antique-leather','tt-reserve-dark-roast','tt-reserve-driftwood','tt-reserve-reclaimed-chestnut','tt-terrain-brown-oak','tt-terrain-silver-maple','tt-terrainplus-dark-oak','tt-terrainplus-natural-white-oak','tt-terrainplus-weathered-oak','tt-vintage-coastline','tt-vintage-cypress','tt-vintage-dark-hickory','tt-vintage-english-walnut','tt-vintage-mahogany','tt-vintage-weathered-teak','wood-cedar','wood-pressure-treated'].map(n=>`${n}.jpg`));
+for(const file of files){
+  const {width=0,height=0}=await sharp(SWATCHES+file).metadata(),edge=Math.min(width,height);
+  ok(LOW_RES_SWATCHES.has(file)?edge<MIN_SOURCE_EDGE:edge>=MIN_SOURCE_EDGE,LOW_RES_SWATCHES.has(file)?`${file}: replaced (${width}×${height}); take it off LOW_RES_SWATCHES`:`${file}: at least ${MIN_SOURCE_EDGE} px on its short side (${width}×${height})`);
+}
+ok([...LOW_RES_SWATCHES].every(f=>files.includes(f))&&LOW_RES_SWATCHES.size<=59,'Every low-resolution swatch listed is still on disk, and the list never grows');
+{const hook=read(`${VIEWER}useSwatchTexture.ts`);ok(!/import\s*\{[^}]*buildSwatchMaps/.test(hook)&&hook.includes("import('./swatchMaps').then(m => m.buildSwatchMaps("),'The atlas builder stays out of the 3D viewer chunk: the worker runs it, and the main thread loads it only when no worker can start');}
+ok(/HIGH_READ_EDGE\s*=\s*2048/.test(read(`${VIEWER}useSwatchTexture.ts`))&&read(`${VIEWER}useSwatchTexture.ts`).includes('width > ATLAS_WIDTH ? HIGH_READ_EDGE : READ_EDGE'),'The high tier reads the photo at up to 2048 px for its 2048 atlas');
+
+// Repetition along a long board: every 48 in tile of a board takes its own strip and offset (the shader's grainPick),
+// crossfading over the tile's last GRAIN_BLEND, so a 16 ft board does not show one stretch of grain four times.
+let repeatMean=0;
+{
+  const {data,info}=await sharp(SWATCHES+'tt-harvest-brownstone.jpg').ensureAlpha().raw().toBuffer({resolveWithObject:true});
+  const maps=await buildSwatchMaps({width:info.width,height:info.height,data},'composite'),W=maps.width,a=maps.albedo;
+  const luma=(strip:number,u:number)=>{const x=((Math.floor(u*W)%W)+W)%W,i=((strip*STRIP_ROWS+STRIP_ROWS/2)*W+x)*4;return .2126*a[i]+.7152*a[i+1]+.0722*a[i+2];};
+  const along=(seed:number[],u:number)=>{
+    const tile=Math.floor(u),[sa,oa]=grainPick(seed[0],seed[1],tile,maps.strips),[sb,ob]=grainPick(seed[0],seed[1],tile+1,maps.strips),w=grainBlend(u-tile);
+    return luma(sa,u+oa)*(1-w)+luma(sb,u+ob)*w;
+  };
+  const pearson=(p:number[],q:number[])=>{const m=(v:number[])=>v.reduce((s,x)=>s+x,0)/v.length,mp=m(p),mq=m(q);let n=0,sp=0,sq=0;p.forEach((x,i)=>{n+=(x-mp)*(q[i]-mq);sp+=(x-mp)**2;sq+=(q[i]-mq)**2;});return n/Math.sqrt(sp*sq||1);};
+  let sum=0,count=0,steps=0,inner=0;const fs=Array.from({length:256},(_,i)=>i/256*(1-GRAIN_BLEND));
+  for(let b=0;b<40;b++){
+    const seed=boardVariation(b*5.6875,b*31.7);
+    for(let k=0;k<3;k++){sum+=pearson(fs.map(f=>along(seed,k+f)),fs.map(f=>along(seed,k+1+f)));count++;}
+    for(let k=1;k<4;k++){steps+=Math.abs(along(seed,k+.5/W)-along(seed,k-.5/W));inner+=Math.abs(along(seed,k+.3+.5/W)-along(seed,k+.3-.5/W));}
+  }
+  repeatMean=sum/count;
+  ok(repeatMean<.35,`Grain along a long board does not repeat tile after tile (mean correlation ${repeatMean.toFixed(2)}; one strip repeated is 1)`);
+  ok(steps<inner*2.5,`No seam where one tile's grain hands over to the next (${(steps/Math.max(inner,1e-9)).toFixed(2)}× an ordinary step)`);
+  const pick=grainPick(.25,.5,3,4),again=grainPick(.25,.5,3,4);
+  ok(pick[0]===again[0]&&pick[1]===again[1]&&Number.isInteger(pick[0])&&pick[0]>=0&&pick[0]<4&&pick[1]>=0&&pick[1]<1,'A tile keeps its strip and offset while the board stays put');
+  // A board keeps one strip (one tone) its whole length; only the offset changes tile to tile. Strips differ in tone on
+  // purpose, so a strip per tile read as foot-long patches once the grain repeated at real scale.
+  ok(Array.from({length:12},(_,t)=>grainPick(.4,.7,t,4)[0]).every(s=>s===grainPick(.4,.7,0,4)[0])&&new Set(Array.from({length:12},(_,t)=>grainPick(.4,.7,t,4)[1].toFixed(3))).size>=10,'A board keeps one strip along its length and changes only the offset');
+  ok(grainBlend(0)===0&&grainBlend(.5)===0&&grainBlend(1)===1,'A tile is its own grain until the handover at its end');
+}
+// Board lines that hold at a distance: each board's long edges shade over about a quarter inch, never thinner than a
+// pixel, and the shading fades out once a whole board is only a few pixels wide.
+{
+  const close=.02,far=.08,tiny=.5,mid=(px:number)=>edgeShade(.5,px);
+  ok(edgeShade(0,close)<mid(close)*(EDGE_SHADE.dark+1e-9)&&edgeShade(.02,close)<edgeShade(.04,close)&&mid(close)-1<.02,'Close up, a board is its own colour mid-face and darkens into its eased edges');
+  ok(edgeShade(.04,far)/mid(far)<.99&&edgeShade(.04,close)/mid(close)>edgeShade(.04,far)/mid(far),'Further off the shaded line stays at least a pixel wide instead of vanishing');
+  ok(edgeShade(0,tiny)===1,'Boards a few pixels wide are not striped dark');
+  // Mid distance: the 3/16 in gap is under a pixel and rasterises as dots; the shaded edge beside it, a pixel wide and
+  // nearly as dark as the cavity, carries the line unbroken.
+  ok(edgeShade(0,.08)/mid(.08)<=.5&&Math.abs(edgeShade(0,close)/mid(close)-EDGE_SHADE.dark)<.02,'At mid distance the edge line darkens toward the gap, so board lines read solid instead of dotted; close up it stays a soft shade');
+  ok(edgeShade(0,0)===1&&edgeShade(1,0)===1,'A board’s long sides (one across value over the face) are not darkened: no fringe under a tread nosing or along the rim');
+  let worstMean=0;for(const px of [.002,.01,.02,.05,.1,.15,.2,.25,.3,.4]){let s=0;const n=4000;for(let i=0;i<n;i++)s+=edgeShade((i+.5)/n,px);worstMean=Math.max(worstMean,Math.abs(s/n-1));}
+  ok(worstMean<.003,`The edge shade keeps the board's mean colour at every distance (worst ${(worstMean*100).toFixed(2)}%)`);
+  const compile=(m:THREE.Material)=>{const s={uniforms:{} as Record<string,THREE.IUniform>,defines:{} as Record<string,string>,vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};m.onBeforeCompile(s as unknown as THREE.WebGLProgramParametersWithUniforms,undefined as never);return s;};
+  const material=surfaceMaterial('#886644'),mesh=compile(material),box=compile(boxVariant(material));
+  ok(mesh.fragmentShader.includes('if(vDcBoard<1.5||px<=')&&mesh.fragmentShader.includes(',band=max(0.045,px)')&&mesh.vertexShader.includes('vDcBoard=aVar.w;')&&box.vertexShader.includes('vDcBoard=0.;'),'Only finished board pieces shade their edges; box-projected rim and framing do not');
+  ok(mesh.fragmentShader.includes('if(vDcBoard>1.5){')&&mesh.fragmentShader.includes('float st=(min(floor(seed.x*uStrips),uStrips-1.)+dcV)/uStrips;')&&mesh.fragmentShader.includes('dcUvA=dcUvB=vec2(vDcUv.x+seed.y,st);dcW=0.;'),'Fascia, cladding, skirting, timbers and box-projected framing keep one strip and offset over the piece, as before');
+  ok(mesh.fragmentShader.includes('highp uint dcMix(highp uint h)')&&mesh.fragmentShader.includes('+uint(int(tile))')&&!/sin\([^)]*tile/.test(mesh.fragmentShader),'The per-tile pick is an integer hash, so both sides of a tile boundary agree exactly on every GPU');
+  ok(mesh.fragmentShader.includes(`smoothstep(${EDGE_SHADE.fadeFrom},${EDGE_SHADE.fadeTo},px)`)&&mesh.fragmentShader.includes(`smoothstep(${1-GRAIN_BLEND},1.,g-tile)`)&&mesh.fragmentShader.includes('uint(s.x*65536.0)'),'Shader constants are written as GLSL floats');
+  // Each board's tiles start at its own seed, so the grain handovers never line up across neighbouring boards (a plaid).
+  ok(mesh.fragmentShader.includes('float g=vDcUv.x+seed.y,tile=floor(g);'),'Each board starts its grain tiles at its own offset, so handovers do not line up across the deck');
+  ok(mesh.fragmentShader.includes('roughnessFactor=mix(roughnessFactor,1.,dcEdgeK);')&&mesh.fragmentShader.includes('float dcEdgeK=0.;')&&box.fragmentShader.includes('float dcEdgeK=0.;'),'The eased edge goes matte where it shades, so the sun leaves no dotted glint along a gap; other pieces keep their roughness');
+  const flat=boardVariation(3,4),board=boardVariation(3,4,true),viewer3=read(`${VIEWER}Deck3DViewer.tsx`);
+  ok(flat[3]===0&&board[3]===BOARD_PIECE&&BOARD_PIECE>1.5&&flat.slice(0,3).every((v,i)=>v===board[i])&&(viewer3.match(/boardVariation\([^)]*,true\)/g)??[]).length===2&&!/boardVariation\([^)]*true/.test(read(`${VIEWER}slabGeometry.ts`)+read(`${VIEWER}raisedBedTimber.ts`)),'Deck board batches and cut pieces are marked as finished boards; skirting, raised-bed timbers and geometry with no grain attribute (notched stringers read WebGL’s default w=1) are not');
+}
+
+// Boards, not a slab: an eased top edge that catches its own highlight, and the dark cavity under the gaps.
+{
+  const g=boardPieceGeometry(96,1,5.5);g.computeBoundingBox();
+  const size=g.boundingBox!.getSize(new THREE.Vector3()),pos=g.getAttribute('position'),norm=g.getAttribute('normal');
+  ok(Math.abs(size.x-96)<1e-6&&Math.abs(size.y-1)<1e-6&&Math.abs(size.z-5.5)<1e-6,'A board keeps its real size with the ease');
+  let flatEdge=0;const tilts=new Set<number>();
+  for(let i=0;i<pos.count;i++){
+    if(Math.abs(pos.getY(i)-.5)<1e-6&&Math.abs(norm.getY(i)-1)<1e-6)flatEdge=Math.max(flatEdge,Math.abs(pos.getZ(i)));
+    // Along the long edge (no lean towards the board's end), from the top face round to the side.
+    if(Math.abs(norm.getX(i))<1e-6&&norm.getZ(i)>=0&&norm.getY(i)>=0)tilts.add(Math.round(Math.acos(Math.min(1,norm.getY(i)))*180/Math.PI));
+  }
+  ok(BOARD_EASE_IN===.125&&Math.abs(flatEdge-(2.75-BOARD_EASE_IN))<1e-6,`The flat face stops ${BOARD_EASE_IN} in short of the edge (${(2.75-flatEdge).toFixed(3)} in)`);
+  ok([...tilts].some(t=>t>20&&t<70),'The ease turns through the radius, so the edge catches a highlight of its own');
+  g.dispose();
+  // The cavity: each level's decking outline just under its boards, so it closes every gap and joint and never shows
+  // past the outer boards, a mitre or a clipped corner (a slab per board stuck out under tread nosings and the rim).
+  // A winder level has no boards of its own and its treads step down below its top, so it gets no cavity.
+  const designs:[string,DeckData][]=[['Straight',DEFAULT_DECK],['Picture Frame',{...structuredClone(DEFAULT_DECK),pattern:'Picture Frame',pictureFrameRows:2}],['Winder',{...structuredClone(DEFAULT_DECK),height:72,stairType:'Winder'}],['Landing',{...structuredClone(DEFAULT_DECK),height:72,stairType:'Landing'}]];
+  const area=(p:{x:number;y:number}[])=>Math.abs(p.reduce((s,a,i)=>{const b=p[(i+1)%p.length];return s+a.x*b.y-b.x*a.y;},0))/2;
+  for(const [name,design] of designs){
+    const model=buildDeckTakeoff(design),decked=model.levels.filter(l=>l.boards.length>0),cavities=gapUnderlayOutlines(model.levels);
+    ok(cavities.length===decked.length&&cavities.every((c,i)=>{const l=decked[i],o=(l.deckingFootprint??l.footprint).outline;return c.points.length===o.length&&c.points.every((p,k)=>p.x===o[k].x+l.offset.x&&p.y===o[k].y+l.offset.z)&&Math.abs(c.y-(l.top-1-GAP_UNDERLAY.dropIn))<1e-9;}),`${name}: each decked level's cavity is its own decking outline, just under the 1 in boards; boardless levels get none`);
+    ok(decked.every((l,i)=>l.boards.every(b=>insidePolygon({x:b.cx+l.offset.x,y:b.cy+l.offset.z},cavities[i].points))&&l.boards.reduce((s,b)=>s+(b.polygon?area(b.polygon):b.length*b.width),0)>=.85*area(cavities[i].points)),`${name}: boards cover their level's cavity, so it only shows through the gaps`);
+    if(name==='Winder')ok(model.levels.some(l=>l.boards.length===0),'The winder design has a boardless winder level to test against');
+  }
+  const geometry=outlineGeometry(gapUnderlayOutlines(buildDeckTakeoff(DEFAULT_DECK).levels).concat([{y:0,points:[{x:0,y:0},{x:0,y:10},{x:10,y:10},{x:10,y:0}]}])),gp=geometry.getAttribute('position'),gi=geometry.getIndex()!;
+  let facesUp=true;for(let t=0;t<gi.count;t+=3){const [a,b,cc]=[0,1,2].map(k=>new THREE.Vector3().fromBufferAttribute(gp,gi.getX(t+k)));if(new THREE.Vector3().crossVectors(b.clone().sub(a),cc.clone().sub(a)).y<=0)facesUp=false;}
+  ok(facesUp&&gi.count>0,'The cavity faces up whichever way its outline winds, so it is never seen from under the deck');geometry.dispose();
+  const c=new THREE.Color(GAP_UNDERLAY.color);ok(.2126*c.r+.7152*c.g+.0722*c.b<.01,'The cavity under a gap is near black');
+  const pieces=read(`${VIEWER}boardPieces.tsx`);
+  ok(pieces.includes("m.userData.snow='none'")&&pieces.includes('selectionPassthrough:true')&&!pieces.includes('DoubleSide'),'The cavity takes no snow, lets clicks through to what is under the deck, and is one-sided');
+  const viewer=read(`${VIEWER}Deck3DViewer.tsx`);
+  ok(viewer.includes('boardPieceGeometry(first.w,first.h,first.d)')&&viewer.includes('Math.min(BOARD_EASE_IN,item.h/6,minEdge/8)')&&(viewer.match(/<GapUnderlay /g)??[]).length===1&&/\{!structure&&<><GapUnderlay levels=\{model\.levels\}\/>/.test(viewer),'Deck boards use the eased board geometry and sit over the cavity; stairs have none');
+}
+
 // The shader patch rewrites chunks three still has, and every board's pick is stable and in range.
 for(const [name,lookup] of PATCHED_CHUNKS)ok((THREE.ShaderChunk as Record<string,string>)[name]?.includes(lookup),`ShaderChunk.${name} still has "${lookup}"`);
 {
@@ -205,7 +311,7 @@ for(const [name,lookup] of PATCHED_CHUNKS)ok((THREE.ShaderChunk as Record<string
   ok(reliefWeight(0.1)===0&&reliefWeight(0.08)===0&&reliefWeight(.8)===1&&reliefWeight((RELIEF_EDGE+RELIEF_FULL)/2)>.4,'A stair tread seen nearly edge-on drops atlas relief; a face-on board keeps the grain');
   const reliefMat=surfaceMaterial('#886644',true),reliefShader={uniforms:{} as Record<string,THREE.IUniform>,defines:{} as Record<string,string>,vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};
   reliefMat.onBeforeCompile(reliefShader as unknown as THREE.WebGLProgramParametersWithUniforms,undefined as never);
-  ok(reliefShader.fragmentShader.includes(`smoothstep(${RELIEF_EDGE},${RELIEF_FULL}`)&&reliefShader.fragmentShader.includes('mix(nonPerturbedNormal,normal,dcKeep)')&&reliefShader.fragmentShader.includes('dcUv+=dcView.xy*(dcHeight-.5)*.03*dcKeep')&&!shader.fragmentShader.includes('dcKeep'),'Grazing stair treads keep the geometric surface; the editor shader is unchanged');
+  ok(reliefShader.fragmentShader.includes(`smoothstep(${RELIEF_EDGE},${RELIEF_FULL}`)&&reliefShader.fragmentShader.includes('mix(nonPerturbedNormal,normal,dcKeep)')&&reliefShader.fragmentShader.includes('vec2 dcShift=dcView.xy*(dcHeight-.5)*.03*dcKeep;dcUvA+=dcShift;dcUvB+=dcShift;')&&!shader.fragmentShader.includes('dcKeep'),'Grazing stair treads keep the geometric surface; the editor shader is unchanged');
 }
 ok(SHOWCASE_STILL_SAMPLES===1&&pipeline.includes('SHOWCASE_STILL_SAMPLES'),'Showcase stills do not jitter the camera across thin stair treads');
 ok(read(`${VIEWER}showcasePost.ts`).includes('abs(z-centerZ)'),'Depth of field leaves a thin tread instead of averaging in the ground behind it');
@@ -368,4 +474,4 @@ for(const [name,lookup] of LAWN_CHUNKS)ok((THREE.ShaderChunk as Record<string,st
   ok(Math.abs(set.y+set.h/2-18)<1e-9&&Math.abs(set.y-set.h/2-(lawnHeight(terrain,0)-1))<1e-9&&seatOnLawn({...rock,y:-2},terrain).h===6&&seatOnLawn({...rock,role:'paver'},terrain).h===6,'A stone standing clear of the lawn reaches an inch into it with its top unchanged; a set stone and other pieces are left alone');
 }
 
-console.log(`DECK REALISM OK — look, pipeline wiring, shadow key and sun fit; ${files.length} swatch atlases (worst ΔE ${worstDelta.toFixed(2)}, worst repeat ${worstSeam.toFixed(2)}×), the board shader and its picks; the sky, its sun and the lawn to the horizon; the house's glass and surfaces; the yard's hardscape and finished grade; ${checks} checks.`);
+console.log(`DECK REALISM OK — look, pipeline wiring, shadow key and sun fit; ${files.length} swatch atlases (worst ΔE ${worstDelta.toFixed(2)}, worst repeat ${worstSeam.toFixed(2)}×; ${files.length-LOW_RES_SWATCHES.size} at ${MIN_SOURCE_EDGE}+ px), the board shader and its picks (grain repeat along a board ${repeatMean.toFixed(2)}); the sky, its sun and the lawn to the horizon; the house's glass and surfaces; the yard's hardscape and finished grade; ${checks} checks.`);

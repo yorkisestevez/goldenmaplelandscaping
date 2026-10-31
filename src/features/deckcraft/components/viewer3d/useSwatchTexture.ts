@@ -7,15 +7,17 @@
 import { useEffect, useMemo } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { ATLAS_WIDTH, buildSwatchMaps, type SwatchImage, type SwatchMaps } from './swatchMaps';
+import type { SwatchImage, SwatchMaps } from './swatchMaps';
+import { ATLAS_WIDTH } from './atlasWidth';
 import { showcaseDetail } from '../../showcaseMode';
 import { useRenderQuality } from './SceneRenderQuality';
 import type { SwatchResult } from './swatchMaps.worker';
 import { clearSurfaceMaps, disposeSurface, setSurfaceMaps, surfaceMaterial } from './surfaceShaders';
 import { useFixtureLit } from './fixtureLighting';
 
-/** The photo is read at up to this many pixels on its longer side (one swatch is 2000 px square). */
-const READ_EDGE = 900;
+/** The photo is read at up to this many pixels on its longer side (one swatch is 2000 px square); the high tier's
+ * 2048 atlas reads up to 2048, so a sharp photo keeps its detail. */
+const READ_EDGE = 900, HIGH_READ_EDGE = 2048;
 /** Processed swatches kept for re-use (a colour picked again, or the same colour on a part): newest last. */
 const cache = new Map<string, Promise<SwatchMaps | null>>();
 const CACHE_SIZE = 6;
@@ -75,7 +77,8 @@ const isWood = (url: string) => /(^|\/)wood-[^/]*$/.test(url.split('?')[0]);
 type Kind = 'composite' | 'wood';
 const pending = new Map<number, { resolve: (maps: SwatchMaps | null) => void; image: SwatchImage; kind: Kind; width: number }>();
 let worker: Worker | null | undefined, nextId = 0;
-const onMainThread = (image: SwatchImage, kind: Kind, width = ATLAS_WIDTH) => buildSwatchMaps(image, kind, () => new Promise(resolve => setTimeout(resolve, 0)), width);
+// The builder loads here only when no worker can start, so it stays out of the viewer's own chunk.
+const onMainThread = (image: SwatchImage, kind: Kind, width = ATLAS_WIDTH) => import('./swatchMaps').then(m => m.buildSwatchMaps(image, kind, () => new Promise(resolve => setTimeout(resolve, 0)), width));
 // The worker lives for the page, so its listeners are module functions: written inline, the build folds this code into
 // the hook's effect and the listener kept the first 3D view's renderer, canvas and context alive.
 function onWorkerMessage(event: MessageEvent<SwatchResult>) { pending.get(event.data.id)?.resolve(event.data.maps); pending.delete(event.data.id); }
@@ -102,7 +105,7 @@ function swatchMaps(url: string, width = ATLAS_WIDTH): Promise<SwatchMaps | null
     img.decoding = 'async';
     img.src = url;
     await img.decode();
-    const edge = width > ATLAS_WIDTH ? 1800 : READ_EDGE;
+    const edge = width > ATLAS_WIDTH ? HIGH_READ_EDGE : READ_EDGE;
     const scale = Math.min(1, edge / Math.max(img.naturalWidth, img.naturalHeight));
     const readW = Math.round(img.naturalWidth * scale), readH = Math.round(img.naturalHeight * scale);
     const canvas = document.createElement('canvas');
