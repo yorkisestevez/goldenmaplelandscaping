@@ -124,6 +124,7 @@ import PrivacyScreens3D from './PrivacyScreens3D';
 import Skirting3D,{Slabs} from './Skirting3D';
 
 import {fasciaSlabs,accessoryFasciaSlabs} from './fasciaSlabs';
+import {onSurfaceReliefReady} from './surfaceRelief';
 
 import Cladding3D from './Cladding3D';
 
@@ -406,6 +407,22 @@ function LandscapeCameraView({preset,saved,yard,pools,...props}:{preset?:'terrac
 
 }
 
+/** Starts every material's shader compile at once when the 3D view opens. With KHR_parallel_shader_compile the first
+ * frames then wait for the slowest program instead of compiling each one in turn on the main thread (measured on a
+ * desktop GPU: the page froze 2.1 s opening 3D without this, 1.4 s with it). Scene parts that arrive later compile as
+ * they draw. Not three's compileAsync: its readiness poll throws when a material's program is replaced mid-poll. */
+function ShaderWarmup(){
+  const gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),camera=useThree(s=>s.camera),invalidate=useThree(s=>s.invalidate);
+  useLayoutEffect(()=>{
+    let live=true;const pending=gl.compile(scene,camera);
+    const poll=()=>{if(!live)return;for(const m of pending){const program=(gl.properties.get(m) as {currentProgram?:{isReady:()=>boolean}}).currentProgram;if(!program||program.isReady())pending.delete(m);}if(pending.size)setTimeout(poll,10);else invalidate();};
+    poll();return ()=>{live=false;};
+  },[gl,scene,camera,invalidate]);
+  return null;
+}
+/** Draws a frame when a surface's 2K relief arrives from its worker: the canvas only draws on demand. */
+function ReliefFrames(){const invalidate=useThree(s=>s.invalidate);useEffect(()=>onSurfaceReliefReady(invalidate),[invalidate]);return null;}
+
 function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,yard,onMovePrivacyScreen,boardPaint,pergolaInteraction,...interaction}:{data:DeckData;model:DeckTakeoff;showMatureSpread?:boolean;structure:boolean;cutaway:boolean;inspection:boolean;yard:YardModel;pergolaInteraction?:PergolaInteraction;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;boardPaint?:BoardPaint}&HouseInteraction){
 
   const material=DECKING_CATALOGUE.find(m=>m.id===data.deckingMaterial)||DECKING_CATALOGUE[0];
@@ -505,6 +522,13 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
   const ownLayoutBoards=boards.filter(b=>b.layoutColour&&!b.accent);
 
+  // Props that only change with the design: a hover, a selection or a pergola drag re-renders this scene, and a fresh
+  // object here rebuilt every yard batch, which also redrew the sun's shadow map (shadowKey) on every pointer move.
+  const visibleYard=useMemo(()=>({...yard,features:yard.features.filter(f=>isObjectVisible(data.editorOrganization,f.config.id)),boxes:visibleYardBoxes(yard.boxes,id=>isObjectVisible(data.editorOrganization,id)),members:yard.members.filter(m=>isObjectVisible(data.editorOrganization,m.featureId))}),[yard,data.editorOrganization]);
+  const plantingBeds=useMemo(()=>(data.landscapeObjects??[]).filter(o=>o.enabled&&o.kind==='bed'&&isObjectVisible(data.editorOrganization,o.id)).map(o=>landscapeFootprint(o).map(v=>({x:v.x,y:v.z}))),[data.landscapeObjects,data.editorOrganization]);
+  const environmentData=useMemo(()=>({...data,houseVisible:data.houseVisible!==false&&isObjectVisible(data.editorOrganization,'house')}),[data]);
+  const landscapeData=useMemo(()=>({...data,landscapeObjects:data.landscapeObjects?.filter(o=>isObjectVisible(data.editorOrganization,o.id))}),[data]);
+  const planKey=useMemo(()=>JSON.stringify(model.quantities),[model]);
   return <><group scale={1/12}><group visible={isObjectVisible(data.editorOrganization,'deck')}>
 
     {!structure&&<><FinishedBoards items={[...mainBoards,...ownLayoutBoards]} material={board} pick={pick}/><FinishedBoards items={boards.filter(b=>b.role==='inlay'&&!b.layoutColour)} material={materials.inlay}/>{darkBorder&&<FinishedBoards items={boards.filter(b=>b.role==='border'&&!b.layoutColour)} material={borderMaterial}/>}{finish?.groups.map(g=><AccentBoards key={g.ref} colour={g.ref} items={boards.filter(b=>b.accent===g.ref)} pick={pick}/>)}{painting&&<HoverOutline boards={boards} addresses={finish?.addresses} scope={boardPaint!.scope} register={registerHover}/>}</>}
@@ -563,11 +587,11 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
     <LightingFixtures items={extras.fixtures} evening={evening} enabled={lightsOn}/>
 
-    </group>{data.pools?.some(p=>p.enabled)&&<Suspense fallback={null}><Pool3D pools={getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))} inspection={inspection||cutaway} evening={evening}/></Suspense>}<Yard3D model={{...yard,features:yard.features.filter(f=>isObjectVisible(data.editorOrganization,f.config.id)),boxes:visibleYardBoxes(yard.boxes,id=>isObjectVisible(data.editorOrganization,id)),members:yard.members.filter(m=>isObjectVisible(data.editorOrganization,m.featureId))}} inspection={inspection||cutaway} plantingBeds={(data.landscapeObjects??[]).filter(o=>o.enabled&&o.kind==='bed'&&isObjectVisible(data.editorOrganization,o.id)).map(o=>landscapeFootprint(o).map(v=>({x:v.x,y:v.z})))}/>{yard.features.some(f=>f.config.kind==='fire-feature')&&<Suspense fallback={null}><Fire3D yard={yard} data={data} inspection={inspection||cutaway}/></Suspense>}
+    </group>{data.pools?.some(p=>p.enabled)&&<Suspense fallback={null}><Pool3D pools={getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))} inspection={inspection||cutaway} evening={evening}/></Suspense>}<Yard3D model={visibleYard} inspection={inspection||cutaway} plantingBeds={plantingBeds}/>{yard.features.some(f=>f.config.kind==='fire-feature')&&<Suspense fallback={null}><Fire3D yard={yard} data={data} inspection={inspection||cutaway}/></Suspense>}
 
-    <Environment3D data={{...data,houseVisible:data.houseVisible!==false&&isObjectVisible(data.editorOrganization,'house')}} footprint={model.levels[0].footprint} topY={data.height} planKey={JSON.stringify(model.quantities)} cutaway={cutaway} finished={!inspection} yard={yard} {...interaction}/>
+    <Environment3D data={environmentData} footprint={model.levels[0].footprint} topY={data.height} planKey={planKey} cutaway={cutaway} finished={!inspection} yard={yard} {...interaction}/>
 
-  </group><Suspense fallback={null}><Landscape3D data={{...data,landscapeObjects:data.landscapeObjects?.filter(o=>isObjectVisible(data.editorOrganization,o.id))}} showMatureSpread={showMatureSpread} source={data} model={model} yard={yard}/></Suspense><FixtureGlows items={extras.fixtures} evening={evening} enabled={lightsOn}/></>;
+  </group><Suspense fallback={null}><Landscape3D data={landscapeData} showMatureSpread={showMatureSpread} source={data} model={model} yard={yard}/></Suspense><FixtureGlows items={extras.fixtures} evening={evening} enabled={lightsOn}/></>;
 
 }
 
@@ -718,6 +742,10 @@ export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calcu
         setTimeout(()=>{if(canvas.isConnected)onContextLost?.();},0);},false);}}>
 
       <color attach="background" args={[evening?'#28374a':DAY_BACKGROUND]}/>
+
+      <ReliefFrames/>
+
+      <ShaderWarmup/>
 
       {/* The real sky (Real Life G3); the studio light stands in while it loads. */}
 
