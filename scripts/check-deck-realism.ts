@@ -10,7 +10,7 @@ import {cameraSetback} from '../src/features/deckcraft/components/viewer3d/camer
 import {railGeometry} from '../src/features/deckcraft/components/viewer3d/EasedRails';
 import {fitSun,shadowKey} from '../src/features/deckcraft/components/viewer3d/shadowCache';
 import {ATLAS_WIDTH,STRIP_ROWS,buildSwatchMaps,deltaE,grainIsVertical,rotate90} from '../src/features/deckcraft/components/viewer3d/swatchMaps';
-import {EDGE_SHADE,GRAIN_BLEND,PATCHED_CHUNKS,edgeShade,RELIEF_EDGE,RELIEF_FULL,boardVariation,boxVariant,grainBlend,grainPick,reliefWeight,surfaceMaterial} from '../src/features/deckcraft/components/viewer3d/surfaceShaders';
+import {BOARD_PIECE,EDGE_SHADE,GRAIN_BLEND,PATCHED_CHUNKS,edgeShade,RELIEF_EDGE,RELIEF_FULL,boardVariation,boxVariant,grainBlend,grainPick,reliefWeight,surfaceMaterial} from '../src/features/deckcraft/components/viewer3d/surfaceShaders';
 import {BOARD_EASE_IN,GAP_UNDERLAY,boardPieceGeometry,gapUnderlayOutlines,outlineGeometry} from '../src/features/deckcraft/components/viewer3d/boardPieces';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {insidePolygon} from '../src/features/deckcraft/lib/polygonCuts';
@@ -240,12 +240,12 @@ let repeatMean=0;
   ok(worstMean<.003,`The edge shade keeps the board's mean colour at every distance (worst ${(worstMean*100).toFixed(2)}%)`);
   const compile=(m:THREE.Material)=>{const s={uniforms:{} as Record<string,THREE.IUniform>,defines:{} as Record<string,string>,vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};m.onBeforeCompile(s as unknown as THREE.WebGLProgramParametersWithUniforms,undefined as never);return s;};
   const material=surfaceMaterial('#886644'),mesh=compile(material),box=compile(boxVariant(material));
-  ok(mesh.fragmentShader.includes('if(vDcBoard<.5||px<=')&&mesh.fragmentShader.includes('float band=max(0.045,px)')&&mesh.vertexShader.includes('vDcBoard=aVar.w;')&&box.vertexShader.includes('vDcBoard=0.;'),'Only finished board pieces shade their edges; box-projected rim and framing do not');
-  ok(mesh.fragmentShader.includes('if(vDcBoard>.5){')&&mesh.fragmentShader.includes('dcUvA=dcUvB=vec2(vDcUv.x+seed.y,(min(floor(seed.x*uStrips),uStrips-1.)+dcV)/uStrips);dcW=0.;'),'Fascia, cladding, skirting, timbers and box-projected framing keep one strip and offset over the piece, as before');
-  ok(mesh.fragmentShader.includes('uint dcMix(uint h)')&&mesh.fragmentShader.includes('+uint(int(tile))')&&!/sin\([^)]*tile/.test(mesh.fragmentShader),'The per-tile pick is an integer hash, so both sides of a tile boundary agree exactly on every GPU');
+  ok(mesh.fragmentShader.includes('if(vDcBoard<1.5||px<=')&&mesh.fragmentShader.includes('float band=max(0.045,px)')&&mesh.vertexShader.includes('vDcBoard=aVar.w;')&&box.vertexShader.includes('vDcBoard=0.;'),'Only finished board pieces shade their edges; box-projected rim and framing do not');
+  ok(mesh.fragmentShader.includes('if(vDcBoard>1.5){')&&mesh.fragmentShader.includes('dcUvA=dcUvB=vec2(vDcUv.x+seed.y,(min(floor(seed.x*uStrips),uStrips-1.)+dcV)/uStrips);dcW=0.;'),'Fascia, cladding, skirting, timbers and box-projected framing keep one strip and offset over the piece, as before');
+  ok(mesh.fragmentShader.includes('highp uint dcMix(highp uint h)')&&mesh.fragmentShader.includes('+uint(int(tile))')&&!/sin\([^)]*tile/.test(mesh.fragmentShader),'The per-tile pick is an integer hash, so both sides of a tile boundary agree exactly on every GPU');
   ok(mesh.fragmentShader.includes(`smoothstep(${EDGE_SHADE.fadeFrom},${EDGE_SHADE.fadeTo},px)`)&&mesh.fragmentShader.includes(`smoothstep(${1-GRAIN_BLEND},1.,vDcUv.x-tile)`)&&mesh.fragmentShader.includes('uint(s.x*65536.0)'),'Shader constants are written as GLSL floats');
   const flat=boardVariation(3,4),board=boardVariation(3,4,true),viewer3=read(`${VIEWER}Deck3DViewer.tsx`);
-  ok(flat[3]===0&&board[3]===1&&flat.slice(0,3).every((v,i)=>v===board[i])&&(viewer3.match(/boardVariation\([^)]*,true\)/g)??[]).length===2&&!/boardVariation\([^)]*true/.test(read(`${VIEWER}slabGeometry.ts`)+read(`${VIEWER}raisedBedTimber.ts`)),'Deck board batches and cut pieces are marked as finished boards; skirting and raised-bed timbers are not');
+  ok(flat[3]===0&&board[3]===BOARD_PIECE&&BOARD_PIECE>1.5&&flat.slice(0,3).every((v,i)=>v===board[i])&&(viewer3.match(/boardVariation\([^)]*,true\)/g)??[]).length===2&&!/boardVariation\([^)]*true/.test(read(`${VIEWER}slabGeometry.ts`)+read(`${VIEWER}raisedBedTimber.ts`)),'Deck board batches and cut pieces are marked as finished boards; skirting, raised-bed timbers and geometry with no grain attribute (notched stringers read WebGL’s default w=1) are not');
 }
 
 // Boards, not a slab: an eased top edge that catches its own highlight, and the dark cavity under the gaps.
