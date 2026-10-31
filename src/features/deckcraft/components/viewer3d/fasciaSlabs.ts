@@ -3,15 +3,18 @@ import type {SkirtingSlab} from '../../skirting';
 import {mitredRunCaps} from '../../lib/mitredSlabs';
 
 /** The existing rim/fascia envelope, closed by actual mitres instead of proud square corner plugs.
- * Framing sizes and estimates stay in the takeoff; this resolves its installed finish surfaces. */
-export function fasciaSlabs(model:DeckTakeoff):SkirtingSlab[]{
+ * Framing sizes and estimates stay in the takeoff; this resolves its installed finish surfaces. `proud` is how far the
+ * fascia board stands off the rim face (finishedFootprint.ts FASCIA_PROUD_IN on a new design, 0 on an older save). */
+export function fasciaSlabs(model:DeckTakeoff,proud=0):SkirtingSlab[]{
   return model.levels.flatMap((level,group)=>{
     const runs=(level.rim??[]).map(m=>{
       const dx=m.b.x-m.a.x,dz=m.b.z-m.a.z,L=Math.hypot(dx,dz)||1;
-      return {a:{x:m.a.x,y:m.a.z},b:{x:m.b.x,y:m.b.z},out:{x:dz/L,y:-dx/L},inner:-m.width/2,outer:m.width/2,group,member:m};
+      return {a:{x:m.a.x,y:m.a.z},b:{x:m.b.x,y:m.b.z},out:{x:dz/L,y:-dx/L},inner:-m.width/2,outer:m.width/2+proud,group,member:m};
     });
     const caps=mitredRunCaps(runs);
-    return runs.map((r,i)=>({a:r.a,b:r.b,out:r.out,thick:r.member.width,bottomA:r.member.a.y-r.member.depth/2,bottomB:r.member.b.y-r.member.depth/2,topA:r.member.a.y+r.member.depth/2,topB:r.member.b.y+r.member.depth/2,capA:caps[i].a,capB:caps[i].b}));
+    // A slab without a mitre cap is centred on a-b: a proud fascia moves that centre out by half its stand-off.
+    const shift=(p:{x:number;y:number},out:{x:number;y:number})=>({x:p.x+out.x*proud/2,y:p.y+out.y*proud/2});
+    return runs.map((r,i)=>({a:shift(r.a,r.out),b:shift(r.b,r.out),out:r.out,thick:r.member.width+proud,bottomA:r.member.a.y-r.member.depth/2,bottomB:r.member.b.y-r.member.depth/2,topA:r.member.a.y+r.member.depth/2,topB:r.member.b.y+r.member.depth/2,capA:caps[i].a,capB:caps[i].b}));
   });
 }
 

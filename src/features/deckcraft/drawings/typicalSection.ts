@@ -3,6 +3,9 @@ import type {DeckData} from '../types';
 import type {DeckTakeoff} from '../deckTakeoff';
 import type {ZoneReference} from '../zoneFraming';
 import {catalogueAccessoryLayout} from '../catalogueAccessories';
+import {usesFinishedFascia} from '../buildRules';
+import {hasPictureFrame} from '../borderLighting';
+import {pictureFrameOverhang} from '../lib/finishedFootprint';
 import {getHardwareLayout} from '../hardwareLayout';
 import {ACTUAL_DEPTH_IN,DESIGN,type JoistSize} from '../structure/spanTables';
 import {type DrawItem,type LayerId,type Pt,feetInches} from './drawingTypes';
@@ -45,7 +48,10 @@ export function typicalSection(data:DeckData,model:DeckTakeoff,names:{materialNa
   const blocks=data.foundation==='Deck Blocks',helical=data.foundation==='Helical Piles',postBase=blocks?6.5:4.5,depth=blocks?0:data.foundationDepthIn??48;
   const {priced:pricedPier,diameter:pier,sized:pierSized}=pierOf(data,model);
   const spacing=data.pattern==='Diagonal'||data.pattern==='Herringbone'?12:data.joistSpacing;
-  const fascia=catalogueAccessoryLayout(data,model).fascia.length>0;
+  const fascia=catalogueAccessoryLayout(data,model).fascia.length>0||usesFinishedFascia(data);
+  // Where the decking ends past the rim's outer face: a new design's picture frame overhangs the fascia face by its own
+  // overhang; older saves draw as they were quoted.
+  const deckEnd=d+(usesFinishedFascia(data)&&hasPictureFrame(data)?(fascia?.625:0)+pictureFrameOverhang(data):0);
   const items:DrawItem[]=[];
   // The cut, in plan: between two joists a third of the way across the zone, clear of the labels centred on S-2.
   // The level's own joists (build-ups at breakers and borders included), in the zone's x.
@@ -103,8 +109,8 @@ export function typicalSection(data:DeckData,model:DeckTakeoff,names:{materialNa
   }
   // Decking: boards crossing the cut show as sections; boards running with it as one band.
   const field=main.boards.find(b=>!b.role)??main.boards[0],cos=Math.abs(Math.cos((field?.angleDeg??0)*Math.PI/180));
-  if(cos>.5){const w=data.boardWidth/cos,pitch=(data.boardWidth+model.gap)/cos;for(let u=0;u<d-.5;u+=pitch)rect('A-DECK-FNSH',u,joistTop,Math.min(d,u+w),top);}
-  else rect('A-DECK-FNSH',0,joistTop,d,top);
+  if(cos>.5){const w=data.boardWidth/cos,pitch=(data.boardWidth+model.gap)/cos;for(let u=0;u<deckEnd-.5;u+=pitch)rect('A-DECK-FNSH',u,joistTop,Math.min(deckEnd,u+w),top);}
+  else rect('A-DECK-FNSH',0,joistTop,deckEnd,top);
   // The guard at the front edge, where the design runs it.
   const railed=data.railingType!=='None',h=model.railing.height;
   const frontZ=main.offset.z+zone.origin.y+d,runZ=model.railing.rails.filter(r=>Math.abs(r.a.z-r.b.z)<1e-6).map(r=>r.a.z).filter(z=>z<=frontZ+1e-6&&frontZ-z<=12).sort((p,q)=>q-p)[0];

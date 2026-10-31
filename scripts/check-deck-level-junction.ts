@@ -84,9 +84,9 @@ for(const [name,c] of Object.entries(cases)){
   }
 }
 
-// 2. Geometry of every case, and of multi-level designs on the live default (one-row flush frame, 2026-10 rules).
+// 2. Geometry of every case, and of multi-level designs on the live default (one-row frame at the board's maximum overhang).
 const fresh=newDefaultJunctionCases();
-ok(Object.keys(fresh).length>=2&&Object.values(fresh).every(c=>hasPictureFrame(c.design)&&c.design.buildRules==='2026-10-walls'),'The geometry also covers the new default: framed, under the current rules (structural review, sized piers, wall ledger rule)');
+ok(Object.keys(fresh).length>=2&&Object.values(fresh).every(c=>hasPictureFrame(c.design)&&c.design.buildRules==='2026-10-frame'),'The geometry also covers the new default: framed, under the current rules (structural review, sized piers, wall ledger rule, fascia and board-maximum overhang)');
 for(const [name,c] of Object.entries({...cases,...fresh})){
   const d=c.design,e=calculateEstimate(d,DECK_SETTINGS),m=e.model,fell=m.issues.some(i=>i.includes('does not fit on the lower level'));
   if(fell)fallbacks++;

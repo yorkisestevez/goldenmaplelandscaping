@@ -4,6 +4,9 @@ import type {ZoneReference} from '../zoneFraming';
 import {getHouseContact} from '../houseContact';
 import {getHardwareLayout} from '../hardwareLayout';
 import {catalogueAccessoryLayout} from '../catalogueAccessories';
+import {usesFinishedFascia} from '../buildRules';
+import {hasPictureFrame} from '../borderLighting';
+import {pictureFrameOverhang} from '../lib/finishedFootprint';
 import {stringerCutProfile} from '../components/viewer3d/stringerProfile';
 import {ACTUAL_DEPTH_IN,type JoistSize} from '../structure/spanTables';
 import {DETAIL_SCALES,SCALES,SHEET,type DrawItem,type LayerId,type Pt,drawnExtents,feetInches,fitScale} from './drawingTypes';
@@ -147,7 +150,8 @@ function guardDetail(c:Ctx):Detail{
   const k=pen(),{jd,size,data,model}=c,h=model.railing.height,jt=-1,W=12,g=-c.guardInset,list:[number,number,string][]=[];
   k.rect('S-FRMG',-1.5,jt-jd,0,jt,true);joistBeyond(k,c,-1.5,-W,jt);
   if(c.fascia)k.rect('A-DECK-FNSH',0,jt-jd,.625,jt);
-  decking(k,c,-W,c.fascia?1.25:.75,jt,0);
+  // A new design's picture frame overhangs the fascia face by its own overhang; older saves draw as they were quoted.
+  decking(k,c,-W,usesFinishedFascia(data)&&hasPictureFrame(data)?(c.fascia?.625:0)+pictureFrameOverhang(data):c.fascia?1.25:.75,jt,0);
   list.push([-.75,jt-jd*.6,`${size} rim joist${c.fascia?' and fascia':''}`]);
   const frameless=model.railing.frameless;
   if(frameless){
@@ -221,7 +225,7 @@ export function detailItems(input:DetailInput,origin:Pt):{items:DrawItem[];title
   const {data,model,reference:ref}=input,main=model.levels[0],size=data.framingSize as JoistSize;
   const field=main.boards.find(b=>!b.role)??main.boards[0],crossBoards=Math.abs(Math.cos((field?.angleDeg??0)*Math.PI/180))>.5;
   const postBase=data.foundation==='Deck Blocks'?6.5:4.5;
-  const c:Ctx={...input,size,jd:ACTUAL_DEPTH_IN[size]??9.25,crossBoards,fascia:catalogueAccessoryLayout(data,model).fascia.length>0,parts:connectionParts(data,model,input.hardware),
+  const c:Ctx={...input,size,jd:ACTUAL_DEPTH_IN[size]??9.25,crossBoards,fascia:catalogueAccessoryLayout(data,model).fascia.length>0||usesFinishedFascia(data),parts:connectionParts(data,model,input.hardware),
     postBase,hasPost:ref.beamBottomIn>postBase+.5,depth:data.foundation==='Deck Blocks'?0:data.foundationDepthIn??48};
   const ledger=data.houseVisible!==false&&getHouseContact(data,main.footprint).contacts.some(x=>x.kind==='ledger');
   const details=[ledger?ledgerDetail(c):houseSideDetail(c),beamDetail(c),footingDetail(c),...(data.railingType==='None'?[]:[guardDetail(c)]),stairDetail(c),deckingDetail(c)].filter((d):d is Detail=>!!d);
