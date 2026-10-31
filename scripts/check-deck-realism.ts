@@ -159,6 +159,7 @@ const SWATCHES='src/features/deckcraft/assets/swatches/';
 const files=readdirSync(SWATCHES).filter(f=>f.endsWith('.jpg')).sort();
 const used=new Set(DECKING_CATALOGUE.flatMap(m=>m.colors.map(c=>c.swatch)));
 ok([...used].every(f=>files.includes(f)),'Every catalogue colour has its swatch on disk');
+const SWATCH_SOURCES=JSON.parse(readFileSync(`${SWATCHES}sources.json`,'utf8')).swatches as Record<string,unknown>;
 let worstDelta=0,worstSeam=0;
 for(const file of files){
   const {data,info}=await sharp(SWATCHES+file).ensureAlpha().raw().toBuffer({resolveWithObject:true});
@@ -166,6 +167,8 @@ for(const file of files){
   // TimberTech's square photos show four boards (Premier+ Natural Oak is a close-up of one surface), and the strips
   // stop before the board across them on the right.
   if(file.startsWith('tt-')&&Math.abs(info.width/info.height-1)<.35&&file!=='tt-premierplus-natural-oak.jpg')ok(maps.layout.kind==='boards'&&maps.strips===4&&maps.layout.strips.every(s=>s.x1<info.width*.82),`${file}: four boards, clear of the board across them`);
+  // Deckorators' installed close-ups (sources.json) are four boards with one across them, mirrored so it is on the right.
+  else if(file.startsWith('dk-')&&SWATCH_SOURCES[file])ok(maps.layout.kind==='boards'&&maps.strips===4&&maps.layout.strips.every(s=>s.x1<info.width*.82),`${file}: four boards, clear of the board across them`);
   else ok(maps.strips>=3,`${file}: at least three strips`);
   ok(maps.width===ATLAS_WIDTH&&maps.height===maps.strips*STRIP_ROWS&&maps.albedo.length===maps.width*maps.height*4,`${file}: the atlas is ${ATLAS_WIDTH} wide with ${STRIP_ROWS} rows a strip`);
   const delta=deltaE(maps.sourceMean,maps.atlasMean);worstDelta=Math.max(worstDelta,delta);
@@ -195,12 +198,15 @@ ok(!/from ['"](three|@react-three)/.test(read(`${VIEWER}swatchMaps.ts`)),'swatch
 // Board photos sharp enough for a close look: the manufacturers' 1000 px close-ups. The photos still below that are
 // listed here, and the list only shrinks: a listed photo that has been replaced fails until it is taken off.
 const MIN_SOURCE_EDGE=1000;
-const LOW_RES_SWATCHES=new Set(['dk-altitude-highland','dk-altitude-sequoia','dk-altitude-trailstone','dk-border-dark-slate','dk-summit-boulder','dk-summit-cliffside','dk-summit-glacier','dk-venture-saltwater','dk-venture-sandbar','dk-vista-driftwood','dk-vista-dunewood','dk-vista-ironwood','dk-vista-silverwood','dk-voyage-costa','dk-voyage-khaya','dk-voyage-mesa','dk-voyage-sedona','dk-voyage-sierra','dk-voyage-tundra','tt-harvest-brownstone','tt-harvest-kona','tt-harvest-slate-gray','tt-harvestplus-timber-gray','tt-harvestplus-toasted-wheat','tt-landmark-american-walnut','tt-landmark-boardwalk','tt-landmark-castle-gate','tt-landmark-french-white-oak','tt-legacy-ashwood','tt-legacy-espresso','tt-legacy-mocha','tt-legacy-pecan','tt-legacy-tigerwood','tt-legacy-whitewash-cedar','tt-premier-dark-teak','tt-premier-maritime-gray','tt-premierplus-natural-oak','tt-prime-dark-teak','tt-prime-maritime-gray','tt-primeplus-coconut-husk','tt-primeplus-dark-cocoa','tt-primeplus-sea-salt-gray','tt-reserve-antique-leather','tt-reserve-dark-roast','tt-reserve-driftwood','tt-reserve-reclaimed-chestnut','tt-terrain-brown-oak','tt-terrain-silver-maple','tt-terrainplus-dark-oak','tt-terrainplus-natural-white-oak','tt-terrainplus-weathered-oak','tt-vintage-coastline','tt-vintage-cypress','tt-vintage-dark-hickory','tt-vintage-english-walnut','tt-vintage-mahogany','tt-vintage-weathered-teak','wood-cedar','wood-pressure-treated'].map(n=>`${n}.jpg`));
+const LOW_RES_SWATCHES=new Set(['dk-border-dark-slate','dk-summit-boulder','dk-summit-cliffside','dk-summit-glacier','tt-harvest-brownstone','tt-harvest-kona','tt-harvest-slate-gray','tt-harvestplus-timber-gray','tt-harvestplus-toasted-wheat','tt-landmark-american-walnut','tt-landmark-boardwalk','tt-landmark-castle-gate','tt-landmark-french-white-oak','tt-legacy-ashwood','tt-legacy-espresso','tt-legacy-mocha','tt-legacy-pecan','tt-legacy-tigerwood','tt-legacy-whitewash-cedar','tt-premier-dark-teak','tt-premier-maritime-gray','tt-premierplus-natural-oak','tt-prime-dark-teak','tt-prime-maritime-gray','tt-primeplus-coconut-husk','tt-primeplus-dark-cocoa','tt-primeplus-sea-salt-gray','tt-reserve-antique-leather','tt-reserve-dark-roast','tt-reserve-driftwood','tt-reserve-reclaimed-chestnut','tt-terrain-brown-oak','tt-terrain-silver-maple','tt-terrainplus-dark-oak','tt-terrainplus-natural-white-oak','tt-terrainplus-weathered-oak','tt-vintage-coastline','tt-vintage-cypress','tt-vintage-dark-hickory','tt-vintage-english-walnut','tt-vintage-mahogany','tt-vintage-weathered-teak','wood-cedar','wood-pressure-treated'].map(n=>`${n}.jpg`));
 for(const file of files){
   const {width=0,height=0}=await sharp(SWATCHES+file).metadata(),edge=Math.min(width,height);
   ok(LOW_RES_SWATCHES.has(file)?edge<MIN_SOURCE_EDGE:edge>=MIN_SOURCE_EDGE,LOW_RES_SWATCHES.has(file)?`${file}: replaced (${width}×${height}); take it off LOW_RES_SWATCHES`:`${file}: at least ${MIN_SOURCE_EDGE} px on its short side (${width}×${height})`);
 }
-ok([...LOW_RES_SWATCHES].every(f=>files.includes(f))&&LOW_RES_SWATCHES.size<=59,'Every low-resolution swatch listed is still on disk, and the list never grows');
+// Every sharper photo cites where it came from (sources.json). Shoreline arrived at 2000 px before citations were kept.
+const SOURCES=JSON.parse(read(`${SWATCHES}sources.json`)).swatches as Record<string,{url:string;retrieved:string;edit:string}>,UNCITED=new Set(['dk-venture-shoreline.jpg']);
+ok(files.filter(f=>!LOW_RES_SWATCHES.has(f)&&!UNCITED.has(f)).every(f=>/^https:\/\/(www\.deckorators\.com\/cdn\/shop\/files|shop\.timbertech\.com\/wp-content\/uploads)\//.test(SOURCES[f]?.url??'')&&SOURCES[f].retrieved&&SOURCES[f].edit)&&Object.keys(SOURCES).every(f=>files.includes(f)&&!LOW_RES_SWATCHES.has(f)),'Every sharper swatch cites its manufacturer photo, and every citation is a swatch on disk');
+ok([...LOW_RES_SWATCHES].every(f=>files.includes(f))&&LOW_RES_SWATCHES.size<=44,'Every low-resolution swatch listed is still on disk, and the list never grows');
 ok(/HIGH_READ_EDGE\s*=\s*2048/.test(read(`${VIEWER}useSwatchTexture.ts`))&&read(`${VIEWER}useSwatchTexture.ts`).includes('width > ATLAS_WIDTH ? HIGH_READ_EDGE : READ_EDGE'),'The high tier reads the photo at up to 2048 px for its 2048 atlas');
 
 // Repetition along a long board: every 48 in tile of a board takes its own strip and offset (the shader's grainPick),
