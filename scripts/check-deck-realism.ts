@@ -241,6 +241,9 @@ let repeatMean=0;
   ok(edgeShade(0,close)<mid(close)*(EDGE_SHADE.dark+1e-9)&&edgeShade(.02,close)<edgeShade(.04,close)&&mid(close)-1<.02,'Close up, a board is its own colour mid-face and darkens into its eased edges');
   ok(edgeShade(.04,far)/mid(far)<.99&&edgeShade(.04,close)/mid(close)>edgeShade(.04,far)/mid(far),'Further off the shaded line stays at least a pixel wide instead of vanishing');
   ok(edgeShade(0,tiny)===1,'Boards a few pixels wide are not striped dark');
+  // Mid distance: the 3/16 in gap is under a pixel and rasterises as dots; the shaded edge beside it, a pixel wide and
+  // nearly as dark as the cavity, carries the line unbroken.
+  ok(edgeShade(0,.08)/mid(.08)<=.5&&Math.abs(edgeShade(0,close)/mid(close)-EDGE_SHADE.dark)<.02,'At mid distance the edge line darkens toward the gap, so board lines read solid instead of dotted; close up it stays a soft shade');
   ok(edgeShade(0,0)===1&&edgeShade(1,0)===1,'A board’s long sides (one across value over the face) are not darkened: no fringe under a tread nosing or along the rim');
   let worstMean=0;for(const px of [.002,.01,.02,.05,.1,.15,.2,.25,.3,.4]){let s=0;const n=4000;for(let i=0;i<n;i++)s+=edgeShade((i+.5)/n,px);worstMean=Math.max(worstMean,Math.abs(s/n-1));}
   ok(worstMean<.003,`The edge shade keeps the board's mean colour at every distance (worst ${(worstMean*100).toFixed(2)}%)`);

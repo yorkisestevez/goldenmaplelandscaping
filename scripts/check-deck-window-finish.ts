@@ -4,7 +4,8 @@ import '../src/features/deckcraft/foundationDatumsRuntime';
 import * as THREE from 'three';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
-import {fasciaSlabs,accessoryFasciaSlabs} from '../src/features/deckcraft/components/viewer3d/fasciaSlabs';
+import {FASCIA_JOINT_IN,FASCIA_STOCK_IN,fasciaSlabs,accessoryFasciaSlabs} from '../src/features/deckcraft/components/viewer3d/fasciaSlabs';
+import {FASCIA_RETAIL_RATES} from '../src/features/deckcraft/supplierRates';
 import {catalogueAccessoryLayout} from '../src/features/deckcraft/catalogueAccessories';
 import {slabGeometry} from '../src/features/deckcraft/components/viewer3d/slabGeometry';
 import {reflectionBinding} from '../src/features/deckcraft/components/viewer3d/windowReflections';
@@ -14,7 +15,14 @@ let checks=0;const ok=(v:unknown,s:string)=>{assert(v,s);checks++;};
 const near=(a:number,b:number)=>Math.abs(a-b)<1e-4;
 for(const patch of [{},{shape:'L-Shape'},{cornerChamfers:{frontLeftFt:2,frontRightFt:3}},{levels:2,width2:10,length2:8,height2:12},{terrainConfig:{widthFt:80,depthFt:80,elevationIn:0,slopePct:3}}]){
   const d={...structuredClone(DEFAULT_DECK),width:22,length:16,height:36,...patch} as DeckData,m=buildDeckTakeoff(d),pieces=fasciaSlabs(m);
-  ok(pieces.length===m.levels.reduce((n,l)=>n+(l.rim?.length??0),0),'One installed fascia per authoritative rim piece');
+  // Fascia comes in 12 ft boards: each rim run is the priced pieces (cut from the run's start, as fasciaSupply cuts
+  // them), butted with a gap; only the run's own ends are mitred.
+  const rims=m.levels.flatMap(l=>l.rim??[]),runLength=(r:typeof rims[number])=>Math.hypot(r.b.x-r.a.x,r.b.z-r.a.z);
+  ok(pieces.length===rims.reduce((n,r)=>n+Math.ceil(runLength(r)/FASCIA_STOCK_IN-1e-9),0),'Each rim run is as many fascia boards as the estimate cuts from 12 ft stock');
+  ok(Object.values(FASCIA_RETAIL_RATES).every(r=>r.stockIn===FASCIA_STOCK_IN),'The drawn fascia board length is the priced stock length');
+  ok(pieces.every(s=>Math.hypot(s.b.x-s.a.x,s.b.y-s.a.y)<=FASCIA_STOCK_IN+1e-6),'No drawn fascia board is longer than the stock it is cut from');
+  {const long=rims.find(r=>runLength(r)>FASCIA_STOCK_IN+1);if(long){const on=pieces.filter(s=>Math.abs((s.a.x-long.a.x)*(long.b.z-long.a.z)-(s.a.y-long.a.z)*(long.b.x-long.a.x))<1e-3*runLength(long)&&Math.abs((s.b.x-long.a.x)*(long.b.z-long.a.z)-(s.b.y-long.a.z)*(long.b.x-long.a.x))<1e-3*runLength(long)),lengths=on.map(s=>Math.hypot(s.b.x-s.a.x,s.b.y-s.a.y)).sort((p,q)=>q-p);
+    ok(on.length>=2&&Math.abs(lengths.reduce((n,l)=>n+l,0)+(on.length-1)*FASCIA_JOINT_IN-runLength(long))<1e-6&&on.filter(s=>s.capA||s.capB).length<=2&&on.every(s=>s.grainAnchor),'A long run shows its butt joint: the pieces and their gaps fill the run, mitres only at its ends, each board its own grain');}}
   let joins=0;
   for(const s of pieces){
     const plain=slabGeometry([s],'along',false),eased=slabGeometry([s],'along',false,true);
