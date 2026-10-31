@@ -388,7 +388,9 @@ function CameraView({view,w,d,cx,cz,height,depth,points,sceneFrame,saved}:{view:
   let cam=camera;
   if(wantOrtho!==(cam instanceof THREE.OrthographicCamera)){
    cam=wantOrtho
-    ?new THREE.OrthographicCamera(-10,10,10,-10,SCENE_LOOK.sky.cameraNear,SCENE_LOOK.sky.cameraFar)
+    // manual: this effect owns the frustum. Otherwise the canvas resets it to pixel units when the render quality changes the
+    // pixel ratio, a change this effect does not re-run for: Above tapped before that showed a 390 ft-wide view.
+    ?Object.assign(new THREE.OrthographicCamera(-10,10,10,-10,SCENE_LOOK.sky.cameraNear,SCENE_LOOK.sky.cameraFar),{manual:true})
     :new THREE.PerspectiveCamera(saved?.fov??38,aspect,SCENE_LOOK.sky.cameraNear,SCENE_LOOK.sky.cameraFar);
    set({camera:cam});
   }
