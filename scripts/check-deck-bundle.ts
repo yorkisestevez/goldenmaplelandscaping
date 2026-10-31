@@ -93,7 +93,10 @@ import {basename} from 'node:path';
 // October 21 (guillotined stones look real): the split-stone geometry is a chunk of its own, fetched by the 3D view only
 // for a design with a guillotined wall, so the viewer stays within its budget (338.9 KB). The chunk measured 5.8 KB with its
 // joints, crease normals and per-stone cache; bound it at 6.5 KB.
-const BUDGET_KB={routeInitial:277,routeCss:12,viewer:340,pdf:150,deltaWorker:213,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35,splitStone:6.5};
+// October 31 (picture-frame overhang follows the board, PR 209): the board's overhang limit and the finished-fascia
+// offset ride with the first estimate — option-deltas worker 213.0 KB gzip, 15 bytes over. Raised to 213.5 KB with the
+// owner's approval.
+const BUDGET_KB={routeInitial:277,routeCss:12,viewer:340,pdf:150,deltaWorker:213.5,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35,splitStone:6.5};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);
