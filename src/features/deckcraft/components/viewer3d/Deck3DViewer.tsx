@@ -17,6 +17,7 @@ import {getPoolModels} from '../../poolModel';
 
 const Pool3D=lazy(()=>import('./Pool3D'));
 const Fire3D=lazy(()=>import('./Fire3D'));
+const KitchenDownlights=lazy(()=>import('./KitchenDownlights'));
 
 import {foundationSolids} from '../../foundationSolids';
 
@@ -595,11 +596,11 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
     <LightingFixtures items={extras.fixtures} evening={evening} enabled={lightsOn}/>
 
-    </group>{data.pools?.some(p=>p.enabled)&&<Suspense fallback={null}><Pool3D pools={getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))} inspection={inspection||cutaway} evening={evening} lamps={poolLamps}/></Suspense>}<Yard3D model={visibleYard} inspection={inspection||cutaway} plantingBeds={plantingBeds}/>{yard.features.some(f=>f.config.kind==='fire-feature')&&<Suspense fallback={null}><Fire3D yard={yard} data={data} inspection={inspection||cutaway}/></Suspense>}
+    </group>{data.pools?.some(p=>p.enabled)&&<Suspense fallback={null}><Pool3D pools={getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))} inspection={inspection||cutaway} evening={evening} lamps={poolLamps}/></Suspense>}<Yard3D evening={evening} model={visibleYard} inspection={inspection||cutaway} plantingBeds={plantingBeds}/>{yard.features.some(f=>f.config.kind==='fire-feature')&&<Suspense fallback={null}><Fire3D yard={yard} data={data} inspection={inspection||cutaway}/></Suspense>}
 
     <Environment3D data={environmentData} footprint={model.levels[0].footprint} topY={data.height} planKey={planKey} cutaway={cutaway} finished={!inspection} yard={yard} {...interaction}/>
 
-  </group><Suspense fallback={null}><Landscape3D data={landscapeData} showMatureSpread={showMatureSpread} source={data} model={model} yard={yard}/></Suspense><FixtureGlows items={extras.fixtures} evening={evening} enabled={lightsOn}/></>;
+  </group>{evening&&lightsOn&&data.landscapeObjects?.some(o=>o.enabled&&o.assetId==='kitchen-island')&&<Suspense fallback={null}><KitchenDownlights data={data}/></Suspense>}<Suspense fallback={null}><Landscape3D data={landscapeData} showMatureSpread={showMatureSpread} source={data} model={model} yard={yard}/></Suspense><FixtureGlows items={extras.fixtures} evening={evening} enabled={lightsOn}/></>;
 
 }
 

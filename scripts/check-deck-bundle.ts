@@ -101,13 +101,16 @@ import {basename} from 'node:path';
 // October 22 (estate lighting meets guillotined armour stone): both raised the route to 277 KB on their own branches.
 // Together they measure 277.6 KB (option-deltas worker 213.4 KB, viewer 339.8 KB). Raised to 278 KB with the owner's
 // approval; perf/deckcraft-route-headroom (the lazy hardscape catalogue) is the planned way back down.
+// October 22 (estate outdoor rooms, PR 183, on top of the seasons and guillotined stone): the evening paver grade that
+// keeps Caffè Crema and Greyed Nickel warm at night rides with the 3D view; the kitchen downlights load on their own.
+// The viewer measures 340.0 KB. Raised to 341 KB with the owner's approval.
 // October 31 (estate lighting meets the faster 3D view, PR 207): together the viewer measured 340.3 KB. The catalogue light
 // housings (CatalogueFixture.tsx, with the pool niche and the well light's louvre) are now a chunk of their own (2.2 KB),
 // fetched with the first catalogue light, so the viewer is 338.9 KB within its unchanged budget (guarded below).
 // October 31 (picture-frame overhang follows the board, PR 209): the board's overhang limit and the finished-fascia
 // offset ride with the first estimate — option-deltas worker 213.0 KB gzip, 15 bytes over. Raised to 213.5 KB with the
 // owner's approval.
-const BUDGET_KB={routeInitial:278,routeCss:12,viewer:340,pdf:150,deltaWorker:214,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35,splitStone:6.5};
+const BUDGET_KB={routeInitial:278,routeCss:12,viewer:341,pdf:150,deltaWorker:214,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35,splitStone:6.5};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);
@@ -129,6 +132,9 @@ let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);che
 // that pulled the checker back in would bring its messages into a first-load chunk.
 const initialText=initial.map(f=>readFileSync(new URL(f,assets),'utf8')).join('\n');
 ok(!initialText.includes('has no underwater light'),'The light-placement checker stays outside the first estimate');
+// October 19 (estate outdoor rooms, PR 183): the outdoor-room checker (outdoorRoomRules.ts) loads after the first paint
+// too, so its fire, pool and patio geometry stays lazy.
+ok(!initialText.includes('keep one band width'),'The outdoor-room checker stays outside the first estimate');
 ok(routeKB<=BUDGET_KB.routeInitial,`Deck designer initial JS is ${routeKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.routeInitial} KB): ${initial.join(', ')}`);
 // The route's own CSS, beyond the stylesheet every page loads.
 const sharedCss=new Set(manifest.routes.root.css??[]);

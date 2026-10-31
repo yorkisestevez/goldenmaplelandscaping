@@ -42,7 +42,7 @@ const has=(m:YardModel,id:string,pattern:RegExp)=>featureOf(m,id).warnings.some(
 const row=(t:YardTakeoff,id:string)=>t.sections.find(s=>s.id===id);
 
 // --- Products, validation and persistence ----------------------------------------------------------------------------
-same(FIRE_PRODUCTS.map(p=>[p.id,p.fuel,p.round,p.min,p.max]),[['fire-wood-ring','wood',true,36,48],['fire-gas-bowl','gas',true,30,48],['fire-gas-linear','gas',false,48,84]],'Three fire products with their size ranges');
+same(FIRE_PRODUCTS.map(p=>[p.id,p.fuel,p.round,p.min,p.max]),[['fire-wood-ring','wood',true,36,48],['fire-gas-bowl','gas',true,30,48],['fire-gas-linear','gas',false,48,84],['fire-gas-sculptural','gas',true,36,48]],'Four fire products with their size ranges (the sculptural bowl is a gas bowl drawn as a cast form)');
 const fresh=newFireFeature(base);
 check(fresh.kind==='fire-feature'&&fresh.productId==='fire-gas-bowl'&&fresh.widthFt*12===42&&fresh.depthFt===fresh.widthFt&&fireFeatureProblem(fresh)==='','The default is a valid 42 in gas fire bowl (no Barrie burn permit)');
 check(newYardFeature('fire-feature',base).kind==='fire-feature','newYardFeature hands a fire feature to newFireFeature');
