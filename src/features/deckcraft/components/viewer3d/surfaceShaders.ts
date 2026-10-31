@@ -87,7 +87,8 @@ export function grainBlend(f:number){
  * board), never narrower than a pixel (`px`, its width per pixel), fading out once the whole board is a few pixels wide.
  * As the band narrows to a pixel the gap itself goes sub-pixel and rasterises as dots, so the line darkens from `dark`
  * to `farDark` (between `farFrom` and `farTo` px) and carries the board line unbroken.
- * The shade is divided by its own mean across the board, so the board's average colour stays the product's.
+ * The shade is divided by its own mean across the board, so the board's average colour stays the product's; at mid
+ * distance that lifts the plain middle of each board about 10% to pay for the dark line.
  */
 export const EDGE_SHADE={dark:.62,farDark:.3,farFrom:.02,farTo:.07,band:.045,fadeFrom:.12,fadeTo:.35,sideFace:1e-6};
 const smooth=(a:number,b:number,x:number)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t);};
@@ -111,7 +112,7 @@ vec2 dcUvA;vec2 dcUvB;float dcW;vec2 dcDx;vec2 dcDy;float dcEdgeK=0.;
 highp uint dcMix(highp uint h){h^=h>>16u;h*=0x7feb352du;h^=h>>15u;h*=0x846ca68bu;h^=h>>16u;return h;}
 float dcPick(vec2 s,float tile){highp uint a=uint(s.x*${glslFloat(SEED_STEPS)}),b=uint(fract(s.y)*${glslFloat(SEED_STEPS)}),h=dcMix(dcMix(a^dcMix(b+${HASH_KEY}u))+uint(int(tile)));return float(h>>8u)/16777216.;}
 vec4 dcTex(sampler2D t){vec4 a=textureGrad(t,dcUvA,dcDx,dcDy);return dcW>0.?mix(a,textureGrad(t,dcUvB,dcDx,dcDy),dcW):a;}
-float dcEdgeShade(float v){float px=fwidth(v);if(vDcBoard<${glslFloat(BOARD_PIECE-.5)}||px<=${EDGE_SHADE.sideFace.toExponential()}*max(1.,abs(v)))return 1.;float e=min(fract(v),1.-fract(v)),band=max(${glslFloat(EDGE_SHADE.band)},px),f=1.-smoothstep(${glslFloat(EDGE_SHADE.fadeFrom)},${glslFloat(EDGE_SHADE.fadeTo)},px),d=${glslFloat(1-EDGE_SHADE.dark)}+${glslFloat(EDGE_SHADE.dark-EDGE_SHADE.farDark)}*smoothstep(${glslFloat(EDGE_SHADE.farFrom)},${glslFloat(EDGE_SHADE.farTo)},px);dcEdgeK=(1.-smoothstep(0.,band,e))*f;return(1.-d*dcEdgeK)/(1.-d*band*f);}`;
+float dcEdgeShade(float v){float px=fwidth(v);if(vDcBoard<${glslFloat(BOARD_PIECE-.5)}||px<=${EDGE_SHADE.sideFace.toExponential()}*max(1.,abs(v)))return 1.;float e=min(fract(v),1.-fract(v)),band=max(${glslFloat(EDGE_SHADE.band)},px),f=1.-smoothstep(${glslFloat(EDGE_SHADE.fadeFrom)},${glslFloat(EDGE_SHADE.fadeTo)},px),d=${glslFloat(+(1-EDGE_SHADE.dark).toFixed(4))}+${glslFloat(+(EDGE_SHADE.dark-EDGE_SHADE.farDark).toFixed(4))}*smoothstep(${glslFloat(EDGE_SHADE.farFrom)},${glslFloat(EDGE_SHADE.farTo)},px);dcEdgeK=(1.-smoothstep(0.,band,e))*f;return(1.-d*dcEdgeK)/(1.-d*band*f);}`;
 /** Finished board pieces shade their long edges, and the eased edge goes matte there: a sub-pixel sun glint on a 1/8 in
  * radius only shows as a dotted line. Everything else is left as it was. */
 const EDGE_FRAGMENT=/* glsl */`
