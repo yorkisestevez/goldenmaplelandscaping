@@ -104,6 +104,9 @@ import {basename} from 'node:path';
 // October 31 (estate lighting meets the faster 3D view, PR 207): together the viewer measured 340.3 KB. The catalogue light
 // housings (CatalogueFixture.tsx, with the pool niche and the well light's louvre) are now a chunk of their own (2.2 KB),
 // fetched with the first catalogue light, so the viewer is 338.9 KB within its unchanged budget (guarded below).
+// October 31 (picture-frame overhang follows the board, PR 209): the board's overhang limit and the finished-fascia
+// offset ride with the first estimate — option-deltas worker 213.0 KB gzip, 15 bytes over. Raised to 213.5 KB with the
+// owner's approval.
 const BUDGET_KB={routeInitial:278,routeCss:12,viewer:340,pdf:150,deltaWorker:214,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35,splitStone:6.5};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');

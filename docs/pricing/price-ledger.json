@@ -248,15 +248,17 @@
         "status": "unverified",
         "context": "premium interlocking patio in Barrie typically ranges from $35,000 to $75,000 depending on size, paver selection, site conditions such as"
       },
-      "$39,700": {
+      "$38,800": {
         "count": 1,
-        "status": "unverified",
-        "context": "one-row picture-frame border, has a priced portion of about $39,700 before HST; the same deck 8 ft up as a walkout has a priced"
+        "status": "approved",
+        "note": "DeckCraft designer price for the FAQ deck after the 2026-10-30 frame overhang change",
+        "context": "one-row picture-frame border, has a priced portion of about $38,800 before HST; the same deck 8 ft up as a walkout has a priced"
       },
-      "$58,200": {
+      "$57,400": {
         "count": 1,
-        "status": "unverified",
-        "context": "ame deck 8 ft up as a walkout has a priced portion of about $58,200. Unpriced connections, installation and order-specific adju"
+        "status": "approved",
+        "note": "DeckCraft designer walkout price for the FAQ deck after the 2026-10-30 frame overhang change",
+        "context": "ame deck 8 ft up as a walkout has a priced portion of about $57,400. Unpriced connections, installation and order-specific adju"
       }
     },
     "src/pages/CostGuide.tsx": {
