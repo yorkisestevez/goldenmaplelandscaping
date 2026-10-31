@@ -24,7 +24,12 @@ The close camera is a saved camera: `{positionIn:[40,90,24], targetIn:[150,28,12
   slides to a new offset, with a short crossfade. Each board starts its tiles at its own seed, so the handovers never
   line up across the deck. Grain correlation from one 48 in tile to the next is −0.03; a single repeated strip would be 1.
 - **Board edges.** The long edges shade into the gap over about ¼ in, and the shading is never thinner than one pixel.
-  The shade is mean-normalised, so the product colour is unchanged. The edge also goes matte inside that band.
+  At mid distance the 3/16 in gap goes sub-pixel and would break into dots, so there the line darkens (0.62 → 0.30) and
+  carries the board line unbroken. The shade is mean-normalised, so the product colour is unchanged. The edge also
+  goes matte inside that band.
+- **Fascia in its boards.** Each rim run shows the 12 ft boards the estimate prices. They are split evenly, with no
+  sliver at a corner, and butted with a ⅛ in gap. The mitres stay exactly at the corners, and each board has its own
+  grain. A selected manufacturer fascia is split the same way.
 - **Shape.** Boards have a real ⅛ in eased edge, with 2 segments.
 - **Gaps.** A near-black cavity sits under each decked level's own outline. It:
   - never shows past the deck edge;
@@ -36,8 +41,8 @@ The close camera is a saved camera: `{positionIn:[40,90,24], targetIn:[150,28,12
   cuts short are dropped.
 - **Bundle.** The atlas builder now loads lazily for the main-thread fallback, so it leaves the 3D viewer chunk
   (337.9/340 KB, down from 339.8).
-- **Unchanged:** fascia, cladding, skirting, raised-bed timbers, stringers and the box-projected framing look exactly as
-  before.
+- **Unchanged:** apart from the fascia joints, the fascia's surface look, cladding, skirting, raised-bed timbers,
+  stringers and the box-projected framing look exactly as before.
 
 ## Blind critic scores (deck boards only, 1–10)
 
@@ -48,9 +53,16 @@ The critics were not told which image was which. Two critics (Opus and Sonnet) s
 | Harvest, round 8 | 6 → 7, 6 → 7 | 5 → 5, 6 → 5 |
 | Harvest, round 9 (same code) | 7 → 6, 6 → 6 | 6 → 6, 5 → 5 |
 | Costa, round 9 | 6 → 7, 7 → 7 | 6 → 6, 5 → 5 |
+| Harvest, round 10 (+ solid mid-distance lines, fascia boards) | 6 → **7**, 5 → 5 | 5 → **6**, 4 → 4 |
+| Costa, round 10 | 6 → **7**, 6 → 6 | 5 → **6**, 5 → 5 |
 
-The Harvest code is identical in rounds 8 and 9, so the scores move about ±1 by chance. On the default deck the code
-work alone is a small change, close to critic noise. What changes in the renders:
+The Harvest code is identical in rounds 8 and 9, so the scores move about ±1 by chance.
+
+Round 10 is the first clear result. The deck-builder critic picked the new render in all four pairs and gave the reason
+each time: its gaps "render as continuous lines" where the old ones break into dots. The second critic called the pairs
+ties or a marginal edge for the new render.
+
+What changes in the renders:
 - crisper, darker gap lines;
 - board lines that hold at mid distance;
 - no visible grain repeat along a board;
@@ -71,7 +83,9 @@ shots of about 3 in of one board.
 ## What still holds it back (critics' consensus)
 
 - **Grain:** soft and low-contrast up close. 59 of 60 swatches are 600 px or smaller.
-- **Rim, fascia and stairs:** read as flat slabs, with no board seams or butt joints.
-- **Aliasing:** gaps and the rim's top edge alias into dotted lines at mid distance. The rim-edge bead predates this
+- **Fascia joints:** a ⅛ in joint is sub-pixel in these views, as it would be in a photo. The fascia and stair skirts
+  still read as flat, low-contrast faces.
+- **Stairs:** jagged dark "icicle" streaks under the tread nosings. This is shadow aliasing and predates this branch.
+- **Rim edge:** a dotted bead along the rim's top edge, which is the board ends' gaps seen end-on. It predates this
   branch.
 - **Harvest colour:** a little uniform from board to board.
