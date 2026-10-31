@@ -76,6 +76,22 @@ test('form and function endpoints are 404, not the app page',async()=>{
   const handler=createAppHandler(makeBuild());
   assert.equal((await get(handler,'/.netlify/functions/deck-assistant')).status,404);
   assert.equal((await get(handler,'/api/leads')).status,404);
+  assert.equal((await get(handler,'/%2Enetlify/functions/x')).status,404);
+  assert.equal((await get(handler,'/API/leads')).status,404);
+});
+
+test('an extension-less path under assets/ is the app page, not an immutable asset',async()=>{
+  const handler=createAppHandler(makeBuild());
+  const res=await get(handler,'/assets/route');
+  assert.equal(res.status,200);
+  assert.equal(res.headers.get('cache-control'),'no-cache');
+});
+
+test('a HEAD request for a remembered asset still gives its length',async()=>{
+  const handler=createAppHandler(makeBuild());
+  await (await get(handler,'/assets/index-abc123.js')).text();
+  const head=await get(handler,'/assets/index-abc123.js',{method:'HEAD'});
+  assert.equal(head.headers.get('content-length'),String('console.log(1)'.length));
 });
 
 test('a form post is refused, so the page cannot report a lead as sent',async()=>{

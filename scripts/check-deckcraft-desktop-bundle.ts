@@ -23,6 +23,8 @@ const gzKB=(rel:string)=>gzipSync(readFileSync(join(ROOT,rel))).length/1024;
 
 const stray=readdirSync(ROOT).filter(name=>!TOP_LEVEL.has(name));
 assert.deepEqual(stray,[],`Unexpected files in the desktop build: ${stray.join(', ')}`);
+const missing=['deckcraft/hardscape-catalogue.json','logo-mark.png','deckcraft-icon.svg'].filter(rel=>!existsSync(join(ROOT,rel)));
+assert.deepEqual(missing,[],`The desktop build is missing files the designer loads: ${missing.join(', ')}`);
 const html=readFileSync(join(ROOT,'index.html'),'utf8');
 const entryJs=html.match(/<script[^>]+src="\/(assets\/[^"]+\.js)"/)?.[1];
 const entryCss=html.match(/<link[^>]+href="\/(assets\/[^"]+\.css)"/)?.[1];
