@@ -5,8 +5,9 @@ import {mitredRunCaps} from '../../lib/mitredSlabs';
 /** Composite fascia comes in 12 ft boards (every rate in FASCIA_RETAIL_RATES), butted with an expansion gap. */
 export const FASCIA_STOCK_IN=144,FASCIA_JOINT_IN=.125;
 
-/** One run of fascia as the boards it is made of: as many 12 ft boards as fasciaSupply prices, split evenly (so no
- * sliver lands at a corner) and butted with the joint gap. Only the run's own ends keep their mitres. */
+/** One run of fascia as the boards it is made of: as many pieces as the estimate cuts from 12 ft stock (fasciaSupply
+ * then packs the cuts into boards, reusing offcuts), split evenly so no sliver lands at a corner, and butted with the
+ * joint gap. Only the run's own ends keep their mitres. */
 function boards(run:SkirtingSlab):SkirtingSlab[]{
   const L=Math.hypot(run.b.x-run.a.x,run.b.y-run.a.y),n=Math.ceil(L/FASCIA_STOCK_IN-1e-9);
   if(n<=1)return [run];
