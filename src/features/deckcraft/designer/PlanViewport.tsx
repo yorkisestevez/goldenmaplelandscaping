@@ -8,13 +8,19 @@ import ProRulers from './pro/ProRulers';
 import './planViewport.css';
 
 const limit=(value:number)=>Math.max(.15,Math.min(3,value));
+// The site plan's smallest labels (edge figures), in drawing units.
+const SMALLEST_LABEL=6.5;
 /** A zoomed or panned sheet stays until Fit. Refitting it under the same zoom percentage jumps every handle.
  * At the fitted view, an edit that changes the sheet (a typed width, a new outline) drops that hold so the
  * drawing and its dimension buttons follow the design. */
 const frameStamp=(frame:PlanFrame)=>`${frame.viewBox}|${frame.dims?.width.inches??''}|${frame.dims?.depth.inches??''}`;
 /** Navigation changes only the view: neither pricing nor the design's undo history. The Pro workspace docks the
  * navigation controls in its tool strip (`navigationTarget`); they keep working the same way there. */
-export default function PlanViewport({children,frame,navigationTarget,fitToken}:{children:(zoom:number,frame:PlanFrame)=>ReactNode;frame:PlanFrame;navigationTarget?:HTMLElement|null;/** When this value changes, fit the drawing (Draw my own / outline tool). */fitToken?:string|number}){
+export default function PlanViewport({children,frame,navigationTarget,fitToken,labelPx,openArea}:{children:(zoom:number,frame:PlanFrame)=>ReactNode;frame:PlanFrame;navigationTarget?:HTMLElement|null;/** When this value changes, fit the drawing (Draw my own / outline tool). */fitToken?:string|number;
+  /** Open zoomed onto the deck so the smallest labels read at this many pixels (the new look's phones); Fit still shows
+   *  the whole design. */labelPx?:number;
+  /** The screen band the drawing shows between controls over it (top and bottom, in viewport pixels); the zoomed deck
+   *  is centred there; null until the controls around it are laid out. */openArea?:()=>{top:number;bottom:number}|null}){
   const box=useRef<HTMLDivElement>(null),stage=useRef<HTMLDivElement>(null);
   // Designer Mode (the Pro workspace) adds rulers in feet along the top and left edges.
   const rulers=useDesignerMode();
@@ -31,6 +37,24 @@ export default function PlanViewport({children,frame,navigationTarget,fitToken}:
   });
   const fit=()=>{frozen.current=frame;gesture.current=null;setPanning(false);setView({zoom:1,x:0,y:0});};
   useArchitectKeys({z:fit});
+  // Once the drawing has a size: the zoom that brings its smallest labels up to labelPx, centred on the deck and its
+  // stairs. The drawing fits its stage (preserveAspectRatio meet), so a drawing unit is the smaller of the two ratios.
+  // The page around the drawing may still be settling (its stylesheet, the controls over it): each resize looks again.
+  const opened=useRef(false),[,settle]=useState(0);
+  useEffect(()=>{
+    const el=stage.current;if(!labelPx||!el)return;
+    const observer=new ResizeObserver(()=>{if(!opened.current)settle(n=>n+1);});observer.observe(el);return()=>observer.disconnect();
+  },[!!labelPx]);
+  useEffect(()=>{
+    if(!labelPx||opened.current)return;
+    const r=stage.current?.querySelector('svg.dd-site-plan')?.getBoundingClientRect(),s=stage.current?.getBoundingClientRect(),area=openArea?openArea():undefined;
+    if(!r?.width||!r.height||!s||area===null)return;
+    opened.current=true;
+    const unit=Math.min(r.width/frame.w,r.height/frame.h),next=limit(labelPx/(SMALLEST_LABEL*unit));if(next<=1)return;
+    const dx=((frame.b.minX+frame.b.maxX)/2-frame.x-frame.w/2)*unit,dy=((frame.b.minZ+frame.b.maxZ)/2-frame.y-frame.h/2)*unit;
+    const aim=area?(area.top+area.bottom)/2-(s.top+s.height/2):0;
+    frozen.current=frame;setView({zoom:next,x:-dx*next,y:aim-dy*next});
+  });
   const fitTokenSeen=useRef<string|number|undefined>(undefined);
   useEffect(()=>{
     if(fitToken===undefined||fitTokenSeen.current===fitToken)return;
