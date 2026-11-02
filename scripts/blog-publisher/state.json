@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-10-26T13:51:00.000Z",
+  "lastRunAt": "2026-11-02T14:38:28.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -28,10 +28,11 @@
     "auto-024",
     "auto-025",
     "auto-026",
-        "auto-027"
+    "auto-027",
+    "auto-028"
   ],
   "publishedSlugs": [],
-  "currentDraft": "backyard-entertaining-wasaga-beach",
+  "currentDraft": "porcelain-vs-concrete-pavers-barrie",
   "history": [
     {
       "topicId": "auto-001",
@@ -388,7 +389,29 @@
       },
       "generatedBy": "muse-autopilot"
     },
-        {"topicId":"auto-027","slug":"outdoor-kitchen-gas-electrical-ontario","at":"2026-10-26T13:51:00.000Z","validation":{"ok":true},"generatedBy":"muse-autopilot"}
+    {
+      "topicId": "auto-027",
+      "slug": "outdoor-kitchen-gas-electrical-ontario",
+      "at": "2026-10-26T13:51:00.000Z",
+      "validation": {
+        "ok": true
+      },
+      "generatedBy": "muse-autopilot"
+    },
+    {
+      "topicId": "auto-028",
+      "slug": "porcelain-vs-concrete-pavers-barrie",
+      "at": "2026-11-02T14:38:28.000Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 2317,
+        "linkCount": 9,
+        "hasTable": true,
+        "numericCount": 18
+      },
+      "generatedBy": "claude-cloud-routine",
+      "mode": "draft-pr"
+    }
   ]
-    
 }
