@@ -133,6 +133,8 @@ html .deck-designer[data-ui=cad] .dd-pro-statusbar kbd{background:var(--cad-fore
   html .deck-designer[data-ui=cad] .dd-cad-title{flex-wrap:wrap;height:auto;padding:4px 10px}
   html .deck-designer[data-ui=cad] .dd-cad-title .dd-pro-menubar{flex-wrap:wrap}
   html .deck-designer[data-ui=cad] .dd-preview{height:auto;overflow:visible}
+  /* One column here: the assistant stacks under the drawing rather than opening a second column that crushes it. */
+  html .deck-designer[data-ui=cad] .dd-assistant-slot{grid-column:1;grid-row:2;border-left:0;border-top:1px solid var(--cad-line)}
   html .deck-designer[data-ui=cad] .dd-sheet-panel{display:flex;flex-direction:column}
   html .deck-designer[data-ui=cad] .dd-canvas>:is(.dd-site-plan,.dd-plan-viewport,[aria-label="Interactive deck construction model"]){height:62dvh!important}
   html .deck-designer[data-ui=cad] .dd-pro-strip{flex-direction:row;flex-wrap:wrap;border-right:0;border-bottom:1px solid var(--cad-line)}

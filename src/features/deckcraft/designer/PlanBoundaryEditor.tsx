@@ -26,6 +26,16 @@ const lockProblem='A saved edge is locked. Move both of its endpoints together, 
 const world=(b:Boundary,p:PlanPoint)=>({x:p.x+b.offset.x,y:p.y+b.offset.y});
 const centre=(points:PlanPoint[])=>({x:points.reduce((n,p)=>n+p.x,0)/points.length,y:points.reduce((n,p)=>n+p.y,0)/points.length});
 const description=(s:Selection)=>s.kind==='point'?`Point ${s.index+1}`:s.kind==='edge'?`Edge ${s.index+1}`:'Whole level';
+/** The part of the plan's clip that controls floating over it leave clear: the new look's top bar and (on a phone) its plan
+ *  tools along the top, an open controls card on the right, and a phone's drawer, price row and dock along the foot. */
+const clearBand=(clip:DOMRect):LabelRect=>{
+  const rects=(selector:string)=>[...document.querySelectorAll(selector)].map(e=>e.getBoundingClientRect()).filter(r=>r.height),middle=clip.top+clip.height/2;
+  const card=document.querySelector('.dd-selection-inspector[open]')?.getBoundingClientRect();
+  return {left:clip.left,top:Math.max(clip.top,...rects('.dd-next-top,.dd-simple-tools').filter(r=>r.top<middle).map(r=>r.bottom)),
+    right:card?.height&&card.left>clip.left+clip.width/2&&card.top<middle?Math.min(clip.right,card.left):clip.right,
+    // A phone's open drawer can reach above the middle of the full-screen plan.
+    bottom:Math.min(clip.bottom,...rects('.dd-selection-inspector[open],.dd-next-price,.dd-next-dock').filter(r=>r.top>clip.top+clip.height/3).map(r=>r.top))};
+};
 
 export interface PlanBoundaryEditorProps{
   data:DeckData;model:DeckTakeoff;update:Update;onEdited?:()=>void;onStatus?:(message:string)=>void;
@@ -199,11 +209,8 @@ export default function PlanBoundaryEditor({data,model,update,onEdited,onStatus,
     if(!editing||!size||!box.current)return undefined;
     const a=editing.boundary.points[editing.index],b=editing.boundary.points[(editing.index+1)%editing.boundary.points.length],pos=at(world(editing.boundary,{x:(a.x+b.x)/2,y:(a.y+b.y)/2}));
     const rect=box.current.getBoundingClientRect(),viewport=box.current.closest('.dd-plan-viewport'),clip=viewport?.getBoundingClientRect()??rect,width=Math.min(300,clip.width-24);
-    // Controls floating along the drawing's top (the new look's top bar and, on a phone, its plan tools) leave no room there.
-    const roof=Math.max(clip.top,...[...document.querySelectorAll('.dd-next-top,.dd-simple-tools')].map(e=>e.getBoundingClientRect()).filter(r=>r.height&&r.top<clip.top+clip.height/2).map(r=>r.bottom));
-    // Nor does an open controls card floating over the drawing's right side (a phone's sits at the foot instead).
-    const card=document.querySelector('.dd-selection-inspector[open]')?.getBoundingClientRect(),wall=card?.height&&card.left>clip.left+clip.width/2&&card.top<clip.top+clip.height/2?Math.min(clip.right,card.left):clip.right;
-    const x=rect.left+pos.left*viewZoom,y=rect.top+pos.top*viewZoom,navigation=viewport?.querySelector('.dd-plan-navigation')?.getBoundingClientRect(),bottom=navigation?Math.min(clip.bottom,navigation.top-8):clip.bottom,height=Math.min(inlineHeight,bottom-roof-24);
+    const {top:roof,right:wall,bottom:floor}=clearBand(clip);
+    const x=rect.left+pos.left*viewZoom,y=rect.top+pos.top*viewZoom,navigation=viewport?.querySelector('.dd-plan-navigation')?.getBoundingClientRect(),bottom=navigation?Math.min(floor,navigation.top-8):floor,height=Math.min(inlineHeight,bottom-roof-24);
     const clampX=(v:number)=>Math.max(clip.left+12,Math.min(wall-width-12,v)),clampY=(v:number)=>Math.max(roof+12,Math.min(bottom-height-12,v));
     let left=clampX(x-width/2),top=clampY(y+30);
     // An endpoint that is present in the SVG must also remain visible beside the editor when space permits.
@@ -240,9 +247,9 @@ export default function PlanBoundaryEditor({data,model,update,onEdited,onStatus,
     const obstacles:LabelRect[]=[...el.closest('.dd-preview')?.querySelectorAll('.dd-plan-tools,.dd-plan-navigation,[data-select-stairs]')??[]].map(node=>node.getBoundingClientRect()).filter(r=>r.left<clip.right&&r.right>clip.left&&r.top<clip.bottom&&r.bottom>clip.top);
     // Keep translated labels off the real point/edge handles, so their drag targets stay usable.
     for(const handle of Object.values(handles.current))if(handle){const r=handle.getBoundingClientRect();obstacles.push({left:r.left+7,right:r.right-7,top:r.top+7,bottom:r.bottom-7});}
-    const next:Record<string,{left:number;top:number}>={};
+    const next:Record<string,{left:number;top:number}>={},band=clearBand(clip);
     for(const boundary of shown)boundary.points.forEach((p,index)=>{const end=boundary.points[(index+1)%boundary.points.length],dx=end.x-p.x,dy=end.y-p.y,len=Math.hypot(dx,dy),key=`${boundary.level}-${index}`,label=dimensionLabels.current[key],pos=at(world(boundary,{x:(p.x+end.x)/2,y:(p.y+end.y)/2})),width=label?.offsetWidth??70,height=label?.offsetHeight??44;
-      const point=placeBoundaryLabel({x:rect.left+pos.left*viewZoom+dy/len*34,y:rect.top+pos.top*viewZoom-dx/len*34},width,height,clip,obstacles);
+      const point=placeBoundaryLabel({x:rect.left+pos.left*viewZoom+dy/len*34,y:rect.top+pos.top*viewZoom-dx/len*34},width,height,band,obstacles);
       next[key]={left:(point.x-rect.left)/viewZoom,top:(point.y-rect.top)/viewZoom};obstacles.push({left:point.x-width/2,right:point.x+width/2,top:point.y-height/2,bottom:point.y+height/2});
     });
     // Ignore sub-pixel layout rounding; moving a label must not schedule another identical layout pass.

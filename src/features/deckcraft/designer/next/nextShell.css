@@ -129,6 +129,8 @@ html .deck-designer[data-ui=next] .dd-ribbon-hint strong{color:#f3d9a4}
   html .deck-designer[data-ui=next] .dd-plan-viewport>.dd-plan-navigation{top:12px;left:12px;right:auto;bottom:auto}
   html .deck-designer[data-ui=next][data-home-panel]:not([data-home-tab=send]){--nx-plan-left:504px}
   html .deck-designer[data-ui=next][data-home-tab=send]{--nx-plan-right:436px}
+  /* Likewise an open controls card (320 px at the right edge), so it never hides what it edits (PreviewPanel cardInset). */
+  html .deck-designer[data-ui=next]:not([data-home-tab=send]) .dd-preview[data-card]{--nx-plan-right:360px}
   /* The plan tools centre on the drawing too, and scroll sideways when it is narrower than they are. */
   html .deck-designer[data-ui=next] .dd-simple-tools{left:calc((var(--nx-plan-left) + 100% - var(--nx-plan-right))/2);max-width:calc(100% - var(--nx-plan-left) - var(--nx-plan-right))}
   html .deck-designer[data-ui=next] .dd-simple-tools>:not(.dd-ribbon-hint){align-self:stretch;min-width:0;max-width:100%}
@@ -138,8 +140,10 @@ html .deck-designer[data-ui=next] .dd-ribbon-hint strong{color:#f3d9a4}
 /* The plan's zoom and pan: on the right, above the price. */
 html .deck-designer[data-ui=next] .dd-plan-navigation{right:20px;bottom:108px;border:1px solid var(--nx-line);border-radius:16px;background:#fff;box-shadow:var(--nx-shadow)}
 
-/* A pergola's preview tools (when the design has one): a card under the top bar, beside the rail or an open panel. */
-html .deck-designer[data-ui=next] .dd-canvas>.dd-pergola-tools{position:absolute;top:84px;left:var(--nx-plan-left,120px);z-index:50;width:min(340px,calc(100% - 140px));max-height:calc(100dvh - 260px);overflow:auto;margin:0;padding:10px 14px;border:1px solid var(--nx-line);border-radius:18px;background:#fff;box-shadow:var(--nx-shadow);font-family:var(--nx-font)}
+/* A pergola's preview tools (when the design has one): a card under the top bar on the right, clear of an open panel and of
+   the pergola itself in the middle of the view; it steps left of an open controls card. */
+html .deck-designer[data-ui=next] .dd-canvas>.dd-pergola-tools{position:absolute;top:84px;right:20px;z-index:50;width:min(340px,calc(100% - 140px));max-height:calc(100dvh - 260px);overflow:auto;margin:0;padding:10px 14px;border:1px solid var(--nx-line);border-radius:18px;background:#fff;box-shadow:var(--nx-shadow);font-family:var(--nx-font)}
+@media(min-width:801px){html .deck-designer[data-ui=next]:has(.dd-selection-inspector[open]) .dd-canvas>.dd-pergola-tools{right:360px}}
 
 /* The plan's inline edge editor opens above the controls card and the drawers (and below the top bar it keeps clear of). */
 html .deck-designer[data-ui=next] .dd-boundary-inline{z-index:60}
@@ -217,6 +221,8 @@ html .deck-designer[data-ui=next] :is(.dd-next-row-send,.dd-next-view,.dd-next-g
   html .deck-designer[data-ui=next][data-home-panel]:not([data-home-tab=send]) .dd-simple-tools,html .deck-designer[data-ui=next][data-home-tab=send] .dd-simple-tools{left:12px;max-width:none}
   html .deck-designer[data-ui=next] .dd-simple-tools-grid{justify-content:flex-start;overflow-x:auto;scrollbar-width:none}
   html .deck-designer[data-ui=next] .dd-ribbon-hint{display:none}
+  /* No page scrolls behind the plan: a swipe over it pans the drawing instead (PlanViewport). */
+  html .deck-designer[data-ui=next] .dd-canvas>.dd-plan-viewport{touch-action:none}
   /* A drawing tool's controls: a bar above the price row that opens into a drawer (owner, 2026-11-01); the plan centres
      the deck in the space above it, and the zoom controls ride above it. */
   html .deck-designer[data-ui=next] .dd-selection-inspector{top:auto;left:0;right:0;bottom:calc(var(--nx-dock) + var(--nx-row) + 8px);width:auto;max-height:none;border-width:1px 0 0;border-radius:20px 20px 0 0}

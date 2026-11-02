@@ -1,5 +1,5 @@
 import {expect,test,type Page} from '@playwright/test';
-import {pickPlanTool} from './nav';
+import {isNextUi,pickPlanTool} from './nav';
 const handle=(page:Page)=>page.getByRole('button',{name:'Main deck point 3',exact:true});
 test.beforeEach(async({context})=>{
   await context.route('**/*',route=>{const host=new URL(route.request().url()).hostname;return ['127.0.0.1','localhost'].includes(host)?route.fallback():route.abort();});
@@ -59,7 +59,13 @@ test('@phone view navigation keeps touch handles 44 px; pan does not reshape the
   const spot=await canvas.evaluate(el=>{const box=el.getBoundingClientRect();for(let y=Math.ceil(box.top)+16;y<box.bottom-16;y+=8){const x=box.left+18;const hit=document.elementFromPoint(x,y);if(hit&&el.contains(hit)&&!hit.closest('button,a,input,select,summary,[role=slider],[role=radio]'))return {x,y};}return null;});
   expect(spot,'pan starts on the canvas, clear of the point handles').toBeTruthy();const {x,y}=spot!;await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:1}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+30,y:y+15,id:1}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   expect(await shape(page)).toBe(original);expect((await matrix(page)).e).toBeCloseTo(before.e+30,1);await aligned(page);
-  await page.getByRole('button',{name:'Pan drawing',exact:true}).click();expect(await canvas.evaluate(el=>getComputedStyle(el).touchAction)).toBe('pan-y');
+  await page.getByRole('button',{name:'Pan drawing',exact:true}).click();
+  if(await isNextUi(page)){
+    // The new look has no page to scroll: with Pan off, a plain swipe over bare drawing still pans it and leaves the deck alone.
+    expect(await canvas.evaluate(el=>getComputedStyle(el).touchAction)).toBe('none');const panned=await matrix(page);
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:2}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+30,y:y+15,id:2}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    expect(await shape(page)).toBe(original);expect((await matrix(page)).e).toBeCloseTo(panned.e+30,1);
+  }else expect(await canvas.evaluate(el=>getComputedStyle(el).touchAction)).toBe('pan-y');
   await page.getByRole('button',{name:'Fit drawing',exact:true}).click();await expect(page.getByLabel('Drawing zoom')).toHaveText('100%');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual((page.viewportSize()!.width)+1);
 });

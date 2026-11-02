@@ -14,6 +14,11 @@ const SMALLEST_LABEL=6.5;
  * At the fitted view, an edit that changes the sheet (a typed width, a new outline) drops that hold so the
  * drawing and its dimension buttons follow the design. */
 const frameStamp=(frame:PlanFrame)=>`${frame.viewBox}|${frame.dims?.width.inches??''}|${frame.dims?.depth.inches??''}`;
+const swipeable=(target:Element,viewport:Element)=>{
+  if(target.closest('button,a,input,select,textarea,label,[role="slider"],[role="button"],[tabindex]:not(.dd-plan-viewport)'))return false;
+  for(let el:Element|null=target;el&&el!==viewport;el=el.parentElement)if(getComputedStyle(el).touchAction!=='auto')return false;
+  return true;
+};
 /** Navigation changes only the view: neither pricing nor the design's undo history. The Pro workspace docks the
  * navigation controls in its tool strip (`navigationTarget`); they keep working the same way there. */
 export default function PlanViewport({children,frame,navigationTarget,fitToken,labelPx,openArea}:{children:(zoom:number,frame:PlanFrame)=>ReactNode;frame:PlanFrame;navigationTarget?:HTMLElement|null;/** When this value changes, fit the drawing (Draw my own / outline tool). */fitToken?:string|number;
@@ -82,7 +87,9 @@ export default function PlanViewport({children,frame,navigationTarget,fitToken,l
     freeze();
     // An explicit insertion tool takes precedence over a previously enabled camera pan.
     if(event.button!==1&&(event.target as Element).closest('.dd-landscape-plan[data-drawing],.dd-boundary-editor[data-add-pull],.dd-yard-shape-editor[data-add-pull],.dd-yard-shape-editor[data-drawing],.dd-inlay-plan-editor[data-placement],.dd-patio-inlay-overlay[data-placing]')){if(pan)setPan(false);return;}
-    const hardscapePan=!!(event.target as Element).closest('.dd-hardscape-plan-picks,[data-area-pick]');
+    // The new look's phones (labelPx) have no page to scroll, so a finger swiping over the drawing pans it; controls, and
+    // editors that take their own touches (touch-action), keep them.
+    const hardscapePan=!!(event.target as Element).closest('.dd-hardscape-plan-picks,[data-area-pick]')||!!labelPx&&event.pointerType==='touch'&&swipeable(event.target as Element,event.currentTarget);
     if(!pan&&event.button!==1&&!hardscapePan)return;
     if((event.target as HTMLElement).closest(event.button===1?'.dd-plan-navigation,input,select,button':'.dd-plan-navigation,.dd-boundary-inline,[data-plan-editor-ui],[role="toolbar"]'))return;
     if(gesture.current&&gesture.current.id!==event.pointerId){gesture.current=null;setPanning(false);return;}

@@ -504,7 +504,7 @@ test('@phone keeps every control at least 44 px tall at 375 px',async({page})=>{
 const toolRow=(page:Page)=>page.getByRole('radiogroup',{name:'Plan tools'}).evaluate(row=>{
   const box=row.getBoundingClientRect(),tools=[...row.querySelectorAll('[role=radio]')].map(el=>{
     const r=el.getBoundingClientRect();
-    return {name:el.textContent??'',top:Math.round(r.top),width:r.width,height:r.height,inView:r.left>=box.left&&r.right<=box.right,labelFits:el.scrollWidth<=el.clientWidth&&el.scrollHeight<=el.clientHeight};
+    return {name:el.textContent??'',label:el.getAttribute('aria-label')??el.textContent??'',top:Math.round(r.top),width:r.width,height:r.height,inView:r.left>=box.left&&r.right<=box.right,labelFits:el.scrollWidth<=el.clientWidth&&el.scrollHeight<=el.clientHeight};
   });
   return {height:box.height,rows:new Set(tools.map(t=>t.top)).size,scrolls:row.scrollWidth>row.clientWidth,pageFits:document.documentElement.scrollWidth<=innerWidth,tools};
 });
@@ -566,7 +566,7 @@ test('@phone keeps every plan tool a 44 px target, and keeps the chosen tool in 
   const problems=await openDesigner(page);
   if(await isNextUi(page))await expectPlanTools(page,'390 px',NEXT_PLAN_TOOLS,'strip');
   else await expectPlanTools(page,'390 px',PLAN_RIBBONS[0][1],'grid');
-  const inView=async(name:string)=>(await toolRow(page)).tools.find(t=>t.name===name)?.inView;
+  const inView=async(name:string)=>(await toolRow(page)).tools.find(t=>t.label===name)?.inView;
   // Leaving the plan and coming back keeps the chosen tool checked and on screen.
   await planTool(page,'House');
   await viewTab(page,'Framing');
@@ -1259,7 +1259,8 @@ test('@phone drags a plan handle by touch, and a swipe over the plan still scrol
   // A swipe up over the drawing, away from the handles, scrolls the page and leaves the design alone.
   const area=(await drawing(page).boundingBox())!,top=await pageY();
   await swipe(area.x+24,area.y+area.height-24,0,-220);
-  await expect.poll(pageY).toBeGreaterThan(top+60);
+  // The new look has no page behind the plan to scroll; there the swipe only has to leave the design alone.
+  if(!await isNextUi(page))await expect.poll(pageY).toBeGreaterThan(top+60);
   await expect(size(page)).toContainText('16 × 12 ft');
   // Dragging the right end by touch widens the deck, once, and does not scroll the page.
   await settled();
@@ -1401,6 +1402,16 @@ test('@phone drags a boundary point by touch and leaves the page scrollable',asy
   expect(await page.evaluate(()=>window.scrollY)).toBe(start);await expect(preview(page).locator('.dd-boundary-notice')).toContainText('updated');
   await expand(preview(page),'Fine adjust a point');expect(Number(await page.getByLabel('Selected point X in feet').inputValue())).toBeGreaterThan(16);expect(Number(await page.getByLabel('Selected point Y in feet').inputValue())).toBeGreaterThan(12);
   await fileTools(page).getByRole('button',{name:'Undo'}).click();await expect(page.getByLabel('Selected point X in feet')).toHaveValue('16');
+  if(await isNextUi(page)){
+    // The new look has no page to scroll: a swipe over the plan, off the deck and its handles, pans the drawing instead.
+    const stage=page.locator('.dd-plan-stage'),panned=await stage.getAttribute('style');
+    const {x,y}=(await page.locator('.dd-plan-viewport').evaluate(el=>{const floor=document.querySelector('.dd-selection-inspector')!.getBoundingClientRect().top;for(let y=floor-24;y>200;y-=8)for(const x of [18,innerWidth-18]){const hit=document.elementFromPoint(x,y);if(hit&&el.contains(hit)&&!hit.closest('button,a,input,select,summary,[role=slider],[role=radio],.dd-plan-navigation'))return {x,y};}return null;}))!;
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+    for(let i=1;i<=8;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-60*i/8}]});
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    await expect.poll(()=>stage.getAttribute('style')).not.toBe(panned);await expect(page.getByLabel('Selected point X in feet')).toHaveValue('16');expect(problems).toEqual([]);
+    return;
+  }
   // An ordinary swipe on the page margin still scrolls after editing.
   await page.evaluate(()=>window.scrollTo({top:100,behavior:'instant'}));
   const beforeSwipe=await page.evaluate(()=>window.scrollY);
