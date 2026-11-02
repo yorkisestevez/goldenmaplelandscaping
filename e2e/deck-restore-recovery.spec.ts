@@ -27,7 +27,7 @@ async function unchanged(page:Page,raw:string){
  // The write is debounced450ms; checking immediately would miss a destructive delayed save.
  await page.waitForTimeout(650);
  expect(await page.evaluate(key=>localStorage.getItem(key),workingKey)).toBe(raw);
- await expect(page.locator('.dd-save-state')).toContainText('Auto-save paused');
+ await expect(page.locator('.dd-save-state,.dd-next-project').first()).toContainText('Auto-save paused');
 }
 async function downloadPrevious(page:Page,raw:string){
  const files=page.locator('.dd-workspace-files');if(!await files.evaluate(el=>el.hasAttribute('open')))await files.locator('summary').first().click();

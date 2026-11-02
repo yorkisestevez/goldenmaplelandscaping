@@ -1,4 +1,4 @@
-import {Suspense,lazy,useEffect,useMemo,useRef,useState} from 'react';
+import {Suspense,lazy,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {useArchitectKeys,revealControl} from './architectKeys';
 import {hasBackyardLayout} from '../backyard';
 import {yardShapeFrame} from '../yardShapeGeometry';
@@ -257,7 +257,9 @@ export default function PreviewPanel({pro,previewData,onPreviewData,data,update,
   const [planStatus,setPlanStatus]=useState('');
   const propertiesDock=useRef<HTMLDetailsElement>(null);
   // The new look floats these settings over the scene, so away from the plan they open only for a selection.
-  useEffect(()=>{if(propertiesDock.current)propertiesDock.current.open=tool!=='size'&&(!next||mode==='plan'&&!phoneLayout())/* a phone's plan stays clear */||!!selection.hardscape||!!selection.partIds.length||!!selection.boards.length;},[tool,selection.hardscape?.id,selection.partIds.length,selection.boards.length,!!pro,next&&mode==='plan']);
+  // The open rule runs before the plan's own effects, so a phone's plan measures the space its drawer leaves (phoneArea).
+  // A phone opens it as a drawer for every tool with controls of its own; Stairs and House work on the plan itself.
+  useLayoutEffect(()=>{if(propertiesDock.current)propertiesDock.current.open=tool!=='size'&&(!next||mode==='plan'&&!(phoneLayout()&&(tool==='stairs'||tool==='house')))||!!selection.hardscape||!!selection.partIds.length||!!selection.boards.length;},[tool,selection.hardscape?.id,selection.partIds.length,selection.boards.length,!!pro,next&&mode==='plan']);
   const [elevationsOpen,setElevationsOpen]=useState(false),[elevationArea,setElevationArea]=useState<ElevationArea>();
   /** Opens the Elevations & build workspace at one of its areas (the Pro Terrain tab), or closes it when that area shows. */
   const toggleElevations=(area:ElevationArea)=>{if(elevationsOpen&&elevationArea===area)setElevationsOpen(false);else{setElevationArea(area);setElevationsOpen(true);requestAnimationFrame(()=>document.getElementById('dd-elevation-tools')?.scrollIntoView({block:'nearest'}));}};
@@ -275,7 +277,7 @@ export default function PreviewPanel({pro,previewData,onPreviewData,data,update,
   const phoneLabels=next&&phoneLayout()?14:undefined;
   // There the drawing shows between the tools and inspector under the top bar and the price row above the dock.
   // Until the price row is on the page (its stylesheet comes with it) the layout is not the new look's yet.
-  const phoneArea=()=>{const price=document.querySelector('.dd-next-price');if(!price)return null;const below=(s:string)=>document.querySelector(s)?.getBoundingClientRect().bottom??0;return {top:Math.max(below('.dd-next-top'),below('.dd-simple-tools'),below('.dd-selection-inspector')),bottom:price.getBoundingClientRect().top};};
+  const phoneArea=()=>{const price=document.querySelector('.dd-next-price');if(!price)return null;const below=(s:string)=>document.querySelector(s)?.getBoundingClientRect().bottom??0,dock=document.querySelector('.dd-selection-inspector')?.getBoundingClientRect();const drawer=!!document.querySelector('.dd-selection-inspector[open]');return {top:Math.max(below('.dd-next-top'),below('.dd-simple-tools')),bottom:Math.min(price.getBoundingClientRect().top,dock?.height?dock.top:Infinity),fit:drawer};};
   const mixed=selection.partIds.length>0&&selection.boards.length>0;
   const mixedControls=<div className="dd-3d-selection-card" role="alert"><strong>Mixed part and board selection</strong><p>Select one editing group before Apply. No selected object will be silently left out.</p><button type="button" className="dd-secondary" onClick={()=>selectObjects({partIds:selection.partIds,boards:[]})}>Edit selected parts only</button><button type="button" className="dd-secondary" onClick={()=>selectObjects({partIds:[],boards:selection.boards})}>Edit selected boards only</button><button type="button" className="dd-secondary" onClick={()=>selectObjects({partIds:[],boards:[]})}>Clear all selected objects</button></div>;
   const [outlineFit,setOutlineFit]=useState(0);

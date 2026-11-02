@@ -1,3 +1,5 @@
+// Pinned to the classic page (?ui=classic): it tests the old screens, which slice S5b retires after porting what
+// they check that still applies (docs/deckcraft/ui-redesign-2026-10/PLAN.md §5e).
 import {test,expect,type Page,type BrowserContext} from '@playwright/test';
 import {proofDir} from './nav';
 
@@ -5,7 +7,7 @@ import {proofDir} from './nav';
 // ribbon's categories and the "All options" task rail; Designer Mode (`?designer=1`) keeps its own ribbon and menus.
 const shots=proofDir('deck-home-tabs');
 const ready=(page:Page)=>expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false),{timeout:60_000}).toBe(true);
-async function open(page:Page,context:BrowserContext,path='/deck-designer/'){
+async function open(page:Page,context:BrowserContext,path='/deck-designer/?ui=classic'){
  await context.addInitScript('window.__name=(t,v)=>t');
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&r.request().method()==='GET'?r.continue():r.fulfill({status:200,body:''}));
  await page.goto(path);await ready(page);
@@ -189,7 +191,7 @@ test('@phone a drawer button that goes back to the drawing gives the focus to th
 
 test('Designer Mode keeps its own ribbon and has no homeowner tabs',async({page,context})=>{
  await page.setViewportSize({width:1366,height:900});
- await open(page,context,'/deck-designer/?designer=1');
+ await open(page,context,'/deck-designer/?ui=classic&designer=1');
  await expect(page.getByRole('menubar',{name:'Pro workspace menu'})).toBeVisible();
  await expect(tabs(page)).toHaveCount(0);
 });

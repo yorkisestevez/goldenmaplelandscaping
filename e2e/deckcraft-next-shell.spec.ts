@@ -8,8 +8,11 @@ import {choose,design,field,fileMenu,group,open,panel,pick,picks,ready,shell,she
 const shots=proofDir('deckcraft-next-shell');
 test.beforeEach(async({page})=>{await page.setViewportSize({width:1440,height:900});});
 
-test('the classic page stays the default until the new look is asked for',async({page,context})=>{
+test('the new look is the default; ?ui=classic keeps the old page while slice S5 retires it',async({page,context})=>{
  await open(page,context,'/deck-designer/');
+ await expect(shell(page)).toHaveCount(1);
+ await expect(page.getByRole('tablist',{name:'Design',exact:true})).toHaveCount(0);
+ await page.goto('/deck-designer/?ui=classic');
  await expect(page.getByRole('tablist',{name:'Design',exact:true})).toBeVisible();
  await expect(shell(page)).toHaveCount(0);
 });

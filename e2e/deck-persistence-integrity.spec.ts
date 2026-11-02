@@ -26,8 +26,8 @@ test('a competing tab cannot overwrite the committed design or report Saved',asy
 test('unreadable legacy bytes remain protected through edits and reload',async({page,context})=>{
  const key='golden-maple.deck-studio.deck-only.v1',raw='{ broken design \n keep these exact bytes Équipe';
  await context.addInitScript(({key,raw})=>{if(localStorage.getItem(key)===null)localStorage.setItem(key,raw);},{key,raw});
- await page.goto('/deck-designer/');await ready(page);await expect(page.locator('.dd-save-state')).toContainText('Auto-save paused');
+ await page.goto('/deck-designer/');await ready(page);await expect(page.locator('.dd-save-state,.dd-next-project').first()).toContainText('Auto-save paused');
  await execute(page,[{type:'design.patch',patch:{width:29}}]);await page.waitForTimeout(650);expect(await page.evaluate(key=>localStorage.getItem(key),key)).toBe(raw);
  expect(await page.evaluate(()=>new Promise(resolve=>{const open=indexedDB.open('golden-maple.deckcraft-projects.v1');open.onsuccess=()=>{const db=open.result,tx=db.transaction('projects'),request=tx.objectStore('projects').get('current');request.onsuccess=()=>resolve(request.result??null);tx.oncomplete=()=>db.close();};}))).toBeNull();
- await page.reload();await ready(page);await expect(page.locator('.dd-save-state')).toContainText('Auto-save paused');expect(await page.evaluate(key=>localStorage.getItem(key),key)).toBe(raw);
+ await page.reload();await ready(page);await expect(page.locator('.dd-save-state,.dd-next-project').first()).toContainText('Auto-save paused');expect(await page.evaluate(key=>localStorage.getItem(key),key)).toBe(raw);
 });

@@ -33,7 +33,7 @@ test('a calibrated PDF survey applies, autosaves and survives reload',async({pag
  await clickImagePixel(page,200,300);await expect(apply).toBeDisabled();
  await clickImagePixel(page,800,300);await expect(apply).toBeEnabled();
  await page.getByLabel('Survey known distance',{exact:true}).fill('20');
- await page.getByLabel('Survey distance unit',{exact:true}).selectOption('ft');
+ await page.getByRole('combobox',{name:'Survey distance unit',exact:true}).selectOption('ft');
  await page.getByLabel('Survey rotation',{exact:true}).fill('15');
  await page.getByLabel('Survey across origin',{exact:true}).fill('2');
  await page.getByLabel('Survey out origin',{exact:true}).fill('3');

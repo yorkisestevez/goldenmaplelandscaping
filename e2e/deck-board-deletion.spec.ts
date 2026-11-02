@@ -14,7 +14,7 @@ async function expectNoAdditions(page:Page){await expect.poll(async()=>{const la
 async function undo(page:Page){await page.getByRole('region',{name:'Save and restore design',exact:true}).getByRole('button',{name:'Undo',exact:true}).click();}
 async function redo(page:Page){await page.getByRole('region',{name:'Save and restore design',exact:true}).getByRole('button',{name:'Redo',exact:true}).click();}
 async function screen(page:Page,p:{x:number;y:number}){return page.locator('.dd-board-layout-svg').evaluate((svg,p)=>{const v=new DOMPoint(p.x,p.y).matrixTransform((svg as SVGSVGElement).getScreenCTM()!);return {x:v.x,y:v.y};},p);}
-async function showBoards(page:Page){await page.locator('.dd-board-layout-svg').evaluate(svg=>svg.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'}));}
+async function showBoards(page:Page){await page.locator('.dd-board-layout-svg').evaluate(svg=>svg.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'}));}
 async function pick(page:Page,board:AgentSnapshot['boards'][number],touch=false,selected=true){
  await showBoards(page);
  const center={x:board.polygon.reduce((n,p)=>n+p.x,0)/board.polygon.length,y:board.polygon.reduce((n,p)=>n+p.y,0)/board.polygon.length};
@@ -76,8 +76,8 @@ test('actual 3D breaker click can be deleted without leaving the 3D sheet',async
 
 test('clearing the board picker or changing deck levels clears the actual Delete targets',async({page})=>{
  const seeded=await page.evaluate(()=>window.deckcraft!.execute({id:'delete-levels',commands:[{type:'design.patch',patch:{levels:2,width2:8,length2:8,height2:24}}]}));expect(seeded.ok).toBe(true);const before=await read(page),board=before.boards.find(b=>b.modelLevel===0&&b.role==='border')!;
- await pick(page,board);await page.getByLabel('Select deck board',{exact:true}).selectOption('');await page.locator('.dd-board-layout-svg').press('Delete');expect((await read(page)).design).toEqual(before.design);await expect(page.locator('.dd-board-delete')).toHaveCount(0);
- await pick(page,board);await page.getByLabel('Board layout level',{exact:true}).selectOption('2');await page.locator('.dd-board-layout-svg').press('Delete');expect((await read(page)).design).toEqual(before.design);await expect(page.locator('.dd-board-delete')).toHaveCount(0);
+ await pick(page,board);await page.getByRole('combobox',{name:'Select deck board',exact:true}).selectOption('');await page.locator('.dd-board-layout-svg').press('Delete');expect((await read(page)).design).toEqual(before.design);await expect(page.locator('.dd-board-delete')).toHaveCount(0);
+ await pick(page,board);await page.getByRole('combobox',{name:'Board layout level',exact:true}).selectOption('2');await page.locator('.dd-board-layout-svg').press('Delete');expect((await read(page)).design).toEqual(before.design);await expect(page.locator('.dd-board-delete')).toHaveCount(0);
 });
 
 for(const v of [{name:'phone',width:390,height:844},{name:'tablet',width:768,height:1024}])test.describe(`${v.name} board deletion`,()=>{

@@ -21,7 +21,7 @@ for(const phone of [false,true])test.describe(phone?'phone actionable review':'d
  test(`${phone?'@phone ':''}warning highlights its real measured opening without an edit; related lighting settings remain reachable`,async({page})=>{
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));const original=await read(page);
   await showProjectControls(page);
-  await page.getByRole('button',{name:/^Review \d+ issues?$/}).click();
+  await page.getByRole('button',{name:/^Review \d+ issues?$|^\d+ issues? to review$/}).click();
   const dialog=page.getByRole('dialog',{name:'Construction readiness',exact:true});await expect(dialog).toBeVisible();
   await expect(dialog.locator('[data-issue-id="opening-clash:site-window"]')).toContainText('railing crosses window');
   await dialog.getByRole('button',{name:'Locate measured opening',exact:true}).click();
@@ -29,7 +29,7 @@ for(const phone of [false,true])test.describe(phone?'phone actionable review':'d
   await expect(page.getByRole('spinbutton',{name:'Opening bottom above grade (in)',exact:true})).toHaveValue('48');
   expect((await read(page)).design).toEqual(original.design);expect((await read(page)).pricing).toEqual(original.pricing);
   await page.screenshot({path:resolve(out,`${phone?'phone':'desktop'}-located-warning.png`)});
-  await page.getByRole('button',{name:/^Review \d+ issues?$/}).click();await dialog.getByRole('button',{name:'Review railing connection',exact:true}).click();
+  await page.getByRole('button',{name:/^Review \d+ issues?$|^\d+ issues? to review$/}).click();await dialog.getByRole('button',{name:'Review railing connection',exact:true}).click();
   await expect.poll(async()=>(await read(page)).openSections).toContain('stairs');
   expect((await read(page)).design).toEqual(original.design);expect(errors).toEqual([]);
  });

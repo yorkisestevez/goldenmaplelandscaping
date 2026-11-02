@@ -1,3 +1,5 @@
+// Pinned to the classic page (?ui=classic): it tests the old screens, which slice S5b retires after porting what
+// they check that still applies (docs/deckcraft/ui-redesign-2026-10/PLAN.md §5e).
 import {test,expect,type Page} from '@playwright/test';
 import {openDesignerMode,proMenu} from './nav';
 /** One layout read. Separate bounding-box calls race a 3D re-render and come back null. */
@@ -18,7 +20,7 @@ for(const viewport of [{width:1440,height:1000},{width:390,height:844}])test('3D
  await page.setViewportSize(viewport);
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
- await page.goto('/deck-designer/');
+ await page.goto('/deck-designer/?ui=classic');
  await page.getByRole('tab',{name:'3D',exact:true}).click();
  const view=page.getByRole('region',{name:'Interactive deck construction model'});
  await expect(view.locator('canvas')).toBeVisible();
@@ -40,7 +42,7 @@ for(const viewport of [{width:1440,height:1000},{width:390,height:844}])test('3D
  await page.getByRole('tablist',{name:'Design',exact:true}).getByRole('tab',{name:'Materials',exact:true}).click();
  await expect.poll(()=>overlay(page),{timeout:60_000}).toBe('compact');
  // In Designer Mode they are one click away under More, inside the screen.
- await openDesignerMode(page);
+ await openDesignerMode(page,'/deck-designer/?designer=1&ui=classic');
  await proMenu(page,'View','3D');
  await expect(view.locator('canvas')).toBeVisible();
  await page.getByRole('group',{name:'3D view controls'}).getByText('More',{exact:true}).click();

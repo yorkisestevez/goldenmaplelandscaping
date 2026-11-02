@@ -20,7 +20,8 @@ export default function PlanViewport({children,frame,navigationTarget,fitToken,l
   /** Open zoomed onto the deck so the smallest labels read at this many pixels (the new look's phones); Fit still shows
    *  the whole design. */labelPx?:number;
   /** The screen band the drawing shows between controls over it (top and bottom, in viewport pixels); the zoomed deck
-   *  is centred there; null until the controls around it are laid out. */openArea?:()=>{top:number;bottom:number}|null}){
+   *  is centred there; null until the controls around it are laid out. With fit, the deck also fits the band whole (a
+   *  phone's tool drawer is open), even if its labels then read smaller. */openArea?:()=>{top:number;bottom:number;fit?:boolean}|null}){
   const box=useRef<HTMLDivElement>(null),stage=useRef<HTMLDivElement>(null);
   // Designer Mode (the Pro workspace) adds rulers in feet along the top and left edges.
   const rulers=useDesignerMode();
@@ -36,6 +37,7 @@ export default function PlanViewport({children,frame,navigationTarget,fitToken,l
     return {zoom:next,x:at?at.x-(at.x-old.x)*ratio:old.x*ratio,y:at?at.y-(at.y-old.y)*ratio:old.y*ratio};
   });
   const fit=()=>{frozen.current=frame;gesture.current=null;setPanning(false);setView({zoom:1,x:0,y:0});};
+
   useArchitectKeys({z:fit});
   // Once the drawing has a size: the zoom that brings its smallest labels up to labelPx, centred on the deck and its
   // stairs. The drawing fits its stage (preserveAspectRatio meet), so a drawing unit is the smaller of the two ratios.
@@ -50,12 +52,16 @@ export default function PlanViewport({children,frame,navigationTarget,fitToken,l
     const r=stage.current?.querySelector('svg.dd-site-plan')?.getBoundingClientRect(),s=stage.current?.getBoundingClientRect(),area=openArea?openArea():undefined;
     if(!r?.width||!r.height||!s||area===null)return;
     opened.current=true;
-    const unit=Math.min(r.width/frame.w,r.height/frame.h),next=limit(labelPx/(SMALLEST_LABEL*unit));if(next<=1)return;
+    const unit=Math.min(r.width/frame.w,r.height/frame.h),margin=72/* room for the edge dimensions outside the deck */;
+    const whole=area?.fit?Math.min((s.width-2*margin)/((frame.b.maxX-frame.b.minX)*unit),(area.bottom-area.top-2*margin)/((frame.b.maxZ-frame.b.minZ)*unit)):Infinity;
+    // Fitting the deck may mean zooming out a little; otherwise the plan only ever opens zoomed in.
+    const next=limit(Math.min(labelPx/(SMALLEST_LABEL*unit),whole));if(next<=1&&!area?.fit)return;
     const dx=((frame.b.minX+frame.b.maxX)/2-frame.x-frame.w/2)*unit,dy=((frame.b.minZ+frame.b.maxZ)/2-frame.y-frame.h/2)*unit;
     const aim=area?(area.top+area.bottom)/2-(s.top+s.height/2):0;
     frozen.current=frame;setView({zoom:next,x:-dx*next,y:aim-dy*next});
   });
-  const fitTokenSeen=useRef<string|number|undefined>(undefined);
+  // A phone opens on its own view (labelPx, above), so the token only fits when it changes after that.
+  const fitTokenSeen=useRef<string|number|undefined>(labelPx?fitToken:undefined);
   useEffect(()=>{
     if(fitToken===undefined||fitTokenSeen.current===fitToken)return;
     fitTokenSeen.current=fitToken;fit();

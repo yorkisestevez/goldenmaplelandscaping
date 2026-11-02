@@ -7,7 +7,7 @@ async function openExtras(page:Page){
  await openDesignTask(page,extrasName);
  await expect(page.getByRole('region',{name:'Aluminum pergolas'})).toBeVisible();
 }
-async function show3D(page:Page){await dismissDesignInspector(page);const files=page.getByRole('region',{name:'Save and restore design'}).locator('details.dd-workspace-files');if(await files.evaluate(el=>(el as HTMLDetailsElement).open).catch(()=>false))await files.locator(':scope>summary').click();await page.getByRole('tab',{name:'3D',exact:true}).click();}
+async function show3D(page:Page){await dismissDesignInspector(page);const files=page.getByRole('region',{name:'Save and restore design'}).locator('details.dd-workspace-files');if(await files.evaluate(el=>(el as HTMLDetailsElement).open).catch(()=>false))await files.locator(':scope>summary').click();await page.getByRole('tab',{name:'3D',exact:true}).click();if((page.viewportSize()?.width??1280)<=800&&await page.locator('.deck-designer[data-ui="next"]').count()){const view=page.locator('.dd-next-view');await expect(view).toBeVisible({timeout:60000});if(await view.getAttribute('aria-expanded')!=='true')await view.click();}}
 async function openFiles(page:Page){await dismissDesignInspector(page);const menu=page.getByRole('region',{name:'Save and restore design'}).locator('details.dd-workspace-files');if(await menu.getAttribute('open')===null)await menu.locator(':scope>summary').click();}
 const shots=proofDir('pergolas');
 const panel=(page:Page)=>page.getByRole('region',{name:'Aluminum pergolas',includeHidden:true});
@@ -21,7 +21,7 @@ test('pergola catalog, costs, autosave, public JSON, undo and 3D',async({page,br
  test.setTimeout(process.env.CI?300_000:150_000);
  const problems:string[]=[];page.on('pageerror',e=>problems.push(String(e)));
  await page.goto('/deck-designer/');await openExtras(page);
- await panel(page).getByLabel('Pergola supplier',{exact:true}).selectOption('costco');
+ await panel(page).getByRole('combobox',{name:'Pergola supplier',exact:true}).selectOption('costco');
  await expect(panel(page).getByRole('button',{name:'Select LOUSOL Junior 10 × 12 ft',exact:true})).toHaveCount(0);
  await panel(page).getByRole('button',{name:'Select Mirador 8.8 × 14.4 ft',exact:true}).click();
  await expect(panel(page)).toContainText('kit dimensions are unchanged');
@@ -45,7 +45,7 @@ test('pergola catalog, costs, autosave, public JSON, undo and 3D',async({page,br
  await page.evaluate(()=>window.deckcraft!.execute({id:'pergola-reload-colour-undo',commands:[{type:'history.undo'}]}));await expect.poll(async()=>(await snapshot()).design.deckingColor).toBe(colour);expect((await snapshot()).pricing.total).toBe(before.pricing.total);
  await openFiles(page);const tools=page.getByRole('region',{name:'Save and restore design'}),[download]=await Promise.all([page.waitForEvent('download'),tools.getByRole('button',{name:'Save JSON',exact:true}).click()]);const file=info.outputPath('pergola.json');await download.saveAs(file);const json=readFileSync(file,'utf8'),saved=JSON.parse(json);
  expect(saved.configuration.pergola.productId).toBe('costco-mirador');expect(saved.configuration.pergola.rotationDeg).toBe(30);expect(json).not.toContain('2345');expect(json).not.toContain('987');expect(json).not.toContain('supplyConfirmed');
- await openExtras(page);await panel(page).getByLabel('Supply responsibility',{exact:true}).selectOption('install-only');await expect(panel(page).getByLabel('Pergola kit supply cost (CAD)',{exact:true})).toHaveCount(0);
+ await openExtras(page);await panel(page).getByRole('combobox',{name:'Supply responsibility',exact:true}).selectOption('install-only');await expect(panel(page).getByLabel('Pergola kit supply cost (CAD)',{exact:true})).toHaveCount(0);
  await dismissDesignInspector(page);await tools.getByRole('button',{name:'Undo',exact:true}).click();await openExtras(page);await expect(panel(page).getByLabel('Supply responsibility',{exact:true})).toHaveValue('supply-install');
  await openFiles(page);await tools.getByRole('button',{name:'Share link',exact:true}).click();const link=await tools.getByLabel('Link to this design').inputValue();expect(link).toMatch(/#d=1/);
  const recipient=await browser.newContext();await recipient.route(/^https:\/\/([\w-]+\.)*(googletagmanager\.com|facebook\.net|clarity\.ms)\//,r=>r.fulfill({status:200,contentType:'text/javascript',body:''}));const shared=await recipient.newPage();await shared.goto(link);await openExtras(shared);await panel(shared).locator('summary',{hasText:'Contractor costs'}).click();await expect(panel(shared).getByLabel('Pergola kit supply cost (CAD)',{exact:true})).toHaveValue('');await expect(panel(shared).getByLabel('Installation labour cost (CAD)',{exact:true})).toHaveValue('');await expect(panel(shared).getByLabel('Louver opening',{exact:true})).toHaveValue('60');await recipient.close();
@@ -55,8 +55,8 @@ test('pergola catalog, costs, autosave, public JSON, undo and 3D',async({page,br
 test('pergola mobile filters, comparison, conceptual dimensions and sold-out status @phone',async({page})=>{
  const problems:string[]=[];page.on('pageerror',e=>problems.push(String(e)));
  await page.goto('/deck-designer/');await openExtras(page);
- await panel(page).getByLabel('Roof operation',{exact:true}).selectOption('motorized');await expect(panel(page).getByRole('button',{name:'Select Kimbel Louvered Custom configuration',exact:true})).toBeVisible();
- await panel(page).getByLabel('Roof operation',{exact:true}).selectOption('');await panel(page).getByLabel('Compare LOUSOL Junior',{exact:true}).check();await panel(page).getByLabel('Compare Mirador',{exact:true}).check();await expect(panel(page).getByRole('table')).toContainText('Exact dimensions unknown');
+ await panel(page).getByRole('combobox',{name:'Roof operation',exact:true}).selectOption('motorized');await expect(panel(page).getByRole('button',{name:'Select Kimbel Louvered Custom configuration',exact:true})).toBeVisible();
+ await panel(page).getByRole('combobox',{name:'Roof operation',exact:true}).selectOption('');await panel(page).getByLabel('Compare LOUSOL Junior',{exact:true}).check();await panel(page).getByLabel('Compare Mirador',{exact:true}).check();await expect(panel(page).getByRole('table')).toContainText('Exact dimensions unknown');
  await panel(page).getByRole('button',{name:'Select Domi Louvered 10 × 10 ft',exact:true}).click();await expect(panel(page)).toContainText('conceptual dimensions');
  await panel(page).locator('summary',{hasText:'Contractor costs'}).click();await expect(panel(page)).toContainText('catalog: sold-out');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBe(true);
@@ -92,7 +92,7 @@ test('pergola touch drag, rotation and lighting controls @phone',async({page,con
  const design=JSON.parse(readFileSync(resolve('e2e/fixtures/pergola.json'),'utf8'));delete design.configuration.pergola;
  await page.goto('/deck-designer/#d=1j'+Buffer.from(JSON.stringify(design)).toString('base64url'));await openExtras(page);
  // Homeowners place the pergola from Extras (the 3D More picker is Designer Mode only); once placed, its tools sit above the view.
- await panel(page).getByLabel('Pergola supplier',{exact:true}).selectOption('costco');await panel(page).getByRole('button',{name:'Select Mirador 8.8 × 14.4 ft',exact:true}).click();await show3D(page);
+ await panel(page).getByRole('combobox',{name:'Pergola supplier',exact:true}).selectOption('costco');await panel(page).getByRole('button',{name:'Select Mirador 8.8 × 14.4 ft',exact:true}).click();await show3D(page);
  const tools=page.getByRole('region',{name:'Pergola preview controls'}),canvas=page.locator('#deck-live-preview canvas');await expect(canvas).toBeVisible({timeout:60000});
  await page.getByRole('button',{name:'Above',exact:true}).click();await canvas.scrollIntoViewIfNeeded();await page.waitForTimeout(300);
  let box=(await canvas.boundingBox())!;await tools.getByRole('button',{name:'Select pergola',exact:true}).click();await expect(tools.getByRole('button',{name:'Done editing pergola',exact:true})).toBeVisible();

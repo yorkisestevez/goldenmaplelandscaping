@@ -1,9 +1,11 @@
+// Pinned to the classic page (?ui=classic): it tests the old screens, which slice S5b retires after porting what
+// they check that still applies (docs/deckcraft/ui-redesign-2026-10/PLAN.md §5e).
 import {test,expect} from '@playwright/test';
 import {proofDir} from './nav';
 const shots=proofDir('drawing-room');
 for(const phone of [false,true])test(`larger drawing room and the tab panel ${phone?'@phone':''}`,async({page,context})=>{
  await context.addInitScript('window.__name=(t,v)=>t');await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
- await page.goto('/deck-designer/');await expect(page.getByRole('tablist',{name:'Design',exact:true})).toBeVisible();await expect(page.locator('.deck-designer')).toHaveAttribute('data-drawing-focus','true');
+ await page.goto('/deck-designer/?ui=classic');await expect(page.getByRole('tablist',{name:'Design',exact:true})).toBeVisible();await expect(page.locator('.deck-designer')).toHaveAttribute('data-drawing-focus','true');
  // Drawing focus now applies from the first paint, so it no longer implies the designer has loaded: wait for that.
  await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false),{timeout:60_000}).toBe(true);
  const before=await page.evaluate(()=>(window as any).deckcraft.read().design),canvas=page.locator('.dd-plan-viewport');

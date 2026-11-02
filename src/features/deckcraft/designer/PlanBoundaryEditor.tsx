@@ -199,14 +199,18 @@ export default function PlanBoundaryEditor({data,model,update,onEdited,onStatus,
     if(!editing||!size||!box.current)return undefined;
     const a=editing.boundary.points[editing.index],b=editing.boundary.points[(editing.index+1)%editing.boundary.points.length],pos=at(world(editing.boundary,{x:(a.x+b.x)/2,y:(a.y+b.y)/2}));
     const rect=box.current.getBoundingClientRect(),viewport=box.current.closest('.dd-plan-viewport'),clip=viewport?.getBoundingClientRect()??rect,width=Math.min(300,clip.width-24);
-    const x=rect.left+pos.left*viewZoom,y=rect.top+pos.top*viewZoom,navigation=viewport?.querySelector('.dd-plan-navigation')?.getBoundingClientRect(),bottom=navigation?Math.min(clip.bottom,navigation.top-8):clip.bottom,height=Math.min(inlineHeight,bottom-clip.top-24);
-    const clampX=(v:number)=>Math.max(clip.left+12,Math.min(clip.right-width-12,v)),clampY=(v:number)=>Math.max(clip.top+12,Math.min(bottom-height-12,v));
+    // Controls floating along the drawing's top (the new look's top bar and, on a phone, its plan tools) leave no room there.
+    const roof=Math.max(clip.top,...[...document.querySelectorAll('.dd-next-top,.dd-simple-tools')].map(e=>e.getBoundingClientRect()).filter(r=>r.height&&r.top<clip.top+clip.height/2).map(r=>r.bottom));
+    // Nor does an open controls card floating over the drawing's right side (a phone's sits at the foot instead).
+    const card=document.querySelector('.dd-selection-inspector[open]')?.getBoundingClientRect(),wall=card?.height&&card.left>clip.left+clip.width/2&&card.top<clip.top+clip.height/2?Math.min(clip.right,card.left):clip.right;
+    const x=rect.left+pos.left*viewZoom,y=rect.top+pos.top*viewZoom,navigation=viewport?.querySelector('.dd-plan-navigation')?.getBoundingClientRect(),bottom=navigation?Math.min(clip.bottom,navigation.top-8):clip.bottom,height=Math.min(inlineHeight,bottom-roof-24);
+    const clampX=(v:number)=>Math.max(clip.left+12,Math.min(wall-width-12,v)),clampY=(v:number)=>Math.max(roof+12,Math.min(bottom-height-12,v));
     let left=clampX(x-width/2),top=clampY(y+30);
     // An endpoint that is present in the SVG must also remain visible beside the editor when space permits.
     if(dimensionProposal?.points){const p=at(world(editing.boundary,dimensionProposal.points[(editing.index+1)%dimensionProposal.points.length])),endpoint={x:rect.left+p.left*viewZoom,y:rect.top+p.top*viewZoom},clear=(l:number,t:number)=>endpoint.x<l-12||endpoint.x>l+width+12||endpoint.y<t-12||endpoint.y>t+height+12;
       if(!clear(left,top)){const alternatives=[{left:clampX(endpoint.x-width-16),top},{left:clampX(endpoint.x+16),top},{left,top:clampY(endpoint.y-height-16)},{left,top:clampY(endpoint.y+16)}].filter(v=>clear(v.left,v.top)).sort((a,b)=>(a.left-left)**2+(a.top-top)**2-((b.left-left)**2+(b.top-top)**2));if(alternatives[0])({left,top}=alternatives[0]);}
     }
-    return {left:(left-rect.left)/viewZoom,top:(top-rect.top)/viewZoom,width,maxHeight:Math.max(120,bottom-clip.top-24),transform:`scale(${1/viewZoom})`};
+    return {left:(left-rect.left)/viewZoom,top:(top-rect.top)/viewZoom,width,maxHeight:Math.max(120,bottom-roof-24),transform:`scale(${1/viewZoom})`};
   };
   // Measure after the parent applies pan/zoom transforms; keep the form above navigation controls.
   useLayoutEffect(()=>{const next=measureInlinePosition();setInlinePosition(old=>JSON.stringify(old)===JSON.stringify(next)?old:next);});

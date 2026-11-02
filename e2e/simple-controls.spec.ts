@@ -1,3 +1,5 @@
+// Pinned to the classic page (?ui=classic): it tests the old screens, which slice S5b retires after porting what
+// they check that still applies (docs/deckcraft/ui-redesign-2026-10/PLAN.md §5e).
 import {test,expect,type Page} from '@playwright/test';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {proofDir} from './nav';
@@ -8,7 +10,7 @@ for(const phone of [false,true])test(`simple controls keep common tools visible 
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(configuration=>localStorage.setItem('golden-maple.deck-studio.deck-only.v1',JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration})),{...DEFAULT_DECK,stairFlights:1,yardFeatures:[{id:'steps',name:'Stone steps',kind:'patio',enabled:true,xFt:40,zFt:12,widthFt:4,depthFt:8,heightIn:0,rotationDeg:0,productId:'permacon-mondrian-plus',color:'#b8b5ae',finishedElevationIn:24,stoneSteps:{lowerElevationIn:0,riserCount:4,treadRunIn:24,stockWidthIn:48,stockDepthIn:24,stockThicknessIn:6,baseDepthIn:6,settingBedIn:1,jointIn:0,productName:'Recorded step stock',support:{kind:'full-step',courses:[0,1,2,3]}}}]});
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
+ await page.goto('/deck-designer/?ui=classic');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
  const tools=page.getByRole('radiogroup',{name:'Plan tools'}),deck=tools.getByRole('radio',{name:'Deck size',exact:true});
  await expect(deck).toHaveAttribute('aria-checked','true');await expect(tools.getByRole('radio')).toHaveCount(5);
  expect(await tools.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);

@@ -1,3 +1,5 @@
+// Pinned to the classic page (?ui=classic): it tests the old screens, which slice S5b retires after porting what
+// they check that still applies (docs/deckcraft/ui-redesign-2026-10/PLAN.md §5e).
 import {expect,test,type Page} from '@playwright/test';
 
 /**
@@ -31,7 +33,7 @@ async function openPro(page:Page){
   const problems:string[]=[];
   page.on('console',m=>{if(m.type()==='error'&&!KNOWN_CONSOLE.some(r=>r.test(m.text())))problems.push(m.text());});
   page.on('pageerror',e=>problems.push(String(e)));
-  await page.goto('/deck-designer/?designer=1');
+  await page.goto('/deck-designer/?ui=classic&designer=1');
   await expect(menubar(page)).toBeVisible();
   await expect(ribbon(page)).toBeVisible();
   // The design is ready once the header's Presets button is (the menus that need a ready design wait for it too).
@@ -279,7 +281,7 @@ test('leaves the Pro workspace for the public designer, which never shows the Pr
   await expect(menubar(page)).toHaveCount(0);
   await expect(page.locator('.deck-designer')).not.toHaveAttribute('data-pro',/.*/);
   // Remembered on the device: a fresh visit without the flag stays public.
-  await page.goto('/deck-designer/');
+  await page.goto('/deck-designer/?ui=classic');
   await expect(page.getByRole('heading',{level:1})).toBeVisible();
   await expect(page.getByRole('radiogroup',{name:'Plan tools'})).toBeVisible();
   await expect(menubar(page)).toHaveCount(0);

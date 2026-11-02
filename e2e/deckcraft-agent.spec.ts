@@ -38,7 +38,7 @@ test('agent previews leave autosave untouched; validated batch is acknowledged a
   const changed=good(await execute(page,[{type:'design.patch',patch:{width:20}},{type:'design.patch',patch:{length:18}}],'atomic-edit'));
   expect(changed.snapshot.design.width).toBe(20);expect(changed.snapshot.design.length).toBe(18);expect(changed.snapshot.history.canUndo).toBe(true);
   // The homeowner page stays in drawing focus, which leaves the drawing's heading out of view; its text is still checked.
-  await showProjectControls(page);await expect(page.locator('.dd-preview-head h2').filter({hasText:/20 × 18/}).first()).toBeAttached();
+  await showProjectControls(page);await expect(page.locator('.dd-preview-head h2,.dd-next-project').filter({hasText:/20 × 18/}).first()).toBeAttached();
   const repeated=good(await execute(page,[{type:'design.patch',patch:{width:20}},{type:'design.patch',patch:{length:18}}],'atomic-edit'));expect(repeated.replayed).toBe(true);
   const undo=good(await execute(page,[{type:'history.undo'}]));expect(undo.snapshot.design).toEqual(before.snapshot.design);
   good(await execute(page,[{type:'history.redo'}]));

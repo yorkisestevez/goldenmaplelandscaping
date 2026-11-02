@@ -1,3 +1,5 @@
+// Pinned to the classic page (?ui=classic): it tests the old screens, which slice S5b retires after porting what
+// they check that still applies (docs/deckcraft/ui-redesign-2026-10/PLAN.md §5e).
 import {test,expect,type Page,type BrowserContext} from '@playwright/test';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
@@ -12,7 +14,7 @@ async function route(context:BrowserContext){
  await context.addInitScript('window.__name=(t,v)=>t');
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&r.request().method()==='GET'?r.continue():r.fulfill({status:200,body:''}));
 }
-async function open(page:Page,context:BrowserContext){await route(context);await page.goto('/deck-designer/');await ready(page);}
+async function open(page:Page,context:BrowserContext){await route(context);await page.goto('/deck-designer/?ui=classic');await ready(page);}
 const box=async(page:Page,selector:string)=>(await page.locator(selector).first().boundingBox())!;
 const apart=(a:{x:number;y:number;width:number;height:number},b:typeof a)=>a.x+a.width<=b.x||b.x+b.width<=a.x||a.y+a.height<=b.y||b.y+b.height<=a.y;
 const sheet=(page:Page,name:string)=>page.getByRole('tablist',{name:'Drawing sheets'}).getByRole('tab',{name,exact:true}).click();
@@ -90,7 +92,7 @@ test('the Framing sheet and the 3D view keep contractor views and presentation t
 });
 
 test('Designer Mode keeps every control the homeowner page leaves out',async({page,context})=>{
- await page.setViewportSize({width:1366,height:900});await route(context);await openDesignerMode(page);
+ await page.setViewportSize({width:1366,height:900});await route(context);await openDesignerMode(page,'/deck-designer/?designer=1&ui=classic');
  const slot=page.locator('#dd-workspace-agent-slot');await expect(slot.getByRole('button',{name:'Presets',exact:true})).toBeVisible();await expect(slot.getByRole('button',{name:'Agents',exact:true})).toBeVisible();
  await expect(page.getByRole('region',{name:'Live price',exact:true}).getByRole('button',{name:'Review quote costs',exact:true})).toBeVisible();
  await expect(page.getByRole('group',{name:'Quick tools'}).getByRole('button',{name:'Select parts',exact:true})).toBeVisible();

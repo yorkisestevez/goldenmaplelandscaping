@@ -1,10 +1,12 @@
+// Pinned to the classic page (?ui=classic): it tests the old screens, which slice S5b retires after porting what
+// they check that still applies (docs/deckcraft/ui-redesign-2026-10/PLAN.md §5e).
 import {test,expect} from '@playwright/test';
 for(const width of [390,900,1440])test(`ribbon, settings and canvas at ${width}px`,async({page,context})=>{
  await page.setViewportSize({width,height:900});
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
+ await page.goto('/deck-designer/?ui=classic');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
  const before=await page.evaluate(()=>(window as any).deckcraft.read().design);
  const tabs=page.getByRole('tablist',{name:'Design',exact:true}),plan=()=>page.getByRole('tablist',{name:'Drawing sheets'}).getByRole('tab',{name:'Plan',exact:true}).click();
  await tabs.getByRole('tab',{name:'Materials',exact:true}).click();await plan();await expect(page.getByRole('radio',{name:'Board layout',exact:true})).toBeVisible();

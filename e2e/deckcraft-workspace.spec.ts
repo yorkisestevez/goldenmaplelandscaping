@@ -1,3 +1,5 @@
+// Pinned to the classic page (?ui=classic): it tests the old screens, which slice S5b retires after porting what
+// they check that still applies (docs/deckcraft/ui-redesign-2026-10/PLAN.md §5e).
 import {expect,test,type Page} from '@playwright/test';
 import {openDesignTask,pickPlanTool} from './nav';
 const names=['Deck shape & size','House','Boards & finish','Stairs & railings','Lighting','Privacy, skirting & extras','Site & foundation','Backyard','Proposal & files'];
@@ -6,7 +8,7 @@ test.beforeEach(async({context})=>{
   await context.route(/^https:\/\/([\w-]+\.)*(googletagmanager\.com|facebook\.net|clarity\.ms)\//,r=>r.fulfill({body:''}));
   await context.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//,r=>r.fulfill({body:''}));
 });
-async function open(page:Page){await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);}
+async function open(page:Page){await page.goto('/deck-designer/?ui=classic');await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);}
 async function reach(page:Page){
   for(const name of names){
     await openDesignTask(page,name);
