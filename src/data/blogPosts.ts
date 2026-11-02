@@ -15,6 +15,7 @@ export interface BlogPostMeta {
 }
 
 export const BLOG_POSTS: BlogPostMeta[] = [
+  { slug: 'porcelain-vs-concrete-pavers-barrie', title: 'Porcelain Pavers vs Concrete Pavers: Which Patio Suits a Barrie Backyard?', excerpt: 'Porcelain vs concrete pavers for a Barrie patio: absorption under 0.5% vs porous concrete, 20 mm porcelain, 60 mm concrete, base, cost and winter durability.', category: 'Materials', readTime: '10 min', image: '/images/projects/patio-pergola.jpg' },
   { slug: 'outdoor-kitchen-gas-electrical-ontario', title: 'Outdoor Kitchen Gas & Electrical in Ontario: TSSA, ESA and Who Does What', excerpt: 'Outdoor kitchen gas and electrical in Ontario: TSSA gas rules, ESA electrical permits, who does each job, and the right sequencing for a Barrie build.', category: 'Regulations', readTime: '10 min', image: '/images/projects/patio-pergola.jpg' },
   {
     slug: 'geogrid-retaining-wall-explained',
