@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {DEFAULT_DECK,NEW_DECK} from '../src/features/deckcraft/defaults';
 import {calculateDeckReleaseEstimate,deckReleaseData} from '../src/features/deckcraft/deckRelease';
 import {DECK_AREA,deckDesignerHref,deckSizeForArea,designHash,estimatorDeckHref,readDeckArea} from '../src/features/deckcraft/estimatorHandoff';
 import {deckFromDesign,drawnDeck,starterDeck} from '../src/features/deckcraft/estimatorDeck';
@@ -76,7 +76,7 @@ const cents=(n:number)=>Math.round(n*100);
 // 4. The deck in an estimate is the designer's price, to the cent, and the totals reconcile.
 await (async()=>{
   for(const sqft of [100,300,612,1000,2000]){
-    const deck=starterDeck(sqft),data=deckReleaseData({...structuredClone(DEFAULT_DECK),...deckSizeForArea(sqft)});
+    const deck=starterDeck(sqft),data=deckReleaseData({...structuredClone(NEW_DECK),...deckSizeForArea(sqft)});
     ok(deck.source==='starter'&&deck.subtotalCents===cents(calculateDeckReleaseEstimate(data).subtotal),`A ${sqft} sq ft starter deck is the designer's own price for its default deck at that size (${deck.subtotalCents} cents)`);
     ok(Math.abs(deck.areaSqft-sqft)/sqft<.06&&!deck.design&&deck.backyardCents===0,`A ${sqft} sq ft starter deck is about that area (${deck.areaSqft} sq ft), with no drawn design or backyard`);
   }
