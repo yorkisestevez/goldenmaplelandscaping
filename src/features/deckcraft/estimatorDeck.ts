@@ -1,5 +1,5 @@
 import {calculateDeckReleaseEstimate,deckReleaseData} from './deckRelease';
-import {DEFAULT_DECK,DECK_SETTINGS} from './defaults';
+import {NEW_DECK,DECK_SETTINGS} from './defaults';
 import {splitSubtotal} from './backyard';
 import {describeDesign,shapeWords,type DeckEstimate} from './designFacts';
 import {decodeDesignLink,designLinkFromHash,encodeDesignLink} from './designLink';
@@ -36,7 +36,7 @@ export function estimatorDeckFor(data:DeckData,estimate:DeckEstimate,source:Esti
 
 /** The designer's default deck at about the given area (the same deck the designer opens at for that area), priced. */
 export function starterDeck(sqft:number):EstimatorDeck{
-  const data=deckReleaseData({...structuredClone(DEFAULT_DECK),...deckSizeForArea(sqft)});
+  const data=deckReleaseData({...structuredClone(NEW_DECK),...deckSizeForArea(sqft)});
   return estimatorDeckFor(data,calculateDeckReleaseEstimate(data,DECK_SETTINGS),'starter');
 }
 

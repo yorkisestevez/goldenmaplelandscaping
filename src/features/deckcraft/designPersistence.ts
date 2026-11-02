@@ -66,7 +66,7 @@ const enums: Partial<Record<keyof DeckData, readonly (string | number)[]>> = {
   shape:['Rectangle','L-Shape','Multi-corner','Curved','Custom'],levels:[1,2,3],pattern:['Straight','Diagonal','Picture Frame','Herringbone'],
   framingSize:['2x8','2x10','2x12'],framingSpecies:['SPF','Hem-Fir','D.Fir-L'],boardWidth:[5.5,3.5],joistSpacing:[12,16],fasteningSystem:['Face','Hidden'],pictureFrameRows:[0,1,2],
   railingType:['None','Wood Picket','Aluminum','Cable','Glass Panels','Frameless Glass','Trex Select','Trex Transcend','Fortress AL13','TT Classic','TT Impression'],
-  stairFlights:[0,1,2,3],stairType:['Straight','Winder','Landing'],stairPosition:['Front','Left','Right','Back'],
+  stairFlights:[0,1,2,3],stairType:['Straight','Winder','Landing'],stairSides:['Open'],stairPosition:['Front','Left','Right','Back'],
   sceneLighting:['Daylight','Evening'],level2Position:['Front','Left','Right'],stairTurn:['Left','Right'],
   borderFinish:['Matching','Dark Slate'],
   glassMount:['Top-mount base shoe','Fascia-mount base shoe','Spigots'],glassFinish:['Black','Silver'],
@@ -80,7 +80,7 @@ const ranges: Partial<Record<keyof DeckData, readonly [number,number]>> = {
   pictureFrameOverhangIn:[0,1.5],
   houseWallHeightIn:[96,240],houseDoorOffset:[0,100],houseDoorWidthIn:[30,144],level2Offset:[0,100],landingDepthIn:[36,120],
 };
-const booleans = ['hasInlay','hasDrainage','hasDemo','houseVisible','lightingPreviewOn','level2FullStep'] as const;
+const booleans = ['hasInlay','hasDrainage','hasDemo','houseVisible','lightingPreviewOn','level2FullStep','stairPad'] as const;
 const texts = ['customerName','projectAddress','scopeOfWork'] as const;
 function record(value:unknown):value is Record<string,unknown>{return !!value&&typeof value==='object'&&!Array.isArray(value);}
 function numeric(value:unknown,min:number,max:number,label:string):number {
@@ -98,7 +98,9 @@ export function validateDesign(input:unknown):DeckData {
   if(input.landscapeObjects!==undefined){if(!validateLandscapeObjects(input.landscapeObjects))throw Error('Invalid landscape objects.');clean.landscapeObjects=structuredClone(input.landscapeObjects) as NonNullable<DeckData['landscapeObjects']>;}
   if(input.editorOrganization!==undefined)clean.editorOrganization=validateEditorOrganization(input.editorOrganization);
   if(input.scenePresentation!==undefined)clean.scenePresentation=validateScenePresentation(input.scenePresentation);
-  for(const [key,values] of Object.entries(enums))if(Object.hasOwn(input,key)){
+  // An optional choice switched off in the editor is still present, as undefined, until the design is saved.
+  const optionalOff=(key:string)=>(key==='stairSides'||key==='stairPad')&&input[key]===undefined;
+  for(const [key,values] of Object.entries(enums))if(Object.hasOwn(input,key)&&!optionalOff(key)){
     if(!values.includes(input[key] as never))throw new Error(`Unsupported ${key} selection.`);
     target[key]=input[key];
   }
@@ -119,7 +121,7 @@ export function validateDesign(input:unknown):DeckData {
   // explicitly for the same reason. Current-rules input (an in-app edit) keeps DEFAULT_DECK's one row, and its overhang
   // follows the rules it was saved under (finishedFootprint.ts pictureFrameOverhang).
   if(clean.buildRules==='legacy'){if(!Object.hasOwn(input,'pictureFrameOverhangIn'))clean.pictureFrameOverhangIn=PICTURE_FRAME_OVERHANG_IN;if(!Object.hasOwn(input,'pictureFrameRows'))clean.pictureFrameRows=0;}
-  for(const key of booleans)if(Object.hasOwn(input,key)){
+  for(const key of booleans)if(Object.hasOwn(input,key)&&!optionalOff(key)){
     if(typeof input[key]!=='boolean')throw new Error(`${key} must be true or false.`);
     target[key]=input[key];
   }

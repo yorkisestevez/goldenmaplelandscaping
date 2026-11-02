@@ -839,10 +839,12 @@ test('adds a band and a compass medallion, and prices the medallion labour as cr
 
 test('adds skirting under the deck, prices it from the rate table, and keeps it after a reload',async({page})=>{
   const problems=await openDesigner(page);
-  const before=await (await price(page)).textContent();
   await openSection(page,'Privacy, skirting & extras');
-  const skirting=page.getByRole('region',{name:'Skirting under the deck'});
-  await skirting.getByRole('checkbox',{name:'Add skirting under the deck'}).check();
+  const skirting=page.getByRole('region',{name:'Skirting under the deck'}),add=skirting.getByRole('checkbox',{name:'Add skirting under the deck'});
+  // A new deck starts skirted (owner 2026-11-02): take it off, then price adding it back.
+  await expect(add).toBeChecked();await add.uncheck();
+  const before=await (await price(page)).textContent();
+  await add.check();
   const pricedStatus=/Skirting \d+\.\d ft, \d+ sq ft of face with 1 access panel\. Priced from the skirting rate table\./;
   await expect(skirting.getByRole('status')).toContainText(pricedStatus);
   await expect(skirting).toContainText('Face, backing, access panels and install labour are in the priced total, from the skirting rate table.');
@@ -922,9 +924,13 @@ test('lists what each change does to the price, tags quotes and never shows $0 f
   await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Railing System')).toHaveText('Railing SystemSupplier quote'); });
   await withSchedule(page,async()=>{ await expect(quoteLine(page,'TimberTech Classic Composite · balusters')).toHaveText('Supplier quote TimberTech Classic Composite · balusters'); });
   // Priced skirting raises the total and adds no quote; nothing unpriced reads $0.
-  const beforeSkirt=await (await price(page)).textContent();
   await openSection(page,'Privacy, skirting & extras');
-  await page.getByRole('region',{name:'Skirting under the deck'}).getByRole('checkbox',{name:'Add skirting under the deck'}).check();
+  // A new deck starts skirted (owner 2026-11-02): take it off, then add it back.
+  const addSkirting=page.getByRole('region',{name:'Skirting under the deck'}).getByRole('checkbox',{name:'Add skirting under the deck'});
+  await expect(addSkirting).toBeChecked();await addSkirting.uncheck();
+  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^\u2212\$[\d,]+ Skirting$/); });
+  const beforeSkirt=await (await price(page)).textContent();
+  await addSkirting.check();
   await expect((await price(page))).not.toHaveText(beforeSkirt??'');
   await withSchedule(page,async()=>{
     await expect(scheduleLine(page,'Deck skirting')).toHaveText(/^Deck skirting\$[\d,]+ · allowance$/);

@@ -1,7 +1,7 @@
 import {getPoolModels} from '../../poolModel';
 import React, {useMemo,useSyncExternalStore} from 'react';
 import {isObjectVisible} from '../../editorOrganization';
-import type {FootprintPlan} from '../../lib/deckGeometry';
+import type {FootprintPlan,PlanPoint} from '../../lib/deckGeometry';
 import type {DeckData} from '../../types';
 import House3D from './House3D';
 // Presentation only: the neighbourhood, its trees and the GLTF loader load once it is switched on.
@@ -21,7 +21,7 @@ import {SEASON_SUN} from './seasonLook';
 const SUN=sunDirection();
 const GOLDEN_ELEVATION=7*Math.PI/180;
 
-export const Environment3D=React.memo(function Environment3D({data,footprint,topY,cutaway=false,finished=true,yard,...interaction}:{data:DeckData;footprint:FootprintPlan;topY:number;planKey:string;cutaway?:boolean;finished?:boolean;yard:YardModel}&HouseInteraction){
+export const Environment3D=React.memo(function Environment3D({data,footprint,topY,cutaway=false,finished=true,yard,paved,...interaction}:{data:DeckData;footprint:FootprintPlan;topY:number;planKey:string;cutaway?:boolean;finished?:boolean;yard:YardModel;paved?:PlanPoint[][]}&HouseInteraction){
   const evening=useSceneEvening(data.sceneLighting),radius=Math.max(footprint.bounds.w,footprint.bounds.h)*3,shadowRange=radius/12;
   const flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags);
   const post=(flags.quality||flags.realistic)&&flags.post&&!evening,golden=post&&flags.hour==='golden',season=SEASON_SUN[useSeason()];
@@ -39,6 +39,6 @@ export const Environment3D=React.memo(function Environment3D({data,footprint,top
   return <group>
     <directionalLight name="sun" castShadow={!evening} color={sunColor} intensity={sunIntensity} position={sun.toArray()} shadow-mapSize={[mapSize,mapSize]} shadow-camera-left={-shadowRange} shadow-camera-right={shadowRange} shadow-camera-top={shadowRange} shadow-camera-bottom={-shadowRange} shadow-camera-near={.5} shadow-camera-far={radius/3} shadow-bias={-.00015} shadow-normalBias={post?.012:.025} shadow-radius={SCENE_LOOK.sunShadow.radius}/>
     {golden&&<directionalLight name="golden-rim" color={[1,.5,.16]} intensity={daySun*.38} position={[-sun.x,Math.max(radius*.22,Math.abs(sun.y)*3),-sun.z]}/>}
-    {!cutaway&&<>{isObjectVisible(data.editorOrganization,'site')&&<Turf pools={getPoolModels(data)} landscapeObjects={data.landscapeObjects} width={footprint.bounds.w} depth={footprint.bounds.h} radius={radius} yard={yard} finished={finished}/>}<House3D data={data} width={footprint.bounds.w} {...interaction}/>{(flags.context||flags.realistic)&&<React.Suspense fallback={null}><ShowcaseContext3D data={data}/></React.Suspense>}</>}
+    {!cutaway&&<>{isObjectVisible(data.editorOrganization,'site')&&<Turf pools={getPoolModels(data)} landscapeObjects={data.landscapeObjects} width={footprint.bounds.w} depth={footprint.bounds.h} radius={radius} paved={paved} yard={yard} finished={finished}/>}<House3D data={data} width={footprint.bounds.w} {...interaction}/>{(flags.context||flags.realistic)&&<React.Suspense fallback={null}><ShowcaseContext3D data={data}/></React.Suspense>}</>}
   </group>;
 });

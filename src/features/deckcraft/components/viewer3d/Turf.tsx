@@ -8,6 +8,7 @@ import normalUrl from './assets/lawn-normal.webp';
 import roughnessUrl from './assets/lawn-roughness.webp';
 if(typeof window!=='undefined'){for(const url of [colorUrl,normalUrl,roughnessUrl]){const img=new Image();img.decoding='async';img.src=url;}}
 import {yardClip,type YardModel} from '../../yardModel';
+import type {PlanPoint} from '../../lib/deckGeometry';
 import {GroundOcclusion,publishGroundOcclusion,type GroundBounds} from './groundOcclusion';
 import {LAWN_MEAN,groundGeometry,groundEdgeGeometry,lawnMaterial,soilFaceMaterial} from './lawnSurface';
 import {onShadowChange} from './renderPipeline';
@@ -50,7 +51,9 @@ export function useLawnMaterial(){
  return material;
 }
 
-export default function Turf({width,depth,radius:_radius,yard,finished=true,landscapeObjects=[],pools=[]}:{width:number;depth:number;radius:number;yard:YardModel;finished?:boolean;landscapeObjects?:LandscapeObject[];pools?:PoolFeatureModel[]}){
+/** Paved ground the deck adds (the stair pads): no blades grow through it. */
+const NO_PAVING:PlanPoint[][]=[];
+export default function Turf({width,depth,radius:_radius,yard,finished=true,landscapeObjects=[],pools=[],paved=NO_PAVING}:{width:number;depth:number;radius:number;yard:YardModel;finished?:boolean;landscapeObjects?:LandscapeObject[];pools?:PoolFeatureModel[];paved?:PlanPoint[][]}){
  const gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),invalidate=useThree(s=>s.invalidate),quality=useRenderQuality();
  const material=useLawnMaterial(),soil=useMemo(soilFaceMaterial,[]);
  useEffect(()=>()=>soil.dispose(),[soil]);
@@ -80,7 +83,7 @@ export default function Turf({width,depth,radius:_radius,yard,finished=true,land
    return ()=>{stop();clearTimeout(timer);};
  },[occlusion,gl,scene,bounds,material,invalidate]);
  useEffect(()=>()=>{publishGroundOcclusion(null);material.aoMap=null;occlusion.dispose();},[occlusion,material]);
- const wallBanks=finished&&yard.features.some(f=>!f.excluded&&f.config.kind==='retaining-wall'),budget=Math.floor(quality.grassBudget*(wallBanks?.8:1)),bladeMasks=useMemo(()=>yardClip([...cuts,...yard.features.filter(f=>!f.excluded).flatMap(f=>f.footprints),...[...landscapeBedAreas(landscapeObjects).values()].flat().map(ring=>ring.map(p=>({x:p.x,y:p.z})))]),[cuts,yard,landscapeObjects]);
+ const wallBanks=finished&&yard.features.some(f=>!f.excluded&&f.config.kind==='retaining-wall'),budget=Math.floor(quality.grassBudget*(wallBanks?.8:1)),bladeMasks=useMemo(()=>yardClip([...cuts,...paved,...yard.features.filter(f=>!f.excluded).flatMap(f=>f.footprints),...[...landscapeBedAreas(landscapeObjects).values()].flat().map(ring=>ring.map(p=>({x:p.x,y:p.z})))]),[cuts,paved,yard,landscapeObjects]);
  const camera=useThree(s=>s.camera),[focus,setFocus]=useState<{x:number;z:number}|undefined>(),focusKey=useRef(''),cameraScratch=useMemo(()=>({p:new THREE.Vector3(),d:new THREE.Vector3()}),[]);
  useFrame(()=>{camera.getWorldPosition(cameraScratch.p);camera.getWorldDirection(cameraScratch.d);const {p,d}=cameraScratch,reach=Math.min(12,Math.max(0,p.y/Math.max(.25,-d.y))),x=Math.round((p.x+d.x*reach)/4)*48,z=Math.round((p.z+d.z*reach)/4)*48,close=Math.abs(p.y)<24,key=close?x+':'+z:'far';if(key!==focusKey.current){focusKey.current=key;setFocus(close?{x,z}:undefined);}});
  // Blades are the same set either way. Building them after the first frame keeps that frame from waiting on tens of thousands of tufts.
