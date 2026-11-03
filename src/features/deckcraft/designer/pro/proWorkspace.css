@@ -156,7 +156,7 @@
 .dd-pro-wizard-review>div{display:contents}
 .dd-pro-wizard-review dt{color:#4d574c}
 .dd-pro-wizard-review dd{margin:0;font-weight:600}
-.dd-pro-wizard-error{margin:0;padding:8px 10px;border:1px solid #c98a7a;border-radius:4px;background:#fbefeb;color:#7a2a17;font-size:13px}
+.dd-pro-wizard-error,.dd-pro-layers-list .dd-layers-error{margin:0;padding:8px 10px;border:1px solid #c98a7a;border-radius:4px;background:#fbefeb;color:#7a2a17;font-size:13px}
 .dd-pro-wizard-actions{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid #d6dad1;background:#f8f9f6}
 .dd-pro-wizard-actions button{min-height:40px;padding:0 16px;border:1px solid #b9c2b6;border-radius:4px;background:#fff;color:#262a26;font:600 13px var(--dc-body,Arial,sans-serif);cursor:pointer}
 .dd-pro-wizard-actions button:first-child{margin-right:auto}
@@ -168,10 +168,10 @@
 .dd-pro-layers-toggle{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border:1px solid #cccfc9;border-radius:4px;background:#fff;color:#2f4733;font:600 12px var(--dc-body,Arial,sans-serif);cursor:pointer}
 .dd-pro-layers-toggle small{font-weight:400;color:#4d574c}
 .dd-pro-layers-toggle[aria-expanded=true]{background:#e7ede4;border-color:#799573}
-.dd-pro-layers-toggle:focus-visible,.dd-pro-layers-manage:focus-visible,.dd-pro-layers-list input:focus-visible{outline:2px solid #437256;outline-offset:1px}
+.dd-pro-layers-toggle:focus-visible,.dd-pro-layers-list .dd-layers-manage:focus-visible,.dd-pro-layers-list input:focus-visible{outline:2px solid #437256;outline-offset:1px}
 .dd-pro-layers-list{position:absolute;right:0;bottom:calc(100% + 6px);z-index:30;width:280px;max-height:320px;overflow:auto;padding:8px;background:#fff;border:1px solid #c3cfc0;border-radius:4px;box-shadow:0 8px 24px #1d241e26;font-size:12px}
 .dd-pro-layers-list ul{display:grid;gap:4px;margin:0 0 8px;padding:0;list-style:none}
 .dd-pro-layers-list li{display:flex;align-items:center;gap:10px;min-height:32px;padding:2px 4px;border-bottom:1px solid #eef0ec}
 .dd-pro-layers-list li strong{flex:1;font-size:13px}
 .dd-pro-layers-list label{display:inline-flex;align-items:center;gap:4px}
-.dd-pro-layers-manage{width:100%;min-height:36px;border:1px solid #b9c2b6;border-radius:4px;background:#f4f5f0;color:#203e2a;font:600 12px var(--dc-body,Arial,sans-serif);cursor:pointer}
+.dd-pro-layers-list .dd-layers-manage{width:100%;min-height:36px;border:1px solid #b9c2b6;border-radius:4px;background:#f4f5f0;color:#203e2a;font:600 12px var(--dc-body,Arial,sans-serif);cursor:pointer}
