@@ -2,13 +2,15 @@ import {test,expect,type BrowserContext,type Page} from '@playwright/test';
 
 /**
  * Where the designer opens (owner, 2026-11-02): a desktop with WebGL opens in 3D, handed over from the plan the page is
- * prerendered with once the 3D viewer has loaded; a phone, a browser without WebGL and a visitor who has already started
- * on the plan stay on the plan. The hand-over swaps the drawing only: the controls around it never move.
+ * prerendered with once the 3D viewer has loaded; a phone, a browser without WebGL, a visitor who has already started
+ * on the plan and an automated browser stay on the plan. The hand-over swaps the drawing only: the controls never move.
  */
 const view=(page:Page)=>page.evaluate(()=>(window as {deckcraft?:{read():{view:string}}}).deckcraft?.read().view);
 const ready=(page:Page)=>expect.poll(()=>page.evaluate(()=>(window as {deckcraft?:{read():{ready:boolean}}}).deckcraft?.read().ready??false),{timeout:60_000}).toBe(true);
 async function stubOffsite(context:BrowserContext){
  await context.route(/^https?:\/\/(?!127\.0\.0\.1|localhost)/,route=>route.fulfill({body:''}));
+ // Automated browsers stay on the plan (no 3D scene on every test's load); these tests are about a visitor's browser.
+ await context.addInitScript(()=>Object.defineProperty(Navigator.prototype,'webdriver',{get:()=>false,configurable:true}));
 }
 
 test('a desktop opens in 3D, and the controls around the drawing stay where they were painted',async({page,context})=>{
@@ -57,4 +59,13 @@ test('@phone a phone opens on the plan and never downloads the 3D viewer at load
  await page.evaluate(()=>new Promise(done=>setTimeout(done,1500)));
  expect(await view(page)).toBe('plan');
  expect(viewer).toEqual([]);
+});
+
+test('an automated browser stays on the plan, so test runs never build the 3D scene at load',async({page})=>{
+ await page.setViewportSize({width:1440,height:900});
+ await page.context().route(/^https?:\/\/(?!127\.0\.0\.1|localhost)/,route=>route.fulfill({body:''}));
+ await page.goto('/deck-designer/');await ready(page);
+ await page.evaluate(()=>new Promise(done=>setTimeout(done,1500)));
+ expect(await page.evaluate(()=>navigator.webdriver)).toBe(true);
+ expect(await view(page)).toBe('plan');
 });

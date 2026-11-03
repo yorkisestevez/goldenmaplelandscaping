@@ -200,11 +200,13 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   nextRef.current=next;
   // A desktop opens in 3D (owner, 2026-11-02): once the page is running, WebGL works and the 3D viewer (fetched as the plan
   // opens) has loaded, the plan hands over to the 3D view, unless the visitor has already started on the page (a press, a
-  // key or a wheel). Phones and browsers saving data stay on the plan, with no 3D download at load. Settled once: an
-  // effect cleaned up before that (React's development double run) arms it again.
+  // key or a wheel). Phones and browsers saving data stay on the plan, with no 3D download at load, and so do automated
+  // browsers (navigator.webdriver, as for the trackers: utils/trackingGate.ts), which would otherwise build the 3D scene
+  // on every load (deck-open-3d.spec.ts poses as a visitor). Settled once: an effect cleaned up before that (React's
+  // development double run) arms it again.
   const opened3d=useRef(false);
   useEffect(()=>{
-    if(!next||!mounted||!hasWebGL||opened3d.current||phoneLayout()||!desktopViewer())return;
+    if(!next||!mounted||!hasWebGL||opened3d.current||navigator.webdriver||phoneLayout()||!desktopViewer())return;
     opened3d.current=true;let live=true,settled=false;const started=()=>{live=false;settled=true;},events=['pointerdown','keydown','wheel'];
     for(const name of events)addEventListener(name,started,{capture:true,passive:true});
     loadViewer().then(()=>{if(live){settled=true;setMode(m=>m==='plan'?'3d':m);}},()=>{settled=true;/* The plan stays. */});
