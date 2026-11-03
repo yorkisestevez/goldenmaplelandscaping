@@ -5,7 +5,7 @@ import {convertStoneSteps} from '../src/features/deckcraft/stepAssembly';
 import type {YardFeature} from '../src/features/deckcraft/types';
 const legacy:YardFeature={id:'steps',name:'Test stone steps',kind:'patio',enabled:true,xFt:25,zFt:12,widthFt:4,depthFt:8,heightIn:0,rotationDeg:0,productId:'permacon-mondrian-plus',color:'#b8b5ae',finishedElevationIn:24,stoneSteps:{lowerElevationIn:0,riserCount:4,treadRunIn:24,stockWidthIn:48,stockDepthIn:24,stockThicknessIn:6,baseDepthIn:6,settingBedIn:1,jointIn:0,productName:'Recorded step stock',support:{kind:'full-step',courses:[0,1,2,3]}}};
 const read=(p:Page)=>p.evaluate(()=>(window as any).deckcraft.read().design);
-for(const phone of [false,true])test(`stone and paver width, wraps, cancel, undo and persistence ${phone?'@phone':''}`,async({page,context})=>{
+for(const phone of [false,true])test(`stone and paver width, wraps, cancel, undo and persistence${phone?' @phone':''}`,async({page,context})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  const placed={...legacy,xFt:40},feature=phone?convertStoneSteps(placed):placed;
  if(phone){feature.stepAssembly!.family='cap-block';feature.stepAssembly!.riser={...feature.stepAssembly!.tread,thicknessIn:2};}

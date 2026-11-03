@@ -40,7 +40,7 @@ async function slowLoad(context:BrowserContext){
  },KEPT);
 }
 
-for(const phone of [false,true])test(`the prerendered designer hydrates in place and nothing moves after the first paint ${phone?'@phone':''}`,async({page,context})=>{
+for(const phone of [false,true])test(`the prerendered designer hydrates in place and nothing moves after the first paint${phone?' @phone':''}`,async({page,context})=>{
  await page.setViewportSize(phone?{width:390,height:844}:{width:1440,height:900});
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await slowLoad(context);

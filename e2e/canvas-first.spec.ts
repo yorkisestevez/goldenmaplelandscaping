@@ -3,7 +3,7 @@ import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {openHomeTab,openSketch,pickPlanTool,proofDir,startOnPlan} from './nav';
 const shots=proofDir('canvas-first');
 const read=(page:Page)=>page.evaluate(()=>(window as any).deckcraft.read().design);
-for(const phone of [false,true])test(`canvas first settings and patio joining ${phone?'@phone':''}`,async({page,context})=>{
+for(const phone of [false,true])test(`canvas first settings and patio joining${phone?' @phone':''}`,async({page,context})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(configuration=>localStorage.setItem('golden-maple.deck-studio.deck-only.v1',JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration})),{...DEFAULT_DECK,yardFeatures:[]});
@@ -32,7 +32,7 @@ for(const phone of [false,true])test(`canvas first settings and patio joining ${
  await page.screenshot({path:`${shots}/${phone?'phone':'desktop'}.png`});expect(errors).toEqual([]);
 });
 
-for(const phone of [false,true])test(`advanced drawing and sketch share clear closing targets ${phone?'@phone':''}`,async({page,context})=>{
+for(const phone of [false,true])test(`advanced drawing and sketch share clear closing targets${phone?' @phone':''}`,async({page,context})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
