@@ -10,7 +10,7 @@ import eveningLighting from './assets/sky/sky-evening-ibl.hdr?url';
 import {SCENE_LOOK} from './sceneLook';
 import {SHOWCASE_GOLDEN_FILL,SHOWCASE_SKY_FILL} from './showcaseGrade';
 import {SKY_PARS,SKY_RADIANCE,hazeColour,skyUniforms} from './skyShade';
-import {SHOWCASE_CLEAR_FOG,SHOWCASE_FOG_DENSITY,getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from '../../showcaseMode';
+import {SHOWCASE_CLEAR_FOG,SHOWCASE_FOG_DENSITY,getShowcaseFlags,getShowcaseServerFlags,goldenHour,subscribeShowcase} from '../../showcaseMode';
 
 /**
  * The real sky (Real Life G3): a CC0 HDRI supplies environment fill. An extracted sun, or a neutral key replacing
@@ -63,7 +63,7 @@ function SkyOf({lighting,strength=visibleSkyStrength(lighting),illumination=skyS
   const map=useSkyMap(lighting==='evening'?eveningLighting:dayLighting);
   const scene=useThree(s=>s.scene),gl=useThree(s=>s.gl),invalidate=useThree(s=>s.invalidate),flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags);
   // Trees and haze come with the realistic look too; the grade follows it at the device's own budget.
-  const context=flags.context||flags.realistic,graded=(flags.quality||flags.realistic)&&flags.post&&lighting==='day',dayBlue=graded&&flags.hour!=='golden',goldenSky=graded&&flags.hour==='golden';
+  const context=flags.context||flags.realistic,graded=(flags.quality||flags.realistic)&&flags.post&&lighting==='day',golden=lighting==='day'&&goldenHour(flags,graded),dayBlue=graded&&!golden,goldenSky=golden;
   const horizon=useMemo(()=>(context?visibleSkyHorizon(map,0):visibleSkyHorizon(map))??data.horizonColor,[map,data,context]);
   // The haze over the horizon (and so the colour the far lawn ends in) comes from the clean sky's horizon row in every look.
   const {horizonHaze:HAZE}=SCENE_LOOK.sky,hazeRgb=useMemo(()=>hazeColour(visibleSkyHorizon(map)??data.horizonColor as [number,number,number],strength),[map,data,strength]);

@@ -327,7 +327,7 @@ test('reaches every feature of the designer',async({page})=>{
     await reach('Deck lighting',sectionBody(page,'Lighting').getByRole('group',{name:'Deck lighting',exact:true}));
     await reach('Lighting catalogue',page.getByLabel('Find lighting',{exact:true}));
     await viewTab(page,'3D');
-    await reach('Day and night preview',page.getByRole('group',{name:'Day or night preview'}));
+    await reach('Day and night preview',page.getByRole('group',{name:'Time of day'}));
   });
   await test.step('Privacy screens, skirting and extras',async()=>{
     await openSection(page,'Privacy, skirting & extras');
@@ -1014,7 +1014,7 @@ test('offers a frameless glass railing in three mounts, as a supplier quote with
   await expect(page.getByLabel('Glass hardware finish',{exact:true})).toHaveValue('Silver');
   await page.getByRole('combobox',{name:'Glass railing mount',exact:true}).selectOption('Fascia-mount base shoe');
   await viewTab(page,'3D');
-  await page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'}).click();
+  await page.getByRole('group',{name:'Time of day'}).getByRole('button',{name:'Night'}).click();
   const canvas=viewer3d(page);
   await canvas.scrollIntoViewIfNeeded();
   await expect(canvas).toBeVisible({timeout:20000});
@@ -1667,7 +1667,7 @@ test('puts a lit design at night on the proposal cover, then gives the visitor b
   test.setTimeout(180_000*PROPOSAL_WAIT);
   const problems=await openDesigner(page);
   await viewTab(page,'3D');
-  await page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'}).click();
+  await page.getByRole('group',{name:'Time of day'}).getByRole('button',{name:'Night'}).click();
   await page.getByRole('button',{name:'Add post & step lights'}).click();
   await page.getByRole('group',{name:'Camera'}).getByRole('button',{name:'Front',exact:true}).click();
   const priced=await (await price(page)).textContent(),changed=await withSchedule(page,()=>changes(page).count());
@@ -1679,7 +1679,7 @@ test('puts a lit design at night on the proposal cover, then gives the visitor b
   await proposalDialog(page).getByRole('button',{name:'Close'}).click();
   // The pictures changed nothing: the visitor's camera and night view are back, with the same price and changes.
   await expect(page.getByRole('group',{name:'Camera'}).getByRole('button',{name:'Front',exact:true})).toHaveAttribute('aria-pressed','true');
-  await expect(page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'})).toHaveAttribute('aria-pressed','true');
+  await expect(page.getByRole('group',{name:'Time of day'}).getByRole('button',{name:'Night'})).toHaveAttribute('aria-pressed','true');
   await expect((await price(page))).toHaveText(priced??'');
   await withSchedule(page,async()=>{ await expect(changes(page)).toHaveCount(changed); });
   expect(problems).toEqual([]);
@@ -1706,7 +1706,7 @@ test('draws the 3D view at night with lights and glass, within the GPU’s textu
   await openSection(page,'Stairs & railings');
   await page.getByRole('combobox',{name:'Railing style',exact:true}).selectOption('Glass Panels');
   await viewTab(page,'3D');
-  await page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'}).click();
+  await page.getByRole('group',{name:'Time of day'}).getByRole('button',{name:'Night'}).click();
   await page.getByRole('button',{name:'Add post & step lights'}).click();
   const canvas=viewer3d(page);
   await canvas.scrollIntoViewIfNeeded();

@@ -357,7 +357,7 @@ export interface DeckData {
   houseWallHeightIn?: number;
   houseDoorOffset?: number;
   houseDoorWidthIn?: number;
-  sceneLighting?: 'Daylight' | 'Evening';
+  sceneLighting?: 'Daylight' | 'Golden' | 'Evening';
   scenePresentation?:import('./scenePresentation').ScenePresentation;
   level2Position?: 'Front' | 'Left' | 'Right';
   level2Offset?: number;

@@ -138,6 +138,6 @@ export const FIELD_NAMES:Partial<Record<FieldPath|'sceneLighting'|'lightingPrevi
   municipality:'Project area',siteType:'Site conditions',soilCondition:'Soil conditions',foundation:'Foundation',foundationDepthIn:'Footing depth',buildSeason:'Build season',intendedLoad:'Intended load',framingSize:'Joist size',joistSpacing:'Joist spacing',boardWidth:'Board width',
   stairTargets:'Stair landing elevations',siteModel:'Survey and grading',landscapeObjects:'Landscape objects',editorOrganization:'Layers, groups and locks',yardFeatures:'Backyard features',terrainConfig:'Terrain',yardAllowances:'Backyard allowances',
   customerName:'Your name',projectAddress:'Project address',scopeOfWork:'Scope of work',permitSite:'Lot and setbacks',
-  sceneLighting:'Day or night preview',lightingPreviewOn:'Preview lights',
+  sceneLighting:'Time of day',lightingPreviewOn:'Preview lights',
 };
 export const fieldName=(field:string)=>FIELD_NAMES[field as keyof typeof FIELD_NAMES]??'Design change';
