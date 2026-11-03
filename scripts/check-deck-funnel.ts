@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {DEFAULT_DECK,NEW_DECK} from '../src/features/deckcraft/defaults';
 import {hasPictureFrame} from '../src/features/deckcraft/borderLighting';
 import {deckReleaseData} from '../src/features/deckcraft/deckRelease';
 import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
@@ -19,7 +19,7 @@ import {designerSource} from './deck-designer-source';
 let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);checks++;};
 const sent:[DeckEvent,string][]=[];
 setDeckAnalyticsSink((event,label)=>sent.push([event,label]));
-const base=():DeckData=>structuredClone(DEFAULT_DECK);
+const base=():DeckData=>structuredClone(NEW_DECK);
 const design=(patch:Partial<DeckData>):DeckData=>deckReleaseData({...base(),...patch});
 const house=getHouseConfig({...base(),width:20});
 
@@ -40,7 +40,7 @@ const expectations:[Partial<DeckData>,string][]=[
   [{catalogueRailingId:RAILING_CATALOGUE[0].id,railingType:RAILING_CATALOGUE[0].baseType},'deck_catalogue_railing'],
   [{railingType:'Frameless Glass'},'deck_frameless_glass'],[{railingType:'Frameless Glass',glassMount:'Spigots'},'deck_glass_spigots'],[{railingType:'Frameless Glass',glassMount:'Fascia-mount base shoe'},'deck_glass_fascia_mount'],
   [{catalogueAccessories:[MANUFACTURER_ACCESSORIES.find(a=>a.previewSupported)!.id]},'deck_accessory'],
-  [{pictureFrameRows:2},'deck_border_extra_row'],[{pictureFrameRows:0},'deck_border_none'],[{hasInlay:true,inlayLf:10},'deck_inlay'],
+  [{pictureFrameRows:2},'deck_border_extra_row'],[{pictureFrameRows:0},'deck_border_none'],[{skirting:undefined},'deck_skirting_none'],[{skirting:{...NEW_DECK.skirting!,style:'Lattice'}},'deck_skirting_style'],[{hasInlay:true,inlayLf:10},'deck_inlay'],
   [{privacyScreens:[{id:'s1',side:'Left',lengthFt:8,heightFt:6,offsetPct:30,lights:false}]},'deck_privacy_screen'],
   [{lightingSystem:{wireDistance:20,selectedItems:[{productId:'wedge',qty:4,zone:'stairs'},{productId:'hub100',qty:1}]}},'deck_lighting'],
   [{benchLf:8},'deck_bench'],[{pergolaSqft:64},'deck_pergola'],[{hasDemo:true},'deck_demolition'],
@@ -121,8 +121,9 @@ ok(!designFeatures(design({customerName:'Jane Q Customer',projectAddress:'12 Exa
   ok(page.includes("const [mode,setMode]=useState<PreviewMode>('plan');"),'The page opens on the site plan, so deck_view_plan is the view counted on load');
   for(const label of ['deck_plan_drag','deck_plan_typed','deck_plan_shortcut','deck_plan_stairs','deck_plan_outline','deck_plan_house'])ok(page.includes(`trackDeck('deckcraft_plan','${label}')`),`The site plan reports ${label}`);
   const report=readFileSync(new URL('../docs/deckcraft/funnel-report.md',import.meta.url),'utf8');
-  for(const label of ['deck_plan_stairs','deck_plan_outline','deck_plan_house','deck_border_extra_row','deck_border_none'])ok(report.includes(`\`${label}\``),`The funnel report explains ${label}`);
+  for(const label of ['deck_plan_stairs','deck_plan_outline','deck_plan_house','deck_border_extra_row','deck_border_none','deck_skirting_none','deck_skirting_style'])ok(report.includes(`\`${label}\``),`The funnel report explains ${label}`);
   ok(/`deck_border_rows` is retired/.test(report),'The funnel report says deck_border_rows is retired and what its history means');
+  ok(/`deck_skirting` is retired/.test(report),'The funnel report says deck_skirting is retired and what its history means');
   ok(page.includes("trackDeck('deckcraft_section',`deck_section_${section.id}`)")&&/for\(const id of sectionsOfPatch\(patch,data\)\)[^\n]*trackDeck\('deckcraft_section',`deck_changed_\$\{id\}`\)/.test(page),'Opening a section and the first edit in it are reported, through the fields it owns');
   for(const label of ['deck_proposal','deck_summary','deck_json_save','deck_json_import','deck_link_opened','deck_link_failed','deck_link_went_back'])ok(page.includes(`'${label}'`),`The page reports ${label}`);
   ok(page.includes("trackDeck('deckcraft_output',`deck_${kind}`)"),'DXF and OBJ exports are reported');

@@ -1,6 +1,6 @@
 import {getHouseConfig,ORIGINAL_HOUSE_CLADDINGS} from './houseSettings';
 import {HOUSE_COLOUR_FIELDS} from './houseSettings';
-import {DEFAULT_DECK} from './defaults';
+import {DEFAULT_DECK,NEW_DECK} from './defaults';
 import {usesCurrentBuildRules} from './buildRules';
 import {isSystemProduct} from './lightingSystem';
 import {LIGHTING_RUNTIME_CATALOGUE} from './lightingRuntimeCatalogue';
@@ -55,7 +55,11 @@ export function designFeatures(data:DeckData):string[]{
   add(data.inlays?.some(i=>i.kind==='diamond'),'deck_inlay_diamond');
   add(data.inlays?.some(i=>i.kind==='band'),'deck_inlay_band');
   add(data.inlays?.some(i=>i.kind==='medallion'),'deck_inlay_medallion');
-  add(data.skirting,'deck_skirting');
+  // New designs start skirted in horizontal boards (owner 2026-11-02), so only a departure from that is a choice; `deck_skirting`
+  // (any skirting) is retired so its GA4 history keeps that meaning. A save from before the default reopens without skirting
+  // and is counted as none.
+  add(!data.skirting,'deck_skirting_none');
+  add(data.skirting&&data.skirting.style!==NEW_DECK.skirting?.style,'deck_skirting_style');
   add(DECK_PARTS.some(p=>data.deckFinishes?.[p]),'deck_part_finishes');
   add(data.deckFinishes?.railingColor,'deck_railing_colour');
   add(data.privacyScreens?.some(screenOn),'deck_privacy_screen');
