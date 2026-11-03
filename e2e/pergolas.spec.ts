@@ -1,5 +1,5 @@
 import {expect,test,type Page} from '@playwright/test';
-import {dismissDesignInspector,openDesignTask,proofDir} from './nav';
+import {dismissDesignInspector,openDesignTask,proofDir,startOnPlan} from './nav';
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 const extrasName='Privacy, skirting & extras';
@@ -20,7 +20,7 @@ test('pergola catalog, costs, autosave, public JSON, undo and 3D',async({page,br
  // four-tab build it ran past the 90 s default. CI keeps its own, longer limit for slow WebGL (playwright.config.ts).
  test.setTimeout(process.env.CI?300_000:150_000);
  const problems:string[]=[];page.on('pageerror',e=>problems.push(String(e)));
- await page.goto('/deck-designer/');await openExtras(page);
+ await page.goto('/deck-designer/');await startOnPlan(page);await openExtras(page);
  await panel(page).getByRole('combobox',{name:'Pergola supplier',exact:true}).selectOption('costco');
  await expect(panel(page).getByRole('button',{name:'Select LOUSOL Junior 10 × 12 ft',exact:true})).toHaveCount(0);
  await panel(page).getByRole('button',{name:'Select Mirador 8.8 × 14.4 ft',exact:true}).click();
@@ -32,7 +32,7 @@ test('pergola catalog, costs, autosave, public JSON, undo and 3D',async({page,br
  await panel(page).getByLabel('Installation labour cost (CAD)',{exact:true}).fill('987');
  for(const name of ['Delivery','Anchoring','Structural preparation','Electrical'])await panel(page).getByLabel(`${name} cost (CAD)`,{exact:true}).fill('0');
  await panel(page).getByLabel('Supplier / accessory costs confirmed for this scope',{exact:true}).check();await panel(page).getByLabel('Availability and kit completeness confirmed',{exact:true}).check();
- await page.waitForTimeout(650);await page.reload();await openExtras(page);await panel(page).locator('summary',{hasText:'Contractor costs'}).click();
+ await page.waitForTimeout(650);await page.reload();await startOnPlan(page);await openExtras(page);await panel(page).locator('summary',{hasText:'Contractor costs'}).click();
  await expect(panel(page).getByLabel('Pergola kit supply cost (CAD)',{exact:true})).toHaveValue('2345');
  await expect(panel(page).getByLabel('Louver opening',{exact:true})).toHaveValue('60');
  const snapshot=()=>page.evaluate(()=>window.deckcraft!.read());
@@ -54,7 +54,7 @@ test('pergola catalog, costs, autosave, public JSON, undo and 3D',async({page,br
 });
 test('pergola mobile filters, comparison, conceptual dimensions and sold-out status @phone',async({page})=>{
  const problems:string[]=[];page.on('pageerror',e=>problems.push(String(e)));
- await page.goto('/deck-designer/');await openExtras(page);
+ await page.goto('/deck-designer/');await startOnPlan(page);await openExtras(page);
  await panel(page).getByRole('combobox',{name:'Roof operation',exact:true}).selectOption('motorized');await expect(panel(page).getByRole('button',{name:'Select Kimbel Louvered Custom configuration',exact:true})).toBeVisible();
  await panel(page).getByRole('combobox',{name:'Roof operation',exact:true}).selectOption('');await panel(page).getByLabel('Compare LOUSOL Junior',{exact:true}).check();await panel(page).getByLabel('Compare Mirador',{exact:true}).check();await expect(panel(page).getByRole('table')).toContainText('Exact dimensions unknown');
  await panel(page).getByRole('button',{name:'Select Domi Louvered 10 × 10 ft',exact:true}).click();await expect(panel(page)).toContainText('conceptual dimensions');
@@ -84,7 +84,7 @@ test('pergola mesh selection, dragging, rotation, cancel and lighting',async({pa
  await page.waitForTimeout(300);await page.locator('#deck-live-preview').screenshot({path:resolve(shots,'deckcraft-pergola-editing-night.png')});await canvas.scrollIntoViewIfNeeded();await page.waitForTimeout(300);await canvas.screenshot({path:resolve(shots,'deckcraft-pergola-canvas-night.png')});
  await page.getByRole('switch',{name:/Preview lights/}).uncheck();await page.waitForTimeout(300);await page.locator('#deck-live-preview').screenshot({path:resolve(shots,'deckcraft-pergola-editing-lights-off.png')});await expect(tools.getByLabel('Pergola LED lighting',{exact:true})).toBeChecked();await page.getByRole('switch',{name:/Preview lights/}).check();
  await openFiles(page);const save=page.getByRole('region',{name:'Save and restore design'}),[download]=await Promise.all([page.waitForEvent('download'),save.getByRole('button',{name:'Save JSON',exact:true}).click()]);const file=info.outputPath('lit-pergola.json');await download.saveAs(file);const saved=JSON.parse(readFileSync(file,'utf8'));expect(saved.configuration.pergola.lighting).toBe('perimeter-led');expect(saved.configuration.pergola.xFt).toBe(moved+.5);
- await page.reload();await openExtras(page);await expect(panel(page).getByLabel('Pergola perimeter LED lighting supply cost (CAD)',{exact:true})).toHaveValue('');await expect(panel(page).getByText('Pergola lighting · warm white LEDs',{exact:true}).locator('..').getByRole('checkbox')).toBeChecked();expect(problems).toEqual([]);
+ await page.reload();await startOnPlan(page);await openExtras(page);await expect(panel(page).getByLabel('Pergola perimeter LED lighting supply cost (CAD)',{exact:true})).toHaveValue('');await expect(panel(page).getByText('Pergola lighting · warm white LEDs',{exact:true}).locator('..').getByRole('checkbox')).toBeChecked();expect(problems).toEqual([]);
 });
 
 test('pergola touch drag, rotation and lighting controls @phone',async({page,context})=>{

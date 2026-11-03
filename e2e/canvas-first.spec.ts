@@ -1,6 +1,6 @@
 import {test,expect,type Page} from '@playwright/test';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
-import {openHomeTab,openSketch,pickPlanTool,proofDir} from './nav';
+import {openHomeTab,openSketch,pickPlanTool,proofDir,startOnPlan} from './nav';
 const shots=proofDir('canvas-first');
 const read=(page:Page)=>page.evaluate(()=>(window as any).deckcraft.read().design);
 for(const phone of [false,true])test(`canvas first settings and patio joining ${phone?'@phone':''}`,async({page,context})=>{
@@ -8,7 +8,7 @@ for(const phone of [false,true])test(`canvas first settings and patio joining ${
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(configuration=>localStorage.setItem('golden-maple.deck-studio.deck-only.v1',JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration})),{...DEFAULT_DECK,yardFeatures:[]});
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
+ await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
  const original=await read(page),panel=page.locator('#dd-home-panel'),dock=page.locator('.dd-selection-inspector');
  await expect(panel).toBeHidden();await expect(dock).not.toHaveAttribute('open');
  await openHomeTab(page,'Materials');
@@ -28,7 +28,7 @@ for(const phone of [false,true])test(`canvas first settings and patio joining ${
  const result=await read(page);expect(result.yardFeatures[0].outline).toHaveLength(4);
  await page.getByRole('region',{name:'Save and restore design'}).getByRole('button',{name:'Undo',exact:true}).click();await expect.poll(async()=>(await read(page)).yardFeatures.length).toBe(0);
  await page.getByRole('button',{name:'Redo',exact:true}).click();await expect.poll(async()=>(await read(page)).yardFeatures.length).toBe(1);
- await expect(page.getByText(/^Saved on this device at/)).toBeVisible();await page.reload();await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);expect((await read(page)).yardFeatures).toEqual(result.yardFeatures);
+ await expect(page.getByText(/^Saved on this device at/)).toBeVisible();await page.reload();await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);expect((await read(page)).yardFeatures).toEqual(result.yardFeatures);
  await page.screenshot({path:`${shots}/${phone?'phone':'desktop'}.png`});expect(errors).toEqual([]);
 });
 
@@ -36,7 +36,7 @@ for(const phone of [false,true])test(`advanced drawing and sketch share clear cl
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
+ await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
  await pickPlanTool(page,'Patios & walls');await page.getByLabel('Designer tools',{exact:true}).check();
  await page.getByRole('button',{name:'Patio outline',exact:true}).click();
  const surface=page.getByLabel('Patio outline drawing surface',{exact:true});await surface.scrollIntoViewIfNeeded();

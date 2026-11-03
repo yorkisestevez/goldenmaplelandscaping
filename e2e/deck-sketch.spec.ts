@@ -1,5 +1,5 @@
 import {test,expect,type Page,type BrowserContext} from '@playwright/test';
-import {savedConfiguration,showProjectControls} from './nav';
+import {savedConfiguration,showProjectControls,startOnPlan} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import sharp from 'sharp';
@@ -42,7 +42,7 @@ test.beforeEach(async({context,page})=>{
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(({key,configuration})=>{if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));},{key:'golden-maple.deck-studio.deck-only.v1',configuration:{...DEFAULT_DECK,deckingMaterial:'tt_prime_plus',deckingColor:'Sea Salt Gray',customerName:'QA Sketch Customer',projectAddress:'QA fixture address'}});
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&r.request().method()==='GET'?r.continue():r.fulfill({status:200,body:''}));
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);
+ await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);
 });
 test.afterEach(async({page})=>{expect(pageErrors.get(page)??[],'Sketch flows must not produce an uncaught browser exception').toEqual([]);});
 

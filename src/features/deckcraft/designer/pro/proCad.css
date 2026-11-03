@@ -135,6 +135,8 @@ html .deck-designer[data-ui=cad] .dd-pro-statusbar kbd{background:var(--cad-fore
   html .deck-designer[data-ui=cad] .dd-preview{height:auto;overflow:visible}
   /* One column here: the assistant stacks under the drawing rather than opening a second column that crushes it. */
   html .deck-designer[data-ui=cad] .dd-assistant-slot{grid-column:1;grid-row:2;border-left:0;border-top:1px solid var(--cad-line)}
+  /* Here the title bar's buttons keep a 44 px touch target (the wide bar trims them to 34 px). */
+  html .deck-designer[data-ui=cad] .dd-cad-title :is(.dd-workspace-files>summary,.dd-agent-open,.dd-send-top){min-height:44px}
   html .deck-designer[data-ui=cad] .dd-sheet-panel{display:flex;flex-direction:column}
   html .deck-designer[data-ui=cad] .dd-canvas>:is(.dd-site-plan,.dd-plan-viewport,[aria-label="Interactive deck construction model"]){height:62dvh!important}
   html .deck-designer[data-ui=cad] .dd-pro-strip{flex-direction:row;flex-wrap:wrap;border-right:0;border-bottom:1px solid var(--cad-line)}

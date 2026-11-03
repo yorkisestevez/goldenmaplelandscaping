@@ -1,5 +1,5 @@
 import {test,expect,type Page,type BrowserContext} from '@playwright/test';
-import {filesSummary,openPriceSchedule,pickPlanTool,savedConfiguration,showProjectControls} from './nav';
+import {filesSummary,openPriceSchedule,pickPlanTool,savedConfiguration,showProjectControls,startOnPlan} from './nav';
 import {readFileSync} from 'node:fs';
 import type {DeckAgentApi,AgentCommand} from '../src/features/deckcraft/designer/deckAgentController';
 type Point={x:number;y:number};
@@ -10,7 +10,7 @@ async function command(page:Page,commands:AgentCommand[]){
  if('error' in response)throw new Error(`${response.error.code}: ${response.error.message}`);return response;
 }
 async function start(page:Page){
- await page.goto('/deck-designer/');await page.waitForFunction(()=>typeof (window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read==='function');
+ await page.goto('/deck-designer/');await startOnPlan(page);await page.waitForFunction(()=>typeof (window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read==='function');
  const radio=await pickPlanTool(page,'Board layout');await expect(page.getByRole('button',{name:'Select board',exact:true})).toBeVisible();
 }
 async function draw(page:Page,context:BrowserContext,points:Point[],touch=false){
@@ -61,7 +61,7 @@ test('cancel and invalid draft never write; real board rotation persists through
  const saved=await state(page),piece=saved.design.boardLayout!.pieces[0],runs=saved.boards.filter(b=>b.layoutId===piece.id);expect(runs.length).toBeGreaterThan(0);expect(runs.every(b=>b.angleDeg===90&&b.colour==='tt_prime_plus:Sea Salt Gray')).toBeTruthy();const xs=runs.flatMap(b=>b.polygon.map(p=>p.x)),ys=runs.flatMap(b=>b.polygon.map(p=>p.y));expect(Math.max(...ys)-Math.min(...ys)).toBeGreaterThan((Math.max(...xs)-Math.min(...xs))*2);
  await filesSummary(page).click();const pending=page.waitForEvent('download');await page.getByRole('button',{name:'Save JSON',exact:true}).click();const downloaded=await pending,file=readFileSync((await downloaded.path())!,'utf8');expect(JSON.parse(file).configuration.boardLayout).toEqual(saved.design.boardLayout);
  await expect.poll(async()=>(await savedConfiguration(page))?.boardLayout).toEqual(saved.design.boardLayout);
- await page.reload();await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);expect((await state(page)).design.boardLayout).toEqual(saved.design.boardLayout);
+ await page.reload();await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);expect((await state(page)).design.boardLayout).toEqual(saved.design.boardLayout);
  await command(page,[{type:'design.patch',patch:{boardLayout:{regions:[],breakers:[],pieces:[]}}}]);expect((await state(page)).design.boardLayout).toBeUndefined();await filesSummary(page).click();await page.locator('input[type="file"][accept*="json"]').setInputFiles({name:'layout.json',mimeType:'application/json',buffer:Buffer.from(file)});await expect.poll(async()=>JSON.stringify((await state(page)).design.boardLayout)).toBe(JSON.stringify(saved.design.boardLayout));
  const beforeApi=await state(page),region={id:'e2e-agent-region',level:1 as const,polygon:[{x:20,y:20},{x:80,y:20},{x:80,y:65},{x:20,y:65}],angleDeg:33,colour:'tt_prime_plus:Dark Cocoa'};
  const dry=await page.evaluate(async(request)=>(window as unknown as {deckcraft:DeckAgentApi}).deckcraft.preview(request),{id:`preview-${++requestId}`,expectedRevision:beforeApi.revision,commands:[{type:'layout.region',region}]});expect(dry.ok).toBeTruthy();expect((await state(page)).design).toEqual(beforeApi.design);expect((await state(page)).history).toEqual(beforeApi.history);

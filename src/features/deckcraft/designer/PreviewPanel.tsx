@@ -211,7 +211,7 @@ export interface PreviewPanelProps{
   homeTab?:HomeTabId;homeTabs?:readonly HomeTab[];onHomeTab?:(tab:HomeTabId)=>void;
   /** Draw's "Deck settings": its panel at Deck shape & size (height, levels, wrap). */
   onHomeSettings?:()=>void;
-  /** The new look (uiMode.ts): its top bar carries the sheets, so the drawing's own head is left out and the plan shows
+  /** The new look (next/NextShell.tsx): its top bar carries the sheets, so the drawing's own head is left out and the plan shows
    *  every rail group's tools. */
   next?:boolean;
 

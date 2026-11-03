@@ -2,19 +2,24 @@ import {test,expect} from '@playwright/test';
 import {proofDir} from './nav';
 import {choose,design,field,fileMenu,group,open,panel,pick,picks,ready,shell,sheet,topBar,rail} from './next-ui';
 
-// The new look (docs/deckcraft/ui-redesign-2026-10/PLAN.md, slice S1): `?ui=next` swaps the homeowner screens for a
-// full-bleed scene with a top bar, a five-group rail, a docked panel and a price pill, remembered on the device until
-// `?ui=classic`. The design, its sections and their editors are the same ones the classic page uses.
+// The new look (docs/deckcraft/ui-redesign-2026-10/PLAN.md): the homeowner page is a full-bleed scene with a top bar, a
+// five-group rail, a docked panel and a price pill. The design, its sections and their editors are the same ones the
+// cost estimator's studio uses with its own screens.
 const shots=proofDir('deckcraft-next-shell');
 test.beforeEach(async({page})=>{await page.setViewportSize({width:1440,height:900});});
 
-test('the new look is the default; ?ui=classic keeps the old page while slice S5 retires it',async({page,context})=>{
- await open(page,context,'/deck-designer/');
+test('the page is the new look, prerendered that way, and the old screens cannot come back',async({page,context})=>{
+ // The prerendered HTML is already the new look (slice S5c): its top bar, rail and price pill, none of the old header,
+ // tabs or price bar.
+ const html=await (await page.request.get('/deck-designer/')).text();
+ for(const piece of ['dd-next-top','dd-next-rail','dd-next-price'])expect(html).toContain(`class="${piece}`);
+ for(const old of ['dd-header','dd-workspace-price','dd-home-tabs'])expect(html).not.toContain(old);
+ // The retired switch, asked for or remembered from an earlier visit, changes nothing.
+ await context.addInitScript(()=>{try{localStorage.setItem('deckcraft.ui','classic');}catch{/* no storage */}});
+ await open(page,context,'/deck-designer/?ui=classic');
  await expect(shell(page)).toHaveCount(1);
  await expect(page.getByRole('tablist',{name:'Design',exact:true})).toHaveCount(0);
- await page.goto('/deck-designer/?ui=classic');
- await expect(page.getByRole('tablist',{name:'Design',exact:true})).toBeVisible();
- await expect(shell(page)).toHaveCount(0);
+ await expect(page.locator('.dd-header,.dd-workspace-price')).toHaveCount(0);
 });
 
 test('the new look puts the scene first with a top bar, a rail and the price',async({page,context})=>{
@@ -95,16 +100,6 @@ test('the file menu keeps every file action',async({page,context})=>{
  await expect(page.getByRole('button',{name:/Link to this design|Share/}).first()).toBeVisible();
  await topBar(page).locator('summary',{hasText:'Start over'}).click();
  await expect(topBar(page).getByRole('button',{name:'Start a new design',exact:true})).toBeVisible();
-});
-
-test('the choice is remembered on the device until the classic look is asked for',async({page,context})=>{
- await open(page,context);
- await page.goto('/deck-designer/');await ready(page);
- await expect(shell(page)).toHaveCount(1);
- await page.goto('/deck-designer/?ui=classic');await ready(page);
- await expect(shell(page)).toHaveCount(0);
- await page.goto('/deck-designer/');await ready(page);
- await expect(shell(page)).toHaveCount(0);
 });
 
 // Slice S2: each group's quick picks make the same edits as the full editors under More.
@@ -227,7 +222,8 @@ test('Extras picks light the deck, add a screen, add demolition and pick the fou
 // Review fixes and gaps (S2).
 test('a group opens folded when a plan tool or Start over brought it forward',async({page,context})=>{
  await open(page,context);
- // A plan tool that belongs to Shape brings that group forward while the panel is shut.
+ // A plan tool that belongs to Shape brings that group forward while the panel is shut (a desktop opens in 3D).
+ await sheet(page,'Plan').click();
  await page.getByRole('radio',{name:'Shape & points',exact:true}).click();
  await group(page,'Shape').click();
  await expect(panel(page).locator('.dd-next-quick')).toBeVisible();
@@ -292,9 +288,10 @@ test('Shape picks lock where the full editor locks, and a locked choice stays re
  // A locked number names its reason, as the full editor's fields do.
  for(const name of [/^Width Set by the outline$/,/^Depth Set by the outline$/])await expect(picks(page,'Size').getByRole('textbox',{name})).toBeDisabled();
  for(const name of ['1 level','2 levels','3 levels'])await expect(pick(page,'Levels',name)).toBeDisabled();
- const [colour,background]=await pick(page,'Levels','1 level').evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor];});
- expect(colour).toBe('rgb(255, 255, 255)');
- expect(background).not.toBe('rgb(20, 38, 28)');
+ // The pick eases between colours, so the settled ones are read.
+ const colours=()=>pick(page,'Levels','1 level').evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor];});
+ await expect.poll(async()=>(await colours())[1]).not.toBe('rgb(20, 38, 28)');
+ expect((await colours())[0]).toBe('rgb(255, 255, 255)');
 });
 
 test('a stair side follows that side, dropping an edge picked under More',async({page,context})=>{

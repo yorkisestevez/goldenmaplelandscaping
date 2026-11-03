@@ -6,7 +6,7 @@ import {mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {expect,test,type Page} from '@playwright/test';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
-import {openDesignerMode,pickPlanTool,savedConfiguration,showProjectControls} from './nav';
+import {openDesignerMode,pickPlanTool,savedConfiguration,showProjectControls,startOnPlan} from './nav';
 
 const proof=resolve(process.env.E2E_OUTPUTS??'/opt/cursor/artifacts','design-tools-review');
 mkdirSync(proof,{recursive:true});
@@ -65,7 +65,7 @@ test.beforeEach(async({page,context})=>{
     if(['127.0.0.1','localhost'].includes(host)&&['GET','HEAD'].includes(route.request().method()))return route.continue();
     return route.fulfill({status:200,body:''});
   });
-  await page.goto('/deck-designer/');
+  await page.goto('/deck-designer/');await startOnPlan(page);
   await ready(page);
 });
 

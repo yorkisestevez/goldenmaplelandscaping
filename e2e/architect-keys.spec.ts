@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
-import {openDesignerMode,pickPlanTool,showProjectControls} from './nav';
-test.beforeEach(async({page,context})=>{await context.addInitScript('window.__name=(target,value)=>target;');await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);});
+import {openDesignerMode,pickPlanTool,showProjectControls,startOnPlan} from './nav';
+test.beforeEach(async({page,context})=>{await context.addInitScript('window.__name=(target,value)=>target;');await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);});
 test('Architect help, file save, point editing and fit navigation',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await showProjectControls(page);await page.keyboard.press('F1');const help=page.getByRole('dialog',{name:'Keyboard shortcuts',exact:true});await expect(help).toBeVisible();await expect(help).toContainText('Ctrl+A');await page.keyboard.press('Escape');await expect(help).not.toBeVisible();
  await page.keyboard.press('e');await expect(page.getByRole('radio',{name:'Shape & points',exact:true})).toHaveAttribute('aria-checked','true');await page.keyboard.press('e');await expect(page.getByRole('radio',{name:'Deck size',exact:true})).toHaveAttribute('aria-checked','true');
@@ -31,7 +31,7 @@ test('Architect transform keys and help in 3D',async({page})=>{
  expect(answer.ok,answer.ok?'':answer.error?.message).toBe(true);
  await expect(page.locator('[data-autosave-state="saving"]')).toBeVisible();
  await expect(page.locator('[data-autosave-state="saved"]')).toBeVisible();
- await page.reload();await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);await page.locator('.dd-hardscape-plan-picks polygon').first().click();await page.getByRole('tab',{name:'3D',exact:true}).click();const bar=page.getByLabel('3D edit controls',{exact:true});await expect(bar).toBeVisible();
+ await page.reload();await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);await page.locator('.dd-hardscape-plan-picks polygon').first().click();await page.getByRole('tab',{name:'3D',exact:true}).click();const bar=page.getByLabel('3D edit controls',{exact:true});await expect(bar).toBeVisible();
  for(const [key,label] of [['r','Rotate'],['s','Resize'],['t','Move'],['e','Shape'],['m','Move']]){await page.keyboard.press(key);await expect(bar.getByRole('button',{name:label,exact:true})).toHaveAttribute('aria-pressed','true');}
  await page.keyboard.press('r');await page.keyboard.press('F1');const help=page.getByRole('dialog',{name:'Keyboard shortcuts',exact:true});await expect(help).toBeVisible();await page.keyboard.press('t');await expect(bar.getByRole('button',{name:'Rotate',exact:true})).toHaveAttribute('aria-pressed','true');await page.keyboard.press('Escape');await expect(help).not.toBeVisible();
 });

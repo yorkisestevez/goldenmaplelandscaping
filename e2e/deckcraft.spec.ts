@@ -1,5 +1,5 @@
 import {readFileSync} from 'node:fs';
-import {openDesignTask,openDesignerMode,savedConfiguration,showTabTools,filesSummary,isNextUi,openHomeTab,openPriceSchedule,showSheet,pricedSubtotal,showProjectControls as navShowProjectControls} from './nav';
+import {openDesignTask,openDesignerMode,savedConfiguration,showTabTools,filesSummary,isNextUi,openHomeTab,openPriceSchedule,showSheet,pricedSubtotal,showProjectControls as navShowProjectControls,startOnPlan} from './nav';
 import {expect,test,type Locator,type Page} from '@playwright/test';
 import {newLandscapeObject,newLandscapePlant} from '../src/features/deckcraft/landscapeCatalogue';
 import {publicContact} from '../src/data/business';
@@ -226,7 +226,7 @@ async function openDesigner(page:Page){
   const problems:string[]=[];
   page.on('console',m=>{if(m.type()==='error'&&!KNOWN_CONSOLE.some(r=>r.test(m.text())))problems.push(m.text());});
   page.on('pageerror',e=>problems.push(String(e)));
-  await page.goto('/deck-designer/');
+  await page.goto('/deck-designer/');await startOnPlan(page);
   await expect(page.getByRole('heading',{level:1})).toContainText(TITLE);
   await expect((await price(page))).toContainText('$');
   // Existing sizing workflows explicitly select their tool; boundary.spec verifies the new default.
@@ -759,7 +759,7 @@ test('paints a row of accent boards, lists and keeps it, and prices the fitting 
   await openSection(page,'Proposal & files');
   await expect(fullList(page).getByRole('listitem').filter({hasText:'Accent-colour board labour'})).toHaveText(/^Accent-colour board labour \d+(?:\.\d+)? boards · Planning allowance$/);
   await page.waitForTimeout(800);// autosave runs 450 ms after the last change
-  await page.reload();
+  await page.reload();await startOnPlan(page);
   await openSection(page,'Boards & finish');
   await expect(panel.getByRole('listitem')).toHaveText(/Row 6 from the house/);
   await panel.getByRole('button',{name:'Remove: Row 6 from the house'}).click();
@@ -872,7 +872,7 @@ test('adds skirting under the deck, prices it from the rate table, and keeps it 
   await expect(skirting.getByRole('status')).toContainText(pricedStatus);
   await expect((await price(page))).not.toHaveText(boarded??'');
   await page.waitForTimeout(800);// autosave runs 450 ms after the last change
-  await page.reload();
+  await page.reload();await startOnPlan(page);
   await openSection(page,'Privacy, skirting & extras');
   await expect(page.getByLabel('Skirting style',{exact:true})).toHaveValue('Lattice');
   await openSection(page,'Proposal & files');
@@ -901,7 +901,7 @@ test('gives the border and stair treads their own colours, quotes a tread line w
   await page.getByRole('combobox',{name:'Railing colour',exact:true}).selectOption('Matte Black');
   await expect(railingColourNote(page)).toHaveText('Matte Black: the colour on screen is illustrative; confirm with a sample.');
   await page.waitForTimeout(800);// autosave runs 450 ms after the last change
-  await page.reload();
+  await page.reload();await startOnPlan(page);
   await openSection(page,'Boards & finish');
   await expect(page.getByLabel('Border boards colour',{exact:true})).toHaveValue('tt_legacy:Espresso');
   await expect(page.getByLabel('Stair tread colour',{exact:true})).toHaveValue('tt_terrain_plus:Dark Oak');
@@ -1007,7 +1007,7 @@ test('offers a frameless glass railing in three mounts, as a supplier quote with
   await expect(cap).toBeDisabled();
   await expect(page.getByText('Cap light on each railing post · a frameless glass railing has no posts')).toBeVisible();
   await page.waitForTimeout(800);// autosave runs 450 ms after the last change
-  await page.reload();
+  await page.reload();await startOnPlan(page);
   await openSection(page,'Stairs & railings');
   await expect(page.getByLabel('Railing style',{exact:true})).toHaveValue('Frameless Glass');
   await expect(page.getByLabel('Glass railing mount',{exact:true})).toHaveValue('Spigots');
@@ -1381,7 +1381,7 @@ test('moves an outline point in both directions and refuses crossed edges',async
   await page.getByLabel('Selected point X in feet').fill('-1');await page.getByLabel('Selected point Y in feet').fill('6');
   await preview(page).getByRole('button',{name:'Apply',exact:true}).click();await expect(preview(page).locator('.dd-boundary-notice')).toContainText('cross');
   await expect.poll(async()=>(await savedConfiguration(page))?.deckOutlines?.main?.[2]??null).toEqual({x:17,y:13});
-  await page.reload();await planTool(page,'Shape & points');
+  await page.reload();await startOnPlan(page);await planTool(page,'Shape & points');
   await expand(preview(page),'Fine adjust a point');await page.getByLabel('Selected boundary point').selectOption('2');
   await expect(page.getByLabel('Selected point X in feet')).toHaveValue('17');await expect(page.getByLabel('Selected point Y in feet')).toHaveValue('13');expect(problems).toEqual([]);
 });
@@ -1462,7 +1462,7 @@ test('dresses the house in the exterior studio without changing the price, and k
   await expect(viewer3d(page)).toBeVisible();
   await expect((await price(page))).toHaveText(before??'');
   await page.waitForTimeout(800);// autosave runs 450 ms after the last change
-  await page.reload();
+  await page.reload();await startOnPlan(page);
   const again=await openExterior(page);
   await expect(again.getByRole('group',{name:'House cladding'}).getByRole('button',{name:'Cedar shakes'})).toHaveAttribute('aria-pressed','true');
   await again.getByRole('button',{name:'Roof',exact:true}).click();
@@ -1497,7 +1497,7 @@ test('finishes one wall with its own cladding and a wainscot, dresses the house 
   await expect(viewer3d(page)).toBeVisible();
   await expect((await price(page))).toHaveText(walled??'');
   await page.waitForTimeout(800);// autosave runs 450 ms after the last change
-  await page.reload();
+  await page.reload();await startOnPlan(page);
   const again=await openExterior(page);
   await again.getByRole('button',{name:'Looks',exact:true}).click();
   await expect(again.getByRole('button',{name:'Coastal look',exact:true})).toHaveAttribute('aria-pressed','true');
@@ -1517,7 +1517,7 @@ test('keeps the design after a reload',async({page})=>{
   await setNumber(page,'Deck width',22);
   await expect(size(page)).toContainText('22 × 12 ft');
   await page.waitForTimeout(800);// autosave runs 450 ms after the last change
-  await page.reload();
+  await page.reload();await startOnPlan(page);
   await expect(size(page)).toContainText('22 × 12 ft');
 });
 
@@ -1870,17 +1870,3 @@ test('@phone fits the screen, with the send button in reach',async({page})=>{
   expect(await sendDialog(page).evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=window.innerWidth;})).toBe(true);
 });
 
-test('@phone keeps the price and "Send my design" on screen in drawing focus',async({page})=>{
-  // Phones hide the header's Send, so the price bar carries it, even in the drawing focus the designer opens in.
-  await page.goto('/deck-designer/');
-  await expect(page.locator('.deck-designer')).toHaveAttribute('data-drawing-focus','true');
-  const bar=page.getByRole('region',{name:'Live price',exact:true}),navigation=page.getByRole('group',{name:'Drawing navigation',exact:true});
-  await expect(bar.getByRole('status',{name:'Priced subtotal'})).toContainText('$');
-  await expect(bar).toBeInViewport({ratio:1});await expect(navigation).toBeVisible();
-  // Two rows at most, and the drawing's zoom bar stays above it.
-  const box=(await bar.boundingBox())!,nav=(await navigation.boundingBox())!;
-  expect(box.height).toBeLessThanOrEqual(120);expect(nav.y+nav.height).toBeLessThanOrEqual(box.y+1);
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
-  await bar.getByRole('button',{name:'Send my design',exact:true}).click();
-  await expect(page.getByRole('dialog',{name:'Send your design to Golden Maple'})).toBeVisible();
-});

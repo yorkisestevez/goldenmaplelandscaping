@@ -1,6 +1,6 @@
 import {test,expect,type Page} from '@playwright/test';
 import {readFileSync} from 'node:fs';
-import {openDesignTask} from './nav';
+import {openDesignTask,startOnPlan} from './nav';
 
 // The permit drawing set in the designer: Proposal & files opens it, its nine sheets preview, the lot for the site plan
 // can be entered from a survey in metres, and the PDF and DXF download with the right names and contents. Nothing is
@@ -14,7 +14,7 @@ async function openProposalFiles(page:Page){
   await openDesignTask(page,'Proposal & files');
 }
 async function openPermitSet(page:Page){
-  await page.goto('/deck-designer/');
+  await page.goto('/deck-designer/');await startOnPlan(page);
   await openProposalFiles(page);
   const permit=page.locator('details').filter({has:page.locator('summary',{hasText:'Permit drawings (planning set)'})});
   await permit.locator('summary').click();
@@ -87,7 +87,7 @@ test('@phone the permit set opens and previews on a phone',async({page})=>{
 });
 
 test('CAD downloads and assistant permit actions use the current design',async({page},info)=>{
-  await page.goto('/deck-designer/');
+  await page.goto('/deck-designer/');await startOnPlan(page);
   await openProposalFiles(page);
   await page.locator('summary',{hasText:'CAD & 3D model exports'}).click();
   for(const [label,extension,signature] of [['Download COLLADA (.dae)','dae','<COLLADA'],['Download GLB','glb','glTF'],['Materials CSV','csv','"estimate item ID","section"']] as const){

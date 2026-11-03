@@ -1,4 +1,5 @@
 import {expect,test,type Page} from '@playwright/test';
+import {startOnPlan} from './nav';
 
 /**
  * The Pro workspace's rulers (Designer Mode, `?designer=1`): feet along the plan's top and left edges that follow pan,
@@ -98,7 +99,7 @@ test('Pro rulers mark real feet along the plan and follow zoom and Fit',async({p
 
 test('the public designer’s plan has no rulers',async({page})=>{
   const problems=watchConsole(page);
-  await page.goto('/deck-designer/');
+  await page.goto('/deck-designer/');await startOnPlan(page);
   await expect(page.getByRole('heading',{level:1})).toBeVisible();
   await expect(page.getByRole('radiogroup',{name:'Plan tools'})).toBeVisible();
   await expect(page.getByRole('menubar',{name:'Pro workspace menu'})).toHaveCount(0);

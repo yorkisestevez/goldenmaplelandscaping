@@ -1,5 +1,5 @@
 import {expect,test,type Page} from '@playwright/test';
-import {openDesignerMode,pickPlanTool,showProjectControls} from './nav';
+import {openDesignerMode,pickPlanTool,showProjectControls,startOnPlan} from './nav';
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import type {AgentCommand,AgentResponse} from '../src/features/deckcraft/designer/deckAgentController';
@@ -21,7 +21,7 @@ test.beforeEach(async({context})=>{
     return route.fulfill({status:200,contentType:type==='stylesheet'?'text/css':type==='script'?'text/javascript':'text/plain',body:''});
   });
 });
-async function open(page:Page){await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);}
+async function open(page:Page){await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);}
 async function execute(page:Page,commands:AgentCommand[],id=`browser-${Date.now()}-${Math.random()}`){return page.evaluate(({commands,id})=>window.deckcraft!.execute({id,commands}),{commands,id});}
 const good=(r:AgentResponse)=>{expect(r.ok,JSON.stringify(r)).toBe(true);if('error' in r)throw new Error(r.error.message);return r;};
 
@@ -43,7 +43,7 @@ test('agent previews leave autosave untouched; validated batch is acknowledged a
   const undo=good(await execute(page,[{type:'history.undo'}]));expect(undo.snapshot.design).toEqual(before.snapshot.design);
   good(await execute(page,[{type:'history.redo'}]));
   await expect.poll(async()=>JSON.parse((await savedProject(page))!).configuration.width).toBe(20);
-  await page.reload();await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);expect((await page.evaluate(()=>window.deckcraft!.read())).design.width).toBe(20);
+  await page.reload();await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);expect((await page.evaluate(()=>window.deckcraft!.read())).design.width).toBe(20);
 });
 
 test('agent rejects stale, unknown and private inputs; review is manual and never submits',async({page})=>{

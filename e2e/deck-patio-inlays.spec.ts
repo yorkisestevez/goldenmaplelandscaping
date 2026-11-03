@@ -1,5 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
-import {pickPlanTool,savedConfiguration} from './nav';
+import {pickPlanTool,savedConfiguration,startOnPlan} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
@@ -23,7 +23,7 @@ async function focusPatio(page:Page){
  for(let n=0;n<5;n++)await page.getByRole('button',{name:'Zoom in',exact:true}).click();expect((await read(page)).design).toEqual(before);
  const dimensions=await canvas.evaluate(el=>{const ancestors=[];for(let e:Element|null=el;e;e=e.parentElement){const c=getComputedStyle(e),b=e.getBoundingClientRect();ancestors.push({tag:e.tagName,class:e.className,rect:{x:b.x,y:b.y,w:b.width,h:b.height},height:c.height,maxHeight:c.maxHeight,overflow:c.overflow,overflowY:c.overflowY});}return {viewport:{w:innerWidth,h:innerHeight},ancestors};});writeFileSync(resolve(proof,`${page.viewportSize()!.width<800?'phone':'desktop'}-canvas-bounds.json`),JSON.stringify(dimensions,null,2));
 }
-test.beforeEach(async({page,context})=>{await context.addInitScript('window.__name=(target,value)=>target;');await context.addInitScript(configuration=>{const key='golden-maple.deck-studio.deck-only.v1';if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));},fixture);await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&['GET','HEAD'].includes(r.request().method())?r.continue():r.fulfill({status:200,body:''}));await page.goto('/deck-designer/');await ready(page);await pickPlanTool(page,'Patios & walls');await controls(page).getByRole('tab',{name:'Materials',exact:true}).click();await expect(inlays(page)).toBeVisible();});
+test.beforeEach(async({page,context})=>{await context.addInitScript('window.__name=(target,value)=>target;');await context.addInitScript(configuration=>{const key='golden-maple.deck-studio.deck-only.v1';if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));},fixture);await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&['GET','HEAD'].includes(r.request().method())?r.continue():r.fulfill({status:200,body:''}));await page.goto('/deck-designer/');await startOnPlan(page);await ready(page);await pickPlanTool(page,'Patios & walls');await controls(page).getByRole('tab',{name:'Materials',exact:true}).click();await expect(inlays(page)).toBeVisible();});
 
 for(const touch of [false,true])test(`${touch?'@phone ':''}patio inlays place rotate edit material delete Undo and persist`,async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));const ui=inlays(page);
@@ -38,7 +38,7 @@ for(const touch of [false,true])test(`${touch?'@phone ':''}patio inlays place ro
  await expect.poll(async()=>(await savedConfiguration(page))?.yardFeatures?.[0]).toEqual(kept);
  await ui.getByRole('combobox',{name:'Selected patio inlay',exact:true}).selectOption(kept.inlays![0].id);await ui.locator('.dd-patio-inlay-fields').screenshot({path:resolve(proof,`${touch?'phone':'desktop'}-inlay-controls.png`)});await ui.locator('.dd-patio-inlay-actions').screenshot({path:resolve(proof,`${touch?'phone':'desktop'}-inlay-actions.png`)});await pickPlanTool(page,'Landscape');await focusPatio(page);await page.getByLabel('Deck drawing canvas',{exact:true}).screenshot({path:resolve(proof,`${touch?'phone':'desktop'}-compass-plan.png`)});
  if(!touch){await page.getByRole('tab',{name:'3D',exact:true}).click();await page.getByRole('group',{name:'Camera',exact:true}).getByRole('button',{name:'Overview',exact:true}).click();const viewer=page.getByRole('region',{name:'Interactive deck construction model',exact:true});await expect(viewer.locator('canvas')).toBeVisible();await page.waitForLoadState('networkidle');await page.waitForTimeout(1500);await viewer.screenshot({path:resolve(proof,'desktop-compass-physical-3d.png')});expect((await read(page)).design.yardFeatures![0]).toEqual(kept);}
- await page.reload();await ready(page);expect((await read(page)).design.yardFeatures![0]).toEqual(kept);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);expect(errors).toEqual([]);
+ await page.reload();await startOnPlan(page);await ready(page);expect((await read(page)).design.yardFeatures![0]).toEqual(kept);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);expect(errors).toEqual([]);
 });
 
 test('custom patio inlay closes on right-click and corner pulls commit once',async({page})=>{

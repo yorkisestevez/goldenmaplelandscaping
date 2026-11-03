@@ -1,5 +1,5 @@
 import {expect,test,type Page} from '@playwright/test';
-import {savedConfiguration} from './nav';
+import {savedConfiguration,startOnPlan} from './nav';
 import {mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 
@@ -13,7 +13,7 @@ test.beforeEach(async({context})=>{
   });
 });
 async function open(page:Page){
-  await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);
+  await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);
   const seeded=await page.evaluate(()=>window.deckcraft!.execute({id:'dimension-fixture',commands:[{type:'design.patch',patch:{deckType:'Freestanding',houseVisible:false,stairFlights:0}},{type:'boundary.set',level:1,points:[{x:0,y:0},{x:192,y:0},{x:192,y:144},{x:0,y:144}]}]}));expect(seeded.ok,JSON.stringify(seeded)).toBe(true);
   await outline(page);
 }
@@ -29,7 +29,7 @@ test('contractor dimensions rotate actual geometry; saved locks block dragging, 
  let before=await read(page);expect(before.boundaries[0].points[0]).toEqual({x:0,y:0});expect(before.boundaries[0].points[1].x).toBeCloseTo(197.5*Math.cos(Math.PI/12),6);expect(before.boundaries[0].points[2]).toEqual({x:192,y:144});
  await page.getByRole('button',{name:'Lock edge',exact:true}).click();await expect.poll(async()=>((await read(page)).design.boundaryLocks?.length)).toBe(1);
  const locked=await read(page);expect(locked.pricing).toEqual(before.pricing);expect(locked.quantities).toEqual(before.quantities);
- await persistedLocks(page);await page.reload();await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);await outline(page);await page.getByLabel('Selected boundary edge').selectOption('0');await expect(page.getByRole('button',{name:'Unlock edge',exact:true})).toBeVisible();
+ await persistedLocks(page);await page.reload();await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);await outline(page);await page.getByLabel('Selected boundary edge').selectOption('0');await expect(page.getByRole('button',{name:'Unlock edge',exact:true})).toBeVisible();
  before=await read(page);await length.fill('18');await page.getByRole('button',{name:'Apply edge dimension',exact:true}).click();await expect(page.locator('.dd-boundary-notice')).toContainText('locked');expect((await read(page)).boundaries).toEqual(before.boundaries);
  const endpoint=page.getByRole('button',{name:'Main deck point 2',exact:true});await endpoint.scrollIntoViewIfNeeded();const box=(await endpoint.boundingBox())!;
  await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x+box.width/2+22,box.y+box.height/2+3,{steps:4});await page.mouse.up();
@@ -50,5 +50,5 @@ test('edge dimension and lock controls fit phone and retain one-step undo @phone
  const dimensions=page.getByRole('region',{name:'Contractor edge dimensions'});
  expect(await dimensions.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
  for(const control of [dimensions.getByRole('button',{name:'Apply edge dimension',exact:true}),dimensions.getByRole('button',{name:'Unlock edge',exact:true}),page.getByLabel('Selected edge length'),page.getByLabel('Selected edge angle in degrees')]){const box=(await control.boundingBox())!;expect(box.height).toBeGreaterThanOrEqual(44);expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(page.viewportSize()!.width+1);}
- await proof(page,'phone-edge-dimensions.png');await persistedLocks(page);await page.reload();await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);expect((await read(page)).design.boundaryLocks?.[0].edge).toBe(2);
+ await proof(page,'phone-edge-dimensions.png');await persistedLocks(page);await page.reload();await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);expect((await read(page)).design.boundaryLocks?.[0].edge).toBe(2);
 });

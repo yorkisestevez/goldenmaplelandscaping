@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {openDesignTask} from './nav';
+import {openDesignTask,startOnPlan} from './nav';
 
 /**
  * The customer view (?view=customer), opened straight from its link. The page is prerendered without the query, so the
@@ -11,7 +11,7 @@ test('a direct customer-view link hides the contractor details',async({page,cont
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
- await page.goto('/deck-designer/?view=customer');
+ await page.goto('/deck-designer/?view=customer');await startOnPlan(page);
  await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
  await expect(page.locator('.deck-designer')).toHaveAttribute('data-customer','true');
  await openDesignTask(page,'Privacy, skirting & extras');
@@ -24,7 +24,7 @@ test('a direct customer-view link hides the contractor details',async({page,cont
 test('the designer without the customer view keeps the contractor details',async({page,context})=>{
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
- await page.goto('/deck-designer/');
+ await page.goto('/deck-designer/');await startOnPlan(page);
  await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
  await expect(page.locator('.deck-designer')).not.toHaveAttribute('data-customer');
  await openDesignTask(page,'Privacy, skirting & extras');

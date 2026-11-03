@@ -31,8 +31,8 @@ export async function savedJobLibrary(page:Page){
   return storedProjectJson(page,'jobs');
 }
 
-/** Which screens the page shows (docs/deckcraft/ui-redesign-2026-10/PLAN.md): the new look is the default; `?ui=classic`
- * keeps the old page while slice S5 removes it. */
+/** Which screens the page shows (docs/deckcraft/ui-redesign-2026-10/PLAN.md): the homeowner page is the new look and
+ * Designer Mode the CAD workspace; the cost estimator's studio keeps the older screens (tabs, header, price bar). */
 const designReady=(page:Page)=>expect.poll(()=>page.evaluate(()=>(window as {deckcraft?:{read():{ready:boolean}}}).deckcraft?.read().ready??false),{timeout:60_000}).toBe(true);
 export const isNextUi=async(page:Page)=>{await designReady(page);return (await page.locator('.deck-designer[data-ui="next"]').count())>0;};
 const isCad=async(page:Page)=>{await designReady(page);return (await page.locator('.deck-designer[data-ui="cad"]').count())>0;};
@@ -52,6 +52,15 @@ export async function showSheet(page:Page,name:'Plan'|'3D'|'Framing'){
   }
   await tab.click();
   await expect(tab).toHaveAttribute('aria-selected','true');
+}
+
+/** A desktop opens in 3D (deck-open-3d.spec.ts). Tests written for the plan start there, as the page did before: picking
+ * the Plan sheet also counts as the visitor starting, so a 3D view that loads afterwards does not take over. Phones and
+ * narrow windows open on the plan already. */
+export async function startOnPlan(page:Page){
+  await designReady(page);
+  if((page.viewportSize()?.width??0)>800)await showSheet(page,'Plan');
+  await expect(page.locator('.dd-canvas>:is(.dd-plan-viewport,.dd-site-plan)').first()).toBeVisible();
 }
 
 /** The new look's five rail groups. */

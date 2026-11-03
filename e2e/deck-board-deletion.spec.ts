@@ -1,5 +1,5 @@
 import {test,expect,type Page,type BrowserContext} from '@playwright/test';
-import {openDesignerMode,pickPlanTool,savedConfiguration} from './nav';
+import {openDesignerMode,pickPlanTool,savedConfiguration,startOnPlan} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import * as THREE from 'three';
@@ -38,7 +38,7 @@ test.beforeEach(async({context,page})=>{
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(configuration=>{if(!localStorage.getItem('golden-maple.deck-studio.deck-only.v1'))localStorage.setItem('golden-maple.deck-studio.deck-only.v1',JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));},fixture);
  await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)&&['GET','HEAD'].includes(r.request().method())?r.continue():r.fulfill({body:''}));
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready)).toBe(true);
+ await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready)).toBe(true);
  await pickPlanTool(page,'Board layout');await expect(page.locator('.dd-board-layout-svg')).toBeVisible();
 });
 
@@ -61,7 +61,7 @@ test('Delete replaces one selected picture-frame cut and retains all other edges
  expect(after.boards.some(b=>b.layoutId===region.id&&b.role==='field')).toBe(true);expect(after.boards.filter(b=>b.role==='border').length).toBeGreaterThan(3);
  await page.screenshot({path:resolve(proof,'desktop-frame-replacement.png'),fullPage:true});await undo(page);expect((await read(page)).design).toEqual(before.design);expect((await read(page)).pricing).toEqual(before.pricing);await redo(page);
  await expect.poll(async()=>(await savedConfiguration(page))?.boardLayout?.regions[0]?.replaceBorder).toBe(true);
- await page.reload();await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready)).toBe(true);expect((await read(page)).design.boardLayout).toEqual(after.design.boardLayout);expect((await read(page)).pricing.total).toBe(after.pricing.total);
+ await page.reload();await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready)).toBe(true);expect((await read(page)).design.boardLayout).toEqual(after.design.boardLayout);expect((await read(page)).pricing.total).toBe(after.pricing.total);
  const response=await page.evaluate(()=>window.deckcraft!.execute({id:'delete-share',commands:[{type:'action',action:'share.create'}]}));expect(response.ok).toBe(true);if(response.ok){const visitor=await context.newPage();await visitor.goto(response.result!.url!);await expect.poll(()=>visitor.evaluate(()=>window.deckcraft?.read().ready)).toBe(true);expect((await read(visitor)).design.boardLayout).toEqual(after.design.boardLayout);expect((await read(visitor)).pricing.total).toBe(after.pricing.total);await visitor.close();}
  writeFileSync(resolve(proof,'frame-exact-price.json'),JSON.stringify({before:before.pricing.total,after:after.pricing.total,selectedCut:board.polygon,replacement:region},null,2));
 });

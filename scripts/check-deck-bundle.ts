@@ -126,12 +126,14 @@ ok(cssKB<=BUDGET_KB.routeCss,`Deck designer route CSS is ${cssKB.toFixed(1)} KB 
 // (DeckDesigner.tsx piecesReady, PreviewPanel.tsx partsReady) or it is thrown away and redrawn on a slow load.
 // October 21 (P1, four tabs): the homeowner's tab strip took the Project controls button's place, which only Designer Mode
 // shows now; the tab panel is its own chunk, loaded when a tab first opens it.
+// November 2 (S5c): the page is prerendered in the new look, whose top bar, rail and price pill are three more preloaded
+// pieces; its file menu's project tools (closed until opened) mount once the page is running.
 {
   const routeCss=css.map(f=>readFileSync(new URL(f,assets),'utf8')).join('\n');
   ok(routeCss.includes('.dd-ribbon-tabs{')&&routeCss.includes('.dd-simple-tools{')&&routeCss.includes('.dd-plan-navigation{'),"The four tabs, the tools ribbon and the plan's zoom bar are styled by the route's stylesheet");
   ok(!files.some(f=>/^PlanToolPicker-.*\.css$/.test(f)),'The tools ribbon has no stylesheet of its own to land after the first paint');
   const streamed=readFileSync(new URL('../deck-designer/index.html',assets),'utf8').match(/\$RC\("B:\d+"/g)?.length??0;
-  ok(streamed===6,`The prerendered designer streams ${streamed} Suspense boundaries; 6 expected (the drawing, the Project controls, the four tabs and tools, the plan, and React Router's two data handoffs; the tab panel opens after the page). Preload any new one before hydration, then update this count.`);
+  ok(streamed===9,`The prerendered designer streams ${streamed} Suspense boundaries; 9 expected (the new look's top bar, rail and price pill, the drawing, the Project controls, the tools, the plan, and React Router's two data handoffs; the group panel opens after the page). Preload any new one before hydration, then update this count.`);
 }
 for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^ProposalDialog-/,/^proposalPdf-/,/^pdfAssets-/,/^proposalModel-/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/,/^optionDeltas-/,/^useOptionDeltas-/,/^splitFaceStone-/,/^HomePanel-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
 // Each section body, and the site plan's editor, is a chunk of its own (one merged into the route would pass the test

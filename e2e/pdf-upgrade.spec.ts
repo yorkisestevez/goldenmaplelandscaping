@@ -1,8 +1,8 @@
 import {test,expect} from '@playwright/test';
 import {jsPDF} from 'jspdf';
-import {openDesignTask} from './nav';
+import {openDesignTask,startOnPlan} from './nav';
 test('patched PDF importer renders pages and rejects invalid PDFs',async({page})=>{
- await page.goto('/deck-designer/');
+ await page.goto('/deck-designer/');await startOnPlan(page);
  await openDesignTask(page,'Backyard');
  const survey=page.getByLabel('Survey file',{exact:true});
  await expect(survey).toBeVisible();

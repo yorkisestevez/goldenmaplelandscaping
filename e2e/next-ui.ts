@@ -1,11 +1,14 @@
 import {expect,type Page,type BrowserContext} from '@playwright/test';
+import {startOnPlan} from './nav';
 
 // The new look's page parts (docs/deckcraft/ui-redesign-2026-10/PLAN.md), shared by its desktop and phone specs.
 export const ready=(page:Page)=>expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false),{timeout:60_000}).toBe(true);
-export async function open(page:Page,context:BrowserContext,path='/deck-designer/?ui=next'){
+export async function open(page:Page,context:BrowserContext,path='/deck-designer/'){
  await context.addInitScript('window.__name=(t,v)=>t');
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&r.request().method()==='GET'?r.continue():r.fulfill({status:200,body:''}));
  await page.goto(path);await ready(page);
+ // The homeowner page's tests start on the plan, as it opened before desktops opened in 3D.
+ if(!path.includes('designer=1'))await startOnPlan(page);
 }
 export const shell=(page:Page)=>page.locator('.deck-designer[data-ui="next"]');
 export const rail=(page:Page)=>page.getByRole('navigation',{name:'Design groups'});

@@ -65,6 +65,8 @@ export default function PlanViewport({children,frame,navigationTarget,fitToken,l
     const aim=area?(area.top+area.bottom)/2-(s.top+s.height/2):0;
     frozen.current=frame;setView({zoom:next,x:-dx*next,y:aim-dy*next});
   });
+  // That view is the new look's: Designer Mode, which takes over from the page's first (homeowner) render, fits again.
+  useEffect(()=>{if(!labelPx&&opened.current){opened.current=false;fit();}},[!!labelPx]);
   // A phone opens on its own view (labelPx, above), so the token only fits when it changes after that.
   const fitTokenSeen=useRef<string|number|undefined>(labelPx?fitToken:undefined);
   useEffect(()=>{

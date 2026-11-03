@@ -11,7 +11,7 @@ const short:Record<PlanTool,string>={size:'Size',outline:'Points',stairs:'Stairs
  * The homeowner's four tabs (homeTabs.ts) above the drawing, on every sheet, and on the plan the open tab's tools. The page
  * owns the open tab: a tab also opens its panel and view, and a tool picked elsewhere (a located warning, the agent) brings
  * its own tab forward. The arrow keys move between tabs and Enter or Space opens one, since opening Materials or Extras
- * loads the 3D view. The new look (`flat`, uiMode.ts) has its rail instead of tabs, so the plan shows every group's tools.
+ * loads the 3D view. The new look (`flat`, next/NextShell.tsx) has its rail instead of tabs, so the plan shows every group's tools.
  */
 export default function PlanToolPicker({tool,onPick,hint,onSketch,sketchReady=true,tab,tabs,onTab,onPlan,onSettings,flat=false}:{tool:PlanTool;onPick:(tool:PlanTool)=>void;hint:string;onSketch?:()=>void;sketchReady?:boolean;tab:HomeTabId;tabs:readonly HomeTab[];onTab:(tab:HomeTabId)=>void;onPlan:boolean;onSettings?:()=>void;flat?:boolean}){
  const visible=!onPlan?[]:flat?[...new Set(tabs.flatMap(t=>t.tools))]:tabs.find(t=>t.id===tab)?.tools??[],current=tabs.findIndex(t=>t.id===tab);

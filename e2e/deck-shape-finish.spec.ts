@@ -1,5 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
-import {pickPlanTool} from './nav';
+import {pickPlanTool,startOnPlan} from './nav';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
 const read=(page:Page)=>page.evaluate(()=>(window as unknown as {deckcraft:DeckAgentApi}).deckcraft.read());
@@ -8,7 +8,7 @@ test('right-click applies a drawn area and breaker as one undoable edit each',as
  await context.addInitScript(configuration=>localStorage.setItem('golden-maple.deck-studio.deck-only.v1',JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration})),{...DEFAULT_DECK,deckType:'Freestanding',houseVisible:false,stairFlights:0,railingType:'None',width:20,length:12,deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk'});
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({status:200,body:''}));
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('/deck-designer/');await expect.poll(async()=>{try{return (await read(page)).ready;}catch{return false;}}).toBe(true);
+ await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(async()=>{try{return (await read(page)).ready;}catch{return false;}}).toBe(true);
  await pickPlanTool(page,'Board layout');
  for(const mode of ['Select area','Add breaker']){
   const before=await read(page);await page.getByRole('button',{name:mode,exact:true}).click();

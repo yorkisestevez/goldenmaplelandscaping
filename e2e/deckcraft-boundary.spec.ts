@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';
 import {expect,test,type Locator,type Page} from '@playwright/test';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
-import {pickPlanTool,savedConfiguration} from './nav';
+import {pickPlanTool,savedConfiguration,startOnPlan} from './nav';
 
 type Point={x:number;y:number};
 type PointerSample={type:string;x:number;y:number;scale:number};
@@ -21,7 +21,7 @@ const outlines=(page:Page)=>page.locator('.dd-boundary-outline');
 const points=(page:Page,level=0)=>outlines(page).nth(level).evaluate(el=>(el.getAttribute('points')??'').split(' ').map(pair=>{const [x,y]=pair.split(',').map(Number);return {x,y};}));
 async function files(page:Page){const menu=tools(page).locator('.dd-workspace-files');if(!await menu.evaluate(el=>(el as HTMLDetailsElement).open))await menu.locator('summary').first().click();}
 async function open(page:Page){
-  await page.goto('/deck-designer/');
+  await page.goto('/deck-designer/');await startOnPlan(page);
   await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);
   await pickPlanTool(page,'Shape & points');
   await expect(handle(page,'Main deck point 1')).toBeVisible();
@@ -68,7 +68,7 @@ test('Escape, pointer cancellation and invalid final crossing leave the original
 test('saved JSON, reload, import and a shared link retain inserted and free coordinates',async({page,context})=>{
   await open(page);await handle(page,'Main deck edge 3').click();await handle(page,'Add point').click();await handle(page,'Main deck point 4').press('Shift+ArrowDown');const before=await points(page),configuration=await exported(page);expect(configuration.deckOutlines.main).toHaveLength(5);
   await expect.poll(async()=>(await savedConfiguration(page))?.deckOutlines?.main?.length).toBe(5);
-  await page.reload();await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);await pickPlanTool(page,'Shape & points');await expect(handle(page,'Main deck point 5')).toBeVisible();expect(await points(page)).toEqual(before);
+  await page.reload();await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);await pickPlanTool(page,'Shape & points');await expect(handle(page,'Main deck point 5')).toBeVisible();expect(await points(page)).toEqual(before);
   await files(page);await tools(page).getByRole('button',{name:'Share link',exact:true}).click();const link=await tools(page).getByLabel('Link to this design').inputValue();const visitor=await context.newPage();await visitor.goto(link);await expect.poll(()=>visitor.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);await pickPlanTool(visitor,'Shape & points');await expect(handle(visitor,'Main deck point 5')).toBeVisible();expect(await points(visitor)).toEqual(before);await visitor.close();
   await handle(page,'Main deck point 4').press('Shift+ArrowDown');await files(page);await tools(page).getByLabel('Import Golden Maple design JSON').setInputFiles({name:'boundary.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}))});await expect.poll(()=>points(page)).toEqual(before);
 });

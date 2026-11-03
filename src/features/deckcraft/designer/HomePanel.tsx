@@ -20,7 +20,7 @@ export interface HomePanelProps{
   /** Jump to a section (Price & send's Edit links and each section's next link), which takes the focus. Price & send: send
    *  the design, download the PDF, and the share link's warm-lead ping. */
   onEdit:(id:SectionId)=>void;onSend:()=>void;onDownloadPdf:()=>void;pdfBusy:boolean;onWarmShare?:()=>void;
-  /** The new look (uiMode.ts) has no price bar, so its quote opens the price schedule and its change list. */
+  /** The new look (next/NextShell.tsx) has no price bar, so its quote opens the price schedule and its change list. */
   onSchedule?:()=>void;
   /** The new look's quick picks for this tab (next/QuickPicks.tsx); its sections then wait under More. */
   quick?:ReactNode;

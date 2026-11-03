@@ -1,5 +1,5 @@
 import {expect,test,type Page} from '@playwright/test';
-import {isNextUi,pickPlanTool} from './nav';
+import {isNextUi,pickPlanTool,startOnPlan} from './nav';
 const handle=(page:Page)=>page.getByRole('button',{name:'Main deck point 3',exact:true});
 test.beforeEach(async({context})=>{
   await context.route('**/*',route=>{const host=new URL(route.request().url()).hostname;return ['127.0.0.1','localhost'].includes(host)?route.fallback():route.abort();});
@@ -21,7 +21,7 @@ const openPoint=(page:Page,preferred:{x:number;y:number},box:{x:number;y:number;
   return preferred;
 },{preferred,box});
 test('zoom and pan change only the view; editing at zoom preserves exact world distances and one-step undo',async({page})=>{
-  await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);await pickPlanTool(page,'Shape & points');await expect(handle(page)).toBeVisible();
+  await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);await pickPlanTool(page,'Shape & points');await expect(handle(page)).toBeVisible();
   const original=await shape(page),before=await matrix(page);
   await page.getByRole('button',{name:'Zoom in',exact:true}).click();await expect(page.getByLabel('Drawing zoom')).toHaveText('125%');await aligned(page);
   expect(await shape(page)).toBe(original);expect((await matrix(page)).a).toBeCloseTo(before.a*1.25,6);
@@ -52,7 +52,7 @@ test('zoom and pan change only the view; editing at zoom preserves exact world d
   await page.getByRole('region',{name:'Save and restore design'}).getByRole('button',{name:'Undo',exact:true}).click();await expect.poll(()=>shape(page)).toBe(original);
 });
 test('@phone view navigation keeps touch handles 44 px; pan does not reshape the deck and ordinary scrolling remains available',async({page,context})=>{
-  await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);await pickPlanTool(page,'Shape & points');await expect(handle(page)).toBeVisible();const original=await shape(page);
+  await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);await pickPlanTool(page,'Shape & points');await expect(handle(page)).toBeVisible();const original=await shape(page);
   const opened=parseInt((await page.getByLabel('Drawing zoom').textContent())!);
   await page.getByRole('button',{name:'Zoom out',exact:true}).click();await expect.poll(async()=>parseInt((await page.getByLabel('Drawing zoom').textContent())!)).toBe(Math.round(opened*.8));await aligned(page);
   await page.getByRole('button',{name:'Pan drawing',exact:true}).click();const canvas=page.getByLabel('Deck drawing canvas');await canvas.scrollIntoViewIfNeeded();const cdp=await context.newCDPSession(page),before=await matrix(page);

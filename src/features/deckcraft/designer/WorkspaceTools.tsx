@@ -2,7 +2,7 @@ import {useEffect,useRef,type ReactNode} from 'react';
 import ShareDesignLink from '../ShareDesignLink';
 import type {DeckData} from '../types';
 interface Props{data:DeckData;linkBackup:boolean;designStatus:string;designError:string;onSave:()=>void;onImport:(file?:File)=>Promise<void>;onRestoreOwn:()=>void;onStartOver:()=>void;onUndo:()=>void;onRedo:()=>void;canUndo:boolean;canRedo:boolean;autosavePaused?:boolean;onDownloadPrevious?:()=>void;
-  /** The new look (uiMode.ts): an icon-only "File menu" opener, and more file tools (the project ZIP) at the menu's end. */
+  /** The new look (next/NextShell.tsx): an icon-only "File menu" opener, and more file tools (the project ZIP) at the menu's end. */
   compact?:boolean;extra?:ReactNode}
 export default function WorkspaceTools(p:Props){
   const file=useRef<HTMLInputElement>(null),menu=useRef<HTMLDetailsElement>(null);

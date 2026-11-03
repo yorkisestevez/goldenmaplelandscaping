@@ -1,10 +1,10 @@
-// Pinned to the classic page (?ui=classic): it tests the old screens, which slice S5b retires after porting what
-// they check that still applies (docs/deckcraft/ui-redesign-2026-10/PLAN.md §5e).
 import {expect,test,type Page} from '@playwright/test';
+import {startOnPlan} from './nav';
 
 /**
- * The Pro workspace (Designer Mode, `?designer=1`): a menu bar, ribbon, left tool strip and status bar around the same
- * designer. The public designer must not change, so the last test opens it without the flag.
+ * The Pro workspace (Designer Mode, `?designer=1`, laid out as in deckcraft-pro-cad.spec.ts): its menus, ribbon tools,
+ * wizards, terrain tools and layers around the same designer. The public designer must not change, so the last test
+ * opens it without the flag.
  */
 const KNOWN_CONSOLE=[/`selected` on <option>/,/THREE\./,/WebGL|GPU stall|swiftshader|GroupMarkerNotSet/i,/React DevTools/,/Failed to load resource/];
 
@@ -24,16 +24,16 @@ const ribbonTab=(page:Page,name:string)=>ribbon(page).getByRole('tab',{name,exac
 const ribbonButton=(page:Page,name:string)=>page.locator('#dd-pro-ribbon-panel').getByRole('button',{name,exact:true});
 const statusBar=(page:Page)=>page.getByRole('region',{name:'Status bar',exact:true});
 const strip=(page:Page)=>page.locator('.dd-pro-strip');
-/** The docked properties panel, one of its design-area bars (named by the area, its summary following), and an open area. */
+/** The inspector, one of its design-area tabs (named by the area), and the area it shows. */
 const properties=(page:Page)=>page.locator('#dd-pro-properties');
-const group=(page:Page,name:string)=>properties(page).getByRole('button',{name:new RegExp(`^${name.replace(/[&()]/g,'\\$&')}\\b`)});
-const area=(page:Page,name:string)=>properties(page).getByRole('region',{name:new RegExp(`^${name.replace(/[&()]/g,'\\$&')}\\b`)});
+const group=(page:Page,name:string)=>properties(page).getByRole('tab',{name,exact:true});
+const area=(page:Page,name:string)=>properties(page).getByRole('tabpanel',{name,exact:true});
 
 async function openPro(page:Page){
   const problems:string[]=[];
   page.on('console',m=>{if(m.type()==='error'&&!KNOWN_CONSOLE.some(r=>r.test(m.text())))problems.push(m.text());});
   page.on('pageerror',e=>problems.push(String(e)));
-  await page.goto('/deck-designer/?ui=classic&designer=1');
+  await page.goto('/deck-designer/?designer=1');
   await expect(menubar(page)).toBeVisible();
   await expect(ribbon(page)).toBeVisible();
   // The design is ready once the header's Presets button is (the menus that need a ready design wait for it too).
@@ -48,18 +48,17 @@ async function choose(page:Page,menuName:string,item:string){
 test('opens the Pro workspace: menu bar, ribbon, tool strip, status bar and the price in view',async({page},info)=>{
   const problems=await openPro(page);
   for(const name of ['File','Edit','Add','Settings','View','Tools','Help'])await expect(menuButton(page,name)).toBeVisible();
-  for(const name of ['Main','Building','Terrain','Landscape','Materials','Plan Detail'])await expect(ribbonTab(page,name)).toBeVisible();
+  for(const name of ['Home','Deck','Stairs & rails','House','Yard','Terrain','Documents'])await expect(ribbonTab(page,name)).toBeVisible();
   await expect(strip(page).getByRole('group',{name:'Quick tools'})).toBeVisible();
   await expect(statusBar(page)).toContainText('F1');
-  // The Pro shell replaces the task menus and the simple tool picker, and never hides the price.
-  await expect(page.getByRole('navigation',{name:'Design tasks'})).toBeHidden();
-  await expect(page.getByRole('region',{name:'Drawing tools'})).toHaveCount(0);
+  // The Pro shell replaces the homeowner's rail and quick picks, and never hides the price.
+  await expect(page.getByRole('navigation',{name:'Design groups'})).toHaveCount(0);
   await expect(page.getByRole('region',{name:'Live price'}).getByRole('status',{name:'Priced subtotal'})).toContainText('$');
-  // Reference pictures of the shell for design review (the assertions above are the test).
   await page.setViewportSize({width:1440,height:900});
-  // On a 1440 × 900 screen the whole workspace fits: the price bar and the status bar are on screen without scrolling.
+  // On a 1440 × 900 screen the whole workspace fits: the price and the status bar are on screen without scrolling.
   await expect(page.getByRole('region',{name:'Live price'})).toBeInViewport({ratio:1});
   await expect(statusBar(page)).toBeInViewport({ratio:1});
+  // Reference pictures of the shell for design review (the assertions above are the test).
   await page.screenshot({path:info.outputPath('pro-workspace.png')});
   await menuButton(page,'File').click();
   await page.screenshot({path:info.outputPath('pro-workspace-file-menu.png')});
@@ -85,15 +84,15 @@ test('works its menus from the keyboard and runs the designer actions they name'
   await menuButton(page,'Edit').click();
   await expect(menu(page,'Edit').getByRole('menuitem',{name:'Undo'})).toBeDisabled();
   await page.keyboard.press('Escape');
-  // View switches the drawing's sheet; Add opens the matching design inspector; Help opens the shortcuts.
+  // View switches the drawing's sheet; Add opens the matching design area; Help opens the shortcuts.
   await choose(page,'View','3D');
   await expect(page.getByRole('tab',{name:'3D',exact:true})).toHaveAttribute('aria-selected','true');
   await choose(page,'View','Plan');
   await expect(page.getByRole('tab',{name:'Plan',exact:true})).toHaveAttribute('aria-selected','true');
-  // Add opens the design area in the docked properties panel, never in a pop-over over the drawing.
+  // Add opens the design area in the inspector, never in a pop-over over the drawing.
   await choose(page,'Add','Stairs & railings');
   await expect(properties(page).getByRole('heading',{level:2})).toHaveText('Edit Stairs & Railings');
-  await expect(group(page,'Stairs & railings')).toHaveAttribute('aria-expanded','true');
+  await expect(group(page,'Stairs & railings')).toHaveAttribute('aria-selected','true');
   await expect(page.getByRole('dialog',{name:'Design inspector'})).toHaveCount(0);
   await choose(page,'Help','Keyboard shortcuts');
   await expect(page.getByRole('dialog',{name:'Keyboard shortcuts'})).toBeVisible();
@@ -102,7 +101,7 @@ test('works its menus from the keyboard and runs the designer actions they name'
 
 test('picks tools and sheets from the ribbon, with the plan’s zoom docked in the tool strip',async({page})=>{
   const problems=await openPro(page);
-  await ribbonTab(page,'Building').click();
+  await ribbonTab(page,'Stairs & rails').click();
   await ribbonButton(page,'Stairs').click();
   await expect(ribbonButton(page,'Stairs')).toHaveAttribute('aria-pressed','true');
   await expect(statusBar(page).getByRole('status')).toContainText('Stairs');
@@ -117,48 +116,42 @@ test('picks tools and sheets from the ribbon, with the plan’s zoom docked in t
   await zoom.getByRole('button',{name:'Fit drawing'}).click();
   await expect(zoom.getByLabel('Drawing zoom')).toHaveText('100%');
   await expect(statusBar(page)).toContainText('fit');
-  // Plan Detail's sheets switch the drawing; a tool picked on another sheet brings the plan back.
-  await ribbonTab(page,'Plan Detail').click();
-  await ribbonButton(page,'Framing').click();
+  // The sheets switch the drawing; a tool picked on another sheet brings the plan back.
+  await page.getByRole('tablist',{name:'Drawing sheets'}).getByRole('tab',{name:'Framing',exact:true}).click();
   await expect(page.getByRole('tab',{name:'Framing',exact:true})).toHaveAttribute('aria-selected','true');
   await expect(statusBar(page).getByRole('status')).toContainText('Framing');
   await strip(page).getByRole('button',{name:'Shape & points'}).click();
   await expect(page.getByRole('tab',{name:'Plan',exact:true})).toHaveAttribute('aria-selected','true');
   // Ribbon tabs move with the arrow keys.
-  await ribbonTab(page,'Plan Detail').focus();await page.keyboard.press('Home');
-  await expect(ribbonTab(page,'Main')).toBeFocused();await expect(ribbonTab(page,'Main')).toHaveAttribute('aria-selected','true');
+  await ribbonTab(page,'Documents').focus();await page.keyboard.press('Home');
+  await expect(ribbonTab(page,'Home')).toBeFocused();await expect(ribbonTab(page,'Home')).toHaveAttribute('aria-selected','true');
   expect(problems).toEqual([]);
 });
 
-test('edits the selected object in the docked properties panel, beside the drawing',async({page})=>{
+test('edits the selected object in the inspector, beside the drawing',async({page})=>{
   const problems=await openPro(page);
-  // The deck is the open design area at first: its title, its areas as bars (one open), and its information.
+  // The deck is the subject at first: its title, its areas as tabs (one showing), and its information.
   await expect(properties(page).getByRole('heading',{level:2})).toHaveText('Edit Deck');
-  await expect(group(page,'Deck shape & size')).toHaveAttribute('aria-expanded','true');
+  await expect(group(page,'Deck shape & size')).toHaveAttribute('aria-selected','true');
+  await group(page,'Information').click();
   await expect(properties(page).getByLabel('Deck information')).toContainText('192 sq ft');
   // Its settings work in place, and the drawing, header and price stay usable around them.
   const price=page.getByRole('region',{name:'Live price'}).getByRole('status',{name:'Priced subtotal'}),before=await price.textContent();
+  await group(page,'Deck shape & size').click();
   const width=area(page,'Deck shape & size').getByLabel('Deck width',{exact:true});
   await width.fill('20');await width.press('Enter');
-  await expect(page.locator('#deck-live-preview .dd-preview-head h2')).toContainText('20 × 12 ft');
   await expect(price).not.toHaveText(before??'');
+  await group(page,'Information').click();
   await expect(properties(page).getByLabel('Deck information')).toContainText('240 sq ft');
   await page.getByRole('region',{name:'Save and restore design'}).getByRole('button',{name:'Undo'}).click();
-  await expect(page.locator('#deck-live-preview .dd-preview-head h2')).toContainText('16 × 12 ft');
-  // One area open at a time; the open one folds away and back.
-  await group(page,'Boards & finish').click();
-  await expect(group(page,'Boards & finish')).toHaveAttribute('aria-expanded','true');
-  await expect(group(page,'Deck shape & size')).toHaveAttribute('aria-expanded','false');
-  await expect(area(page,'Boards & finish')).toBeVisible();
-  await group(page,'Boards & finish').click();
-  await expect(group(page,'Boards & finish')).toHaveAttribute('aria-expanded','false');
-  await expect(area(page,'Boards & finish')).toHaveCount(0);
-  // Picking the house on the plan brings up the house; the ribbon opens other areas in the same panel.
+  await expect(properties(page).getByLabel('Deck information')).toContainText('192 sq ft');
+  await expect(price).toHaveText(before??'');
+  // Picking the house on the plan brings up the house; the ribbon opens other areas in the same inspector.
   await strip(page).getByRole('button',{name:'Select parts'}).click();
   await page.getByRole('button',{name:'Select Main house'}).click();
   await expect(properties(page).getByRole('heading',{level:2})).toHaveText('Edit House');
-  await expect(group(page,'House')).toHaveAttribute('aria-expanded','true');
-  await ribbonTab(page,'Building').click();
+  await expect(group(page,'House')).toHaveAttribute('aria-selected','true');
+  await ribbonTab(page,'Stairs & rails').click();
   await ribbonButton(page,'Lighting').click();
   await expect(properties(page).getByRole('heading',{level:2})).toHaveText('Edit Stairs & Railings');
   await expect(area(page,'Lighting')).toBeVisible();
@@ -169,7 +162,7 @@ test('builds a deck, house, patio and pool with the Tools wizards, each as one u
   const problems=await openPro(page);
   const wizard=(name:string)=>page.getByRole('dialog',{name});
   const next=async(name:string)=>wizard(name).getByRole('button',{name:'Next',exact:true}).click();
-  const heading=page.locator('#deck-live-preview .dd-preview-head h2');
+  const size=async()=>{await group(page,'Information').click();return properties(page).getByLabel('Deck information');};
   const price=page.getByRole('region',{name:'Live price'}).getByRole('status',{name:'Priced subtotal'}),before=await price.textContent();
   // Escape leaves a wizard without changing anything.
   await choose(page,'Tools','Deck wizard…');
@@ -193,12 +186,12 @@ test('builds a deck, house, patio and pool with the Tools wizards, each as one u
   await expect(deck.getByLabel('What will change')).toContainText('Helical Piles');
   await deck.getByRole('button',{name:'Apply to design'}).click();
   await expect(deck).toHaveCount(0);
-  await expect(heading).toContainText('20 × 12 ft');
   await expect(price).not.toHaveText(before??'');
   await expect(properties(page).getByRole('heading',{level:2})).toHaveText('Edit Deck');
+  await expect(await size()).toContainText('240 sq ft');
   // One undo step takes the whole wizard back.
   await page.getByRole('region',{name:'Save and restore design'}).getByRole('button',{name:'Undo'}).click();
-  await expect(heading).toContainText('16 × 12 ft');
+  await expect(await size()).toContainText('192 sq ft');
   await expect(price).toHaveText(before??'');
   // The house wizard resizes the house (appearance only: the price stays).
   await choose(page,'Tools','House wizard…');
@@ -281,7 +274,7 @@ test('leaves the Pro workspace for the public designer, which never shows the Pr
   await expect(menubar(page)).toHaveCount(0);
   await expect(page.locator('.deck-designer')).not.toHaveAttribute('data-pro',/.*/);
   // Remembered on the device: a fresh visit without the flag stays public.
-  await page.goto('/deck-designer/?ui=classic');
+  await page.goto('/deck-designer/');await startOnPlan(page);
   await expect(page.getByRole('heading',{level:1})).toBeVisible();
   await expect(page.getByRole('radiogroup',{name:'Plan tools'})).toBeVisible();
   await expect(menubar(page)).toHaveCount(0);

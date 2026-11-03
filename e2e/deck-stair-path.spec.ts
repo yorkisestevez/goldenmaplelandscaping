@@ -1,5 +1,5 @@
 import {expect,test,type Page} from '@playwright/test';
-import {closeSketchMeasurements,openDesignTask,openSketchFiles,openSketchMeasurements,savedConfiguration} from './nav';
+import {closeSketchMeasurements,openDesignTask,openSketchFiles,openSketchMeasurements,savedConfiguration,startOnPlan} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
@@ -49,7 +49,7 @@ test.beforeEach(async({page,context})=>{
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(({configuration})=>{const key='golden-maple.deck-studio.deck-only.v1';if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));},{configuration:{...DEFAULT_DECK,width:16,length:12,height:30,levels:1,stairFlights:0,customerName:'Stair path QA',projectAddress:'Local browser fixture'}});
  await context.route('**/*',route=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(route.request().url())&&route.request().method()==='GET'?route.continue():route.fulfill({status:200,body:''}));
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);
+ await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);
 });
 test.afterEach(async({page})=>expect(caught.get(page)??[],'Native stair sketch interaction must not throw').toEqual([]));
 
@@ -82,7 +82,7 @@ test('an open line creates its exact stair opening, remains editable and persist
  await expect.poll(async()=>(await savedConfiguration(page))?.stairRiserCount).toBe(6);
  // The width is edited after the risers: wait for autosave to hold it too, or a slow runner reloads the earlier width.
  await expect.poll(async()=>JSON.stringify((await savedConfiguration(page))?.stairPath)).toBe(JSON.stringify(edited.design.stairPath));
- await page.reload();await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);expect((await state(page)).design.stairPath).toEqual(edited.design.stairPath);expect((await state(page)).design.stairRiserCount).toBe(6);expect((await state(page)).design.stairTreadDepthIn).toBe(12.5);expect((await state(page)).pricing).toEqual(edited.pricing);
+ await page.reload();await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);expect((await state(page)).design.stairPath).toEqual(edited.design.stairPath);expect((await state(page)).design.stairRiserCount).toBe(6);expect((await state(page)).design.stairTreadDepthIn).toBe(12.5);expect((await state(page)).pricing).toEqual(edited.pricing);
  writeFileSync(resolve(proof,'desktop-line-persistence.json'),JSON.stringify({applied,edited,reloaded:await state(page)},null,2));await stairControls(page);await page.screenshot({path:resolve(proof,'desktop-line-editable-persisted.png')});
 });
 

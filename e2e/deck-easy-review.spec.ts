@@ -1,5 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
-import {savedConfiguration,showProjectControls} from './nav';
+import {savedConfiguration,showProjectControls,startOnPlan} from './nav';
 import {mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
@@ -14,7 +14,7 @@ test.beforeEach(async({context,page})=>{
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(({storageKey,fixture})=>localStorage.setItem(storageKey,JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration:fixture})),{storageKey,fixture});
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&r.request().method()==='GET'?r.continue():r.fulfill({status:200,body:''}));
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready)).toBe(true);
+ await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready)).toBe(true);
 });
 for(const phone of [false,true])test.describe(phone?'phone actionable review':'desktop actionable review',()=>{
  test.use({viewport:phone?{width:390,height:844}:{width:1440,height:1000},hasTouch:phone,isMobile:phone});
