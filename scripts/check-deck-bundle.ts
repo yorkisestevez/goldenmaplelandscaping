@@ -110,7 +110,13 @@ import {basename} from 'node:path';
 // October 31 (picture-frame overhang follows the board, PR 209): the board's overhang limit and the finished-fascia
 // offset ride with the first estimate — option-deltas worker 213.0 KB gzip, 15 bytes over. Raised to 213.5 KB with the
 // owner's approval.
-const BUDGET_KB={routeInitial:278,routeCss:12,viewer:341,pdf:150,deltaWorker:214,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35,splitStone:6.5};
+// November 2 (open stringer stairs, skirting behind them and the paver pad at the stair foot): the stair cladding,
+// skirting run and pad price ride with the first estimate — option-deltas worker 214.1 KB gzip. Raised to 214.5 KB with
+// the owner's approval; the pad's pavers and their renderer are a chunk of their own, so the viewer stays within 340 KB.
+// November 3 (estate lighting meets the open stringer stairs, PR 215): together the option-deltas worker measures
+// 214.8 KB gzip; the new paver and pool lights and their GFCI and ESA warnings ride with the estimate. Raised to 215 KB with
+// the owner's approval.
+const BUDGET_KB={routeInitial:278,routeCss:12,viewer:341,pdf:150,deltaWorker:215,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35,splitStone:6.5};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);

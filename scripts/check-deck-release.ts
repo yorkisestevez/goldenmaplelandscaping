@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {DEFAULT_DECK,NEW_DECK} from '../src/features/deckcraft/defaults';
 import {DESIGN_STORAGE_KEY,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {DECK_RELEASE_STORAGE_KEY,deckReleaseData,parseDeckReleaseDesign,serializeDeckReleaseDesign,calculateDeckReleaseEstimate} from '../src/features/deckcraft/deckRelease';
 import {exportDeckReleaseDXF,exportDeckReleaseOBJ} from '../src/features/deckcraft/deckReleaseExports';
@@ -183,7 +183,7 @@ for(const privacySqft of [24,25,137,500]){
     ok(SECTIONS.every(s=>sectionSummary(s,d).length>0),`${label}: every row has a current choice`);
   }
   // The "changed" mark compares a section's fields with the default design; an edit belongs to its fields' sections.
-  const plain=deckReleaseData(structuredClone(DEFAULT_DECK));
+  const plain=deckReleaseData(structuredClone(NEW_DECK));
   ok(SECTIONS.every(s=>!sectionChanged(s,plain)),'On the default design no section is marked changed');
   const changed=(patch:Partial<DeckData>)=>SECTIONS.filter(s=>sectionChanged(s,deckReleaseData({...plain,...patch}))).map(s=>s.id).join();
   ok(changed({width:20})==='deck'&&changed({stairFlights:2})==='stairs'&&changed({deckFinishes:{railingColor:'Matte Black'}})==='stairs'&&changed({deckFinishes:{border:'tt_legacy:Espresso'}})==='boards'&&changed({boardColours:[]})===''&&changed({sceneLighting:'Evening'})==='','Each change marks only its own section (an empty list is no change)');
