@@ -5,6 +5,9 @@ import {dollars,type DeckEstimate} from './designFacts';
 import {drawnDeck} from './estimatorDeck';
 import type {EstimatorDeck} from './estimatorHandoff';
 import type {DeckData} from './types';
+// The studio draws the designer's older screens (header, tabs, price bar): their stylesheet comes with this chunk, so a
+// visit that arrives here from the deck designer page (which never loads it) is styled from its first frame.
+import './designer/classicChrome.css';
 import './estimatorStudio.css';
 
 /**

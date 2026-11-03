@@ -173,6 +173,16 @@ test('@phone a drawing tool opens its controls as a drawer above the price row, 
  await expect(drawer).not.toHaveAttribute('open','');
 });
 
+test('@phone on a short phone a drawing tool\'s drawer never shrinks the plan below 40 %',async({page,context})=>{
+ // 375 × 667: the band above the drawer is about 130 px, less than the room the edge dimensions ask for.
+ await page.setViewportSize({width:375,height:667});
+ await open(page,context);
+ await page.getByRole('radio',{name:'Shape & points',exact:true}).click();
+ await expect(page.locator('details.dd-selection-inspector')).toHaveAttribute('open','');
+ const zoom=page.getByRole('group',{name:'Drawing navigation',exact:true}).getByLabel('Drawing zoom');
+ await expect.poll(async()=>parseInt(await zoom.textContent()??'0')).toBeGreaterThanOrEqual(40);
+});
+
 test('@phone the narrowest phones keep the top bar, its menu and the price row inside the screen',async({page,context})=>{
  await page.setViewportSize({width:320,height:640});
  await open(page,context);

@@ -57,8 +57,10 @@ export default function PlanViewport({children,frame,navigationTarget,fitToken,l
     const r=stage.current?.querySelector('svg.dd-site-plan')?.getBoundingClientRect(),s=stage.current?.getBoundingClientRect(),area=openArea?openArea():undefined;
     if(!r?.width||!r.height||!s||area===null)return;
     opened.current=true;
-    const unit=Math.min(r.width/frame.w,r.height/frame.h),margin=72/* room for the edge dimensions outside the deck */;
-    const whole=area?.fit?Math.min((s.width-2*margin)/((frame.b.maxX-frame.b.minX)*unit),(area.bottom-area.top-2*margin)/((frame.b.maxZ-frame.b.minZ)*unit)):Infinity;
+    // Room for the edge dimensions outside the deck: 72 px, but never more than a quarter of the space (a short phone's
+    // band above the drawer is barely 130 px), and the fit never shrinks the drawing below 40 % to make it.
+    const unit=Math.min(r.width/frame.w,r.height/frame.h),room=(span:number)=>span-2*Math.min(72,span/4);
+    const whole=area?.fit?Math.max(.4,Math.min(room(s.width)/((frame.b.maxX-frame.b.minX)*unit),room(area.bottom-area.top)/((frame.b.maxZ-frame.b.minZ)*unit))):Infinity;
     // Fitting the deck may mean zooming out a little; otherwise the plan only ever opens zoomed in.
     const next=limit(Math.min(labelPx/(SMALLEST_LABEL*unit),whole));if(next<=1&&!area?.fit)return;
     const dx=((frame.b.minX+frame.b.maxX)/2-frame.x-frame.w/2)*unit,dy=((frame.b.minZ+frame.b.maxZ)/2-frame.y-frame.h/2)*unit;

@@ -26,14 +26,14 @@ test('a desktop opens in 3D, and the controls around the drawing stay where they
  expect(await page.evaluate(()=>(window as any).__shift)).toBeLessThanOrEqual(0.005);
 });
 
-test('a visitor who starts on the plan before the 3D view is ready stays on it',async({page,context})=>{
+for(const how of ['click','key'] as const)test(`a visitor who starts on the plan (${how}) before the 3D view is ready stays on it`,async({page,context})=>{
  await page.setViewportSize({width:1440,height:900});
  await stubOffsite(context);
- // The viewer's chunk is held, so the visitor's first click lands while the plan is still up.
+ // The viewer's chunk is held, so the visitor's first press lands while the plan is still up.
  let release=()=>{};const held=new Promise<void>(done=>{release=done;});
  await context.route(/\/assets\/Deck3DViewer-[^/]*\.js$/,async route=>{await held;await route.continue();});
  await page.goto('/deck-designer/');await ready(page);
- await page.mouse.click(720,480);
+ if(how==='click')await page.mouse.click(720,480);else await page.keyboard.press('Tab');
  release();
  await page.waitForResponse(/\/assets\/Deck3DViewer-[^/]*\.js$/);
  await page.evaluate(()=>new Promise(done=>setTimeout(done,500)));

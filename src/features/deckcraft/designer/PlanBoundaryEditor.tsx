@@ -33,8 +33,8 @@ const clearBand=(clip:DOMRect):LabelRect=>{
   const card=document.querySelector('.dd-selection-inspector[open]')?.getBoundingClientRect();
   return {left:clip.left,top:Math.max(clip.top,...rects('.dd-next-top,.dd-simple-tools').filter(r=>r.top<middle).map(r=>r.bottom)),
     right:card?.height&&card.left>clip.left+clip.width/2&&card.top<middle?Math.min(clip.right,card.left):clip.right,
-    // A phone's open drawer can reach above the middle of the full-screen plan.
-    bottom:Math.min(clip.bottom,...rects('.dd-selection-inspector[open],.dd-next-price,.dd-next-dock').filter(r=>r.top>clip.top+clip.height/3).map(r=>r.top))};
+    // A phone's open drawer can reach above the middle of the full-screen plan; folded, its bar still sits over the foot.
+    bottom:Math.min(clip.bottom,...rects('.dd-selection-inspector,.dd-next-price,.dd-next-rail').filter(r=>r.top>clip.top+clip.height/3).map(r=>r.top))};
 };
 
 export interface PlanBoundaryEditorProps{
@@ -210,7 +210,7 @@ export default function PlanBoundaryEditor({data,model,update,onEdited,onStatus,
     const a=editing.boundary.points[editing.index],b=editing.boundary.points[(editing.index+1)%editing.boundary.points.length],pos=at(world(editing.boundary,{x:(a.x+b.x)/2,y:(a.y+b.y)/2}));
     const rect=box.current.getBoundingClientRect(),viewport=box.current.closest('.dd-plan-viewport'),clip=viewport?.getBoundingClientRect()??rect,width=Math.min(300,clip.width-24);
     const {top:roof,right:wall,bottom:floor}=clearBand(clip);
-    const x=rect.left+pos.left*viewZoom,y=rect.top+pos.top*viewZoom,navigation=viewport?.querySelector('.dd-plan-navigation')?.getBoundingClientRect(),bottom=navigation?Math.min(floor,navigation.top-8):floor,height=Math.min(inlineHeight,bottom-roof-24);
+    const x=rect.left+pos.left*viewZoom,y=rect.top+pos.top*viewZoom,navigation=viewport?.querySelector('.dd-plan-navigation')?.getBoundingClientRect(),bottom=navigation?Math.min(floor,navigation.top-8):floor,height=Math.min(inlineHeight,Math.max(120,bottom-roof-24));
     const clampX=(v:number)=>Math.max(clip.left+12,Math.min(wall-width-12,v)),clampY=(v:number)=>Math.max(roof+12,Math.min(bottom-height-12,v));
     let left=clampX(x-width/2),top=clampY(y+30);
     // An endpoint that is present in the SVG must also remain visible beside the editor when space permits.

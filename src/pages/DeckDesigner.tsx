@@ -199,20 +199,22 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   const next=!pro&&!embed,nextRef=useRef(next),cad=pro&&!embed;
   nextRef.current=next;
   // A desktop opens in 3D (owner, 2026-11-02): once the page is running, WebGL works and the 3D viewer (fetched as the plan
-  // opens) has loaded, the plan hands over to the 3D view, unless the visitor has already started on the page. Phones and
-  // browsers saving data stay on the plan, with no 3D download at load.
+  // opens) has loaded, the plan hands over to the 3D view, unless the visitor has already started on the page (a press, a
+  // key or a wheel). Phones and browsers saving data stay on the plan, with no 3D download at load. Settled once: an
+  // effect cleaned up before that (React's development double run) arms it again.
   const opened3d=useRef(false);
   useEffect(()=>{
     if(!next||!mounted||!hasWebGL||opened3d.current||phoneLayout()||!desktopViewer())return;
-    opened3d.current=true;let live=true;const started=()=>{live=false;};
-    addEventListener('pointerdown',started,true);addEventListener('keydown',started,true);
-    loadViewer().then(()=>{if(live)setMode(m=>m==='plan'?'3d':m);},()=>{/* The plan stays. */});
-    return ()=>{live=false;removeEventListener('pointerdown',started,true);removeEventListener('keydown',started,true);};
+    opened3d.current=true;let live=true,settled=false;const started=()=>{live=false;settled=true;},events=['pointerdown','keydown','wheel'];
+    for(const name of events)addEventListener(name,started,{capture:true,passive:true});
+    loadViewer().then(()=>{if(live){settled=true;setMode(m=>m==='plan'?'3d':m);}},()=>{settled=true;/* The plan stays. */});
+    return ()=>{live=false;if(!settled)opened3d.current=false;for(const name of events)removeEventListener(name,started,{capture:true});};
   },[next,mounted,hasWebGL]);
   // Designer Mode turned on during a visit: its screens' stylesheet was not among the pieces.
   useEffect(()=>{if(!next)loadClassicChrome().catch(()=>{/* Loaded again on the next change. */});},[next]);
   // A new design reopens the Deck section; the new look opens each group on its quick picks, so nothing starts open there.
-  // It reads the switch through a ref, since the design loader (useDeckDesign) keeps the callback from the first render.
+  // It reads the look through a ref (Designer Mode can change it), since the design loader (useDeckDesign) keeps the
+  // callback from the first render.
   const closeSections=()=>{setOpen(new Set(nextRef.current?[]:['deck']));setWorkspaceView('canvas');setPanelOpen(false);};
   // The quick picks are fetched as the new look turns on, unless the visitor has asked the browser to save data.
   useEffect(()=>{

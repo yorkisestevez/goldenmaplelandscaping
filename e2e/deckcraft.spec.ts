@@ -1241,7 +1241,7 @@ test('changes the shape from the shortcuts on the plan, and says what a wrap-aro
   expect(problems).toEqual([]);
 });
 
-test('@phone drags a plan handle by touch, and a swipe over the plan still scrolls the page',async({page})=>{
+test('@phone drags a plan handle by touch, and a swipe over the plan never edits the design',async({page})=>{
   const problems=await openDesigner(page);
   const handle=planHandle(page,'Deck width, right end');
   await expect(handle).toHaveAttribute('aria-valuenow','16');
