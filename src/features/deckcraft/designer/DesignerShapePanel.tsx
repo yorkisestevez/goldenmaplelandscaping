@@ -1,6 +1,8 @@
 import {useArchitectKeys,revealControl} from './architectKeys';
 import {useState} from 'react';
 import {createPortal} from 'react-dom';
+// A drawn patio or wall joins the design at once, so the supplier catalogue comes with the shape tools.
+import '../hardscapeCatalogue';
 import type {DeckData,YardFeature} from '../types';
 import type {PlanPoint} from '../lib/deckGeometry';
 import type {PlanFrame} from '../ConstructionPlan';

@@ -1,4 +1,4 @@
-import {hardscapeSelection} from './hardscapeCatalogue';
+import {hardscapeSelection} from './hardscapeLookup';
 import type {YardFeatureModel} from './yardModel';
 import type {PublicYardSection} from './yardTakeoff';
 

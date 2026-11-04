@@ -1,3 +1,4 @@
+import '../src/features/deckcraft/hardscapeCatalogue';
 import assert from 'node:assert/strict';
 import {DEFAULT_DECK,DECK_SETTINGS} from '../src/features/deckcraft/defaults';
 import type {DeckData,YardFeature} from '../src/features/deckcraft/types';
