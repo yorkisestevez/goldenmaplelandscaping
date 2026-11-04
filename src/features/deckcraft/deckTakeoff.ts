@@ -16,7 +16,7 @@ import {applyInlays,bandBuildUps,frameInlays,keepBreakers,planInlays,INLAY_KIND_
 import {type DeckData, RAILING_COSTS} from './types';
 import {DECKING_CATALOGUE} from './manufacturerRuntimeCatalogue';
 import {finishedFasciaOffset} from './lib/finishedFootprint';
-import {getStairSupport,getStringerOffsets,makeRiserBoards,type RiserBoard} from './stairConstruction';
+import {getStairSupport,getStringerOffsets,makeRiserBoards,openStairs,OPEN_STAIR,OPEN_TREAD_EXTENSION_IN,type RiserBoard} from './stairConstruction';
 import {framelessGlassLayout,glassPanelMembers,type FramelessGlassLayout} from './framelessGlass';
 import {getHouseContact,exposedSides,deckAttachesToHouse,exposedHouseLine,abuttingHouseEdges,freestandingHouseLine} from './houseContact';
 import {getHouseConfig} from './houseSettings';
@@ -236,13 +236,13 @@ export function buildDeckTakeoff(data:DeckData){
   const railInset=(along:PlanPoint)=>2.5*(Math.abs(along.x)+Math.abs(along.y))+.5;
   function addStraight(origin:V3,outward:PlanPoint,along:PlanPoint,width:number,n:number,rise:number,kind:Flight['kind'],id:string,startOffset=(data.pictureFrameRows||data.pattern==='Picture Frame')?finishedFasciaOffset(data):0,opts:{rails?:boolean;stringers?:boolean;endExtend?:number}={}){
     const run=kind==='grade'?gradeRun:stairSupport.runIn;
-    const e=opts.endExtend??0;
+    const e=opts.endExtend??0,side=kind==='grade'&&openStairs(data)?OPEN_TREAD_EXTENSION_IN:0;
     const start={x:origin.x+outward.x*startOffset,y:origin.y,z:origin.z+outward.y*startOffset};
     const end={x:start.x+outward.x*run*Math.max(0,n-1),y:start.y-n*rise,z:start.z+outward.y*run*Math.max(0,n-1)};
     const yaw=Math.atan2(outward.x,outward.y),stringerOffsets=getStringerOffsets(width,stairSupport.spacingIn,stairSupport.minimumStringers);
     for(let i=0;i<n;i++)riserBoards.push(...makeRiserBoards({x:start.x+outward.x*i*run,y:start.y-i*rise,z:start.z+outward.y*i*run},along,outward,width+2*e,rise,stairSupport,data.deckingMaterial,id,i));
     if(rise<=1)issues.push('A stair rise is no greater than the modeled tread thickness; this transition needs a reviewed threshold detail.');
-    for(let i=1;i<n;i++){const d=(i-.5)*run+stairSupport.treadNosingIn/2;treads.push({x:start.x+outward.x*d,y:start.y-i*rise-.5,z:start.z+outward.y*d,w:width+2*e,h:1,d:run+stairSupport.treadNosingIn,angle:yaw,kind:'tread',...(kind==='grade'?{flightId:stairTargetId(id)}:{})});}
+    for(let i=1;i<n;i++){const d=(i-.5)*run+stairSupport.treadNosingIn/2;treads.push({x:start.x+outward.x*d,y:start.y-i*rise-.5,z:start.z+outward.y*d,w:width+2*e+2*side,h:1,d:run+stairSupport.treadNosingIn,angle:yaw,kind:'tread',...(kind==='grade'?{flightId:stairTargetId(id)}:{})});}
     // A one-riser step-up has no intermediate tread; when border or under-step lighting is on, emit a nosing
     // board at the upper rim so the step-up can take an under-step light (and the lit border's mounting nose).
     if(n===1&&(data.autoLighting?.stairs||data.autoLighting?.border)){const nose=stairSupport.treadNosingIn,d=nose/2;treads.push({x:start.x+outward.x*d,y:start.y-.5,z:start.z+outward.y*d,w:width+2*e,h:1,d:nose,angle:yaw,kind:'tread',...(kind==='grade'?{flightId:stairTargetId(id)}:{})});}
@@ -571,6 +571,7 @@ export function buildDeckTakeoff(data:DeckData){
     const deckOutline=levels[0].footprint.outline,plan=(t:Box)=>t.polygon??(()=>{const o={x:Math.sin(t.angle??0),y:Math.cos(t.angle??0)},u={x:o.y,y:-o.x};return [[-1,-1],[1,-1],[1,1],[-1,1]].map(([s,r])=>({x:t.x+u.x*s*t.w/2+o.x*r*t.d/2,y:t.z+u.y*s*t.w/2+o.y*r*t.d/2}));})();
     if(treads.some(t=>polygonCut([deckOutline],[plan(t)]).some(p=>Math.abs(signedArea(p))>16)))issues.push('A stair runs over the deck: its treads cross another part of the custom outline. Put the stair on another edge before construction.');
   }
+  if(flights.some(f=>f.kind==='grade')&&openStairs(data))issues.push(`Open stringer stairs: each tread runs ${OPEN_STAIR.overhangIn} in past the stringer fascia (${OPEN_TREAD_EXTENSION_IN+OPEN_STAIR.stringerFaceIn} in past the outer stringer). Confirm the tread board's side overhang with the manufacturer.`);
   if(flights.length)issues.push(...stairSupport.issues,'Closed-riser thickness is allowed for in the illustrated stringer notch faces. Confirm the resulting stringer throat, bearing and manufacturer attachment detail before cutting.');
   issues.push(...levels.flatMap(l=>l.layoutIssues??[]));
   // Door-sill step-down, checked only once the house floor height has been set. 7.75 in is the
