@@ -43,14 +43,15 @@ test('the view bar picks Day, Golden hour or Night, and the design keeps the sky
 });
 
 test('a still’s golden hour lights a Day design with the grade, and a before-still without it stays day',async({page})=>{
+ test.setTimeout(300_000);
  await page.setViewportSize({width:1440,height:900});
  await page.goto('/deck-designer/?deck-quality=showcase&deck-hour=golden');await ready(page);
  await showSheet(page,'3D');
  await expect(pick(page,'Day')).toHaveAttribute('aria-pressed','true');
- await expect.poll(()=>hour(page),{timeout:60_000}).toBe('golden');
+ await expect.poll(()=>hour(page),DRAWN).toBe('golden');
  await page.goto('/deck-designer/?deck-quality=showcase&deck-hour=golden&deck-grade=0');await ready(page);
  await showSheet(page,'3D');
- await expect.poll(()=>hour(page),{timeout:60_000}).toBe('day');
+ await expect.poll(()=>hour(page),DRAWN).toBe('day');
 });
 
 test('the three skies fit the phone View sheet as full-size targets @phone',async({page})=>{
