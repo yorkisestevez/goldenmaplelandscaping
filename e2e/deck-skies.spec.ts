@@ -10,6 +10,11 @@ const pick=(page:Page,name:string)=>sky(page).getByRole('button',{name,exact:tru
 const hour=(page:Page)=>page.locator('[aria-label="Interactive deck construction model"] canvas').first().getAttribute('data-scene-hour');
 // The scene marks its hour when it next draws; CI's software renderer can take well over the default 15 s to redraw a sky.
 const DRAWN={timeout:60_000};
+// Autosave can take longer than the default 5 s poll on CI.
+const SAVED={timeout:30_000};
+const saved=(page:Page)=>savedConfiguration(page).then(c=>c?.sceneLighting);
+/** Picks a sky until it shows pressed: the bar can still be settling after a reload, and picking it again changes nothing. */
+const choose=(page:Page,name:string)=>expect(async()=>{await pick(page,name).click();await expect(pick(page,name)).toHaveAttribute('aria-pressed','true',{timeout:5000});}).toPass({timeout:60_000});
 const ready=(page:Page)=>expect.poll(()=>page.evaluate(()=>(window as {deckcraft?:{read():{ready:boolean}}}).deckcraft?.read().ready??false),{timeout:60_000}).toBe(true);
 
 test('the view bar picks Day, Golden hour or Night, and the design keeps the sky',async({page})=>{
@@ -25,7 +30,7 @@ test('the view bar picks Day, Golden hour or Night, and the design keeps the sky
  await pick(page,'Golden hour').click();
  await expect(pick(page,'Golden hour')).toHaveAttribute('aria-pressed','true');
  await expect(pick(page,'Day')).toHaveAttribute('aria-pressed','false');
- await expect.poll(async()=>(await savedConfiguration(page))?.sceneLighting).toBe('Golden');
+ await expect.poll(()=>saved(page),SAVED).toBe('Golden');
  await expect.poll(()=>hour(page),DRAWN).toBe('golden');
  await expect.poll(()=>page.locator('.dd-next-price').innerText()).toBe(price);
 
@@ -34,11 +39,11 @@ test('the view bar picks Day, Golden hour or Night, and the design keeps the sky
  await expect(pick(page,'Golden hour')).toHaveAttribute('aria-pressed','true');
  await expect.poll(()=>hour(page),DRAWN).toBe('golden');
 
- await pick(page,'Night').click();
- await expect.poll(async()=>(await savedConfiguration(page))?.sceneLighting).toBe('Evening');
+ await choose(page,'Night');
+ await expect.poll(()=>saved(page),SAVED).toBe('Evening');
  await expect.poll(()=>hour(page),DRAWN).toBe('night');
- await pick(page,'Day').click();
- await expect.poll(async()=>(await savedConfiguration(page))?.sceneLighting).toBe('Daylight');
+ await choose(page,'Day');
+ await expect.poll(()=>saved(page),SAVED).toBe('Daylight');
  await expect.poll(()=>hour(page),DRAWN).toBe('day');
 });
 
