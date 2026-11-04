@@ -7,6 +7,7 @@ import {sectionPriceEffect,quoteLabel,type Ledger} from './priceLedgerModel';
 import {sectionSummary} from './sectionSummaries';
 import {phoneLayout,type HomeTab} from './homeTabs';
 import {WorkspaceIcon} from './WorkspaceNavigation';
+import DrawerHandle from './next/DrawerHandle';
 import './homePanel.css';
 
 export interface HomePanelProps{
@@ -19,6 +20,12 @@ export interface HomePanelProps{
   /** Jump to a section (Price & send's Edit links and each section's next link), which takes the focus. Price & send: send
    *  the design, download the PDF, and the share link's warm-lead ping. */
   onEdit:(id:SectionId)=>void;onSend:()=>void;onDownloadPdf:()=>void;pdfBusy:boolean;onWarmShare?:()=>void;
+  /** The new look (next/NextShell.tsx) has no price bar, so its quote opens the price schedule and its change list. */
+  onSchedule?:()=>void;
+  /** The new look's quick picks for this tab (next/QuickPicks.tsx); its sections then wait under More. */
+  quick?:ReactNode;
+  /** The new look's phone drawer takes a grip to drag it taller or away (shown on phones only, nextShell.css). */
+  drawer?:boolean;
   /** A section opened from elsewhere, to bring into view and focus once it shows; then `onFocused` clears it. */
   focus?:SectionId;onFocused:()=>void;
 }
@@ -28,7 +35,7 @@ export interface HomePanelProps{
  * phones, so the deck stays in view while a choice is made. Its sections open one at a time and keep the section ids and
  * regions the rest of the page and the agent interface use. Price & send starts with a quote-style summary.
  */
-export default function HomePanel({hidden,tab,data,ledger,expanded,onExpand,onCollapse,renderBody,onClose,onEdit,onSend,onDownloadPdf,pdfBusy,onWarmShare,focus,onFocused}:HomePanelProps){
+export default function HomePanel({hidden,tab,data,ledger,expanded,onExpand,onCollapse,renderBody,onClose,onEdit,onSend,onDownloadPdf,pdfBusy,onWarmShare,onSchedule,quick,drawer,focus,onFocused}:HomePanelProps){
   const home=tab;
   // Phones: the drawer covers the foot of the screen, so the drawing moves up under the header, above it.
   useEffect(()=>{if(!hidden&&phoneLayout())document.querySelector('#deck-live-preview .dd-canvas')?.scrollIntoView({block:'start'});},[tab.id,hidden]);
@@ -41,8 +48,10 @@ export default function HomePanel({hidden,tab,data,ledger,expanded,onExpand,onCo
     onFocused();
   },[focus,hidden,expanded]);
   return <aside id="dd-home-panel" className="dd-home-panel" aria-labelledby="dd-home-panel-title" hidden={hidden}>
+    {drawer&&<DrawerHandle key={`${tab.id}-${hidden}`} onClose={onClose}/>}
     <div className="dd-home-panel-top"><h2 id="dd-home-panel-title">{home.name}</h2><button type="button" className="dd-linklike" onClick={onClose}>Hide panel</button></div>
-    {tab.id==='send'&&<PriceAndSend data={data} ledger={ledger} onEdit={onEdit} onSend={onSend} onDownloadPdf={onDownloadPdf} pdfBusy={pdfBusy} onWarmShare={onWarmShare}/>}
+    {tab.id==='send'&&<PriceAndSend data={data} ledger={ledger} onEdit={onEdit} onSend={onSend} onDownloadPdf={onDownloadPdf} pdfBusy={pdfBusy} onWarmShare={onWarmShare} onSchedule={onSchedule}/>}
+    {quick&&<><div className="dd-next-quick">{quick}</div><h3 className="dd-next-more">More</h3></>}
     {home.sections.map(id=>{
       const section=SECTION_BY_ID[id],related=SECTION_BY_ID[section.related.id],price=sectionPriceEffect(section,ledger),open=expanded===id;
       return <section key={id} id={`dd-section-${id}`} className="dd-home-section">
@@ -54,7 +63,7 @@ export default function HomePanel({hidden,tab,data,ledger,expanded,onExpand,onCo
 }
 
 /** Each choice with its price effect and an Edit link, the planning total, what is still to quote, then Send. */
-function PriceAndSend({data,ledger,onEdit,onSend,onDownloadPdf,pdfBusy,onWarmShare}:Pick<HomePanelProps,'data'|'ledger'|'onEdit'|'onSend'|'onDownloadPdf'|'pdfBusy'|'onWarmShare'>){
+function PriceAndSend({data,ledger,onEdit,onSend,onDownloadPdf,pdfBusy,onWarmShare,onSchedule}:Pick<HomePanelProps,'data'|'ledger'|'onEdit'|'onSend'|'onDownloadPdf'|'pdfBusy'|'onWarmShare'|'onSchedule'>){
   return <div className="dd-home-quote">
     <ul className="dd-home-quote-list" aria-label="Your design">{SECTIONS.filter(s=>s.id!=='proposal').map(section=>{
       const price=sectionPriceEffect(section,ledger);
@@ -67,6 +76,7 @@ function PriceAndSend({data,ledger,onEdit,onSend,onDownloadPdf,pdfBusy,onWarmSha
       <button type="button" className="dd-primary" aria-haspopup="dialog" onClick={onSend}>Send my design</button>
       <ShareDesignLink data={data} label="Copy design link" onWarm={onWarmShare}/>
       <button type="button" className="dd-secondary" onClick={onDownloadPdf} disabled={pdfBusy}>{pdfBusy?'Making your PDF…':'Download PDF'}</button>
+      {onSchedule&&<button type="button" className="dd-secondary" aria-haspopup="dialog" onClick={onSchedule}>Price schedule</button>}
     </div>
   </div>;
 }

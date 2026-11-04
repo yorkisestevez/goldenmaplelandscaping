@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
-import {savedConfiguration} from './nav';
+import {savedConfiguration,startOnPlan} from './nav';
 import type {HardscapeProduct} from '../src/features/deckcraft/hardscapeCatalogue';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
 const workingKey='golden-maple.deck-studio.deck-only.v1',recoveryKey='golden-maple.deck-studio.unrestored.v1';
@@ -27,7 +27,7 @@ async function unchanged(page:Page,raw:string){
  // The write is debounced450ms; checking immediately would miss a destructive delayed save.
  await page.waitForTimeout(650);
  expect(await page.evaluate(key=>localStorage.getItem(key),workingKey)).toBe(raw);
- await expect(page.locator('.dd-save-state')).toContainText('Auto-save paused');
+ await expect(page.locator('.dd-save-state,.dd-next-project').first()).toContainText('Auto-save paused');
 }
 async function downloadPrevious(page:Page,raw:string){
  const files=page.locator('.dd-workspace-files');if(!await files.evaluate(el=>el.hasAttribute('open')))await files.locator('summary').first().click();
@@ -42,7 +42,7 @@ test.beforeEach(async({context})=>{
 for(const reason of ['joint','colour'] as const)test(`source ${reason} restore failure preserves exact file through edits, sharing and reload; explicit ${reason==='joint'?'import':'new design'} resumes safely`,async({page,context})=>{
  const raw=previous(reason);
  await context.addInitScript(({workingKey,raw})=>{if(!localStorage.getItem(workingKey))localStorage.setItem(workingKey,raw);},{workingKey,raw});
- await page.goto('/deck-designer/');await ready(page);await unchanged(page,raw);
+ await page.goto('/deck-designer/');await startOnPlan(page);await ready(page);await unchanged(page,raw);
  expect((await read(page)).design.yardFeatures??[]).toEqual([]);
  await downloadPrevious(page,raw);await patch(page,19);await unchanged(page,raw);
  await patch(page,23);const shared=await page.evaluate(()=>(window as unknown as {deckcraft:DeckAgentApi}).deckcraft.execute({id:'qa-recovery-share',commands:[{type:'action',action:'share.create'}]}));expect(shared.ok).toBe(true);
@@ -50,7 +50,7 @@ for(const reason of ['joint','colour'] as const)test(`source ${reason} restore f
  await patch(page,20);await unchanged(page,raw);
  await page.evaluate(hash=>{location.hash=hash;},new URL(shared.result!.url!).hash);await ready(page);
  await expect.poll(async()=>(await read(page)).design.width).toBe(23);await unchanged(page,raw);
- await page.reload();await ready(page);await unchanged(page,raw);await downloadPrevious(page,raw);
+ await page.reload();await startOnPlan(page);await ready(page);await unchanged(page,raw);await downloadPrevious(page,raw);
  const files=page.locator('.dd-workspace-files');
  if(reason==='joint'){
   // Keep this focused on restore protection; supplier rendering is exercised
@@ -66,13 +66,13 @@ for(const reason of ['joint','colour'] as const)test(`source ${reason} restore f
  await expect(page.locator('[data-autosave-state="saved"]')).toBeVisible();
  await expect.poll(async()=>(await savedConfiguration(page))?.yardFeatures?.some(feature=>feature.id==='restore-patio')??false).toBe(false);
  await patch(page,24);await expect.poll(async()=>(await savedConfiguration(page))?.width).toBe(24);
- await page.reload();await ready(page);expect((await read(page)).design.width).toBe(24);
+ await page.reload();await startOnPlan(page);await ready(page);expect((await read(page)).design.width).toBe(24);
  expect(await page.evaluate(key=>localStorage.getItem(key),recoveryKey)).toBe(raw);
  await downloadPrevious(page,raw);
 });
 test('failed recovery backup keeps autosave paused even after explicit start-new',async({page,context})=>{
  const raw=previous('joint');await context.addInitScript(({workingKey,raw,recoveryKey})=>{if(!localStorage.getItem(workingKey))localStorage.setItem(workingKey,raw);const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k===recoveryKey)throw new DOMException('Quota exceeded','QuotaExceededError');original.call(this,k,v);};},{workingKey,raw,recoveryKey});
- await page.goto('/deck-designer/');await ready(page);await unchanged(page,raw);
+ await page.goto('/deck-designer/');await startOnPlan(page);await ready(page);await unchanged(page,raw);
  const files=page.locator('.dd-workspace-files');await files.locator('summary').first().click();await files.locator('.dd-reset>summary').click();await files.getByRole('button',{name:'Start a new design',exact:true}).click();
  await unchanged(page,raw);expect(await page.evaluate(key=>localStorage.getItem(key),recoveryKey)).toBeNull();
  await patch(page,25);await unchanged(page,raw);await downloadPrevious(page,raw);

@@ -1,3 +1,4 @@
+import '../src/features/deckcraft/hardscapeCatalogue';
 import assert from 'node:assert/strict';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';

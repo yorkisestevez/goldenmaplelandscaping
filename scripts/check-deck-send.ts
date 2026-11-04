@@ -142,7 +142,8 @@ ok(!read('src/features/deckcraft/SendDesignDialog.tsx').includes('data-netlify')
 // 6. The designer offers it everywhere it matters, and the booking page picks up the design link.
 {
   const page=designerSource(),booking=read('src/components/BookingScheduler.tsx'),privacy=read('src/pages/Privacy.tsx');
-  ok(/<header className="dd-header">[\s\S]*?className="dd-send-top"[\s\S]*?Send my design[\s\S]*?<\/header>/.test(page),'The header offers "Send my design"');
+  // The CAD workspace (Pro under the new look) keeps the same header, restyled, so its class may depend on that flag.
+  ok(/<header className=(?:"dd-header"|\{cad\?'dd-header dd-cad-title':'dd-header'\})>[\s\S]*?className="dd-send-top"[\s\S]*?Send my design[\s\S]*?<\/header>/.test(page),'The header offers "Send my design"');
   // The close pack (options → share → proposal → send) replaced the standalone dd-send-card.
   // The Send step is still that named region, with the same button, and the page still mounts the dialog.
   ok(/<section className="dd-close-pack"[\s\S]*?<section aria-label="Send your design to Golden Maple">[\s\S]*?onClick=\{onSend\}>Send my design<\/button>[\s\S]*?<\/section>[\s\S]*?<\/section>/.test(page)&&page.includes('<SendDesignDialog '),'The estimate step’s close pack has the send step and the page mounts the dialog');

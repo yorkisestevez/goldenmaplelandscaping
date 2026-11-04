@@ -31,11 +31,57 @@ export async function savedJobLibrary(page:Page){
   return storedProjectJson(page,'jobs');
 }
 
-/** The homeowner page has no task menus to show since its four tabs (Draw · Materials · Extras · Price & send) replaced the
- * rail and its "All options" toggle, so this waits for the tabs. Designer Mode keeps its own menus. */
+/** Which screens the page shows (docs/deckcraft/ui-redesign-2026-10/PLAN.md): the homeowner page is the new look and
+ * Designer Mode the CAD workspace; the cost estimator's studio keeps the older screens (tabs, header, price bar). */
+const designReady=(page:Page)=>expect.poll(()=>page.evaluate(()=>(window as {deckcraft?:{read():{ready:boolean}}}).deckcraft?.read().ready??false),{timeout:60_000}).toBe(true);
+export const isNextUi=async(page:Page)=>{await designReady(page);return (await page.locator('.deck-designer[data-ui="next"]').count())>0;};
+const isCad=async(page:Page)=>{await designReady(page);return (await page.locator('.deck-designer[data-ui="cad"]').count())>0;};
+
+/** The file menu's opener: the classic "Files" summary, or the new look's icon-only one. */
+export const filesSummary=(page:Page)=>page.locator('details.dd-workspace-files>summary').first();
+
+/** Shows a sheet. A phone in the new look keeps Framing in the file menu ("Framing view"). */
+export async function showSheet(page:Page,name:'Plan'|'3D'|'Framing'){
+  const tab=page.getByRole('tablist',{name:'Drawing sheets'}).getByRole('tab',{name,exact:true});
+  if(name==='Framing'&&await isNextUi(page)&&!await tab.isVisible()){
+    const menu=page.locator('details.dd-workspace-files');
+    if(!await menu.evaluate(el=>(el as HTMLDetailsElement).open))await filesSummary(page).click();
+    await page.getByRole('button',{name:'Framing view',exact:true}).click();
+    await expect.poll(()=>page.evaluate(()=>(window as {deckcraft?:{read():{view:string}}}).deckcraft?.read().view)).toBe('drawing');
+    return;
+  }
+  await tab.click();
+  await expect(tab).toHaveAttribute('aria-selected','true');
+}
+
+/** A desktop opens in 3D (deck-open-3d.spec.ts). Tests written for the plan start there, as the page did before: picking
+ * the Plan sheet also counts as the visitor starting, so a 3D view that loads afterwards does not take over. Phones and
+ * narrow windows open on the plan already. */
+export async function startOnPlan(page:Page){
+  await designReady(page);
+  if((page.viewportSize()?.width??0)>800)await showSheet(page,'Plan');
+  await expect(page.locator('.dd-canvas>:is(.dd-plan-viewport,.dd-site-plan)').first()).toBeVisible();
+}
+
+/** The new look's five rail groups. */
+export const railGroups=(page:Page)=>page.getByRole('navigation',{name:'Design groups'});
+
+/** The priced subtotal: the classic price bar's status, or the new look's price pill. */
+export const pricedSubtotal=(page:Page)=>page.getByRole('region',{name:'Live price'}).locator('[aria-label="Priced subtotal"],.dd-next-total>strong').first();
+
+/** Opens the price schedule: from the classic price bar, or from the new look's quote (the price pill opens it). */
+export async function openPriceSchedule(page:Page){
+  if(await isNextUi(page)){
+    await openNextGroup(page,'Price & send');
+    await page.locator('#dd-home-panel').getByRole('button',{name:'Price schedule',exact:true}).click();
+  }else await page.getByRole('region',{name:'Live price'}).getByRole('button',{name:'Price schedule',exact:true}).click();
+  await expect(page.getByRole('dialog',{name:'Price schedule'})).toBeVisible();
+}
+
+/** The homeowner's controls: the classic page's four tabs, or the new look's rail. Designer Mode keeps its own menus. */
 export async function showProjectControls(page:Page){
   if(await page.locator('.deck-designer[data-pro]').count())return;
-  await expect(homeTabs(page)).toBeVisible();
+  await expect(await isNextUi(page)?railGroups(page):homeTabs(page)).toBeVisible();
 }
 
 /** The homeowner's four tabs. */
@@ -47,11 +93,28 @@ export async function openHomeTab(page:Page,name:'Draw'|'Materials'|'Extras'|'Pr
   await expect.poll(()=>page.evaluate(()=>(window as {deckcraft?:{read():{ready:boolean}}}).deckcraft?.read().ready??false),{timeout:60_000}).toBe(true);
   const files=page.locator('details.dd-workspace-files[open]');
   if(await files.count())await files.locator(':scope>summary').click();
+  if(await isNextUi(page))return openNextGroup(page,name);
   const tab=homeTabs(page).getByRole('tab',{name,exact:true});
   await tab.click();
   await expect(tab).toHaveAttribute('aria-selected','true');
   // The panel loads on demand: wait for it, so a caller that puts it away does not race it.
   if(name!=='Draw')await expect(page.locator('#dd-home-panel')).toBeVisible();
+}
+
+/** The new look's counterpart of a classic tab: Draw puts any open panel away (the plan shows every tool), Materials opens
+ * Boards, Extras opens Extras and Price & send opens the quote from the price pill. */
+async function openNextGroup(page:Page,name:'Draw'|'Materials'|'Extras'|'Price & send'){
+  const panel=page.locator('#dd-home-panel');
+  if(name==='Draw'){
+    const open=railGroups(page).locator('button[aria-pressed="true"]');
+    if(await open.count())await open.click();
+    else if(await page.locator('.dd-next-total[aria-expanded="true"]').count())await page.locator('.dd-next-total').click();
+    await expect(panel).toBeHidden();
+    return;
+  }
+  const opener=name==='Price & send'?page.locator('.dd-next-total'):railGroups(page).getByRole('button',{name:name==='Materials'?'Boards':'Extras',exact:true});
+  if(await opener.getAttribute(name==='Price & send'?'aria-expanded':'aria-pressed')!=='true')await opener.click();
+  await expect(panel).toBeVisible();
 }
 
 /** The homeowner tab that shows each plan tool (designer/homeTabs.ts). Select parts is a Designer Mode tool. */
@@ -60,10 +123,14 @@ const HOME_TOOL_TABS:Record<string,'Draw'|'Materials'|'Extras'>={
   'Landscape':'Extras','Patios & walls':'Extras','Board layout':'Materials','Inlays':'Materials',
 };
 
-/** Designer Mode's ribbon tab of each plan tool. */
+/** Designer Mode's ribbon tab of each plan tool: the classic Pro ribbon, and the CAD workspace's (slice S4). */
 const PLAN_TABS:Record<string,string>={
   'Deck size':'Building','Shape & points':'Building','Stairs':'Building','House':'Building','Rails & screens':'Building',
   'Landscape':'Landscape','Patios & walls':'Landscape','Board layout':'Materials','Inlays':'Materials','Select parts':'Main',
+};
+const CAD_TABS:Record<string,string>={
+  'Deck size':'Deck','Shape & points':'Deck','Board layout':'Deck','Inlays':'Deck','Stairs':'Stairs & rails','Rails & screens':'Stairs & rails',
+  'House':'House','Landscape':'Yard','Patios & walls':'Yard','Select parts':'Home',
 };
 
 /** Opens Designer Mode, which keeps the contractor tools the homeowner page leaves out. */
@@ -83,7 +150,7 @@ export async function proMenu(page:Page,menu:string,item:string|RegExp){
 async function pickProTool(page:Page,name:string){
   const quick=page.getByRole('group',{name:'Quick tools'}).getByRole('button',{name,exact:true});
   const button=await quick.count()?quick:page.locator('#dd-pro-ribbon-panel').getByRole('button',{name,exact:true});
-  if(button!==quick&&!await button.isVisible())await page.getByRole('tablist',{name:'Ribbon tabs'}).getByRole('tab',{name:PLAN_TABS[name]??'Building',exact:true}).click();
+  if(button!==quick&&!await button.isVisible()){const tabs=await isCad(page)?CAD_TABS:PLAN_TABS;await page.getByRole('tablist',{name:'Ribbon tabs'}).getByRole('tab',{name:tabs[name]??Object.values(tabs)[0],exact:true}).click();}
   await button.click();
   await expect(button).toHaveAttribute('aria-pressed','true');
   return button;
@@ -118,7 +185,8 @@ async function revealSection(page:Page,id:string){
 /** Shows a homeowner tab's plan tools: Draw from its tab; Materials and Extras brought forward as a link does, so the view
  * stays as it is; then the plan sheet when another view is showing. */
 export async function showTabTools(page:Page,tab:'Draw'|'Materials'|'Extras'){
-  if(tab==='Draw')await openHomeTab(page,'Draw');else await revealSection(page,tab==='Materials'?'boards':'lighting');
+  // The new look's plan shows every tool whatever is open.
+  if(!await isNextUi(page)){if(tab==='Draw')await openHomeTab(page,'Draw');else await revealSection(page,tab==='Materials'?'boards':'lighting');}
   if(!await page.getByRole('radiogroup',{name:'Plan tools'}).isVisible())await page.getByRole('tablist',{name:'Drawing sheets'}).getByRole('tab',{name:'Plan',exact:true}).click();
 }
 
@@ -130,6 +198,12 @@ export async function pickPlanTool(page:Page,name:string){
   await dismissDesignInspector(page);
   await radio.click();
   await expect(radio).toHaveAttribute('aria-checked','true');
+  // A phone in the new look keeps a tool's own controls in the "Drawing controls" card, which stays shut so the plan is
+  // clear; a visitor opens it to use them. Deck size, Stairs and House work on the plan itself.
+  if(!['Deck size','Stairs','House'].includes(name)&&(page.viewportSize()?.width??1280)<=800&&await isNextUi(page)){
+    const dock=page.locator('details.dd-selection-inspector');
+    if(await dock.count()&&!await dock.evaluate(el=>(el as HTMLDetailsElement).open))await dock.locator(':scope>summary').click();
+  }
   return radio;
 }
 
@@ -180,8 +254,10 @@ export async function closeSketchMeasurements(page:Page){
 export async function openDesignTask(page:Page,name:string){
   const tab=SECTION_TABS[name];
   if(!tab)throw Error(`No homeowner tab holds ${name}`);
-  const panel=page.locator('#dd-home-panel'),drawOpen=await homeTabs(page).getByRole('tab',{name:'Draw',exact:true}).getAttribute('aria-selected')==='true';
-  if(tab!=='Draw')await revealSection(page,SECTION_IDS[name]);
+  const panel=page.locator('#dd-home-panel'),next=await isNextUi(page);
+  const drawOpen=!next&&await homeTabs(page).getByRole('tab',{name:'Draw',exact:true}).getAttribute('aria-selected')==='true';
+  // The new look opens every section the way a link does: its group's panel, the section's row.
+  if(next||tab!=='Draw')await revealSection(page,SECTION_IDS[name]);
   else if(!drawOpen||!await panel.isVisible()){
     await openHomeTab(page,'Draw');
     await page.getByRole('button',{name:'Deck settings',exact:true}).click();

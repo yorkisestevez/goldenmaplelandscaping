@@ -1,5 +1,5 @@
 import type {YardFeature} from './types';
-import {hardscapeSelection} from './hardscapeCatalogue';
+import {hardscapeSelection} from './hardscapeLookup';
 import {yardWallCourses} from './yardElevations';
 /** Planning quantities, not a reinforcement design. Every wall includes grid. */
 export interface WallConstruction {

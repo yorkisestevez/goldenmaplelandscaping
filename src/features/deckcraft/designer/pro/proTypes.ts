@@ -8,6 +8,8 @@ import {designIssues} from '../reviewNotes';
  * them into menu and ribbon actions, so the public route carries no Pro code beyond this one object. */
 export interface ProPage{
   ready:boolean;issues:readonly string[];canUndo:boolean;canRedo:boolean;
+  /** The CAD workspace (the new look's Pro, slice S4), and the page's live price bar, which its inspector carries. */
+  cad?:boolean;price?:ReactNode;
   undo:()=>void;redo:()=>void;
   openSection:(id:SectionId,bringIntoView?:boolean)=>void;
   /** The open design area and its settings: the docked properties panel shows them in place of the section pop-over. */
@@ -46,6 +48,9 @@ export const proMenuActions=(p:ProPage):ProMenuActions=>({...proCommands(p),read
   tool:next=>{p.setPlanTool(next);p.setMode('plan');p.showCanvas();},sheet:next=>{p.setMode(next);p.showCanvas();},
   quoteCosts:()=>p.setQuoteReviewOpen(true),fullList:p.showFullList,ask:()=>{p.showCanvas();p.setAskOpen(true);},askExpert:expert=>{p.setAskExpert(expert);},issues:()=>p.setIssuesOpen(true),
   sketch:()=>p.setSketchOpen(true),agents:()=>p.setAgentOpen(true)});
+
+/** The CAD ribbon asks the menu bar (which owns the wizard dialog) for a wizard with this window event. */
+export const WIZARD_EVENT='deckcraft-pro-wizard';
 
 export type ProMenuItem={label:string;run:()=>void;keys?:string;disabled?:boolean;dialog?:boolean};
 export type ProMenu={label:string;items:(ProMenuItem|'-')[]};

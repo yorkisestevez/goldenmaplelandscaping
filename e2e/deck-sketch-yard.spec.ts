@@ -5,7 +5,7 @@ import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import type {DeckData,YardFeature} from '../src/features/deckcraft/types';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
 import type {SketchDocument} from '../src/features/deckcraft/sketch/sketchTypes';
-import {openSketchFiles,openSketchMeasurements,pickPlanTool} from './nav';
+import {openSketchFiles,openSketchMeasurements,pickPlanTool,startOnPlan} from './nav';
 import {yardShapeWorldPoints,yardShapeRunIn} from '../src/features/deckcraft/yardShapeEditing';
 
 const proof=resolve(process.cwd(),'../../outputs/deckcraft-yard-shape-review');mkdirSync(proof,{recursive:true});
@@ -22,7 +22,7 @@ async function apply(page:Page,touch=false){await activate(page,modal(page).getB
 async function select(page:Page,name:string,touch=false){await openSketchMeasurements(page);await activate(page,modal(page).getByRole('button').filter({hasText:name}).filter({has:page.locator('.dd-sketch-shape-number')}),touch);}
 async function corners(page:Page,points:{x:number;y:number}[],touch=false){const canvas=modal(page).getByRole('group',{name:'Sketch canvas',exact:true});await canvas.scrollIntoViewIfNeeded();for(const p of points){const at=await canvas.evaluate((el,p)=>{const q=new DOMPoint(p.x,p.y).matrixTransform((el as SVGSVGElement).getScreenCTM()!);return {x:q.x,y:q.y};},p);if(touch)await page.touchscreen.tap(at.x,at.y);else await page.mouse.click(at.x,at.y);}}
 const errors=new WeakMap<Page,string[]>();
-test.beforeEach(async({page,context})=>{const found:string[]=[];errors.set(page,found);page.on('pageerror',e=>found.push(e.message));await context.addInitScript('window.__name=(target,value)=>target;');await context.addInitScript(configuration=>{const key='golden-maple.deck-studio.deck-only.v1';if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));},fixture);await context.route('**/*',route=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(route.request().url())&&['GET','HEAD'].includes(route.request().method())?route.continue():route.fulfill({status:200,body:''}));await page.goto('/deck-designer/');await ready(page);});
+test.beforeEach(async({page,context})=>{const found:string[]=[];errors.set(page,found);page.on('pageerror',e=>found.push(e.message));await context.addInitScript('window.__name=(target,value)=>target;');await context.addInitScript(configuration=>{const key='golden-maple.deck-studio.deck-only.v1';if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));},fixture);await context.route('**/*',route=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(route.request().url())&&['GET','HEAD'].includes(route.request().method())?route.continue():route.fulfill({status:200,body:''}));await page.goto('/deck-designer/');await startOnPlan(page);await ready(page);});
 test.afterEach(async({page})=>{expect(errors.get(page)??[]).toEqual([]);});
 
 for(const touch of [false,true])test(`${touch?'@phone ':''}sketch and plan share rotated patio pulls, wall length, excluded status and one Undo`,async({page})=>{

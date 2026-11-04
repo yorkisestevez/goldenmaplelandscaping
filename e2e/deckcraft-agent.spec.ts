@@ -1,5 +1,5 @@
 import {expect,test,type Page} from '@playwright/test';
-import {openDesignerMode,pickPlanTool,showProjectControls} from './nav';
+import {openDesignerMode,pickPlanTool,showProjectControls,startOnPlan} from './nav';
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import type {AgentCommand,AgentResponse} from '../src/features/deckcraft/designer/deckAgentController';
@@ -21,7 +21,7 @@ test.beforeEach(async({context})=>{
     return route.fulfill({status:200,contentType:type==='stylesheet'?'text/css':type==='script'?'text/javascript':'text/plain',body:''});
   });
 });
-async function open(page:Page){await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);}
+async function open(page:Page){await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);}
 async function execute(page:Page,commands:AgentCommand[],id=`browser-${Date.now()}-${Math.random()}`){return page.evaluate(({commands,id})=>window.deckcraft!.execute({id,commands}),{commands,id});}
 const good=(r:AgentResponse)=>{expect(r.ok,JSON.stringify(r)).toBe(true);if('error' in r)throw new Error(r.error.message);return r;};
 
@@ -38,12 +38,12 @@ test('agent previews leave autosave untouched; validated batch is acknowledged a
   const changed=good(await execute(page,[{type:'design.patch',patch:{width:20}},{type:'design.patch',patch:{length:18}}],'atomic-edit'));
   expect(changed.snapshot.design.width).toBe(20);expect(changed.snapshot.design.length).toBe(18);expect(changed.snapshot.history.canUndo).toBe(true);
   // The homeowner page stays in drawing focus, which leaves the drawing's heading out of view; its text is still checked.
-  await showProjectControls(page);await expect(page.locator('.dd-preview-head h2').filter({hasText:/20 × 18/}).first()).toBeAttached();
+  await showProjectControls(page);await expect(page.locator('.dd-preview-head h2,.dd-next-project').filter({hasText:/20 × 18/}).first()).toBeAttached();
   const repeated=good(await execute(page,[{type:'design.patch',patch:{width:20}},{type:'design.patch',patch:{length:18}}],'atomic-edit'));expect(repeated.replayed).toBe(true);
   const undo=good(await execute(page,[{type:'history.undo'}]));expect(undo.snapshot.design).toEqual(before.snapshot.design);
   good(await execute(page,[{type:'history.redo'}]));
   await expect.poll(async()=>JSON.parse((await savedProject(page))!).configuration.width).toBe(20);
-  await page.reload();await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);expect((await page.evaluate(()=>window.deckcraft!.read())).design.width).toBe(20);
+  await page.reload();await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);expect((await page.evaluate(()=>window.deckcraft!.read())).design.width).toBe(20);
 });
 
 test('agent rejects stale, unknown and private inputs; review is manual and never submits',async({page})=>{

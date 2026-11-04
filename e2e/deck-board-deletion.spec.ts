@@ -1,11 +1,13 @@
 import {test,expect,type Page,type BrowserContext} from '@playwright/test';
-import {openDesignerMode,pickPlanTool,savedConfiguration} from './nav';
+import {openDesignerMode,pickPlanTool,savedConfiguration,startOnPlan} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import * as THREE from 'three';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {sceneBounds} from '../src/features/deckcraft/components/viewer3d/sceneBounds';
+// Above is the viewer's orthographic plan camera, framed for the canvas's aspect (Deck3DViewer CameraView).
+import {cameraSetback} from '../src/features/deckcraft/components/viewer3d/cameraFraming';
 import type {AgentSnapshot} from '../src/features/deckcraft/designer/deckAgentController';
 const proof=resolve('../../outputs/deckcraft-delete-pull-review/boards');mkdirSync(proof,{recursive:true});
 const fixture={...DEFAULT_DECK,deckType:'Freestanding' as const,houseVisible:false,width:20,length:12,height:48,pictureFrameRows:2 as const,stairFlights:0,railingType:'None' as const,deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk'};
@@ -14,7 +16,7 @@ async function expectNoAdditions(page:Page){await expect.poll(async()=>{const la
 async function undo(page:Page){await page.getByRole('region',{name:'Save and restore design',exact:true}).getByRole('button',{name:'Undo',exact:true}).click();}
 async function redo(page:Page){await page.getByRole('region',{name:'Save and restore design',exact:true}).getByRole('button',{name:'Redo',exact:true}).click();}
 async function screen(page:Page,p:{x:number;y:number}){return page.locator('.dd-board-layout-svg').evaluate((svg,p)=>{const v=new DOMPoint(p.x,p.y).matrixTransform((svg as SVGSVGElement).getScreenCTM()!);return {x:v.x,y:v.y};},p);}
-async function showBoards(page:Page){await page.locator('.dd-board-layout-svg').evaluate(svg=>svg.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'}));}
+async function showBoards(page:Page){await page.locator('.dd-board-layout-svg').evaluate(svg=>svg.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'}));}
 async function pick(page:Page,board:AgentSnapshot['boards'][number],touch=false,selected=true){
  await showBoards(page);
  const center={x:board.polygon.reduce((n,p)=>n+p.x,0)/board.polygon.length,y:board.polygon.reduce((n,p)=>n+p.y,0)/board.polygon.length};
@@ -36,7 +38,7 @@ test.beforeEach(async({context,page})=>{
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(configuration=>{if(!localStorage.getItem('golden-maple.deck-studio.deck-only.v1'))localStorage.setItem('golden-maple.deck-studio.deck-only.v1',JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));},fixture);
  await context.route('**/*',r=>['127.0.0.1','localhost'].includes(new URL(r.request().url()).hostname)&&['GET','HEAD'].includes(r.request().method())?r.continue():r.fulfill({body:''}));
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready)).toBe(true);
+ await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready)).toBe(true);
  await pickPlanTool(page,'Board layout');await expect(page.locator('.dd-board-layout-svg')).toBeVisible();
 });
 
@@ -59,7 +61,7 @@ test('Delete replaces one selected picture-frame cut and retains all other edges
  expect(after.boards.some(b=>b.layoutId===region.id&&b.role==='field')).toBe(true);expect(after.boards.filter(b=>b.role==='border').length).toBeGreaterThan(3);
  await page.screenshot({path:resolve(proof,'desktop-frame-replacement.png'),fullPage:true});await undo(page);expect((await read(page)).design).toEqual(before.design);expect((await read(page)).pricing).toEqual(before.pricing);await redo(page);
  await expect.poll(async()=>(await savedConfiguration(page))?.boardLayout?.regions[0]?.replaceBorder).toBe(true);
- await page.reload();await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready)).toBe(true);expect((await read(page)).design.boardLayout).toEqual(after.design.boardLayout);expect((await read(page)).pricing.total).toBe(after.pricing.total);
+ await page.reload();await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready)).toBe(true);expect((await read(page)).design.boardLayout).toEqual(after.design.boardLayout);expect((await read(page)).pricing.total).toBe(after.pricing.total);
  const response=await page.evaluate(()=>window.deckcraft!.execute({id:'delete-share',commands:[{type:'action',action:'share.create'}]}));expect(response.ok).toBe(true);if(response.ok){const visitor=await context.newPage();await visitor.goto(response.result!.url!);await expect.poll(()=>visitor.evaluate(()=>window.deckcraft?.read().ready)).toBe(true);expect((await read(visitor)).design.boardLayout).toEqual(after.design.boardLayout);expect((await read(visitor)).pricing.total).toBe(after.pricing.total);await visitor.close();}
  writeFileSync(resolve(proof,'frame-exact-price.json'),JSON.stringify({before:before.pricing.total,after:after.pricing.total,selectedCut:board.polygon,replacement:region},null,2));
 });
@@ -67,7 +69,7 @@ test('Delete replaces one selected picture-frame cut and retains all other edges
 test('actual 3D breaker click can be deleted without leaving the 3D sheet',async({page,context})=>{
  await page.setViewportSize({width:1440,height:1000});await openDesignerMode(page);await pickPlanTool(page,'Board layout');await expect(page.locator('.dd-board-layout-svg')).toBeVisible();const original=await read(page),added=await addBreaker(page,context);await page.getByRole('tab',{name:'3D',exact:false}).click();await page.getByRole('button',{name:'Above',exact:true}).click();await page.getByRole('button',{name:'Select objects in 3D',exact:true}).click();
  const canvas=page.getByRole('region',{name:'Interactive deck construction model',exact:true}).locator('canvas');await expect(canvas).toBeVisible();await page.waitForTimeout(900);
- const model=buildDeckTakeoff({...fixture,...added.design}),bounds=sceneBounds(model),rect=(await canvas.boundingBox())!,cx=(bounds.maxX+bounds.minX)/24,cz=(bounds.maxZ+bounds.minZ)/24,r=Math.max((bounds.maxX-bounds.minX)/12,(bounds.maxZ-bounds.minZ)/12),camera=new THREE.PerspectiveCamera(38,rect.width/rect.height,.1,1000);camera.position.set(cx,r*2+.1,cz+.01);camera.lookAt(cx,bounds.top/24,cz);camera.updateMatrixWorld();
+ const model=buildDeckTakeoff({...fixture,...added.design}),bounds=sceneBounds(model),rect=(await canvas.boundingBox())!,cx=(bounds.maxX+bounds.minX)/24,cz=(bounds.maxZ+bounds.minZ)/24,r=Math.max((bounds.maxX-bounds.minX)/12,(bounds.maxZ-bounds.minZ)/12),aspect=rect.width/rect.height,half=r*.55/Math.max(.5,cameraSetback(aspect)*.85),camera=new THREE.OrthographicCamera(-half*aspect,half*aspect,half,-half,.1,1000);camera.position.set(cx,r*2+.1,cz+.01);camera.lookAt(cx,bounds.top/24,cz);camera.updateMatrixWorld();
  const board=added.boards.find(b=>b.layoutKind==='breaker')!,p=new THREE.Vector3((board.cx+board.offset.x)/12,(model.levels[0].top-.5)/12,(board.cy+board.offset.y)/12).project(camera);await page.mouse.click(rect.x+(p.x+1)*rect.width/2,rect.y+(1-p.y)*rect.height/2);
  await expect(page.getByLabel('Select deck board',{exact:true})).toHaveValue(String(board.index));await expect(page.getByRole('button',{name:'Delete selected board',exact:true})).toBeEnabled();await page.keyboard.press('Delete');
  await expectNoAdditions(page);expect((await read(page)).view).toBe('top');expect((await read(page)).boards).toEqual(original.boards);expect((await read(page)).pricing.total).toBe(original.pricing.total);await undo(page);expect((await read(page)).design).toEqual(added.design);
@@ -76,8 +78,8 @@ test('actual 3D breaker click can be deleted without leaving the 3D sheet',async
 
 test('clearing the board picker or changing deck levels clears the actual Delete targets',async({page})=>{
  const seeded=await page.evaluate(()=>window.deckcraft!.execute({id:'delete-levels',commands:[{type:'design.patch',patch:{levels:2,width2:8,length2:8,height2:24}}]}));expect(seeded.ok).toBe(true);const before=await read(page),board=before.boards.find(b=>b.modelLevel===0&&b.role==='border')!;
- await pick(page,board);await page.getByLabel('Select deck board',{exact:true}).selectOption('');await page.locator('.dd-board-layout-svg').press('Delete');expect((await read(page)).design).toEqual(before.design);await expect(page.locator('.dd-board-delete')).toHaveCount(0);
- await pick(page,board);await page.getByLabel('Board layout level',{exact:true}).selectOption('2');await page.locator('.dd-board-layout-svg').press('Delete');expect((await read(page)).design).toEqual(before.design);await expect(page.locator('.dd-board-delete')).toHaveCount(0);
+ await pick(page,board);await page.getByRole('combobox',{name:'Select deck board',exact:true}).selectOption('');await page.locator('.dd-board-layout-svg').press('Delete');expect((await read(page)).design).toEqual(before.design);await expect(page.locator('.dd-board-delete')).toHaveCount(0);
+ await pick(page,board);await page.getByRole('combobox',{name:'Board layout level',exact:true}).selectOption('2');await page.locator('.dd-board-layout-svg').press('Delete');expect((await read(page)).design).toEqual(before.design);await expect(page.locator('.dd-board-delete')).toHaveCount(0);
 });
 
 for(const v of [{name:'phone',width:390,height:844},{name:'tablet',width:768,height:1024}])test.describe(`${v.name} board deletion`,()=>{

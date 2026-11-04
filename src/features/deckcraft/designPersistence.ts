@@ -6,7 +6,7 @@ import {assertUniqueObjectIds} from './editorOrganization';
 import {pruneEdgeNames} from './edgeNames';
 import {validateStairPath} from './lib/stairPath';
 import {yardShapeProblem,yardShapeRunIn} from './yardShapeGeometry';
-import {hardscapeProduct,hardscapeProblem,hardscapeSelection} from './hardscapeCatalogue';
+import {hardscapeProduct,hardscapeProblem,hardscapeSelection} from './hardscapeLookup';
 import {FLAGSTONE_PRODUCT_ID,flagstoneSpec} from './flagstoneSpec';
 import {earthworkProblem} from './yardEarthwork';
 import {wallConstructionProblem} from './wallConstruction';

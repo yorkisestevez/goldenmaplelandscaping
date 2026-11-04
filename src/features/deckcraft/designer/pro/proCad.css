@@ -1,0 +1,147 @@
+/* The CAD workspace (slice S4): Designer Mode with the new look's switch fills the window like a CAD program. Title bar
+   with the menus, ribbon, then the tool strip, drawing and inspector side by side, then the sheets and the status bar.
+   Every rule is scoped to [data-ui=cad] (and prefixed with html to outrank the classic and Pro sheets), so Pro without
+   the switch and the public designer never change. Loaded with the Pro chunks only. */
+html .deck-designer[data-ui=cad]{
+  --cad-forest:#14261c;--cad-ink:#1d2a21;--cad-ink-2:#4d574c;--cad-gold:#c08a2e;--cad-gold-soft:#f6ead2;--cad-gold-deep:#6b4c12;
+  --cad-chrome:#eef0ec;--cad-chrome-2:#e3e7e1;--cad-line:#c9cec5;--cad-ground:#dfe3dc;--cad-body:var(--dc-body,Inter,Arial,sans-serif);
+  display:flex;flex-direction:column;height:100dvh;min-height:560px;overflow:hidden;background:var(--cad-ground);color:var(--cad-ink)
+}
+html .deck-designer[data-ui=cad] :focus-visible{outline:2px solid var(--cad-gold);outline-offset:-2px}
+
+/* Title bar: brand, the menus, the project and its save state, then Files, Presets, Agents and Send. */
+html .deck-designer[data-ui=cad] .dd-cad-title{position:relative;z-index:60;display:flex;align-items:center;gap:10px;flex:none;height:48px;min-height:48px;padding:0 10px 0 12px;background:var(--cad-forest);color:#f6f0df}
+html .deck-designer[data-ui=cad] .dd-cad-title .dd-workspace-brand{width:auto;font-size:15px;gap:8px}
+html .deck-designer[data-ui=cad] .dd-cad-title .dd-brand-symbol{width:26px;height:26px;border-color:var(--cad-gold);border-radius:7px;color:var(--cad-gold);font-size:16px}
+html .deck-designer[data-ui=cad] .dd-cad-title .dd-workspace-brand small{display:inline-block;margin:0 0 0 6px;padding:2px 6px;border-radius:4px;background:var(--cad-gold);color:var(--cad-forest);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;vertical-align:2px}
+html .deck-designer[data-ui=cad] .dd-cad-title .dd-pro-menubar{flex:none;min-height:48px;padding:0;background:none;border:0;color:inherit}
+html .deck-designer[data-ui=cad] .dd-cad-title .dd-pro-menu>button{height:48px;padding:0 9px;color:inherit}
+html .deck-designer[data-ui=cad] .dd-cad-title .dd-pro-menu>button:hover,html .deck-designer[data-ui=cad] .dd-cad-title .dd-pro-menu>button[aria-expanded=true]{background:#ffffff1a}
+html .deck-designer[data-ui=cad] .dd-cad-title .dd-pro-menu-list{color:var(--cad-ink)}
+html .deck-designer[data-ui=cad] .dd-cad-title .dd-workspace-project{gap:12px;padding-left:12px;overflow:hidden}
+html .deck-designer[data-ui=cad] .dd-cad-title .dd-save-state{min-width:0;overflow:hidden;text-overflow:ellipsis}
+html .deck-designer[data-ui=cad] .dd-cad-title .dd-workspace-project h1{font-size:12px;color:#e9e4d4!important}
+html .deck-designer[data-ui=cad] .dd-cad-title :is(.dd-workspace-files>summary,.dd-agent-open,.dd-send-top){min-height:34px;border-radius:6px}
+html .deck-designer[data-ui=cad] .dd-cad-title .dd-send-top{border-color:var(--cad-gold);background:var(--cad-gold);color:var(--cad-forest)}
+html .deck-designer[data-ui=cad] .dd-cad-title .dd-send-top:hover{background:#d39c3c}
+html .deck-designer[data-ui=cad] .dd-cad-title .dd-files-popover{top:42px}
+
+/* The workspace under the title bar: one column, plus the assistant's when it is open. */
+html .deck-designer[data-ui=cad] .dd-workspace{flex:1 1 auto;min-height:0;height:auto!important;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:0;margin:0;padding:0;max-width:none}
+@media(min-width:801px){html .deck-designer[data-ui=cad][data-assistant-open] .dd-workspace{grid-template-columns:minmax(0,1fr) minmax(340px,400px)}}
+html .deck-designer[data-ui=cad] .dd-assistant-slot{grid-column:2;grid-row:1;min-height:0;overflow:auto;background:#fff;border-left:1px solid var(--cad-line)}
+html .deck-designer[data-ui=cad] .dd-preview{position:relative;top:auto;display:flex;flex-direction:column;min-width:0;min-height:0;height:100%;max-height:none;margin:0;padding:0;overflow:hidden;background:var(--cad-ground);border:0;border-radius:0;box-shadow:none}
+
+/* Ribbon: its tabs across the top, Undo and Redo stacked at the start, then the tab's large buttons. */
+html .deck-designer[data-ui=cad] .dd-pro-ribbon{flex:none;display:grid;grid-template-columns:auto minmax(0,1fr);margin:0;background:#fafbf8;border:0;border-bottom:1px solid var(--cad-line);border-radius:0}
+html .deck-designer[data-ui=cad] .dd-pro-ribbon-tabs{grid-column:1/-1;padding:0 6px;background:var(--cad-chrome)}
+html .deck-designer[data-ui=cad] .dd-pro-ribbon-tabs button{min-height:32px;color:var(--cad-ink-2)}
+html .deck-designer[data-ui=cad] .dd-pro-ribbon-tabs button[aria-selected=true]{border-bottom-color:var(--cad-gold);color:var(--cad-forest)}
+html .deck-designer[data-ui=cad] .dd-cad-history{justify-content:center;gap:2px;padding:4px 8px;border-right:1px solid #dde1d9}
+html .deck-designer[data-ui=cad] .dd-cad-history .dd-pro-ribbon-button{flex-direction:row;gap:6px;width:auto;min-height:30px;padding:3px 10px 3px 6px}
+html .deck-designer[data-ui=cad] .dd-cad-history .dd-pro-ribbon-button svg{width:16px;height:16px}
+html .deck-designer[data-ui=cad] .dd-pro-ribbon-panel{padding:4px 4px 2px}
+html .deck-designer[data-ui=cad] .dd-pro-ribbon-button{width:70px;min-height:60px}
+html .deck-designer[data-ui=cad] .dd-pro-ribbon-button svg{color:var(--cad-forest)}
+html .deck-designer[data-ui=cad] .dd-pro-ribbon-button[aria-pressed=true]{background:var(--cad-gold-soft);border-color:var(--cad-gold);color:var(--cad-gold-deep)}
+html .deck-designer[data-ui=cad] .dd-pro-ribbon-button[aria-pressed=true] svg{color:var(--cad-gold-deep)}
+
+/* The drawing area: tool strip, drawing and inspector side by side and as tall as the window allows. The Elevations &
+   build tools, when open, sit over the drawing. */
+html .deck-designer[data-ui=cad] .dd-sheet-panel{position:relative;flex:1 1 auto;min-height:0;display:grid;grid-template-columns:auto minmax(0,1fr) clamp(320px,27vw,400px);grid-template-rows:auto minmax(0,1fr);gap:0;margin:0;padding:0}
+html .deck-designer[data-ui=cad] .dd-selection-workspace{display:contents}
+html .deck-designer[data-ui=cad] .dd-pro-strip{grid-column:1;grid-row:1/-1;position:static;gap:6px;padding:6px;overflow:auto;background:var(--cad-chrome);border-right:1px solid var(--cad-line)}
+html .deck-designer[data-ui=cad] .dd-pro-strip button[aria-pressed=true]{background:var(--cad-forest);color:#f6f0df}
+html .deck-designer[data-ui=cad] #dd-elevation-tools{grid-column:2;grid-row:1;max-height:36vh;overflow:auto;padding:8px 12px;background:#fff;border-bottom:1px solid var(--cad-line)}
+html .deck-designer[data-ui=cad] .dd-canvas{grid-column:2;grid-row:2;position:relative;min-width:0;min-height:0;margin:0;border:0;border-radius:0;box-shadow:none}
+html .deck-designer[data-ui=cad] .dd-canvas>:is(.dd-site-plan,.dd-plan-viewport,[aria-label="Interactive deck construction model"]){height:100%!important;min-height:0;max-height:none!important;aspect-ratio:auto!important;border-radius:0}
+/* Notes and chips that belong to the drawing float over it. */
+html .deck-designer[data-ui=cad] .dd-sheet-panel>:is(.dd-night-hint,.dd-framing-modes,.dd-paint-chip,.dd-plan-status){grid-column:2;grid-row:2;z-index:6;align-self:start;justify-self:center;max-width:calc(100% - 32px);margin:12px 16px}
+html .deck-designer[data-ui=cad] .dd-sheet-panel>.dd-plan-status{align-self:end;padding:6px 12px;border-radius:6px;background:#ffffffeb;box-shadow:0 2px 8px #14261c26;font-size:12px}
+html .deck-designer[data-ui=cad] .dd-sheet-panel>.dd-plan-status:empty{display:none}
+
+/* The compass puck: the four real cameras on a dial at the drawing's lower left (Above in the middle), above the viewer's
+   own hint. Its height and roundness beat the canvas's and the view toggles' rules. */
+html .deck-designer[data-ui=cad] .dd-cad-puck{position:absolute;left:16px;bottom:48px;z-index:8;display:grid;grid-template:1fr auto 1fr/1fr auto 1fr;place-items:center;gap:0;width:144px;height:144px!important;padding:0;border:1px solid #ffffff99;border-radius:50%!important;background:radial-gradient(circle,#f6f0dff2 0 34%,#e9ece6e6 35% 100%);box-shadow:0 6px 20px #14261c40}
+html .deck-designer[data-ui=cad] .dd-cad-puck button{min-width:0;min-height:30px;padding:0 6px;border:0;border-radius:999px;background:none;color:var(--cad-forest);font:600 11px var(--cad-body);cursor:pointer}
+html .deck-designer[data-ui=cad] .dd-cad-puck button:hover{background:#14261c14}
+html .deck-designer[data-ui=cad] .dd-cad-puck button[aria-pressed=true]{background:var(--cad-forest);color:#f6f0df}
+html .deck-designer[data-ui=cad] .dd-cad-puck button:nth-child(1){grid-area:2/2;min-width:58px;min-height:58px;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 1px var(--cad-line)}
+html .deck-designer[data-ui=cad] .dd-cad-puck button:nth-child(1)[aria-pressed=true]{background:var(--cad-forest);box-shadow:none}
+html .deck-designer[data-ui=cad] .dd-cad-puck button:nth-child(2){grid-area:1/2}
+html .deck-designer[data-ui=cad] .dd-cad-puck button:nth-child(3){grid-area:2/3}
+html .deck-designer[data-ui=cad] .dd-cad-puck button:nth-child(4){grid-area:3/2}
+
+/* Side column: the inspector (the subject's head, its areas as tabs, one editor with the drawing's notes under it) takes
+   what the drawing tool's options and the live price leave, so the price and documents never leave the screen. */
+html .deck-designer[data-ui=cad] .dd-pro-side{grid-column:3;grid-row:1/-1;display:flex;flex-direction:column;gap:0;height:auto!important;min-width:0;min-height:0;background:#fff;border-left:1px solid var(--cad-line)}
+html .deck-designer[data-ui=cad] .dd-cad-inspector{flex:1 1 0;min-height:120px;overflow:hidden;border:0;border-radius:0}
+html .deck-designer[data-ui=cad] .dd-cad-inspector>.dd-pro-properties-head{position:static;flex:none;padding:6px 10px;background:var(--cad-chrome)}
+html .deck-designer[data-ui=cad] .dd-cad-inspector>.dd-pro-properties-head h2{font-size:14px}
+html .deck-designer[data-ui=cad] .dd-cad-inspector>.dd-pro-properties-head button{width:32px;height:32px}
+html .deck-designer[data-ui=cad] .dd-cad-tabs{flex:none;display:flex;flex-wrap:wrap;gap:2px;padding:4px 8px 0;background:var(--cad-chrome);border-bottom:1px solid var(--cad-line)}
+html .deck-designer[data-ui=cad] .dd-cad-tabs button{min-height:30px;margin-bottom:-1px;padding:0 8px;border:1px solid transparent;border-radius:5px 5px 0 0;background:none;color:var(--cad-ink-2);font:600 12px var(--cad-body);cursor:pointer}
+html .deck-designer[data-ui=cad] .dd-cad-tabs button:hover{color:var(--cad-forest);background:#ffffff99}
+html .deck-designer[data-ui=cad] .dd-cad-tabs button[aria-selected=true]{background:#fff;border-color:var(--cad-line);border-bottom-color:#fff;color:var(--cad-forest);box-shadow:inset 0 2px 0 var(--cad-gold)}
+html .deck-designer[data-ui=cad] .dd-cad-scroll{flex:1 1 0;min-height:0;overflow:auto;overscroll-behavior:contain;padding:0 12px 12px}
+html .deck-designer[data-ui=cad] .dd-cad-scroll>*+*{margin-top:10px}
+/* The drawing tool's options keep a band of their own (at most a third) under the area, as in Pro without the switch. */
+html .deck-designer[data-ui=cad] .dd-pro-side>.dd-selection-inspector{flex:0 0 auto;position:static;max-height:33%;min-height:0;margin:0;padding:0 12px;overflow:auto;overscroll-behavior:contain;border:0;border-top:1px solid var(--cad-line);border-radius:0;background:#fff}
+html .deck-designer[data-ui=cad] .dd-pro-side>.dd-selection-inspector>summary{position:sticky;top:0;z-index:1;min-height:36px;background:#fff;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--cad-ink-2)}
+html .deck-designer[data-ui=cad] .dd-cad-scroll>:is(.dd-preview-details,.dd-boundary-presets){margin-left:0;margin-right:0;padding:2px 12px;border:1px solid var(--cad-line);border-radius:4px;background:#fff;font-size:13px}
+html .deck-designer[data-ui=cad] .dd-cad-scroll>.dd-quantities{font-size:12px}
+html .deck-designer[data-ui=cad] .dd-cad-price{flex:0 0 auto;padding:8px 12px 10px;background:#f7f6f1;border-top:1px solid var(--cad-line)}
+html .deck-designer[data-ui=cad] .dd-cad-price .dd-workspace-price{position:static;inset:auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;min-width:0;margin:0;padding:0;background:none;border:0;box-shadow:none;z-index:auto}
+html .deck-designer[data-ui=cad] .dd-cad-price .dd-workspace-amount{flex:1 1 100%;align-items:baseline;gap:0 8px}
+html .deck-designer[data-ui=cad] .dd-cad-price .dd-workspace-amount>span{flex-basis:100%;font-size:10px}
+html .deck-designer[data-ui=cad] .dd-cad-price .dd-workspace-amount>strong{font-size:20px}
+html .deck-designer[data-ui=cad] .dd-cad-price .dd-workspace-amount>small{flex-basis:auto}
+html .deck-designer[data-ui=cad] .dd-cad-price .dd-workspace-price>button,html .deck-designer[data-ui=cad] .dd-cad-price .dd-workspace-quotes>summary{min-height:28px;font-size:11px}
+html .deck-designer[data-ui=cad] .dd-cad-price .dd-workspace-price>.dd-secondary{padding:0 10px}
+html .deck-designer[data-ui=cad] .dd-cad-price .dd-price-send{display:none}
+html .deck-designer[data-ui=cad] .dd-cad-documents{display:flex;gap:6px;margin-top:6px}
+html .deck-designer[data-ui=cad] .dd-cad-documents button{flex:1;min-height:32px;padding:0 10px;border:1px solid #b9c2b6;border-radius:5px;background:#fff;color:var(--cad-forest);font:600 12px var(--cad-body);cursor:pointer}
+html .deck-designer[data-ui=cad] .dd-cad-documents button:hover:not(:disabled){background:var(--cad-chrome)}
+html .deck-designer[data-ui=cad] .dd-cad-documents button:disabled{opacity:.5;cursor:default}
+
+@media(max-height:800px){
+  html .deck-designer[data-ui=cad] .dd-cad-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}
+  html .deck-designer[data-ui=cad] .dd-cad-tabs button{flex:none;white-space:nowrap}
+  html .deck-designer[data-ui=cad] .dd-cad-price .dd-workspace-amount>span{display:none}
+}
+
+/* Bottom bar: the sheets as tabs, the 3D view's day, night and lights, the drawing's title, and the layers. */
+html .deck-designer[data-ui=cad] .dd-preview>.dd-preview-head{flex:none;flex-wrap:nowrap;gap:12px;min-height:38px;margin:0;padding:0 10px 0 0;background:var(--cad-chrome);border-top:1px solid var(--cad-line)}
+html .deck-designer[data-ui=cad] .dd-preview>.dd-preview-head h2{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--cad-ink-2)}
+html .deck-designer[data-ui=cad] .dd-preview .dd-sheet-tabs{align-self:stretch;border:0;border-right:1px solid var(--cad-line);border-radius:0}
+html .deck-designer[data-ui=cad] .dd-preview .dd-sheet-tabs button{min-height:38px;border-top:3px solid transparent}
+html .deck-designer[data-ui=cad] .dd-preview .dd-sheet-tabs [aria-selected=true]{background:#fff;border-top-color:var(--cad-gold);color:var(--cad-forest)}
+html .deck-designer[data-ui=cad] .dd-cad-scene{display:flex;align-items:center;gap:10px;flex:none}
+html .deck-designer[data-ui=cad] .dd-cad-scene .dd-day-night button{min-height:30px}
+html .deck-designer[data-ui=cad] .dd-cad-scene .dd-preview-light-switch{margin:0;font-size:12px;white-space:nowrap}
+
+/* Status bar: the current tool and its hint, and the keys it answers to. */
+html .deck-designer[data-ui=cad] .dd-pro-statusbar{flex:none;flex-wrap:nowrap;margin:0;padding:4px 12px;background:var(--cad-chrome-2);border:0;border-top:1px solid var(--cad-line);border-radius:0;font-size:12px}
+html .deck-designer[data-ui=cad] .dd-pro-statusbar p{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html .deck-designer[data-ui=cad] .dd-pro-statusbar ul{flex:none;flex-wrap:nowrap}
+html .deck-designer[data-ui=cad] .dd-pro-statusbar kbd{background:var(--cad-forest);color:#f6f0df}
+
+/* Narrow screens: the window stacks (title bar and ribbon scroll sideways, the inspector follows the drawing) and the
+   page scrolls again. */
+@media(max-width:800px){
+  html .deck-designer[data-ui=cad]{height:auto;min-height:0;overflow:visible}
+  html .deck-designer[data-ui=cad] .dd-cad-title{flex-wrap:wrap;height:auto;padding:4px 10px}
+  html .deck-designer[data-ui=cad] .dd-cad-title .dd-pro-menubar{flex-wrap:wrap}
+  html .deck-designer[data-ui=cad] .dd-preview{height:auto;overflow:visible}
+  /* One column here: the assistant stacks under the drawing rather than opening a second column that crushes it. */
+  html .deck-designer[data-ui=cad] .dd-assistant-slot{grid-column:1;grid-row:2;border-left:0;border-top:1px solid var(--cad-line)}
+  /* Here the title bar's buttons keep a 44 px touch target (the wide bar trims them to 34 px). */
+  html .deck-designer[data-ui=cad] .dd-cad-title :is(.dd-workspace-files>summary,.dd-agent-open,.dd-send-top){min-height:44px}
+  html .deck-designer[data-ui=cad] .dd-sheet-panel{display:flex;flex-direction:column}
+  html .deck-designer[data-ui=cad] .dd-canvas>:is(.dd-site-plan,.dd-plan-viewport,[aria-label="Interactive deck construction model"]){height:62dvh!important}
+  html .deck-designer[data-ui=cad] .dd-pro-strip{flex-direction:row;flex-wrap:wrap;border-right:0;border-bottom:1px solid var(--cad-line)}
+  html .deck-designer[data-ui=cad] .dd-pro-side{border-left:0;border-top:1px solid var(--cad-line)}
+  html .deck-designer[data-ui=cad] .dd-cad-inspector{overflow:visible}
+  html .deck-designer[data-ui=cad] :is(.dd-cad-scroll,.dd-pro-side>.dd-selection-inspector){max-height:none;overflow:visible}
+  html .deck-designer[data-ui=cad] .dd-preview>.dd-preview-head,html .deck-designer[data-ui=cad] .dd-pro-statusbar{flex-wrap:wrap}
+}

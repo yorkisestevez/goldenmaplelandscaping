@@ -1,9 +1,10 @@
 import {test,expect,type Page} from '@playwright/test';
+import {startOnPlan} from './nav';
 import {mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 test.beforeEach(async({context})=>{await context.route('**/*',route=>{const request=route.request(),url=new URL(request.url());if(!['GET','HEAD'].includes(request.method()))return route.abort();if(['127.0.0.1','localhost','[::1]'].includes(url.hostname))return route.fallback();return route.fulfill({status:200,contentType:request.resourceType()==='script'?'text/javascript':request.resourceType()==='stylesheet'?'text/css':'text/plain',body:''});});});
 const read=(page:Page)=>page.evaluate(()=>window.deckcraft!.read());
-async function open(page:Page){await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);const response=await page.evaluate(()=>window.deckcraft!.execute({id:'easy-dimension-seed',commands:[{type:'design.patch',patch:{deckType:'Freestanding',houseVisible:false,stairFlights:0}},{type:'boundary.set',level:1,points:[{x:0,y:0},{x:192,y:0},{x:192,y:144},{x:0,y:144}]}]}));expect(response.ok,JSON.stringify(response)).toBe(true);await page.locator('#dd-tool-outline').click();}
+async function open(page:Page){await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);const response=await page.evaluate(()=>window.deckcraft!.execute({id:'easy-dimension-seed',commands:[{type:'design.patch',patch:{deckType:'Freestanding',houseVisible:false,stairFlights:0}},{type:'boundary.set',level:1,points:[{x:0,y:0},{x:192,y:0},{x:192,y:144},{x:0,y:144}]}]}));expect(response.ok,JSON.stringify(response)).toBe(true);await page.locator('#dd-tool-outline').click();}
 async function proof(page:Page,name:string){if(process.env.DECK_EASY_DIMENSION_PROOF==='1'){const dir=resolve('../../outputs/deckcraft-easy-edit-review/dimensions');mkdirSync(dir,{recursive:true});await page.locator('.dd-plan-viewport').screenshot({path:resolve(dir,name)});}}
 async function assertLabelsReachable(page:Page){
  const labels=page.locator('.dd-boundary-dimension-label');await expect(labels).toHaveCount(4);

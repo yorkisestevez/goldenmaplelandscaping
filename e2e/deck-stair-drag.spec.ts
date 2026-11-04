@@ -1,4 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
+import {startOnPlan} from './nav';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 const storage='golden-maple.deck-studio.deck-only.v1';
 const read=(page:Page)=>page.evaluate(()=>(window as any).deckcraft.read().design);
@@ -21,7 +22,7 @@ test('stairs drag across edges, undo atomically, cancel and survive reload',asyn
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(({storage,configuration})=>{if(!localStorage.getItem(storage))localStorage.setItem(storage,JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));},{storage,configuration:{...DEFAULT_DECK,width:20,length:12,height:36,levels:1,stairFlights:1,stairPosition:'Front',stairOffset:50}});
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
+ await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
  await page.locator('[data-select-stairs]').last().click();await expect(page.getByRole('radio',{name:'Stairs',exact:true})).toHaveAttribute('aria-checked','true');await expect(page.getByRole('region',{name:'Stair shape tools',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'Deck shape & size',exact:true})).toHaveCount(0);const before=await read(page);
  await dragTo(page,240);await expect.poll(async()=>(await read(page)).stairPosition).toBe('Right');
  const right=await read(page);expect(right.stairOffset).toBeCloseTo(50,0);await expect(page.getByRole('button',{name:'Apply preview',exact:true})).toHaveCount(0);
@@ -30,5 +31,5 @@ test('stairs drag across edges, undo atomically, cancel and survive reload',asyn
  await dragTo(page,0,true);expect(await read(page)).toEqual(right);
  await dragTo(page,0);await expect.poll(async()=>(await read(page)).stairPosition).toBe('Left');const left=await read(page);
  await expect(page.getByText(/^Saved on this device at/)).toBeVisible();
- await page.reload();await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);expect(await read(page)).toEqual(left);
+ await page.reload();await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);expect(await read(page)).toEqual(left);
 });

@@ -2,7 +2,7 @@ import {test,expect,type Page,type Locator} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import type {DeckData} from '../src/features/deckcraft/types';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
-import {openDesignTask} from './nav';
+import {openDesignTask,startOnPlan} from './nav';
 
 /**
  * Ground fit (G3) on Craighurst: a real U-Level survey (no customer details) under a 12 × 5 ft deck at +30 in with four
@@ -20,7 +20,7 @@ test.beforeEach(async({page,context})=>{
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(([key,value])=>{if(!localStorage.getItem(key))localStorage.setItem(key,value);},[KEY,DESIGN] as const);
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&['GET','HEAD'].includes(r.request().method())?r.continue():r.fulfill({body:''}));
- await page.goto('/deck-designer/');await ready(page);
+ await page.goto('/deck-designer/');await startOnPlan(page);await ready(page);
  expect(fit(await design(page))).toMatchObject({landing:5,risers:4});
 });
 

@@ -1,6 +1,6 @@
 import {test,expect,type Page} from '@playwright/test';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
-import {pickPlanTool} from './nav';
+import {pickPlanTool,startOnPlan} from './nav';
 // Draft keys act on the drawing in progress, never on the saved design: Ctrl+Z removes the last point, L/T/A pick the
 // next edge, C finishes. Shift-held drawing still closes on the first point. The right-click menu deletes patios and
 // opens the stair shape tool.
@@ -10,7 +10,7 @@ test.beforeEach(async({page,context},info)=>{
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(configuration=>localStorage.setItem('golden-maple.deck-studio.deck-only.v1',JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration})),{...DEFAULT_DECK,yardFeatures:info.title.startsWith('right-click')?[MENU_PATIO]:[]});
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
+ await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
 });
 async function patioSurface(page:Page){
  await pickPlanTool(page,'Patios & walls');await page.getByRole('button',{name:'Draw patio',exact:true}).click();

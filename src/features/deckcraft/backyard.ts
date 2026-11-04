@@ -1,4 +1,4 @@
-import {ALLOWANCE_FINISHES,PATIO_PRODUCTS,WALL_PRODUCTS,WATER_PRODUCTS,allowanceItems,fireProduct} from './yardSettings';
+import {ALLOWANCE_FINISHES,NO_ALLOWANCES,PATIO_PRODUCTS,WALL_PRODUCTS,WATER_PRODUCTS,allowanceItems,fireProduct} from './yardSettings';
 import type {YardModel} from './yardModel';
 import type {DeckData,YardAllowances} from './types';
 
@@ -9,6 +9,11 @@ import type {DeckData,YardAllowances} from './types';
  * A design with none of these and no terrain settings is exactly the deck-only design it always was.
  */
 export const hasYardAllowances=(a?:YardAllowances)=>allowanceItems(a).length>0;
+/** A change to the allowances. Switching the last one off removes them, so the design saves exactly as one without. */
+export function yardAllowancesPatch(data:Pick<DeckData,'yardAllowances'>,patch:Partial<YardAllowances>):Partial<DeckData>{
+  const next={...(data.yardAllowances??NO_ALLOWANCES),...patch};
+  return {yardAllowances:hasYardAllowances(next)?next:undefined};
+}
 /** Patios, walls, water or terrain settings: the backyard the 3D view draws (allowances are not drawn). */
 export const hasBackyardLayout=(data:Pick<DeckData,'yardFeatures'|'terrainConfig'|'siteModel'|'landscapeObjects'>)=>!!(data.yardFeatures?.length||data.terrainConfig||data.siteModel||data.landscapeObjects?.some(o=>o.enabled));
 export const hasBackyard=(data:Pick<DeckData,'yardFeatures'|'terrainConfig'|'siteModel'|'landscapeObjects'|'yardAllowances'>)=>hasBackyardLayout(data)||hasYardAllowances(data.yardAllowances);
