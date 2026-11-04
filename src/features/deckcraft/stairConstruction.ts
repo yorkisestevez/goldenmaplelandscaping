@@ -63,6 +63,14 @@ export function getStringerOffsets(width:number,spacing:number,minimum=3):number
   return points;
 }
 
+/** Open stringer stairs (DeckData.stairSides 'Open', owner 2026-11-02): a fascia board on each outer stringer's face, cut
+ * to the stringer's profile, and treads that overhang that fascia by 1 in. The outer stringers are centred 1 in inside the
+ * stair width (getStringerOffsets), so their faces are 0.25 in inside it and each tread runs 1.5 in past it on both sides.
+ * A drawn stair path keeps boxed sides: its mitred treads are shared between segments. */
+export const OPEN_STAIR={fasciaIn:.75,overhangIn:1,stringerFaceIn:.25} as const;
+export const OPEN_TREAD_EXTENSION_IN=OPEN_STAIR.fasciaIn+OPEN_STAIR.overhangIn-OPEN_STAIR.stringerFaceIn;
+export const openStairs=(data:DeckData)=>data.stairSides==='Open'&&!data.stairPath;
+
 export type RiserBoard=Box&{kind:'riser';flightId:string;riserIndex:number;stockLength:number;stockWidth:number;materialId:string};
 /** A closed riser spans lower walking surface to the underside of the upper
  * one-inch tread. Its front face is at the step boundary; thickness goes uphill. */

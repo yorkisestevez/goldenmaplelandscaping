@@ -21,6 +21,8 @@ import {inlayCrewDays,PATTERN_LABOUR} from './lib/inlayGeometry';
 import {SKIRTING_STYLE_NAMES,skirtingGeometry,skirtingPlan,type SkirtingPlan} from './skirting';
 import {pricedSkirtingRows} from './skirtingPricing';
 import {claddingPlan} from './stairCladding';
+import {stairPads,STAIR_PAD} from './stairPads';
+import {PAVER_BRANDS} from '../../data/carrPrices';
 import {pricedCladdingFinish,pricedFasciaFinish,pricedStairFrameDetail} from './claddingPricing';
 import {STAIR_ALLOWANCE_WIDTH_IN,DECKING_RATE_SOURCES,deckingRateWidth} from './supplierRates';
 import {fasciaSupply} from './fasciaPricing';
@@ -851,6 +853,14 @@ function estimateBody(data: DeckData, settings: any, skirt:(data:DeckData,model:
     }
   }
   flags.push(...cladding.notes);
+  // A paver pad at the foot of each flight to the ground (stairPads.ts), at the paver's installed rate.
+  const pads=stairPads(data,model);
+  if(pads.length){
+    const paver=PAVER_BRANDS.find(p=>p.id===STAIR_PAD.productId);if(!paver)throw Error(`The stair pad paver ${STAIR_PAD.productId} is missing from the price list.`);
+    const sqft=pads.reduce((n,p)=>n+p.areaSqft,0),cost=sqft*paver.installedPerSqft,name=`${paver.brand} ${paver.product}`;
+    sections.push({title:'Stair landing pad',icon:'🧱',total:cost,description:`${name} pavers on a compacted base at the foot of the stairs, at the installed paver rate.`,
+      items:[{name:'Paver landing pad',spec:`${pads.length} pad${pads.length===1?'':'s'}, ${STAIR_PAD.depthIn} in out from the last riser and ${STAIR_PAD.marginIn} in wider than the stair on each side; ${name} at $${paver.installedPerSqft}/sq ft installed.`,qty:Math.round(sqft*10)/10,unit:'sqft',cost}]});
+  }
   flags.push(...yardTakeoff.warnings);
   for(const row of yardTakeoff.sections){
     const unknown=row.amountCents===null;if(unknown)quoteRequired.push(row.label);

@@ -1,5 +1,5 @@
 import type {DeckTakeoff,DeckLevel} from './deckTakeoff';
-import type {RiserBoard} from './stairConstruction';
+import {openStairs,OPEN_STAIR,type RiserBoard} from './stairConstruction';
 import type {DeckData} from './types';
 import type {SkirtingSlab} from './skirting';
 import type {PlanPoint} from './lib/deckGeometry';
@@ -12,7 +12,8 @@ import {levelJunctions,worldOutline} from './lib/levelJunctions';
  * The finish boards that make stairs and level joins look built, not framed (owner decision 2026-09-25). Pure data,
  * worked out from the takeoff, never stored in it:
  * - Stair sides: a stepped fascia panel over each outer stringer, from the ground (or the deck the step stands on) up
- *   to the underside of each tread, 0.25 in proud of the tread and riser ends, so no raw stringer shows.
+ *   to the underside of each tread, 0.25 in proud of the tread and riser ends, so no raw stringer shows. Open stringer
+ *   stairs (stairConstruction.ts OPEN_STAIR) instead clad each outer stringer's face, cut to the stringer's profile.
  * - Level drops: where a higher level meets a lower one, the face between the lower deck's surface and the underside of
  *   the higher level's rim is boarded, flush under its fascia, outside the step openings.
  * - Rim corners: the outer corner square the two rim pieces leave open at every outside corner is filled (drawn only).
@@ -38,6 +39,7 @@ export function claddingPlan(data:DeckData,model:DeckTakeoff):CladdingPlan{
   const terrain=getTerrainConfig(data),ground=(p:PlanPoint)=>terrain.elevationIn+p.y*terrain.slopePct/100;
   const slabs:CladdingSlab[]=[],notes:string[]=[];
   const decks=model.levels.map((l,i)=>({l,i,poly:l.kind==='winder'?null:worldOutline(l)})).filter(d=>d.poly);
+  const setback=model.riserBoards.length?model.stairSupport.riserThicknessIn:0,stringerDepth=model.stringers.find(s=>s.role==='stringer')?.depth??9.25;
   // 1. Stair sides and step ends, per going.
   for(const f of model.flights){
     if(!f.outward||!f.along||f.risers<2)continue;
@@ -46,10 +48,16 @@ export function claddingPlan(data:DeckData,model:DeckTakeoff):CladdingPlan{
     // A step that stands on a deck level is boarded down to that deck; any other flight down to the ground.
     const mid=at((f.risers-1)*f.run/2,0,0),deck=decks.find(d=>Math.abs(d.l.top-f.end.y)<.6&&inside(mid,d.poly!));
     const part:CladdingPart=f.kind==='connection'?'step-end':'stair-side';
+    // An open stringer's fascia follows its cut (stringerProfile.ts): up to each tread and down to the stringer's
+    // underside, which runs from its throat under the top tread to the ground at the last riser.
+    const open=!deck&&f.kind==='grade'&&f.type==='Straight'&&openStairs(data),across=open?THICK/2-OPEN_STAIR.stringerFaceIn:PROUD-THICK/2;
+    const foot=Math.max(0,(f.risers-1)*f.run-setback),throat=Math.max(f.end.y,f.start.y-f.rise-stringerDepth);
+    const underside=(t:number)=>t<foot?throat+(f.end.y-throat)*t/foot:f.end.y;
+    const floor=(p:PlanPoint,t:number)=>deck?deck.l.top:open?Math.max(ground(p),underside(t)):ground(p);
     for(const side of [-1,1])for(let i=1;i<f.risers;i++){
-      const t0=(i-1)*f.run,t1=i*f.run,top=f.start.y-i*f.rise-1,a=at(t0,side,PROUD-THICK/2),b=at(t1,side,PROUD-THICK/2);
-      const bottomA=deck?deck.l.top:ground(a),bottomB=deck?deck.l.top:ground(b);
-      if(top-Math.max(bottomA,bottomB)<MIN_FACE)continue;
+      const t0=(i-1)*f.run,t1=i*f.run,top=f.start.y-i*f.rise-1,a=at(t0,side,across),b=at(t1,side,across);
+      const bottomA=floor(a,t0),bottomB=floor(b,t1);
+      if(top-(open?Math.min:Math.max)(bottomA,bottomB)<MIN_FACE)continue;
       slabs.push({part,a,b,out:{x:u.x*side,y:u.y*side},thick:THICK,bottomA,topA:top,bottomB,topB:top});
     }
   }

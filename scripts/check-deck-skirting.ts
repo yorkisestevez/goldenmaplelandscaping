@@ -256,7 +256,8 @@ for(const [label,patch] of houses)for(const deckType of ['Attached','Freestandin
 {
   const d=base({height:48,skirting:skirt({colour:COCOA})}),e=price(d),facts=describeDesign(d,e);
   ok(facts.facts.some(f=>/^Skirting: horizontal boards in Dark Cocoa \(TimberTech EDGE Prime\+\), [\d.]+ ft on 3 sides, 2 in above the ground, 1 access panel$/.test(f))&&facts.summary.includes('Skirting: horizontal boards'),'The design facts and summary describe the skirting');
-  ok(designFeatures(d).includes('deck_skirting'),'The funnel counts skirting');
+  // New designs start skirted (owner 2026-11-02), so the funnel counts only a departure: none, or another style.
+  ok(!designFeatures(d).some(f=>f.startsWith('deck_skirting'))&&designFeatures(base({height:48})).includes('deck_skirting_none')&&designFeatures(base({height:48,skirting:skirt({style:'Lattice'})})).includes('deck_skirting_style'),'The funnel counts a departure from the default skirting');
   const fields:SendDesignFields={name:'A',email:'a@example.com',phone:'7053008015',address:'Barrie',notes:'',offers:false,botField:'',timeline:'',budget:'',samples:true};
   const sent=buildDeckDesignSubmission(fields,{data:d,estimate:e,summary:facts.summary,reviewItems:[],link:'https://goldenmaplelandscaping.ca/deck-designer#d',sentAt:new Date(0),consent:null});
   ok(sent.details.includes('Samples: please bring Coconut Husk and the skirting colour: Dark Cocoa (TimberTech EDGE Prime+)')&&sent.details.includes('Skirting: horizontal boards'),'A sent design names the skirting and asks for its colour sample');

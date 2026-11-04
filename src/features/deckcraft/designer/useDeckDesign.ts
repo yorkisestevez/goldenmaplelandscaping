@@ -1,7 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {prepareDesignUpdate} from './designUpdate';
 import {deckReleaseData,DECK_RELEASE_STORAGE_KEY,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../deckRelease';
-import {DEFAULT_DECK} from '../defaults';
+import {NEW_DECK} from '../defaults';
 import {DESIGN_STORAGE_KEY} from '../designPersistence';
 import {DESIGN_LINK_BACKUP_KEY,DesignLinkError,decodeDesignLinkFile,designLinkFromHash,designToKeep} from '../designLink';
 import {PRICE_BOOK,priceBookLabel} from '../priceBook';
@@ -25,7 +25,7 @@ async function restoreText(text:string):Promise<DeckData>{const restored=await p
  * sections, so the new design is seen from the top).
  */
 export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
-  const [data,setData]=useState<DeckData>(()=>deckReleaseData(structuredClone(DEFAULT_DECK)));
+  const [data,setData]=useState<DeckData>(()=>deckReleaseData(structuredClone(NEW_DECK)));
   const [mounted,setMounted]=useState(false);
   const [designReady,setDesignReady]=useState(false);
   const [hasWebGL,setHasWebGL]=useState(true);
