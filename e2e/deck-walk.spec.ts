@@ -23,14 +23,16 @@ async function walking(page:Page){
 }
 
 test('walks up the stairs onto the deck at eye height and stops at the house wall',async({page})=>{
+ test.setTimeout(300_000);
  await walking(page);
  const start=await eye(page);
  expect(start.y-start.floor).toBeCloseTo(5.5,1);
  expect(start.z).toBeGreaterThan(12);
  await page.keyboard.down('ArrowUp');
- // Yard, stairs and deck are about 25 ft; at 4 ft a second the walker reaches the wall and stays there.
- await expect.poll(async()=>(await eye(page)).floor,{timeout:30_000}).toBeGreaterThan(2);
- await page.waitForTimeout(6000);
+ // Yard, stairs and deck are about 25 ft. Each frame moves at most 0.1 s worth, so on CI's slow software renderer the walk
+ // takes far longer than 25 ft at 4 ft a second: wait for progress (onto the deck, then no longer moving), not a time.
+ await expect.poll(async()=>(await eye(page)).floor,{timeout:120_000}).toBeGreaterThan(2);
+ await expect.poll(async()=>{const a=(await eye(page)).z;await page.waitForTimeout(1000);const b=(await eye(page)).z;return Math.abs(a-b)<.05&&b<4;},{timeout:120_000}).toBe(true);
  await page.keyboard.up('ArrowUp');
  const end=await eye(page);
  expect(end.floor).toBeGreaterThan(2);

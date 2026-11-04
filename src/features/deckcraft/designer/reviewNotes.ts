@@ -9,7 +9,7 @@ const NOTES=[
  /^Deck width\/depth refer to the structural rim centre-line footprint\./,
  /^OBC: Deck > (24|71)" \(\d+mm\) - (36|42)" high railing required\.$/,
  /^OBC: Ensure baluster spacing is < 4"/,
- /^Closed-riser thickness is allowed for in the illustrated stringer notch faces\./,
+ /^Closed-riser thickness is allowed for in the illustrated stringer notch faces\./,/^Open stringer stairs: each tread runs \d+ in past the stringer fascia/,/^Skirting (ventilation|drainage): /,/^Skirting access: \d+ framed access panels?, \d+ in wide, to reach the footings and framing under the deck\.$/,
  // A new design prices a sized pier at its size; a saved one still says the price book allows a smaller pier.
  /^Footings size to \d+ in for the tributary load(?!.*The price book still allows)/,
  /^Selected decking uses a current DeckMart retail purchasing benchmark/,

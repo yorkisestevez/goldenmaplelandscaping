@@ -2,7 +2,7 @@ import {Suspense,lazy,use,useCallback,useEffect,useMemo,useRef,useState,type Rea
 import {Link,useSearchParams} from 'react-router-dom';
 import SEO from '../components/SEO';
 import {deckReleaseData,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../features/deckcraft/deckRelease';
-import {DEFAULT_DECK} from '../features/deckcraft/defaults';
+import {NEW_DECK} from '../features/deckcraft/defaults';
 import {DEFAULT_FEATURE_LABOUR} from '../features/deckcraft/featureLabour';
 import type {DeckData,DeckInlay,HouseOpening,PrivacyScreen} from '../features/deckcraft/types';
 import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,pricedPrivacyArea,privacySides,screenOn,screenProduct} from '../features/deckcraft/privacyScreens';
@@ -567,7 +567,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   const drawOnPlan=()=>openPlanTool('outline');
   const startOver=()=>{
     void (async()=>{
-      const next=deckReleaseData(structuredClone(DEFAULT_DECK));
+      const next=deckReleaseData(structuredClone(NEW_DECK));
       try{
         const {readFeatureLabourDefaults}=await import('../features/deckcraft/featureLabourStorage');
         const saved=await readFeatureLabourDefaults();
