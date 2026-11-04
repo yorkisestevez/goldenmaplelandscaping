@@ -154,13 +154,16 @@ const YARD_ADDS:readonly (readonly [YardFeatureKind,string,string])[]=[
   ['patio','Patio','M4 7h20v14H4zM4 14h20M11 7v7M17 14v7'],['retaining-wall','Wall','M3 20h22v-5H3zM3 15h22v-5H3zM10 20v-5M17 20v-5M7 15v-5M14 15v-5M21 15v-5'],
   ['fire-feature','Fire feature','M14 4c4 5 6 8 6 11a6 6 0 0 1-12 0c0-2 1-4 3-6 0 3 1 4 3 4 0-3-1-6 0-9zM6 24h16'],['water-feature','Water feature','M3 12c3-3 5-3 8 0s5 3 8 0 4-2 6 0M3 18c3-3 5-3 8 0s5 3 8 0 4-2 6 0'],
 ];
+const FENCE_ICON='M5 23V9l2-3 2 3v14M12 23V9l2-3 2 3v14M19 23V9l2-3 2 3v14M3 12h22M3 19h22';
 function YardPicks({data,update,onSelectYard,onPlanTool}:QuickPicksProps){
   const features=data.yardFeatures??[],a=data.yardAllowances??NO_ALLOWANCES,[error,setError]=useState('');
   // A first patio or wall is checked and priced at once, so the supplier catalogue (lazy, hardscapeLookup.ts) comes first.
   const add=async(kind:YardFeatureKind)=>{try{await loadHardscapeCatalogue();const feature=newYardFeature(kind,data);update({yardFeatures:[...features,feature]});onSelectYard(feature.id);setError('');}catch(e){setError((e as Error).message);}};
   const allow=(patch:Partial<YardAllowances>)=>update(yardAllowancesPatch(data,patch));
+  // A fence runs across the yard; the plan then shows it with its corner handles (FenceShapeEditor.tsx).
+  const addFence=async()=>{try{const {newFence,validateFences,FENCE_LIMITS}=await import('../../fenceRuntime'),fences=data.fences??[];if(fences.length>=FENCE_LIMITS.fences)throw Error(`A design can have up to ${FENCE_LIMITS.fences} fences.`);update({fences:validateFences([...fences,newFence(data)])});onPlanTool('yard');setError('');}catch(e){setError((e as Error).message);}};
   return <>
-    <Group look="tiles" label="Add to the yard" items={YARD_ADDS.map(([kind,name,d])=>({text:<Tile d={d} name={name}/>,name:`Add a ${name.toLowerCase()}`,disabled:features.length>=MAX_YARD_FEATURES,onClick:()=>void add(kind)}))}/>
+    <Group look="tiles" label="Add to the yard" items={[...YARD_ADDS.map(([kind,name,d])=>({text:<Tile d={d} name={name}/>,name:`Add a ${name.toLowerCase()}`,disabled:features.length>=MAX_YARD_FEATURES,onClick:()=>void add(kind)})),{text:<Tile d={FENCE_ICON} name="Fence"/>,name:'Add a fence',onClick:()=>void addFence()}]}/>
     {error&&<p className="dd-next-note" role="alert">{error}</p>}
     <Group look="actions" label="Draw on the plan" items={[{text:'Patios & walls',onClick:()=>onPlanTool('yard')},{text:'Landscape areas',onClick:()=>onPlanTool('landscape')}]}/>
     <Choices label="Fire pit" value={a.firePit} options={[['none','None'],['wood','Wood'],['gas','Gas']] as const} onPick={firePit=>allow({firePit})}/>
