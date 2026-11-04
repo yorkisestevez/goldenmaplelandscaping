@@ -1,3 +1,4 @@
+import '../src/features/deckcraft/hardscapeCatalogue';
 import assert from 'node:assert/strict';
 // Decorative inlay geometry is lazy (lib/inlayGeometryRuntime.ts); the showcase designs with inlays need it loaded.
 import '../src/features/deckcraft/lib/inlayGeometryRuntime';

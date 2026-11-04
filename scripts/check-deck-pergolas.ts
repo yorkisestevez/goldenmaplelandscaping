@@ -1,3 +1,4 @@
+import '../src/features/deckcraft/hardscapeCatalogue';
 import {pergolaDescription} from '../src/features/deckcraft/pergolaSummary';
 import {PERGOLA_PRODUCTS} from '../src/features/deckcraft/pergolaFullCatalog';
 import assert from 'node:assert/strict';

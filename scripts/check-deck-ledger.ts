@@ -1,3 +1,4 @@
+import '../src/features/deckcraft/hardscapeCatalogue';
 import '../src/features/deckcraft/lib/inlayGeometryRuntime';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
