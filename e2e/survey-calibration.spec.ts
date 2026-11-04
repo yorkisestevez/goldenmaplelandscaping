@@ -1,6 +1,6 @@
 import {test,expect,type Page} from '@playwright/test';
 import {jsPDF} from 'jspdf';
-import {openDesignTask} from './nav';
+import {openDesignTask,startOnPlan} from './nav';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
 const read=(page:Page)=>page.evaluate(()=>(window as unknown as {deckcraft:DeckAgentApi}).deckcraft.read());
 const ready=async(page:Page)=>expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);
@@ -20,7 +20,7 @@ async function clickImagePixel(page:Page,x:number,y:number){
 }
 test('a calibrated PDF survey applies, autosaves and survives reload',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('/deck-designer/');await ready(page);await saved(page);
+ await page.goto('/deck-designer/');await startOnPlan(page);await ready(page);await saved(page);
  const survey=await openSurvey(page);const region=page.getByRole('region',{name:'Survey import and calibration'});
  const start=page.getByRole('button',{name:'Start planning site from current slope',exact:true});
  // Starting the site proposes a reviewed preview; nothing is saved until it is applied.
@@ -33,7 +33,7 @@ test('a calibrated PDF survey applies, autosaves and survives reload',async({pag
  await clickImagePixel(page,200,300);await expect(apply).toBeDisabled();
  await clickImagePixel(page,800,300);await expect(apply).toBeEnabled();
  await page.getByLabel('Survey known distance',{exact:true}).fill('20');
- await page.getByLabel('Survey distance unit',{exact:true}).selectOption('ft');
+ await page.getByRole('combobox',{name:'Survey distance unit',exact:true}).selectOption('ft');
  await page.getByLabel('Survey rotation',{exact:true}).fill('15');
  await page.getByLabel('Survey across origin',{exact:true}).fill('2');
  await page.getByLabel('Survey out origin',{exact:true}).fill('3');
@@ -46,7 +46,7 @@ test('a calibrated PDF survey applies, autosaves and survives reload',async({pag
  expect(overlay).toMatchObject({rotationDeg:15,originXIn:24,originZIn:36});
  expect(overlay!.widthPx).toBeGreaterThan(0);expect(overlay!.heightPx).toBeGreaterThan(0);
  await saved(page);
- await page.reload();await ready(page);
+ await page.reload();await startOnPlan(page);await ready(page);
  expect((await read(page)).design.siteModel?.overlay).toEqual(overlay);
  await openSurvey(page);
  await expect(page.locator('svg[aria-label="Survey terrain plan"] image').first()).toHaveAttribute('href',/^blob:/);
@@ -54,7 +54,7 @@ test('a calibrated PDF survey applies, autosaves and survives reload',async({pag
  expect(errors.filter(e=>/destroy|pdf/i.test(e))).toEqual([]);
 });
 test('survey apply refuses without a site model',async({page})=>{
- await page.goto('/deck-designer/');await ready(page);await saved(page);
+ await page.goto('/deck-designer/');await startOnPlan(page);await ready(page);await saved(page);
  test.skip(!!(await read(page)).design.siteModel,'Default design already carries a site model.');
  const survey=await openSurvey(page);
  await survey.setInputFiles(surveyPdf());

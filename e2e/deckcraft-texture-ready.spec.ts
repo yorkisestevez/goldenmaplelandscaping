@@ -1,4 +1,5 @@
 import {expect,test} from '@playwright/test';
+import {startOnPlan} from './nav';
 import type {AgentCommand} from '../src/features/deckcraft/designer/deckAgentController';
 
 /** A proposal must depict the selected finish even when the actual atlas worker loads slowly. */
@@ -11,7 +12,7 @@ test('proposal cover matches the restored board finish and subsequent grey choic
     if(/swatchMaps.*worker/i.test(url.pathname)){delayed++;await new Promise(resolve=>setTimeout(resolve,3000));}
     await route.continue();
   });
-  await page.goto('/deck-designer/');
+  await page.goto('/deck-designer/');await startOnPlan(page);
   await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);
   const execute=async(id:string,commands:AgentCommand[])=>{
     const response=await page.evaluate(({id,commands})=>window.deckcraft!.execute({id,commands}),{id,commands});

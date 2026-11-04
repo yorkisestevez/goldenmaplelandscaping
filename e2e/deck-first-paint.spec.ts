@@ -8,10 +8,10 @@ import {test,expect,type BrowserContext} from '@playwright/test';
  * before those land. Boxes are compared with the same run's first paint, never fixed pixels (CI's fonts differ); fonts and
  * trackers are stubbed, and nothing here draws WebGL.
  */
-const PIECES=/\/assets\/(PreviewPanel|ArchitectShortcuts|PlanToolPicker|PlanEditingWorkspace|DimensionsStep|EasyEditTools)-/;
+const PIECES=/\/assets\/(PreviewPanel|ArchitectShortcuts|PlanToolPicker|PlanEditingWorkspace|DimensionsStep|EasyEditTools|NextShell)-/;
 /** First-painted nodes that must survive hydration, and whether their height must hold too (the drawing's own height
- *  includes what is below the fold). */
-const KEPT:[string,boolean][]=[['#deck-live-preview',false],['.dd-home-tabs',true],['section.dd-simple-tools',true],['.dd-canvas>.dd-plan-viewport',true],['.dd-plan-navigation',true]];
+ *  includes what is below the fold). The page is prerendered in the new look: its top bar, rail and price pill. */
+const KEPT:[string,boolean][]=[['#deck-live-preview',false],['.dd-next-top',true],['.dd-next-rail',true],['.dd-next-price',true],['section.dd-simple-tools',true],['.dd-canvas>.dd-plan-viewport',true],['.dd-plan-navigation',true]];
 
 async function slowLoad(context:BrowserContext){
  await context.addInitScript('window.__name=(target,value)=>target;');
@@ -40,10 +40,13 @@ async function slowLoad(context:BrowserContext){
  },KEPT);
 }
 
-for(const phone of [false,true])test(`the prerendered designer hydrates in place and nothing moves after the first paint ${phone?'@phone':''}`,async({page,context})=>{
+for(const phone of [false,true])test(`the prerendered designer hydrates in place and nothing moves after the first paint${phone?' @phone':''}`,async({page,context})=>{
  await page.setViewportSize(phone?{width:390,height:844}:{width:1440,height:900});
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await slowLoad(context);
+ // The prerendered plan's hydration is the subject: without WebGL a desktop stays on it rather than handing over to 3D
+ // once the viewer loads (deck-open-3d.spec.ts checks that hand-over moves nothing either).
+ await context.addInitScript(()=>{const get=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(this:HTMLCanvasElement,kind:string,...rest:unknown[]){return /webgl/.test(kind)?null:(get as any).call(this,kind,...rest);} as typeof get;});
  await page.goto('/deck-designer/');
  // Settled: the design is ready, and the job bar and the plan's handles (mounted after hydration, the last to land) are in.
  await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false),{timeout:30_000}).toBe(true);

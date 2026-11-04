@@ -4,14 +4,13 @@
 # netlify-deploy.yml (push to main) is unchanged, so a slow or flaky browser run can never block or
 # trigger a production deploy.
 #
-# The suite runs one test at a time (WebGL on SwiftShader is CPU-bound) and takes about 37 minutes on
-# one runner, so it is split into six shards on separate runners. `--fully-parallel` lets Playwright
-# split inside a spec file (deckcraft.spec.ts alone is about 15 minutes on CI); within a shard the tests
-# still run one at a time, in file order. Shards split by test count, so the one that draws the proposal,
-# PDF and pergola 3D tests is the long pole. Since the homeowner tabs (2026-10-22) the 3D drawing stays on screen beside
-# an open panel, so that shard takes about 21 minutes of tests, 25 in all, where the others take 8-13. More shards do not
-# shorten it (a count split keeps those tests together), so the step allows 28 minutes and the job 32. The final `e2e`
-# job reports the combined result as one check.
+# The suite runs one test at a time (WebGL on SwiftShader is CPU-bound) and takes about 70 minutes on
+# one runner, so it is split into six shards on separate runners. scripts/e2e-shard.mjs splits it by the
+# CI times in e2e/shard-times.json, about 11.5 minutes of tests each. Playwright's own --shard splits by
+# count in file order, which kept the proposal, PDF and night-lighting tests of deckcraft.spec.ts together:
+# 26 of that shard's 28 minutes on 2026-11-03. New tests count as the median until the times are recorded
+# again (`node scripts/e2e-shard.mjs --record <shard logs>`). The step allows 28 minutes and the job 32.
+# The final `e2e` job reports the combined result as one check.
 name: DeckCraft E2E
 
 on:
@@ -30,6 +29,7 @@ on:
       - 'public/__forms.html'
       - 'e2e/**'
       - 'playwright.config.ts'
+      - 'scripts/e2e-shard.mjs'
       - 'package-lock.json'
       - '.github/workflows/deckcraft-e2e.yml'
   workflow_dispatch:
@@ -67,7 +67,7 @@ jobs:
       # A step timeout fails (rather than cancels) an overrunning shard, so its report is still uploaded.
       - name: Run DeckCraft smoke tests
         timeout-minutes: 28
-        run: npx playwright test --shard=${{ matrix.shard }}/6 --fully-parallel
+        run: node scripts/e2e-shard.mjs ${{ matrix.shard }} 6
       - name: Keep the report when a test fails
         if: failure()
         uses: actions/upload-artifact@v7

@@ -20,6 +20,8 @@ import {POOL_LIGHT_ID} from './poolLightSpec';
 import {postFacing,treadNose} from './extrasLayout';
 import {newLandscapeObject,newLandscapePlant} from './landscapeCatalogue';
 import {patioInlayPlans} from './patioInlays';
+// The sample's supplier paving is laid out as this module loads, so it brings the supplier catalogue with it.
+import './hardscapeCatalogue';
 import {onPaving,pavingRings} from './pathLightPlacement';
 import {poolOutline,poolPermanentExclusion} from './poolGeometry';
 import {getLightingRuntimeProduct} from './lightingRuntimeCatalogue';

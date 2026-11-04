@@ -1,5 +1,5 @@
 import {expect,test,type Page} from '@playwright/test';
-import {pickPlanTool} from './nav';
+import {isNextUi,pickPlanTool,startOnPlan} from './nav';
 const handle=(page:Page)=>page.getByRole('button',{name:'Main deck point 3',exact:true});
 test.beforeEach(async({context})=>{
   await context.route('**/*',route=>{const host=new URL(route.request().url()).hostname;return ['127.0.0.1','localhost'].includes(host)?route.fallback():route.abort();});
@@ -12,12 +12,20 @@ async function aligned(page:Page){
   const error=await handle(page).evaluate(button=>{const svg=document.querySelector('.dd-site-plan') as SVGSVGElement,m=svg.getScreenCTM()!,[x,y]=document.querySelector('.dd-boundary-outline')!.getAttribute('points')!.split(' ')[2].split(',').map(Number),point=new DOMPoint(x,y).matrixTransform(m),b=button.getBoundingClientRect();return {x:Math.abs(point.x-b.x-b.width/2),y:Math.abs(point.y-b.y-b.height/2),w:b.width,h:b.height};});
   expect(error.x).toBeLessThan(.6);expect(error.y).toBeLessThan(.6);expect(error.w).toBeGreaterThanOrEqual(43.99);expect(error.h).toBeGreaterThanOrEqual(43.99);
 }
+/** The first point on the drawing that no control covers, starting from the preferred one (the new look floats its top bar
+ * and rail over the drawing's corner). */
+const openPoint=(page:Page,preferred:{x:number;y:number},box:{x:number;y:number;width:number;height:number})=>page.evaluate(({preferred,box})=>{
+  const hits=(p:{x:number;y:number})=>{const el=document.elementFromPoint(p.x,p.y);return !!el?.closest('.dd-plan-viewport')&&!el.closest('.dd-plan-navigation');};
+  if(hits(preferred))return preferred;
+  for(let y=box.y+box.height*.25;y<box.y+box.height*.75;y+=24)for(let x=box.x+box.width*.25;x<box.x+box.width*.75;x+=24)if(hits({x,y}))return {x,y};
+  return preferred;
+},{preferred,box});
 test('zoom and pan change only the view; editing at zoom preserves exact world distances and one-step undo',async({page})=>{
-  await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);await pickPlanTool(page,'Shape & points');await expect(handle(page)).toBeVisible();
+  await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);await pickPlanTool(page,'Shape & points');await expect(handle(page)).toBeVisible();
   const original=await shape(page),before=await matrix(page);
   await page.getByRole('button',{name:'Zoom in',exact:true}).click();await expect(page.getByLabel('Drawing zoom')).toHaveText('125%');await aligned(page);
   expect(await shape(page)).toBe(original);expect((await matrix(page)).a).toBeCloseTo(before.a*1.25,6);
-  const viewport=(await page.getByLabel('Deck drawing canvas').boundingBox())!,tools=(await page.getByRole('region',{name:'Contractor job tools'}).boundingBox())!,anchor={x:viewport.x+35,y:Math.max(viewport.y+35,tools.y+tools.height+35)},wheelBefore=await matrix(page);
+  const viewport=(await page.getByLabel('Deck drawing canvas').boundingBox())!,tools=(await page.getByRole('region',{name:'Contractor job tools'}).boundingBox())!,anchor=await openPoint(page,{x:viewport.x+35,y:Math.max(viewport.y+35,tools.y+tools.height+35)},viewport),wheelBefore=await matrix(page);
   const world={x:(anchor.x-wheelBefore.e)/wheelBefore.a,y:(anchor.y-wheelBefore.f)/wheelBefore.d};
   expect(await page.evaluate(p=>!!document.elementFromPoint(p.x,p.y)?.closest('.dd-plan-viewport'),anchor)).toBe(true);
   await page.mouse.move(anchor.x,anchor.y);await page.keyboard.down('Control');
@@ -44,13 +52,20 @@ test('zoom and pan change only the view; editing at zoom preserves exact world d
   await page.getByRole('region',{name:'Save and restore design'}).getByRole('button',{name:'Undo',exact:true}).click();await expect.poll(()=>shape(page)).toBe(original);
 });
 test('@phone view navigation keeps touch handles 44 px; pan does not reshape the deck and ordinary scrolling remains available',async({page,context})=>{
-  await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);await pickPlanTool(page,'Shape & points');await expect(handle(page)).toBeVisible();const original=await shape(page);
-  await page.getByRole('button',{name:'Zoom out',exact:true}).click();await expect(page.getByLabel('Drawing zoom')).toHaveText('80%');await aligned(page);
+  await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);await pickPlanTool(page,'Shape & points');await expect(handle(page)).toBeVisible();const original=await shape(page);
+  const opened=parseInt((await page.getByLabel('Drawing zoom').textContent())!);
+  await page.getByRole('button',{name:'Zoom out',exact:true}).click();await expect.poll(async()=>parseInt((await page.getByLabel('Drawing zoom').textContent())!)).toBe(Math.round(opened*.8));await aligned(page);
   await page.getByRole('button',{name:'Pan drawing',exact:true}).click();const canvas=page.getByLabel('Deck drawing canvas');await canvas.scrollIntoViewIfNeeded();const cdp=await context.newCDPSession(page),before=await matrix(page);
   const spot=await canvas.evaluate(el=>{const box=el.getBoundingClientRect();for(let y=Math.ceil(box.top)+16;y<box.bottom-16;y+=8){const x=box.left+18;const hit=document.elementFromPoint(x,y);if(hit&&el.contains(hit)&&!hit.closest('button,a,input,select,summary,[role=slider],[role=radio]'))return {x,y};}return null;});
   expect(spot,'pan starts on the canvas, clear of the point handles').toBeTruthy();const {x,y}=spot!;await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:1}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+30,y:y+15,id:1}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   expect(await shape(page)).toBe(original);expect((await matrix(page)).e).toBeCloseTo(before.e+30,1);await aligned(page);
-  await page.getByRole('button',{name:'Pan drawing',exact:true}).click();expect(await canvas.evaluate(el=>getComputedStyle(el).touchAction)).toBe('pan-y');
+  await page.getByRole('button',{name:'Pan drawing',exact:true}).click();
+  if(await isNextUi(page)){
+    // The new look has no page to scroll: with Pan off, a plain swipe over bare drawing still pans it and leaves the deck alone.
+    expect(await canvas.evaluate(el=>getComputedStyle(el).touchAction)).toBe('none');const panned=await matrix(page);
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:2}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+30,y:y+15,id:2}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    expect(await shape(page)).toBe(original);expect((await matrix(page)).e).toBeCloseTo(panned.e+30,1);
+  }else expect(await canvas.evaluate(el=>getComputedStyle(el).touchAction)).toBe('pan-y');
   await page.getByRole('button',{name:'Fit drawing',exact:true}).click();await expect(page.getByLabel('Drawing zoom')).toHaveText('100%');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual((page.viewportSize()!.width)+1);
 });

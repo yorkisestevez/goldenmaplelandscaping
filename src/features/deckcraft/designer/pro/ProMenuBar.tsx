@@ -2,8 +2,9 @@ import {Suspense,lazy,useEffect,useRef,useState,type KeyboardEvent} from 'react'
 import type {WizardKind} from './ProWizards';
 import {revealControl} from '../architectKeys';
 import {setDesignerMode} from '../designerMode';
-import {proMenuActions,type ProMenu,type ProMenuActions,type ProMenuItem,type ProPage} from './proTypes';
+import {WIZARD_EVENT,proMenuActions,type ProMenu,type ProMenuActions,type ProMenuItem,type ProPage} from './proTypes';
 import './proWorkspace.css';
+import './proCad.css';
 
 /** The Pro workspace's menus. Every entry runs an action the designer already offers in its header, sections or
  * drawing, so the menus add a way to reach things, not new behaviour. */
@@ -98,6 +99,12 @@ export default function ProMenuBar({page}:{page:ProPage}){
   const menus=proMenus(proMenuActions(page),setWizard),bar=useRef<HTMLDivElement>(null);
   const [open,setOpen]=useState<number|null>(null),[active,setActive]=useState(0);
   const focusItem=useRef<'first'|'last'|null>(null);
+  // The CAD ribbon's wizard buttons ask for a wizard here; focus goes back to the button that asked when it closes.
+  const opener=useRef<HTMLElement|null>(null);
+  useEffect(()=>{
+    const ask=(e:Event)=>{opener.current=document.activeElement as HTMLElement|null;setWizard((e as CustomEvent<WizardKind>).detail);};
+    window.addEventListener(WIZARD_EVENT,ask);return ()=>window.removeEventListener(WIZARD_EVENT,ask);
+  },[]);
   useEffect(()=>{
     if(open===null)return;
     const close=(e:PointerEvent)=>{if(!bar.current?.contains(e.target as Node))setOpen(null);};
@@ -145,6 +152,6 @@ export default function ProMenuBar({page}:{page:ProPage}){
       </div>}
     </div>)}
   </div>
-  {wizard&&<Suspense fallback={null}><ProWizards kind={wizard} page={page} onClose={()=>{setWizard(null);requestAnimationFrame(()=>trigger(menus.findIndex(m=>m.label==='Tools'))?.focus());}}/></Suspense>}
+  {wizard&&<Suspense fallback={null}><ProWizards kind={wizard} page={page} onClose={()=>{setWizard(null);const back=opener.current;opener.current=null;requestAnimationFrame(()=>(back?.isConnected&&back!==document.body?back:trigger(menus.findIndex(m=>m.label==='Tools')))?.focus());}}/></Suspense>}
   </>;
 }

@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import type {DeckData} from '../src/features/deckcraft/types';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
 import type {DesignerAiRequest,DesignerAiResponse} from '../src/features/deckcraft/designer/siteDesignerAiContract';
-import {openDesignTask,openDesignerMode} from './nav';
+import {openDesignTask,openDesignerMode,startOnPlan} from './nav';
 
 /**
  * S5 "Design from my ground" on Craighurst extended: the real U-Level shots under the 12 × 5 ft deck plus SYNTHETIC
@@ -71,7 +71,7 @@ test.beforeEach(async({page,context})=>{
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&['GET','HEAD'].includes(r.request().method())?r.continue():r.fulfill({body:''}));
  // No cloud AI by default: the function answers as a site with no AI configured does (deck-designer-ai.ts).
  await context.route(AI,r=>r.request().method()==='GET'&&!new URL(r.request().url()).searchParams.has('job')?json(r,200,{available:false,reason:'not_configured'}):json(r,REFUSED.not_configured.status,REFUSED.not_configured.body));
- await page.goto('/deck-designer/');await ready(page);
+ await page.goto('/deck-designer/');await startOnPlan(page);await ready(page);
  expect((await design(page)).siteModel?.points.length).toBeGreaterThan(40);
 });
 

@@ -14,7 +14,7 @@ import {isChamferEdgeId} from '../src/features/deckcraft/lib/cornerChamfers';
 import {edgeNameOf} from '../src/features/deckcraft/lib/wrapGeometry';
 import {activeCustomFront,customLabourFactor,customOutline,customShapeWords,frontFromOutline,normalizeFront,outlineFeatures,outlineProblems,type OutlinePoint} from '../src/features/deckcraft/lib/customOutline';
 import {addStep,angleCorner,frontEdges,moveEdge,OUTLINE_PRESETS,outlinePreset,removeStep,squareCorner} from '../src/features/deckcraft/lib/outlineEdits';
-import {chooseShape,drawOwnOutline} from '../src/features/deckcraft/designer/deckShapeActions';
+import {SHAPES,chooseShape,drawOwnOutline} from '../src/features/deckcraft/designer/deckShapeActions';
 import type {DeckData} from '../src/features/deckcraft/types';
 import {designerSource} from './deck-designer-source';
 
@@ -162,7 +162,7 @@ for(const [name,patch] of [['rectangle',{}],['L-shape',{shape:'L-Shape',cutoutWi
 // 10. The designer: the shape menu offers it, the editor loads on demand, width, depth and levels follow the outline.
 {
   const page=designerSource(),step=read('src/features/deckcraft/designer/steps/DimensionsStep.tsx'),editor=read('src/features/deckcraft/designer/OutlineEditor.tsx'),actions=read('src/features/deckcraft/designer/deckShapeActions.ts');
-  ok(step.includes("['Custom','Custom outline']")&&step.includes("const OutlineEditor=lazy(()=>import('../OutlineEditor'));"),'The shape menu offers a custom outline, and its editor loads only when chosen');
+  ok(SHAPES.some(([shape,name])=>shape==='Custom'&&name==='Custom outline')&&step.includes('SHAPES.map(')&&step.includes("const OutlineEditor=lazy(()=>import('../OutlineEditor'));"),'The shape menu offers a custom outline, and its editor loads only when chosen');
   ok(/return \{shape,deckOutlines,customFront:kept\?\?frontFromOutline\(unnotchedMainOutline\(data\)\)\?\?rectangleFront\(data\.width,data\.length\),levels:1\};/.test(actions)&&step.includes('update(chooseShape(data,e.target.value as DeckShape))'),'Choosing the legacy outline preset clears the free outline and starts from the deck as drawn, one level');
   const drawn=deckReleaseData({...base(),levels:2}),picked=chooseShape(drawn,'Custom'),kept=chooseShape({...drawn,customFront:T},'Custom');
   ok(picked.levels===1&&JSON.stringify(picked.customFront)===JSON.stringify(frontFromOutline(unnotchedMainOutline(drawn)))&&JSON.stringify(kept.customFront)===JSON.stringify(T),'The shape action starts from the deck as drawn, or keeps a clean outline');

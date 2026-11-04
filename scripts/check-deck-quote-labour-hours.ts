@@ -1,3 +1,4 @@
+import '../src/features/deckcraft/hardscapeCatalogue';
 /**
  * Crew-hours quote entry: labour = crew × hours × person-hour rate, plus optional materials.
  * Used in Quote Review for medallion / accent / cladding / custom-inlay scopes without a fixed book rate.

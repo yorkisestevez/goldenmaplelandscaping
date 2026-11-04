@@ -8,13 +8,25 @@ import ProRulers from './pro/ProRulers';
 import './planViewport.css';
 
 const limit=(value:number)=>Math.max(.15,Math.min(3,value));
+// The site plan's smallest labels (edge figures), in drawing units.
+const SMALLEST_LABEL=6.5;
 /** A zoomed or panned sheet stays until Fit. Refitting it under the same zoom percentage jumps every handle.
  * At the fitted view, an edit that changes the sheet (a typed width, a new outline) drops that hold so the
  * drawing and its dimension buttons follow the design. */
 const frameStamp=(frame:PlanFrame)=>`${frame.viewBox}|${frame.dims?.width.inches??''}|${frame.dims?.depth.inches??''}`;
+const swipeable=(target:Element,viewport:Element)=>{
+  if(target.closest('button,a,input,select,textarea,label,[role="slider"],[role="button"],[tabindex]:not(.dd-plan-viewport)'))return false;
+  for(let el:Element|null=target;el&&el!==viewport;el=el.parentElement)if(getComputedStyle(el).touchAction!=='auto')return false;
+  return true;
+};
 /** Navigation changes only the view: neither pricing nor the design's undo history. The Pro workspace docks the
  * navigation controls in its tool strip (`navigationTarget`); they keep working the same way there. */
-export default function PlanViewport({children,frame,navigationTarget,fitToken}:{children:(zoom:number,frame:PlanFrame)=>ReactNode;frame:PlanFrame;navigationTarget?:HTMLElement|null;/** When this value changes, fit the drawing (Draw my own / outline tool). */fitToken?:string|number}){
+export default function PlanViewport({children,frame,navigationTarget,fitToken,labelPx,openArea}:{children:(zoom:number,frame:PlanFrame)=>ReactNode;frame:PlanFrame;navigationTarget?:HTMLElement|null;/** When this value changes, fit the drawing (Draw my own / outline tool). */fitToken?:string|number;
+  /** Open zoomed onto the deck so the smallest labels read at this many pixels (the new look's phones); Fit still shows
+   *  the whole design. */labelPx?:number;
+  /** The screen band the drawing shows between controls over it (top and bottom, in viewport pixels); the zoomed deck
+   *  is centred there; null until the controls around it are laid out. With fit, the deck also fits the band whole (a
+   *  phone's tool drawer is open), even if its labels then read smaller. */openArea?:()=>{top:number;bottom:number;fit?:boolean}|null}){
   const box=useRef<HTMLDivElement>(null),stage=useRef<HTMLDivElement>(null);
   // Designer Mode (the Pro workspace) adds rulers in feet along the top and left edges.
   const rulers=useDesignerMode();
@@ -30,8 +42,35 @@ export default function PlanViewport({children,frame,navigationTarget,fitToken}:
     return {zoom:next,x:at?at.x-(at.x-old.x)*ratio:old.x*ratio,y:at?at.y-(at.y-old.y)*ratio:old.y*ratio};
   });
   const fit=()=>{frozen.current=frame;gesture.current=null;setPanning(false);setView({zoom:1,x:0,y:0});};
+
   useArchitectKeys({z:fit});
-  const fitTokenSeen=useRef<string|number|undefined>(undefined);
+  // Once the drawing has a size: the zoom that brings its smallest labels up to labelPx, centred on the deck and its
+  // stairs. The drawing fits its stage (preserveAspectRatio meet), so a drawing unit is the smaller of the two ratios.
+  // The page around the drawing may still be settling (its stylesheet, the controls over it): each resize looks again.
+  const opened=useRef(false),[,settle]=useState(0);
+  useEffect(()=>{
+    const el=stage.current;if(!labelPx||!el)return;
+    const observer=new ResizeObserver(()=>{if(!opened.current)settle(n=>n+1);});observer.observe(el);return()=>observer.disconnect();
+  },[!!labelPx]);
+  useEffect(()=>{
+    if(!labelPx||opened.current)return;
+    const r=stage.current?.querySelector('svg.dd-site-plan')?.getBoundingClientRect(),s=stage.current?.getBoundingClientRect(),area=openArea?openArea():undefined;
+    if(!r?.width||!r.height||!s||area===null)return;
+    opened.current=true;
+    // Room for the edge dimensions outside the deck: 72 px, but never more than a quarter of the space (a short phone's
+    // band above the drawer is barely 130 px), and the fit never shrinks the drawing below 40 % to make it.
+    const unit=Math.min(r.width/frame.w,r.height/frame.h),room=(span:number)=>span-2*Math.min(72,span/4);
+    const whole=area?.fit?Math.max(.4,Math.min(room(s.width)/((frame.b.maxX-frame.b.minX)*unit),room(area.bottom-area.top)/((frame.b.maxZ-frame.b.minZ)*unit))):Infinity;
+    // Fitting the deck may mean zooming out a little; otherwise the plan only ever opens zoomed in.
+    const next=limit(Math.min(labelPx/(SMALLEST_LABEL*unit),whole));if(next<=1&&!area?.fit)return;
+    const dx=((frame.b.minX+frame.b.maxX)/2-frame.x-frame.w/2)*unit,dy=((frame.b.minZ+frame.b.maxZ)/2-frame.y-frame.h/2)*unit;
+    const aim=area?(area.top+area.bottom)/2-(s.top+s.height/2):0;
+    frozen.current=frame;setView({zoom:next,x:-dx*next,y:aim-dy*next});
+  });
+  // That view is the new look's: Designer Mode, which takes over from the page's first (homeowner) render, fits again.
+  useEffect(()=>{if(!labelPx&&opened.current){opened.current=false;fit();}},[!!labelPx]);
+  // A phone opens on its own view (labelPx, above), so the token only fits when it changes after that.
+  const fitTokenSeen=useRef<string|number|undefined>(labelPx?fitToken:undefined);
   useEffect(()=>{
     if(fitToken===undefined||fitTokenSeen.current===fitToken)return;
     fitTokenSeen.current=fitToken;fit();
@@ -52,7 +91,9 @@ export default function PlanViewport({children,frame,navigationTarget,fitToken}:
     freeze();
     // An explicit insertion tool takes precedence over a previously enabled camera pan.
     if(event.button!==1&&(event.target as Element).closest('.dd-landscape-plan[data-drawing],.dd-boundary-editor[data-add-pull],.dd-yard-shape-editor[data-add-pull],.dd-yard-shape-editor[data-drawing],.dd-inlay-plan-editor[data-placement],.dd-patio-inlay-overlay[data-placing]')){if(pan)setPan(false);return;}
-    const hardscapePan=!!(event.target as Element).closest('.dd-hardscape-plan-picks,[data-area-pick]');
+    // The new look's phones (labelPx) have no page to scroll, so a finger swiping over the drawing pans it; controls, and
+    // editors that take their own touches (touch-action), keep them.
+    const hardscapePan=!!(event.target as Element).closest('.dd-hardscape-plan-picks,[data-area-pick]')||!!labelPx&&event.pointerType==='touch'&&swipeable(event.target as Element,event.currentTarget);
     if(!pan&&event.button!==1&&!hardscapePan)return;
     if((event.target as HTMLElement).closest(event.button===1?'.dd-plan-navigation,input,select,button':'.dd-plan-navigation,.dd-boundary-inline,[data-plan-editor-ui],[role="toolbar"]'))return;
     if(gesture.current&&gesture.current.id!==event.pointerId){gesture.current=null;setPanning(false);return;}
