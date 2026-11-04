@@ -67,7 +67,7 @@ const enums: Partial<Record<keyof DeckData, readonly (string | number)[]>> = {
   framingSize:['2x8','2x10','2x12'],framingSpecies:['SPF','Hem-Fir','D.Fir-L'],boardWidth:[5.5,3.5],joistSpacing:[12,16],fasteningSystem:['Face','Hidden'],pictureFrameRows:[0,1,2],
   railingType:['None','Wood Picket','Aluminum','Cable','Glass Panels','Frameless Glass','Trex Select','Trex Transcend','Fortress AL13','TT Classic','TT Impression'],
   stairFlights:[0,1,2,3],stairType:['Straight','Winder','Landing'],stairSides:['Open'],stairPosition:['Front','Left','Right','Back'],
-  sceneLighting:['Daylight','Evening'],level2Position:['Front','Left','Right'],stairTurn:['Left','Right'],
+  sceneLighting:['Daylight','Golden','Evening'],level2Position:['Front','Left','Right'],stairTurn:['Left','Right'],
   borderFinish:['Matching','Dark Slate'],
   glassMount:['Top-mount base shoe','Fascia-mount base shoe','Spigots'],glassFinish:['Black','Silver'],
 };

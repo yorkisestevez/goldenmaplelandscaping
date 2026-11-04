@@ -54,7 +54,7 @@ test('added landscape objects stay after Day/Night and a saved camera',async({pa
   expect(added.items[0].enabled).toBe(true);
 
   await page.getByRole('tablist',{name:'Drawing sheets'}).getByRole('tab',{name:/3D$/}).click();
-  await page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'}).click();
+  await page.getByRole('group',{name:'Time of day'}).getByRole('button',{name:'Night'}).click();
   await expect.poll(async()=>(await objects(page)).lighting).toBe('Evening');
   await expect.poll(async()=>(await objects(page)).items.map(item=>item.id)).toEqual([added.items[0].id]);
   await expect(list.getByRole('combobox',{name:'Selected landscape object'})).toContainText('Deciduous tree');
@@ -83,7 +83,7 @@ test('added landscape objects stay after Day/Night and a saved camera',async({pa
   await page.waitForTimeout(600);
   await list.getByRole('button',{name:'Duplicate object',exact:true}).click();
   await expect.poll(async()=>(await objects(page)).items.length).toBe(3);
-  await page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Day'}).click();
+  await page.getByRole('group',{name:'Time of day'}).getByRole('button',{name:'Day'}).click();
   await expect.poll(async()=>(await objects(page)).lighting).toBe('Daylight');
   await expect.poll(async()=>(await objects(page)).items.length).toBe(3);
   await list.getByRole('button',{name:'Remove object',exact:true}).click();
@@ -114,7 +114,7 @@ test('a bed size edit stays staged through Day/Night until it is applied',async(
   await expect(list.getByRole('group',{name:'Review area changes'})).toBeVisible();
   await expect.poll(async()=>(await objects(page)).items[0]?.widthIn).toBe(120);
   await page.getByRole('tablist',{name:'Drawing sheets'}).getByRole('tab',{name:/3D$/}).click();
-  await page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'}).click();
+  await page.getByRole('group',{name:'Time of day'}).getByRole('button',{name:'Night'}).click();
   await expect.poll(async()=>(await objects(page)).lighting).toBe('Evening');
   await expect(list.getByRole('group',{name:'Review area changes'})).toBeVisible();
   await expect(width).toHaveValue('180');
