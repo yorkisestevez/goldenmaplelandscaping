@@ -11,6 +11,10 @@ type Solid={object:THREE.Object3D;box:THREE.Box3};
 const SOFT_INSTANCES=1500;
 /** A down-ray starts this far above the floor: it finds a railing's top rail (at most 42 in) but not a pergola's beams. */
 const PROBE_FT=4,WAIST_FT=2.5,HEAD_FT=WALK_EYE_FT+.5,LOOK_RAD_PX=.005,PITCH_LIMIT=1.2;
+/** The longest time one frame moves the walker for, and the longest single step checked against stairs and walls. */
+const MAX_FRAME_S=.5,MAX_STEP_FT=.25;
+/** Where a step's floor is sampled, along the way: behind, at and ahead of the step. */
+const FOOT_FT=[-1/3,0,1/3];
 /** Where the walk may start, in feet in front of the deck: the first spot standing on open ground wins. */
 const START_FT=[10,8,12,6,14,16,4];
 const KEYS:Record<string,true>={KeyW:true,ArrowUp:true,KeyS:true,ArrowDown:true,KeyA:true,KeyD:true,ArrowLeft:true,KeyQ:true,ArrowRight:true,KeyE:true};
@@ -82,7 +86,13 @@ export default function WalkMode({from,look,onExit}:{from:Point;look:{x:number;y
     for(const offset of [0,side,-side]){
       if(cast(new THREE.Vector3(w.x-uz*offset,w.floor+WAIST_FT,w.z+ux*offset),new THREE.Vector3(ux,0,uz),length+WALK_RADIUS_FT,near).length)return null;
     }
-    const floorAt=(x:number,z:number)=>{const hit=cast(new THREE.Vector3(x,w.floor+PROBE_FT,z),DOWN,60,near)[0];return hit?hit.point.y:null;};
+    // A foot is wider than one ray: the floor is the highest surface at the step and a third of a foot either side of it
+    // along the way, so the gap between two tread boards (open stringer stairs) never drops the walker through.
+    const floorAt=(x:number,z:number)=>{
+      let top:number|null=null;
+      for(const o of FOOT_FT){const hit=cast(new THREE.Vector3(x+ux*o,w.floor+PROBE_FT,z+uz*o),DOWN,60,near)[0];if(hit&&(top===null||hit.point.y>top))top=hit.point.y;}
+      return top;
+    };
     // One radius ahead on a stair can be two treads up.
     if(stepFloor(w.floor,floorAt(nx+ux*WALK_RADIUS_FT,nz+uz*WALK_RADIUS_FT),false,2)===null)return null;
     const floor=stepFloor(w.floor,floorAt(nx,nz),false);
@@ -148,7 +158,9 @@ export default function WalkMode({from,look,onExit}:{from:Point;look:{x:number;y
   },[]);
 
   useFrame((_,delta)=>{
-    const w=walker.current,dt=Math.min(delta,.1),keys=w.keys;
+    // A slow device draws few frames: each one covers the time that passed (up to half a second), so walking keeps its
+    // speed, and moves in short substeps so the stair and wall checks see the same small steps as at full frame rate.
+    const w=walker.current,dt=Math.min(delta,MAX_FRAME_S),keys=w.keys;
     const forward=(keys.has('KeyW')||keys.has('ArrowUp')||walkPad.forward?1:0)-(keys.has('KeyS')||keys.has('ArrowDown')||walkPad.back?1:0);
     const side=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0);
     const turn=(keys.has('ArrowLeft')||keys.has('KeyQ')||walkPad.turnLeft?1:0)-(keys.has('ArrowRight')||keys.has('KeyE')||walkPad.turnRight?1:0);
@@ -156,13 +168,17 @@ export default function WalkMode({from,look,onExit}:{from:Point;look:{x:number;y
     if(forward||side){
       // The design can change while walking: look for solids again every so often.
       if(performance.now()-w.seen>1500)refresh();
-      const speed=(w.run?RUN_FT_S:WALK_FT_S)*dt,sin=Math.sin(w.yaw),cos=Math.cos(w.yaw);
-      const mx=(-sin*forward+cos*side)*speed,mz=(-cos*forward-sin*side)*speed,near=around(w.x,w.z,WALK_RADIUS_FT*2+speed);
-      // Slide along whatever stops the full step.
-      for(const [nx,nz] of [[w.x+mx,w.z+mz],[w.x+mx,w.z],[w.x,w.z+mz]]){
-        if(nx===w.x&&nz===w.z)continue;
-        const floor=tryStep(nx,nz,near);
-        if(floor!==null){w.x=nx;w.z=nz;w.floor=floor;break;}
+      const distance=(w.run?RUN_FT_S:WALK_FT_S)*dt,steps=Math.ceil(distance/MAX_STEP_FT),speed=distance/steps,sin=Math.sin(w.yaw),cos=Math.cos(w.yaw);
+      const mx=(-sin*forward+cos*side)*speed,mz=(-cos*forward-sin*side)*speed,near=around(w.x,w.z,WALK_RADIUS_FT*2+distance);
+      for(let step=0;step<steps;step++){
+        // Slide along whatever stops the full step; stop once nothing moves.
+        let moved=false;
+        for(const [nx,nz] of [[w.x+mx,w.z+mz],[w.x+mx,w.z],[w.x,w.z+mz]]){
+          if(nx===w.x&&nz===w.z)continue;
+          const floor=tryStep(nx,nz,near);
+          if(floor!==null){w.x=nx;w.z=nz;w.floor=floor;moved=true;break;}
+        }
+        if(!moved)break;
       }
     }
     // The eye eases onto each new floor, so a stair reads as steps rather than a jolt.
