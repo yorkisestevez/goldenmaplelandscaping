@@ -1,5 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
-import {savedConfiguration,showSheet} from './nav';
+import {showSheet} from './nav';
 
 /**
  * Skies (S6, owner 2026-11-03): the 3D view bar offers Day, Golden hour and Night, and the pick is saved with the design
@@ -10,9 +10,13 @@ const pick=(page:Page,name:string)=>sky(page).getByRole('button',{name,exact:tru
 const hour=(page:Page)=>page.locator('[aria-label="Interactive deck construction model"] canvas').first().getAttribute('data-scene-hour');
 // The scene marks its hour when it next draws; CI's software renderer can take well over the default 15 s to redraw a sky.
 const DRAWN={timeout:60_000};
-// Autosave can take longer than the default 5 s poll on CI.
-const SAVED={timeout:30_000};
-const saved=(page:Page)=>savedConfiguration(page).then(c=>c?.sceneLighting);
+/** Waits for autosave to store the newest edit (the page's save status), then reloads: the sky picked must come back. */
+async function keeps(page:Page,name:string){
+ await expect(page.locator('[data-autosave-state]').first()).toHaveAttribute('data-autosave-state','saved',{timeout:30_000});
+ await page.reload();await ready(page);
+ await showSheet(page,'3D');
+ await expect(pick(page,name)).toHaveAttribute('aria-pressed','true');
+}
 /** Picks a sky until it shows pressed: the bar can still be settling after a reload, and picking it again changes nothing. */
 const choose=(page:Page,name:string)=>expect(async()=>{await pick(page,name).click();await expect(pick(page,name)).toHaveAttribute('aria-pressed','true',{timeout:5000});}).toPass({timeout:60_000});
 const ready=(page:Page)=>expect.poll(()=>page.evaluate(()=>(window as {deckcraft?:{read():{ready:boolean}}}).deckcraft?.read().ready??false),{timeout:60_000}).toBe(true);
@@ -30,21 +34,16 @@ test('the view bar picks Day, Golden hour or Night, and the design keeps the sky
  await pick(page,'Golden hour').click();
  await expect(pick(page,'Golden hour')).toHaveAttribute('aria-pressed','true');
  await expect(pick(page,'Day')).toHaveAttribute('aria-pressed','false');
- await expect.poll(()=>saved(page),SAVED).toBe('Golden');
  await expect.poll(()=>hour(page),DRAWN).toBe('golden');
  await expect.poll(()=>page.locator('.dd-next-price').innerText()).toBe(price);
-
- await page.reload();await ready(page);
- await showSheet(page,'3D');
- await expect(pick(page,'Golden hour')).toHaveAttribute('aria-pressed','true');
+ await keeps(page,'Golden hour');
  await expect.poll(()=>hour(page),DRAWN).toBe('golden');
 
  await choose(page,'Night');
- await expect.poll(()=>saved(page),SAVED).toBe('Evening');
  await expect.poll(()=>hour(page),DRAWN).toBe('night');
  await choose(page,'Day');
- await expect.poll(()=>saved(page),SAVED).toBe('Daylight');
  await expect.poll(()=>hour(page),DRAWN).toBe('day');
+ await keeps(page,'Day');
 });
 
 test('a still’s golden hour lights a Day design with the grade, and a before-still without it stays day',async({page})=>{
