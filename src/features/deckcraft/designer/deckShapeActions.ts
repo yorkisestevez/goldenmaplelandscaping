@@ -1,3 +1,4 @@
+import {defaultLevel3} from '../designPersistence';
 import {unnotchedMainOutline} from '../lib/deckGeometry';
 import {activeCornerChamfers} from '../lib/cornerChamfers';
 import {frontFromOutline,outlineProblems,rectangleFront} from '../lib/customOutline';
@@ -11,6 +12,11 @@ import type {DeckData,DeckShape,HouseConfig,WrapPorch,WrapWing} from '../types';
  */
 type Side='left'|'right';
 type HouseSize=Pick<HouseConfig,'widthFt'|'depthFt'>;
+
+/** The Deck menu's shapes, with their names. */
+export const SHAPES:readonly (readonly [DeckShape,string])[]=[['Rectangle','Rectangle'],['L-Shape','L-Shape'],['Multi-corner','Multi-corner'],['Curved','Curved'],['Custom','Custom outline']];
+/** A number of levels; a third level starts from its default size when the design has none yet. */
+export const levelsPatch=(data:DeckData,levels:number):Partial<DeckData>=>({levels,...(levels===3&&!data.level3?{level3:defaultLevel3(data)}:{})});
 
 /**
  * A new shape from the Deck menu. "Custom outline" is the constrained front (square or 45° edges, shape presets,

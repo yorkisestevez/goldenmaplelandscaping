@@ -32,6 +32,7 @@ import {lawnHeight} from '../src/features/deckcraft/components/viewer3d/lawnSurf
 import {slabGeometry} from '../src/features/deckcraft/components/viewer3d/slabGeometry';
 import {ensureLiveDesignExtensions} from '../src/features/deckcraft/designExtensions';
 import {yardFinishGeometry} from '../src/features/deckcraft/components/viewer3d/yardFinishGeometry';
+import {getShowcaseFlags,goldenHour,holdDesignGolden,sceneHour,setShowcaseFlags} from '../src/features/deckcraft/showcaseMode';
 
 /**
  * DeckCraft's photographic look (the "Real Life" track, plan phases G1–G8). G1 is the render pipeline: ambient
@@ -106,7 +107,7 @@ ok(/catch\(error\)\{fail\(error\);\}\s*gl\.render\(scene,camera\);/.test(pipelin
 ok(viewer.includes('<RenderPipeline evening={evening}/>')&&viewer.includes('const pipeline=pipelineFor(gl);if(pipeline)pipeline.capture(scale);else gl.render(scene,camera);'),'The live view and the proposal pictures both draw through the pipeline');
 ok(viewer.includes('shadows="percentage"')&&viewer.includes('antialias:false'),'Multisampling lives in the pipeline’s own target, and shadows use PCF (r185 retires PCFSoft)');
 ok(environment.includes('<directionalLight name="sun" castShadow'),'The sun is named, so its shadow can be fitted');
-ok(environment.includes('GOLDEN_ELEVATION=7*Math.PI/180')&&environment.includes('name="golden-rim"')&&environment.includes('daySun*2.05'),'Showcase golden hour uses a low raking sun and a warm rim');
+ok(environment.includes('GOLDEN_ELEVATION=7*Math.PI/180')&&environment.includes('name="golden-rim"')&&environment.includes('GOLDEN_SUN=2.05')&&environment.includes('daySun*(post?GOLDEN_SUN:GOLDEN_SUN/SHOWCASE_DAY_SUN)')&&environment.includes('golden=!evening&&goldenHour(flags,post)'),'Golden hour uses a low raking sun and a warm rim, at the graded look’s ratio to its day sun without the grade');
 
 // The shadow key: it changes when a shadow would, and not when only the camera or a colour does.
 function sceneWithSun(){
@@ -365,7 +366,7 @@ ok(assetBytes<=15*1024*1024&&!readdirSync(ASSETS).some(f=>f.startsWith('grass008
   ok(viewer3.includes('<Suspense fallback={<StudioLight evening={evening}/>}><Sky3D evening={evening}/></Suspense>')&&viewer3.includes('near:SCENE_LOOK.sky.cameraNear,far:SCENE_LOOK.sky.cameraFar'),'The real sky loads behind the studio light, and the camera sees to the sky dome');
   ok(environment3.includes('castShadow={!evening}')&&environment3.includes('SUN.clone().multiplyScalar(radius)')&&!environment3.includes('hemisphereLight'),'The scene’s sun takes the HDRI’s place (none in the evening), and no hemisphere light doubles the sky');
   ok(sky.includes('name="sky-dome"')&&sky.includes('depthWrite:false,fog:false')&&sky.includes('scene.fog.color.setRGB(')&&viewer3.includes('<fogExp2 attach="fog" args={[')&&sky.includes('preloadEvening()')&&sky.includes("fallback={<SkyOf lighting=\"day\" strength={skyStrength('evening').background} illumination={skyStrength('evening').environment}/>}"),'The dome draws behind everything without fog; one haze lasts the viewer’s life (adding fog recompiles every material) and the sky only recolours it; the evening sky preloads once the day is in, and the dimmed day sky stands in while it loads');
-  ok(sky.includes('lead*${DAY_SKY_RED}')&&sky.includes('${DAY_SKY_BLEND}*skyish')&&sky.includes('${DAY_SKY_GAIN}')&&sky.includes('${GOLDEN_SKY_GAIN}')&&sky.includes("dayBlue=graded&&flags.hour!=='golden'")&&sky.includes("goldenSky=graded&&flags.hour==='golden'"),'Showcase day recolors the sky after exposure, and golden hour warms the dome before the grade');
+  ok(sky.includes('lead*${DAY_SKY_RED}')&&sky.includes('${DAY_SKY_BLEND}*skyish')&&sky.includes('${DAY_SKY_GAIN}')&&sky.includes('${GOLDEN_SKY_GAIN}')&&sky.includes("golden=lighting==='day'&&goldenHour(flags,graded),dayBlue=graded&&!golden,goldenSky=golden"),'Showcase day recolors the sky after exposure, and golden hour (the design’s or a still’s) warms the dome, graded or not');
   ok(sky.includes('sampleEl=cleanEl+uHorizonBand*0.')&&sky.includes('smoothstep(0.22,0.0,el)*uSkyline')&&sky.includes('vec3(0.04,0.045,0.035)*strength')&&!sky.includes('band*uHorizonBand')&&sky.includes('goldenSky?SHOWCASE_GOLDEN_FILL:SHOWCASE_SKY_FILL')&&!sky.includes('?0.72:1'),'The dome keeps the clean upper sky, fades the horizon into a tree line, and applies golden fill once');
   ok(SCENE_LOOK.sky.domeRadiusFt<SCENE_LOOK.sky.cameraFar&&Math.exp(-((100*SCENE_LOOK.sky.fogDensity)**2))>.985,'The dome sits inside the far plane, and haze stays under 1.5% at 100 ft');
 }
@@ -472,6 +473,20 @@ for(const [name,lookup] of LAWN_CHUNKS)ok((THREE.ShaderChunk as Record<string,st
     ok(bankGeometry(low.boxes.find(b=>b.role==='wall-drainage')!,low.boxes.find(b=>b.role==='backfill')!,{elevationIn:0,slopePct:0})===null,'A wall that holds less than an inch gets no bank');
   const terrain={elevationIn:0,slopePct:0},rock={id:'r',featureId:'w',role:'rock' as const,color:'#8e938b',x:0,y:15,z:0,w:24,h:6,d:18},set=seatOnLawn(rock,terrain);
   ok(Math.abs(set.y+set.h/2-18)<1e-9&&Math.abs(set.y-set.h/2-(lawnHeight(terrain,0)-1))<1e-9&&seatOnLawn({...rock,y:-2},terrain).h===6&&seatOnLawn({...rock,role:'paver'},terrain).h===6,'A stone standing clear of the lawn reaches an inch into it with its top unchanged; a set stone and other pieces are left alone');
+}
+
+// Skies (S6): the design's Golden hour draws at any quality, a presentation golden hour only graded (stills unchanged),
+// and a second viewer closing does not clear the first one's golden sky.
+{
+  const at=(hour:'day'|'golden'|'night',designGolden:boolean)=>({...getShowcaseFlags(),hour,designGolden});
+  ok(goldenHour(at('day',true),false)&&goldenHour(at('day',true),true),"A design's Golden hour draws with or without the grade");
+  ok(!goldenHour(at('golden',false),false)&&goldenHour(at('golden',false),true),'A presentation golden hour still needs the grade');
+  ok(!goldenHour(at('day',false),true)&&!goldenHour(at('night',true),true),'Day and a presentation night never draw golden');
+  ok(sceneHour(at('day',true))==='golden'&&sceneHour(at('golden',false))==='golden'&&sceneHour(at('day',false))==='day','The scene hour reads the design unless a presentation hour is set');
+  const main=holdDesignGolden(),sketch=holdDesignGolden();sketch();
+  ok(getShowcaseFlags().designGolden,'Closing a second viewer keeps the first viewer golden');
+  main();ok(!getShowcaseFlags().designGolden,'The last golden viewer closing clears the design sky');
+  setShowcaseFlags({hour:'day'});
 }
 
 console.log(`DECK REALISM OK — look, pipeline wiring, shadow key and sun fit; ${files.length} swatch atlases (worst ΔE ${worstDelta.toFixed(2)}, worst repeat ${worstSeam.toFixed(2)}×; ${files.length-LOW_RES_SWATCHES.size} at ${MIN_SOURCE_EDGE}+ px), the board shader and its picks (grain repeat along a board ${repeatMean.toFixed(2)}); the sky, its sun and the lawn to the horizon; the house's glass and surfaces; the yard's hardscape and finished grade; ${checks} checks.`);

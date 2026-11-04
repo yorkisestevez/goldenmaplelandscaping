@@ -1,0 +1,208 @@
+/* The new look (NextShell.tsx): calm, tactile, canvas-first. The scene fills the window and the controls float over it like
+   tools on a table. Every rule is scoped to [data-ui=next] (and prefixed with html to outrank the designer's other
+   sheets). The homeowner page is prerendered in this look, so this sheet comes with the page's own stylesheet and holds
+   what the first paint shows; the rules for everything after it (panels, menus, hover, 3D) are nextShellLater.css. */
+html .deck-designer[data-ui=next]{
+  --nx-forest:#14261c;--nx-ink:#14261c;--nx-ink-2:rgb(20 38 28/.68);--nx-gold:#c08a2e;--nx-gold-deep:#8a6519;--nx-cream:#f6f0df;
+  --nx-stone:#f3f5f3;--nx-line:rgb(20 38 28/.11);--nx-ground:#e8ede7;
+  --nx-shadow:0 12px 32px -10px rgb(20 38 28/.24),0 2px 6px rgb(20 38 28/.07);--nx-shadow-up:0 28px 56px -14px rgb(20 38 28/.32);
+  --nx-ease:cubic-bezier(.16,1,.3,1);--nx-font:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  position:relative;min-height:0;font-family:var(--nx-font);background:var(--nx-ground);color:var(--nx-ink);
+}
+
+.dd-next-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@keyframes dd-next-in{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+@keyframes dd-next-in-right{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+@keyframes dd-next-pulse{50%{opacity:.35}}
+@keyframes dd-next-up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){html .deck-designer[data-ui=next] *{animation:none!important;transition:none!important}}
+
+/* The stage: the drawing or 3D view fills the window. What sits under the drawing (doors and windows, drawing notes, the
+   framing quantities) scrolls up from below it, clear of the rail. */
+html .deck-designer[data-ui=next] .dd-workspace{display:block;position:relative;height:100dvh;min-height:520px;padding:0;overflow:hidden}
+html .deck-designer[data-ui=next] .dd-preview{position:absolute;inset:0;top:0;width:auto;max-height:none;padding:0 28px 132px 120px;overflow:auto;overscroll-behavior:contain;background:var(--nx-ground);border:0;outline:0;border-radius:0}
+html .deck-designer[data-ui=next] .dd-sheet-panel{position:static}
+html .deck-designer[data-ui=next] .dd-selection-workspace{display:block;margin:0 -28px 24px -120px}
+html .deck-designer[data-ui=next] .dd-canvas{position:relative;border:0;border-radius:0;box-shadow:none;background:var(--nx-ground)}
+html .deck-designer[data-ui=next] .dd-canvas>:is(.dd-site-plan,.dd-plan-viewport,[aria-label="Interactive deck construction model"]){height:100dvh!important;min-height:520px;max-height:none!important;aspect-ratio:auto!important}
+html .deck-designer[data-ui=next] .dd-easy-tools{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);padding:0;border:0}
+html .deck-designer[data-ui=next] :is(.dd-preview-details,.dd-boundary-presets,.dd-plan-status,.dd-quantities,.dd-sheet-panel>.dd-note,.dd-preview>.dd-note){max-width:880px;font-family:var(--nx-font)}
+html .deck-designer[data-ui=next] .dd-preview-details{margin:0 0 12px;padding:4px 18px;border-radius:16px;background:#fff;border:1px solid var(--nx-line)}
+
+/* Top bar: brand and project on the left, the sheets in the middle, undo, files and Send on the right. */
+html .deck-designer[data-ui=next] .dd-next-top{position:absolute;inset:0 0 auto;z-index:70;display:flex;align-items:center;gap:12px;padding:16px 20px;pointer-events:none}
+html .deck-designer[data-ui=next] .dd-next-top>*{pointer-events:auto}
+html .deck-designer[data-ui=next] :is(.dd-next-start,.dd-next-end){display:flex;align-items:center;gap:8px;flex:1 1 0;min-width:0}
+html .deck-designer[data-ui=next] .dd-next-end{justify-content:flex-end}
+html .deck-designer[data-ui=next] .dd-next-chip{display:inline-flex;align-items:center;gap:9px;height:44px;margin:0;padding:0 14px;border-radius:14px;background:#fff;border:1px solid var(--nx-line);box-shadow:var(--nx-shadow);color:var(--nx-ink);font:600 13px/1 var(--nx-font);text-decoration:none;white-space:nowrap}
+html .deck-designer[data-ui=next] .dd-next-brand{font-weight:700;letter-spacing:-.01em}
+
+html .deck-designer[data-ui=next] .dd-next-mark{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:var(--nx-forest);color:var(--nx-gold);font-size:11px}
+html .deck-designer[data-ui=next] .dd-next-project{font-variant-numeric:tabular-nums}
+html .deck-designer[data-ui=next] .dd-next-project i{flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:#2e9a58}
+
+html .deck-designer[data-ui=next] .dd-next-internal{background:#fdf2da;border-color:#e6c77b;color:#5f420c}
+html .deck-designer[data-ui=next] .dd-next-sheets{display:flex;gap:4px;padding:4px;border-radius:16px;background:#fff;border:1px solid var(--nx-line);box-shadow:var(--nx-shadow)}
+html .deck-designer[data-ui=next] .dd-next-sheets button{min-width:76px;height:36px;padding:0 16px;border:0;border-radius:12px;background:transparent;color:var(--nx-ink-2);font:700 13px var(--nx-font);cursor:pointer;transition:background .18s,color .18s}
+
+html .deck-designer[data-ui=next] .dd-next-sheets button[aria-selected=true]{background:var(--nx-forest);color:#fff}
+html .deck-designer[data-ui=next] .dd-next-send{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 20px;border:0;border-radius:14px;background:var(--nx-gold-deep);color:#fff;font:700 14px var(--nx-font);box-shadow:var(--nx-shadow);cursor:pointer;transition:transform .12s,background .18s}
+
+/* Undo, redo and the file menu (WorkspaceTools, compact). */
+html .deck-designer[data-ui=next] .dd-next-top .dd-workspace-tools{display:flex;align-items:center;gap:8px;margin:0;padding:0;background:none;border:0}
+html .deck-designer[data-ui=next] .dd-next-top .dd-undo-actions{display:flex;gap:8px;margin:0}
+html .deck-designer[data-ui=next] .dd-next-top :is(.dd-undo-actions button,.dd-workspace-files>summary){display:grid;place-items:center;width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border-radius:14px;background:#fff;border:1px solid var(--nx-line);box-shadow:var(--nx-shadow);color:var(--nx-ink);font:700 20px/1 var(--nx-font);cursor:pointer;list-style:none}
+html .deck-designer[data-ui=next] .dd-next-top .dd-workspace-files>summary::-webkit-details-marker{display:none}
+
+html .deck-designer[data-ui=next] .dd-next-top .dd-undo-actions button:disabled{color:rgb(20 38 28/.28);cursor:not-allowed;box-shadow:none}
+html .deck-designer[data-ui=next] .dd-next-top .dd-workspace-files{position:relative;margin:0}
+
+/* The rail: five groups, any of them at any time. */
+html .deck-designer[data-ui=next] .dd-next-rail{position:absolute;left:20px;top:50%;z-index:60;display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:22px;background:#fff;border:1px solid var(--nx-line);box-shadow:var(--nx-shadow);transform:translateY(-50%)}
+html .deck-designer[data-ui=next] .dd-next-rail button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;width:64px;height:62px;padding:0;border:0;border-radius:15px;background:transparent;color:var(--nx-ink-2);font:700 11px/1 var(--nx-font);cursor:pointer;transition:background .18s,color .18s,transform .12s}
+
+html .deck-designer[data-ui=next] .dd-next-rail button[aria-pressed=true]{background:var(--nx-forest);color:#fff}
+html .deck-designer[data-ui=next] .dd-next-rail svg{width:22px;height:22px}
+
+/* The docked panel (HomePanel): beside the rail, never over the deck's middle; the quote docks on the right. */
+
+/* A long note (the House row) wraps beside the name instead of pushing the panel sideways. */
+
+/* The quick picks' box and the More heading over the sections (QuickPicks.tsx brings the rest). */
+
+/* The price pill: always on screen, bottom right. */
+html .deck-designer[data-ui=next] .dd-next-price{position:absolute;right:20px;bottom:24px;z-index:60;display:flex;align-items:center;gap:8px}
+html .deck-designer[data-ui=next] .dd-next-total{display:grid;justify-items:start;gap:3px;min-width:180px;min-height:64px;padding:9px 20px;border:2px solid var(--nx-gold);border-radius:20px;background:#fff;box-shadow:var(--nx-shadow);color:var(--nx-ink);font-family:var(--nx-font);text-align:left;font-variant-numeric:tabular-nums;cursor:pointer;transition:background .18s,transform .12s}
+
+html .deck-designer[data-ui=next] .dd-next-total small{font:600 11px/1.2 var(--nx-font);color:var(--nx-ink-2)}
+html .deck-designer[data-ui=next] .dd-next-total strong{font-size:24px;line-height:1;font-weight:800;letter-spacing:-.02em}
+
+/* Plan tools: one floating strip at the foot of the plan (where the 3D view keeps its view bar), its hint above it. */
+html .deck-designer[data-ui=next] .dd-simple-tools{position:absolute;top:auto;bottom:24px;left:50%;z-index:50;display:flex;flex-direction:column-reverse;align-items:center;gap:8px;width:max-content;max-width:calc(100% - 560px);margin:0;padding:0;background:none;border:0;transform:translateX(-50%)}
+html .deck-designer[data-ui=next] .dd-simple-tools:empty{display:none}
+html .deck-designer[data-ui=next] .dd-simple-tools-grid{display:flex;flex-wrap:nowrap;justify-content:center;gap:4px;padding:5px;border-radius:16px;background:#fff;border:1px solid var(--nx-line);box-shadow:var(--nx-shadow)}
+html .deck-designer[data-ui=next] .dd-simple-tools-grid button{flex:0 0 auto;min-width:0;min-height:44px;padding:0 12px;white-space:nowrap;border:0;border-radius:11px;background:transparent;color:var(--nx-ink-2);font:600 12px var(--nx-font);cursor:pointer}
+
+html .deck-designer[data-ui=next] .dd-simple-tools-grid button[aria-checked=true]{background:var(--nx-forest);color:#fff}
+html .deck-designer[data-ui=next] .dd-ribbon-hint{max-width:560px;margin:0;padding:7px 14px;border-radius:999px;background:rgb(20 38 28/.82);color:#fff;font:500 12px/1.4 var(--nx-font);text-align:center}
+html .deck-designer[data-ui=next] .dd-ribbon-hint strong{color:#f3d9a4}
+
+/* Desktop: the plan fits the space the floating controls leave (under the top bar, above the plan tools and their hint, right of the rail
+   or an open panel, left of the quote), so opening one re-fits the drawing beside it instead of covering the deck. The
+   controls card does not re-fit it: it opens on a selection, and the drawing must not move under the pointer. Its paper
+   stops there; pan and zoom work as before. */
+@media(min-width:801px){
+  html .deck-designer[data-ui=next]{--nx-plan-left:120px;--nx-plan-right:20px}
+  html .deck-designer[data-ui=next] .dd-canvas>:is(.dd-site-plan,.dd-plan-viewport){height:calc(100dvh - 232px)!important;min-height:0;margin:84px var(--nx-plan-right) 148px var(--nx-plan-left)}
+  /* The zoom and pan controls keep to the drawing's own upper-left corner: clear of the controls card on the right, and of
+     the deck, which hangs below the house in the middle. */
+  html .deck-designer[data-ui=next] .dd-plan-viewport>.dd-plan-navigation{top:12px;left:12px;right:auto;bottom:auto}
+  
+  
+  /* Likewise an open controls card (320 px at the right edge), so it never hides what it edits (PreviewPanel cardInset). */
+  
+  /* The plan tools centre on the drawing too, and scroll sideways when it is narrower than they are. */
+  html .deck-designer[data-ui=next] .dd-simple-tools{left:calc((var(--nx-plan-left) + 100% - var(--nx-plan-right))/2);max-width:calc(100% - var(--nx-plan-left) - var(--nx-plan-right))}
+  html .deck-designer[data-ui=next] .dd-simple-tools>:not(.dd-ribbon-hint){align-self:stretch;min-width:0;max-width:100%}
+  html .deck-designer[data-ui=next] .dd-simple-tools-grid{min-width:0;max-width:100%;justify-content:safe center;overflow-x:auto;scrollbar-width:thin}
+}
+
+/* The plan's zoom and pan: on the right, above the price. */
+html .deck-designer[data-ui=next] .dd-plan-navigation{right:20px;bottom:108px;border:1px solid var(--nx-line);border-radius:16px;background:#fff;box-shadow:var(--nx-shadow)}
+
+/* A pergola's preview tools (when the design has one): a card under the top bar on the right, clear of an open panel and of
+   the pergola itself in the middle of the view; it steps left of an open controls card. */
+
+/* The plan's inline edge editor opens above the controls card and the drawers (and below the top bar it keeps clear of). */
+html .deck-designer[data-ui=next] .dd-boundary-inline{z-index:60}
+
+/* The selected object's settings: a card on the right, under the top bar. */
+html .deck-designer[data-ui=next] .dd-selection-inspector{position:absolute;top:84px;right:20px;z-index:50;width:320px;max-height:calc(100dvh - 220px);overflow:auto;padding:0;border:1px solid var(--nx-line);border-radius:18px;background:#fff;box-shadow:var(--nx-shadow);font-family:var(--nx-font)}
+/* In 3D the closed card has nothing to offer until something is selected, which opens it. */
+
+html .deck-designer[data-ui=next] .dd-selection-inspector>summary{min-height:44px;padding:12px 16px;font:600 13px var(--nx-font);color:var(--nx-ink);cursor:pointer}
+
+/* The 3D view's bar becomes the view bar: bottom centre in the space the rail, a docked panel and the price leave free,
+   wrapping to a second row rather than scrolling its choices out of sight. */
+
+/* Hints over the drawing: small dark chips under the top bar, never in the way of the deck. */
+
+/* Phone-only parts (S3): Send in the price row, the View button, the drawer's grip, Framing in the file menu. */
+html .deck-designer[data-ui=next] :is(.dd-next-row-send,.dd-next-view,.dd-next-grip,.dd-next-phone-only){display:none}
+
+/* Phones (S3, AI-STUDIO-PROMPT.md §5): a slim top bar; the price and Send in one row above the five-group dock; groups and
+   the quote in a drawer above that row, at 45 % of the screen or, dragged up, the whole space under the top bar; the 3D
+   view bar folded into a View button that opens it as a sheet. */
+@media(max-width:800px){
+  html .deck-designer[data-ui=next]{--nx-top:70px;--nx-dock:68px;--nx-row:52px;--nx-bottom:calc(var(--nx-dock) + var(--nx-row) + 14px)}
+  html .deck-designer[data-ui=next] .dd-next-top{padding:10px 12px;gap:6px}
+  html .deck-designer[data-ui=next] :is(.dd-next-project,.dd-next-brand>span:last-child,.dd-next-top .dd-next-send,.dd-next-sheets [data-sheet=framing]){display:none}
+  html .deck-designer[data-ui=next] .dd-next-start{flex:none}
+  html .deck-designer[data-ui=next] .dd-next-end{flex:1 1 auto;gap:6px}
+  /* Phones: every top-bar control is a 44 px target. */
+  html .deck-designer[data-ui=next] .dd-next-sheets{padding:2px}
+  html .deck-designer[data-ui=next] .dd-next-sheets button{min-width:56px;height:44px;padding:0 10px}
+  html .deck-designer[data-ui=next] .dd-workspace-files .dd-next-phone-only{display:block;width:100%}
+  html .deck-designer[data-ui=next] .dd-preview{padding:0 12px calc(var(--nx-bottom) + 72px)}
+  /* A landscape phone is shorter than the desktop floor: the scene and its controls fit the screen. */
+  html .deck-designer[data-ui=next] :is(.dd-workspace,.dd-canvas>:is(.dd-site-plan,.dd-plan-viewport,[aria-label="Interactive deck construction model"])){min-height:0}
+  html .deck-designer[data-ui=next] .dd-selection-workspace{margin:0 -12px 16px}
+  html .deck-designer[data-ui=next] .dd-next-rail{left:0;right:0;top:auto;bottom:0;height:var(--nx-dock);padding:5px 8px;flex-direction:row;justify-content:space-around;border-radius:22px 22px 0 0;transform:none}
+  html .deck-designer[data-ui=next] .dd-next-rail button{flex:1 1 0;width:auto;height:auto;font-size:12px}
+
+  /* The price row: the total and Send side by side, the review badge before them. */
+  html .deck-designer[data-ui=next] .dd-next-price{left:12px;right:12px;bottom:calc(var(--nx-dock) + 8px);height:var(--nx-row)}
+  html .deck-designer[data-ui=next] .dd-next-total{display:flex;flex:1 1 auto;align-items:center;gap:8px;min-width:0;min-height:0;height:100%;padding:0 16px;border-radius:16px}
+  html .deck-designer[data-ui=next] .dd-next-total strong{order:-1;font-size:20px}
+  html .deck-designer[data-ui=next] .dd-next-total small{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  html .deck-designer[data-ui=next] .dd-next-total small:first-of-type{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  html .deck-designer[data-ui=next] .dd-next-row-send{display:inline-flex;flex:none;height:100%;padding:0 22px;border-radius:16px}
+  
+
+  /* The drawer and its grip. */
+  
+  
+  
+  html .deck-designer[data-ui=next] .dd-next-grip{position:sticky;top:0;z-index:3;display:grid;place-items:center;flex:none;width:100%;height:24px;margin:0;padding:0;border:0;border-radius:24px 24px 0 0;background:#fff;cursor:grab;touch-action:none}
+  html .deck-designer[data-ui=next] .dd-next-grip>span{width:44px;height:5px;border-radius:3px;background:rgb(20 38 28/.28)}
+  
+
+  /* The plan's tools under the top bar; the inspector and zoom clear the price row. */
+  html .deck-designer[data-ui=next] .dd-simple-tools{top:calc(var(--nx-top) + 2px);bottom:auto;left:12px;right:12px;width:auto;max-width:none;flex-direction:column;align-items:stretch;transform:none}
+  
+  html .deck-designer[data-ui=next] .dd-simple-tools-grid{justify-content:flex-start;overflow-x:auto;scrollbar-width:none}
+  html .deck-designer[data-ui=next] .dd-ribbon-hint{display:none}
+  /* No page scrolls behind the plan: a swipe over it pans the drawing instead (PlanViewport). */
+  html .deck-designer[data-ui=next] .dd-canvas>.dd-plan-viewport{touch-action:none}
+  /* A drawing tool's controls: a bar above the price row that opens into a drawer (owner, 2026-11-01); the plan centres
+     the deck in the space above it, and the zoom controls ride above it. */
+  html .deck-designer[data-ui=next] .dd-selection-inspector{top:auto;left:0;right:0;bottom:calc(var(--nx-dock) + var(--nx-row) + 8px);width:auto;max-height:none;border-width:1px 0 0;border-radius:20px 20px 0 0}
+  
+  
+  html .deck-designer[data-ui=next] .dd-selection-inspector>summary{position:sticky;top:0;z-index:1;background:#fff}
+  
+  html .deck-designer[data-ui=next]:has(.dd-selection-inspector:not([open])) .dd-plan-navigation{bottom:calc(var(--nx-dock) + var(--nx-row) + 60px)}
+  /* Framing's modes and the drawing hints span the screen under the top bar. */
+  
+  html .deck-designer[data-ui=next] .dd-plan-navigation{left:12px;right:auto;bottom:calc(var(--nx-bottom) + 8px)}
+
+  /* 3D: the View button, and the view bar only while it is open, as a sheet above the button. */
+  html .deck-designer[data-ui=next] .dd-next-view{position:absolute;left:12px;bottom:calc(var(--nx-bottom) + 8px);z-index:58;display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;border:1px solid var(--nx-line);border-radius:14px;background:#fff;box-shadow:var(--nx-shadow);color:var(--nx-ink);font:700 14px var(--nx-font);cursor:pointer}
+  
+  
+  
+  /* The sheet wraps its groups onto rows, starting at the left, instead of running off both sides. */
+  
+  
+  
+  
+}
+@media(max-width:380px){
+  html .deck-designer[data-ui=next] .dd-next-top{padding:10px 8px;gap:4px}
+  html .deck-designer[data-ui=next] .dd-next-end{gap:4px}
+  html .deck-designer[data-ui=next] .dd-next-sheets button{min-width:44px;padding:0 8px}
+  html .deck-designer[data-ui=next] .dd-next-brand{width:44px;min-width:44px}
+  html .deck-designer[data-ui=next] .dd-next-brand{justify-content:center;padding:0}
+  
+  html .deck-designer[data-ui=next] .dd-next-row-send{padding:0 16px}
+}

@@ -1,5 +1,5 @@
 import {expect,test,type Locator,type Page} from '@playwright/test';
-import {openSketchFiles,openSketchMeasurements,savedConfiguration} from './nav';
+import {openSketchFiles,openSketchMeasurements,savedConfiguration,startOnPlan} from './nav';
 import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
@@ -52,7 +52,7 @@ test.beforeEach(async({page,context})=>{
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(({configuration,draft,key})=>{const storage='golden-maple.deck-studio.deck-only.v1';if(!localStorage.getItem(storage))localStorage.setItem(storage,JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify(draft));},{configuration:fixture,draft:independentDraft,key:draftKey});
  await context.route('**/*',route=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(route.request().url())&&route.request().method()==='GET'?route.continue():route.fulfill({status:200,body:''}));
- await page.goto('/deck-designer/');await settled(page);
+ await page.goto('/deck-designer/');await startOnPlan(page);await settled(page);
 });
 test.afterEach(async({page},info)=>{writeFileSync(resolve(proof,`${info.project.name}-${info.title.includes('Current plan')?'roundtrip':'draft'}-errors.json`),JSON.stringify({status:info.status,errors:errors.get(page)??[]},null,2));expect(errors.get(page)??[]).toEqual([]);});
 

@@ -3,7 +3,7 @@ import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
-import {pickPlanTool} from './nav';
+import {pickPlanTool,startOnPlan} from './nav';
 
 const proof=resolve(process.cwd(),'../../outputs/deckcraft-stair-path-review/boundary-render');mkdirSync(proof,{recursive:true});
 const errors=new WeakMap<Page,string[]>();
@@ -34,13 +34,14 @@ test.afterEach(async({page},info)=>{
 });
 
 for(const touch of [false,true])test(`${touch?'@phone ':''}fractional custom outline dimension labels settle after resizing, zooming and native pan`,async({page,context})=>{
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);
+ await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);
  await pickPlanTool(page,'Shape & points');const original=await read(page);expect(original.boundaries[0].points).toHaveLength(outline.length);for(let i=0;i<outline.length;i++){expect(original.boundaries[0].points[i].x).toBeCloseTo(outline[i].x,6);expect(original.boundaries[0].points[i].y).toBeCloseTo(outline[i].y,6);}
  const samples:unknown[]=[await stable(page)],sizes=touch?[{width:390,height:844},{width:768,height:1024},{width:430,height:932}]:[{width:1440,height:1000},{width:1177,height:901},{width:979,height:833}];
  for(const viewport of sizes){
   await page.setViewportSize(viewport);await page.getByRole('button',{name:'Fit drawing',exact:true}).click();samples.push({viewport,frames:await stable(page)});
   await page.getByRole('button',{name:'Zoom in',exact:true}).click();await expect(page.getByLabel('Drawing zoom')).toHaveText('125%');samples.push({zoom:'125%',frames:await stable(page)});
-  await page.getByRole('button',{name:'Pan drawing',exact:true}).click();const canvas=page.getByLabel('Deck drawing canvas');await canvas.scrollIntoViewIfNeeded();const b=(await canvas.boundingBox())!,x=b.x+b.width/2,y=b.y+76;
+  await page.getByRole('button',{name:'Pan drawing',exact:true}).click();const canvas=page.getByLabel('Deck drawing canvas');await canvas.scrollIntoViewIfNeeded();// Start on bare drawing: a dimension label stays clickable in Pan mode and would open its editor.
+  const {x,y}=await canvas.evaluate(el=>{const r=el.getBoundingClientRect();for(let y=r.top+76;y<r.bottom-40;y+=8)for(const x of [r.left+r.width/2,r.left+48,r.right-48]){const t=document.elementFromPoint(x,y);if(t&&el.contains(t)&&!t.closest('button,[data-plan-editor-ui],.dd-plan-navigation'))return {x,y};}return {x:r.left+r.width/2,y:r.top+76};});
   if(touch){const cdp=await context.newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:1}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+27.75,y:y+13.25,id:1}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();}
   else{await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+27.75,y+13.25,{steps:4});await page.mouse.up();}
   await page.getByRole('button',{name:'Pan drawing',exact:true}).click();samples.push({pan:true,frames:await stable(page)});expect((await read(page)).design).toEqual(original.design);expect((await read(page)).pricing).toEqual(original.pricing);expect((await read(page)).history).toEqual(original.history);

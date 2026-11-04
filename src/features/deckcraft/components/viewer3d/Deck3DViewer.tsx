@@ -28,6 +28,7 @@ import SceneStillExport from './SceneStillExport';
 // Fly-through: the panel's tools and the recorder (camera paths, video encoder) load once the panel is opened.
 import FlythroughLauncher from './FlythroughLauncher';
 const FlythroughRecorder=lazy(()=>import('./FlythroughRecorder'));
+const WalkMode=lazy(()=>import('./WalkMode'));
 import {isFlythroughArmed,subscribeFlythroughArm} from './flythroughState';
 import {useFlythroughRendering,useSceneEvening} from './sceneEvening';
 
@@ -96,6 +97,7 @@ import {castsPreviewLight} from '../../lightingPreview';
 import {sceneBounds} from './sceneBounds';
 
 import {getStairBoards} from '../../stairBoards';
+import {stairPads} from '../../stairPads';
 
 import {houseLayout} from './houseLayout';
 
@@ -130,6 +132,7 @@ import {exposedRim} from '../../houseContact';
 import {onSurfaceReliefReady} from './surfaceRelief';
 
 import Cladding3D from './Cladding3D';
+const StairPads3D=lazy(()=>import('./StairPads3D'));
 
 import {drawnRiserBoards} from '../../stairCladding';
 
@@ -449,6 +452,8 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
   const catalogueExtras=useMemo(()=>catalogueAccessoryLayout(data,model),[data,model]);
 
+  // The lawn keeps its blades off the paver pads at the stair feet (stairPads.ts).
+  const paved=useMemo(()=>stairPads(data,model).map(p=>p.outline),[data,model]);
   const stairBoards=useMemo(()=>{const primary=model.flights.find(f=>f.kind==='grade');return getStairBoards(data,model).map(b=>{if(!primary)return b;const dx=primary.end.x-primary.start.x,dz=primary.end.z-primary.start.z,length=Math.hypot(dx,dz);if(!length)return b;const x=b.x-primary.start.x,z=b.z-primary.start.z,along=(x*dx+z*dz)/length,cross=(x*dz-z*dx)/length;return along>=-.01&&along<=length+.01&&Math.abs(cross)<=primary.width/2+1&&b.y<=primary.start.y&&b.y>=primary.end.y?{...b,partId:'stairs:primary'}:b;});},[data,model]);
 
   const stairVeneer=useMemo(()=>stairVeneerLayout(data,model),[data,model]);
@@ -563,6 +568,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
     {!structure&&<group name="closed-stair-riser-boards"><FinishedBoards items={drawnRisers} material={riserMat}/></group>}
 
     {!structure&&<Cladding3D data={data} model={model} material={fasciaMat} finished={!cutaway}/>}
+    {data.stairPad&&<Suspense fallback={null}><StairPads3D data={data} model={model}/></Suspense>}
 
     <NotchedStringers model={model} material={materials.wood}/>
 
@@ -590,7 +596,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
     </group>{data.pools?.some(p=>p.enabled)&&<Suspense fallback={null}><Pool3D pools={getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))} inspection={inspection||cutaway} evening={evening}/></Suspense>}<Yard3D model={visibleYard} inspection={inspection||cutaway} plantingBeds={plantingBeds}/>{yard.features.some(f=>f.config.kind==='fire-feature')&&<Suspense fallback={null}><Fire3D yard={yard} data={data} inspection={inspection||cutaway}/></Suspense>}
 
-    <Environment3D data={environmentData} footprint={model.levels[0].footprint} topY={data.height} planKey={planKey} cutaway={cutaway} finished={!inspection} yard={yard} {...interaction}/>
+    <Environment3D data={environmentData} footprint={model.levels[0].footprint} topY={data.height} planKey={planKey} cutaway={cutaway} finished={!inspection} yard={yard} paved={paved} {...interaction}/>
 
   </group><Suspense fallback={null}><Landscape3D data={landscapeData} showMatureSpread={showMatureSpread} source={data} model={model} yard={yard}/></Suspense><FixtureGlows items={extras.fixtures} evening={evening} enabled={lightsOn}/></>;
 
@@ -664,7 +670,7 @@ function opaqueRenderer(defaults:{canvas:HTMLCanvasElement|OffscreenCanvas}){
  return renderer;
 }
 
-export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,onSnapshotReady,boardPaint,onUpdate,selection,selectionEnabled=false,onObjectPick,editInteraction,designer=false,...interaction}:{toolbar?:React.ReactNode;onUpdate?:Update;designer?:boolean;data:DeckData;model:DeckTakeoff;selection?:SelectionState;selectionEnabled?:boolean;editInteraction?:SceneEditInteraction;onObjectPick?:(pick:ObjectPick,toggle:boolean)=>void;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;onSnapshotReady?:(capture:DeckSnapshotCapture|null)=>void;boardPaint?:BoardPaint}&HouseInteraction){
+export default function Deck3DViewer({toolbar,walk=false,onWalkEnd,data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,onSnapshotReady,boardPaint,onUpdate,selection,selectionEnabled=false,onObjectPick,editInteraction,designer=false,...interaction}:{toolbar?:React.ReactNode;walk?:boolean;onWalkEnd?:()=>void;onUpdate?:Update;designer?:boolean;data:DeckData;model:DeckTakeoff;selection?:SelectionState;selectionEnabled?:boolean;editInteraction?:SceneEditInteraction;onObjectPick?:(pick:ObjectPick,toggle:boolean)=>void;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;onSnapshotReady?:(capture:DeckSnapshotCapture|null)=>void;boardPaint?:BoardPaint}&HouseInteraction){
   // The page keeps scrolling over the 3D view: the wheel zooms once the view has been clicked, or with Ctrl/⌘ (pinch
   // on a trackpad sends Ctrl). Touch pinch is unaffected. The 2D plan already zooms only with Ctrl.
   const regionRef=useRef<HTMLDivElement>(null),[wheelHint,setWheelHint]=useState(false);
@@ -758,12 +764,14 @@ export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calcu
 
       <FixtureLightContext.Provider value={fixtureLight}><Scene data={data} model={model} showMatureSpread={view==='top'} structure={structure} cutaway={cutaway} inspection={inspection} yard={yard} onMovePrivacyScreen={onMovePrivacyScreen} boardPaint={boardPaint} pergolaInteraction={!editInteraction&&onUpdate&&rawData.pergola&&!boardPaint&&!structure&&!cutaway?{selected,mode:pergolaMode,onSelect:()=>setSelected(true),onDraft:setDraft,onCommit:patch=>onUpdate({pergola:{...rawData.pergola!,...patch}})}:undefined} {...interaction}/></FixtureLightContext.Provider>
 
-      {editInteraction&&selection&&<Suspense fallback={null}><SceneEditHandles data={rawData} model={model} selection={selection} interaction={editInteraction}/></Suspense>}<SavedCameraBridge data={data} update={onUpdate}/><SelectionBridge enabled={!boardPaint} hardscapeOnly={!selectionEnabled} revision={calculatedYard??model} selection={selection??{partIds:[],boards:[]}} onPick={onObjectPick}/><SnapshotBridge onReady={onSnapshotReady}/><SceneStillExport revision={rawData}/>{winter&&<Suspense fallback={null}><SeasonScene/></Suspense>}{flythroughArmed&&<Suspense fallback={null}><FlythroughRecorder revision={rawData} designEvening={rawData.sceneLighting==='Evening'}/></Suspense>}
-      <ShowcaseModeSync/><RenderQuality/><RenderPipeline evening={evening}/>{photoOn&&<Suspense fallback={null}><PhotoTracer evening={evening} revision={rawData}/></Suspense>}
+      {editInteraction&&selection&&!walk&&<Suspense fallback={null}><SceneEditHandles data={rawData} model={model} selection={selection} interaction={editInteraction}/></Suspense>}<SavedCameraBridge data={data} update={onUpdate}/><SelectionBridge enabled={!boardPaint&&!walk} hardscapeOnly={!selectionEnabled} revision={calculatedYard??model} selection={selection??{partIds:[],boards:[]}} onPick={onObjectPick}/><SnapshotBridge onReady={onSnapshotReady}/><SceneStillExport revision={rawData}/>{winter&&<Suspense fallback={null}><SeasonScene/></Suspense>}{flythroughArmed&&<Suspense fallback={null}><FlythroughRecorder revision={rawData} designEvening={rawData.sceneLighting==='Evening'}/></Suspense>}
+      <ShowcaseModeSync golden={data.sceneLighting==='Golden'}/><RenderQuality/><RenderPipeline evening={evening}/>{photoOn&&<Suspense fallback={null}><PhotoTracer evening={evening} revision={rawData}/></Suspense>}
 
-      <OrbitControls makeDefault target={savedCamera||preset||view==='overview'?undefined:[cx,cutaway?-(data.foundationDepthIn??48)/24:height*.4,cz]} maxPolarAngle={cutaway?Math.PI*.7:Math.PI/2-.04} minDistance={savedCamera||preset?1:r*.25} maxDistance={view==='overview'?Math.max(r*8,height*4):r*4} enableDamping={false}/>
+      {/* Walking stands 10 ft in front of the deck, looking at it; the orbit view waits until it ends. */}
+      {walk&&<Suspense fallback={null}><WalkMode from={{x:cx,z:bounds.maxZ/12+10}} look={{x:cx,y:rawData.height/12+2,z:cz}} onExit={()=>onWalkEnd?.()}/></Suspense>}
+      <OrbitControls enabled={!walk} makeDefault target={savedCamera||preset||view==='overview'?undefined:[cx,cutaway?-(data.foundationDepthIn??48)/24:height*.4,cz]} maxPolarAngle={cutaway?Math.PI*.7:Math.PI/2-.04} minDistance={savedCamera||preset?1:r*.25} maxDistance={view==='overview'?Math.max(r*8,height*4):r*4} enableDamping={false}/>
 
-    </Canvas>{photoOn&&<Suspense fallback={null}><PhotoModePanel lighting={evening?'Evening':'Daylight'} onLighting={lighting=>onUpdate?.({sceneLighting:lighting})}/></Suspense>}{simplifiedPaving&&<p className="absolute top-3 left-3 right-3 w-fit rounded-md bg-white/95 px-3 py-2 text-xs text-[#38413b] shadow-sm pointer-events-none">Simplified paving preview · {yard.quantities.paverPieces.toLocaleString()} pavers retained in quantities, construction view and exports.</p>}<p className={`absolute bottom-3 left-4 right-4 text-[10px] pointer-events-none ${evening?'text-white':'text-[#474c43]'}`}>Drag to orbit · pinch, or Ctrl + scroll, to zoom{evening&&data.lightingPreviewOn!==false&&lights>MAX_PREVIEW_LIGHTS?` · ${lights} fixtures shown; light spread preview limited to ${MAX_PREVIEW_LIGHTS} fixtures`:''}</p>
+    </Canvas>{photoOn&&<Suspense fallback={null}><PhotoModePanel lighting={evening?'Evening':'Daylight'} onLighting={lighting=>onUpdate?.({sceneLighting:lighting})}/></Suspense>}{simplifiedPaving&&<p className="absolute top-3 left-3 right-3 w-fit rounded-md bg-white/95 px-3 py-2 text-xs text-[#38413b] shadow-sm pointer-events-none">Simplified paving preview · {yard.quantities.paverPieces.toLocaleString()} pavers retained in quantities, construction view and exports.</p>}{!walk&&<p className={`absolute bottom-3 left-4 right-4 text-[10px] pointer-events-none ${evening?'text-white':'text-[#474c43]'}`}>Drag to orbit · pinch, or Ctrl + scroll, to zoom{evening&&data.lightingPreviewOn!==false&&lights>MAX_PREVIEW_LIGHTS?` · ${lights} fixtures shown; light spread preview limited to ${MAX_PREVIEW_LIGHTS} fixtures`:''}</p>}
 
   </div>{designer&&onUpdate&&!structure&&!cutaway&&<FlythroughLauncher data={data}/>}{terrainWarnings.length>0&&<details open className="text-xs py-2" aria-label="Terrain conflicts"><summary>Terrain needs attention · {terrainWarnings.length}</summary><ul>{terrainWarnings.map(w=><li key={w}>{w}</li>)}</ul></details>}</>;
 

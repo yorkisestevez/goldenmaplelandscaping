@@ -1,5 +1,5 @@
 import {test,expect,type Page,type BrowserContext} from '@playwright/test';
-import {openSketchMeasurements} from './nav';
+import {openSketchMeasurements,startOnPlan} from './nav';
 import {mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
@@ -21,7 +21,7 @@ test.beforeEach(async({page,context})=>{
  const caught:string[]=[];errors.set(page,caught);page.on('pageerror',error=>caught.push(error.message));
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&r.request().method()==='GET'?r.continue():r.fulfill({status:200,body:''}));
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);
+ await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);
  await page.getByRole('button',{name:'Sketch a design',exact:true}).click();await modal(page).getByRole('button',{name:'New sketch',exact:true}).click();await modal(page).getByRole('button',{name:'Straight lines',exact:true}).click();
  await expect(modal(page).getByRole('button',{name:'Snap to 90°',exact:true})).toHaveAttribute('aria-pressed','true');
 });

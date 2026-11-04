@@ -1,6 +1,6 @@
 import YardEditor from '../../YardEditor';
 import {dollars,type DeckEstimate} from '../../designFacts';
-import {hasYardAllowances,splitSubtotal} from '../../backyard';
+import {hasYardAllowances,splitSubtotal,yardAllowancesPatch} from '../../backyard';
 import {ALLOWANCE_FINISHES,NO_ALLOWANCES,TURF_SQFT} from '../../yardSettings';
 import type {DeckData,YardAllowances} from '../../types';
 import {Field,NumberField,type Update} from '../fields';
@@ -12,8 +12,7 @@ import {Field,NumberField,type Update} from '../fields';
 export default function BackyardStep({data,update,onApplyElevation,estimate,earlierYard,onRestoreEarlierYard,onDismissEarlierYard,onDesign,selectedFeatureId,onSelectFeature,onGeometry}:{onGeometry?:(data:DeckData|null)=>void;data:DeckData;update:Update;onApplyElevation?:Update;estimate:DeckEstimate;earlierYard:number;onRestoreEarlierYard:()=>void;onDismissEarlierYard:()=>void;onDesign?:()=>void;selectedFeatureId?:string;onSelectFeature?:(id:string)=>void}){
   const active=(data.yardFeatures??[]).filter(f=>f.enabled),split=splitSubtotal(estimate),yard=estimate.yardTakeoff;
   const a=data.yardAllowances??NO_ALLOWANCES;
-  // Switching the last allowance off removes them, so the design saves exactly as one without allowances.
-  const setAllowance=(patch:Partial<YardAllowances>)=>{const next={...a,...patch};update({yardAllowances:hasYardAllowances(next)?next:undefined});};
+  const setAllowance=(patch:Partial<YardAllowances>)=>update(yardAllowancesPatch(data,patch));
   const hint=(...words:(string|undefined)[])=>words.filter(Boolean).join(' ');
   const amount=(id:string)=>{const row=yard.sections.find(s=>s.id===`allowance-${id}`);return row?row.amountCents===null?'Builder quote required':`Allowance: ${dollars(row.amountCents/100)}`:undefined;};
   return <>

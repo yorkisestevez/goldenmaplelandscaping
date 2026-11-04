@@ -1,5 +1,5 @@
 import {deckReleaseData} from '../deckRelease';
-import {DEFAULT_DECK} from '../defaults';
+import {NEW_DECK} from '../defaults';
 import type {DeckData} from '../types';
 
 /**
@@ -53,8 +53,8 @@ export const SECTIONS:readonly DesignSection[]=[
     fields:['deckingMaterial','deckingColor','pattern','fasteningSystem','pictureFrameRows','pictureFrameOverhangIn','borderFinish','hasInlay','inlayLf','boardColours','boardLayout','inlays','deckFinishes'],
     ledger:['Decking','Picture-frame border finish','Accent-colour boards','Accent colours & inlays','Deck-part finishes','Custom board-layout*'],related:{id:'stairs',text:'Add stairs and a railing'}},
   {id:'stairs',name:'Stairs & railings',legacyStep:2,load:loadStairsStep,
-    fields:['stairPath','stairTargets','stairRiserCount','stairTreadDepthIn','stairFlights','stairWidth','stairType','stairPosition','stairEdgeId','stairOffset','stairTurn','landingDepthIn','railingType','railingLf','railSections','railDefault','catalogueRailingId','glassMount','glassFinish','deckFinishes.railingColor'],
-    ledger:['Stairs','Stair picture-frame detail','Railing System','Stair and level cladding','Terrain stair support connections','Unresolved stair path'],related:{id:'lighting',text:'Light the steps and posts'}},
+    fields:['stairPath','stairTargets','stairRiserCount','stairTreadDepthIn','stairSides','stairPad','stairFlights','stairWidth','stairType','stairPosition','stairEdgeId','stairOffset','stairTurn','landingDepthIn','railingType','railingLf','railSections','railDefault','catalogueRailingId','glassMount','glassFinish','deckFinishes.railingColor'],
+    ledger:['Stairs','Stair picture-frame detail','Railing System','Stair and level cladding','Stair landing pad','Terrain stair support connections','Unresolved stair path'],related:{id:'lighting',text:'Light the steps and posts'}},
   {id:'lighting',name:'Lighting',legacyStep:3,load:loadSiteExtrasStep,
     fields:['autoLighting','lightingSystem','lightingZoneEnabled'],
     ledger:['in-lite® Lighting System','Picture-frame lighting edge detail'],related:{id:'extras',text:'Add privacy screens or skirting'}},
@@ -65,7 +65,7 @@ export const SECTIONS:readonly DesignSection[]=[
     fields:['quoteResolutions','municipality','siteType','soilCondition','foundation','foundationDepthIn','buildSeason','intendedLoad','framingSize','joistSpacing','boardWidth'],
     ledger:['Permits & Professional Fees','Foundation & Footings','Confirmed additional quote costs'],related:{id:'backyard',text:'Plan the yard around the deck'}},
   {id:'backyard',name:'Backyard',legacyStep:4,load:loadBackyardStep,
-    fields:['yardFeatures','yardEarthwork','terrainConfig','yardAllowances','siteModel','landscapeObjects','editorOrganization'],
+    fields:['yardFeatures','yardEarthwork','terrainConfig','yardAllowances','siteModel','landscapeObjects','fences','editorOrganization'],
     ledger:['Yard · *'],related:{id:'proposal',text:'See the estimate and send it'}},
   {id:'proposal',name:'Proposal & files',legacyStep:5,load:loadEstimateStep,
     fields:['customerName','projectAddress','scopeOfWork','permitSite'],
@@ -104,8 +104,8 @@ function plain(value:unknown):unknown{
 const same=(a:unknown,b:unknown)=>JSON.stringify(plain(a))===JSON.stringify(plain(b));
 
 let defaults:DeckData|null=null;
-/** The default design as the designer holds it (DEFAULT_DECK through the release boundary). */
-const defaultDesign=()=>defaults??=deckReleaseData(structuredClone(DEFAULT_DECK));
+/** The default design as the designer holds it (NEW_DECK through the release boundary). */
+const defaultDesign=()=>defaults??=deckReleaseData(structuredClone(NEW_DECK));
 /** Whether a section's fields differ from the default design; a restored or shared design shows it too. */
 export const sectionChanged=(section:DesignSection,data:DeckData)=>section.fields.some(f=>!same(valueAt(data,f),valueAt(defaultDesign(),f)));
 
@@ -131,13 +131,13 @@ export const FIELD_NAMES:Partial<Record<FieldPath|'sceneLighting'|'lightingPrevi
   deckingMaterial:'Collection',deckingColor:'Colour',pattern:'Board layout',fasteningSystem:'Fasteners',pictureFrameRows:'Border rows',pictureFrameOverhangIn:'Outer frame overhang',borderFinish:'Border finish',
   railSections:'Railing sections',railDefault:'Automatic railings',
   hasInlay:'Centre inlay stripe',inlayLf:'Inlay length',boardColours:'Accent boards',boardLayout:'Local board layout',inlays:'Inlays',deckFinishes:'Deck-part finishes',
-  stairPath:'Stair edge path',stairRiserCount:'Number of risers',stairTreadDepthIn:'Tread depth',stairFlights:'Stair flights',stairWidth:'Stair width',stairType:'Stair layout',stairPosition:'Stair location',stairEdgeId:'Stair edge',stairOffset:'Stair position along the edge',stairTurn:'Stair turning direction',landingDepthIn:'Landing depth',
+  stairPath:'Stair edge path',stairRiserCount:'Number of risers',stairTreadDepthIn:'Tread depth',stairSides:'Stair sides',stairPad:'Paver pad at the stair foot',stairFlights:'Stair flights',stairWidth:'Stair width',stairType:'Stair layout',stairPosition:'Stair location',stairEdgeId:'Stair edge',stairOffset:'Stair position along the edge',stairTurn:'Stair turning direction',landingDepthIn:'Landing depth',
   railingType:'Railing style',railingLf:'Railing length',catalogueRailingId:'Manufacturer railing',glassMount:'Glass railing mount',glassFinish:'Glass hardware finish',['deckFinishes.railingColor']:'Railing colour',
   autoLighting:'Deck lighting',lightingSystem:'Lighting',lightingZoneEnabled:'Lighting zones',
   privacyScreens:'Privacy screens',privacySqft:'Privacy screen area',skirting:'Skirting',benchLf:'Built-in bench',pergolaSqft:'Pergola',hasDemo:'Remove an existing deck',hasDrainage:'Under-deck drainage',catalogueAccessories:'Manufacturer accessories',
   municipality:'Project area',siteType:'Site conditions',soilCondition:'Soil conditions',foundation:'Foundation',foundationDepthIn:'Footing depth',buildSeason:'Build season',intendedLoad:'Intended load',framingSize:'Joist size',joistSpacing:'Joist spacing',boardWidth:'Board width',
-  stairTargets:'Stair landing elevations',siteModel:'Survey and grading',landscapeObjects:'Landscape objects',editorOrganization:'Layers, groups and locks',yardFeatures:'Backyard features',terrainConfig:'Terrain',yardAllowances:'Backyard allowances',
+  stairTargets:'Stair landing elevations',siteModel:'Survey and grading',landscapeObjects:'Landscape objects',fences:'Fences and gates',editorOrganization:'Layers, groups and locks',yardFeatures:'Backyard features',terrainConfig:'Terrain',yardAllowances:'Backyard allowances',
   customerName:'Your name',projectAddress:'Project address',scopeOfWork:'Scope of work',permitSite:'Lot and setbacks',
-  sceneLighting:'Day or night preview',lightingPreviewOn:'Preview lights',
+  sceneLighting:'Time of day',lightingPreviewOn:'Preview lights',
 };
 export const fieldName=(field:string)=>FIELD_NAMES[field as keyof typeof FIELD_NAMES]??'Design change';

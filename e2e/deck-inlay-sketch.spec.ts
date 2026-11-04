@@ -4,7 +4,7 @@ import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
 import type {OutlinePoint} from '../src/features/deckcraft/types';
-import {pickPlanTool} from './nav';
+import {pickPlanTool,startOnPlan} from './nav';
 
 const proof=resolve(process.cwd(),'../../outputs/deckcraft-inlay-review');mkdirSync(proof,{recursive:true});
 const fixture={...DEFAULT_DECK,width:16,length:12,height:30,deckType:'Freestanding',houseVisible:false,hasInlay:false,inlays:undefined};
@@ -27,7 +27,7 @@ test.beforeEach(async({page,context})=>{
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(configuration=>localStorage.setItem('golden-maple.deck-studio.deck-only.v1',JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration})),fixture);
  await context.route('**/*',route=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(route.request().url())&&route.request().method()==='GET'?route.continue():route.fulfill({status:200,body:''}));
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);
+ await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);
 });
 for(const touch of [false,true])test(`${touch?'@phone ':''}Custom inlay sketch supports native straight taps, measured size, point pulls and local undo before placement`,async({page,context})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));const before=await state(page);await open(page,touch);

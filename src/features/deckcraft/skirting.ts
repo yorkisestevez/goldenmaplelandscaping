@@ -7,6 +7,7 @@ import {insidePolygon as inside} from './lib/polygonCuts';
 import {accentAllowed,colourName,deckColourRef,parseColourRef} from './boardFinishes';
 import {mitredRunCaps,type SlabCap} from './lib/mitredSlabs';
 import {createSiteSurface,designSiteModel,siteGroundProfile} from './siteSurface';
+import {openStairs} from './stairConstruction';
 
 /**
  * Skirting under the deck: boards or lattice closing in the space between each deck edge's rim and the ground.
@@ -14,7 +15,9 @@ import {createSiteSurface,designSiteModel,siteGroundProfile} from './siteSurface
  * - The edges are the levels' rim pieces. On the main deck, the edges the house covers are left alone, and
  *   houseContact.ts (onContact) is the only judge of which those are: nothing here finds the house by its position.
  * - Where two levels meet or overlap, and across every stair and level-connection opening (its width plus 1 in each
- *   side), the skirting stops. Winder treads belong to the stair and are not skirted.
+ *   side), the skirting stops. Winder treads belong to the stair and are not skirted. An open stringer stair
+ *   (stairConstruction.ts) hangs in front of the rim instead, so the skirting carries on behind it, as a run of its own
+ *   that never takes an access panel.
  * - The face runs from the underside of the rim down to the ground (the measured survey where there is one, otherwise
  *   getTerrainConfig, so it follows a slope) plus
  *   the chosen clearance. A stretch with less than 3 in of face is left open.
@@ -58,7 +61,7 @@ const FRAMING:Record<SkirtingStyle,{studIn:number;railIn?:number;words:string}>=
 export interface SkirtingSlab{a:PlanPoint;b:PlanPoint;out:PlanPoint;thick:number;bottomA:number;topA:number;bottomB:number;topB:number;capA?:SlabCap;capB?:SlabCap;grainAnchor?:PlanPoint;grainOffset?:number}
 /** One straight stretch of skirting along a rim. Its face runs from `top` (the rim's underside) down to the ground plus
  * the clearance, `bottomA` and `bottomB` at its ends. */
-export interface SkirtingRun{edge:string;level:number;a:PlanPoint;b:PlanPoint;lengthIn:number;out:PlanPoint;top:number;bottomA:number;bottomB:number;faceSqft:number}
+export interface SkirtingRun{edge:string;level:number;a:PlanPoint;b:PlanPoint;lengthIn:number;out:PlanPoint;top:number;bottomA:number;bottomB:number;faceSqft:number;behindStair?:boolean}
 /** A deck side the skirting can close in, for the editor's list: `open` when the design leaves it open. */
 export interface SkirtingEdge{id:string;label:string;lengthFt:number;open:boolean}
 export interface SkirtingPlan{
@@ -150,19 +153,21 @@ function layoutSkirting(data:DeckData,model:DeckTakeoff){
         for(const [s,e] of insideSpans(a,u,len,poly))spans=cut(spans,s,e);
       });
       // Stairs and level connections: a flight leaving or landing on this level at this edge opens it, 1 in past each side.
+      const behind:Span[]=[];
       for(const f of model.flights)for(const p of [f.start,f.end]){
         const q={x:p.x,y:p.z};if(Math.abs(p.y-level.top)>.6||across(q)>3)continue;
         const t=along(q),half=f.width/2+PAD;spans=cut(spans,t-half,t+half);
+        if(p===f.start&&f.kind==='grade'&&f.type==='Straight'&&openStairs(data))behind.push([Math.max(0,t-half),Math.min(len,t+half)]);
       }
       const facing=edgeFacing(out),id=`${key}-${facing.toLowerCase()}`;
       const edge=edges.get(id)??{id,label:`${name}, ${SIDE_WORDS[facing]??'back'}`,lengthFt:0,open:open.has(id)};edges.set(id,edge);
       // The ground under the rim as straight pieces: the plane's one, or the survey's own breaks.
       const profile=surface&&siteGroundProfile(surface,a,b,GROUND_TOLERANCE);estimatedGround||=!!profile&&profile.estimated;
       const top=m.a.y-m.depth/2,bottom=(t:number)=>(profile?profile.at(t):ground(a.y+u.y*t))+clearanceIn,at=(t:number)=>({x:a.x+u.x*t,y:a.y+u.y*t});
-      for(const [S0,E0] of spans){
+      for(const [S0,E0,behindStair] of [...spans.map(([s,e])=>[s,e,false] as const),...behind.map(([s,e])=>[s,e,true] as const)]){
         // A stretch that keeps its face carries on across the ground's breaks; one under MIN_RUN in all is left open.
         let group:[number,number][]=[],sum=0;
-        const flush=()=>{if(sum>=MIN_RUN){edge.lengthFt+=sum/12;if(!edge.open)for(const [s,e] of group){const bA=bottom(s),bB=bottom(e);runs.push({edge:id,level:li,a:at(s),b:at(e),lengthIn:e-s,out,top,bottomA:bA,bottomB:bB,faceSqft:(e-s)*(2*top-bA-bB)/2/144});}}group=[];sum=0;};
+        const flush=()=>{if(sum>=MIN_RUN){edge.lengthFt+=sum/12;if(!edge.open)for(const [s,e] of group){const bA=bottom(s),bB=bottom(e);runs.push({edge:id,level:li,a:at(s),b:at(e),lengthIn:e-s,out,top,bottomA:bA,bottomB:bB,faceSqft:(e-s)*(2*top-bA-bB)/2/144,...(behindStair?{behindStair}:{})});}}group=[];sum=0;};
         const stops=profile?profile.stops(S0,E0):[S0,E0];
         for(let i=1;i<stops.length;i++){
           const s0=stops[i-1],e0=stops[i];
@@ -266,7 +271,7 @@ function layoutSkirting(data:DeckData,model:DeckTakeoff){
   };
   const perRun=runs.map(()=>0),heightsIn:number[]=[];
   for(let i=0;i<requested;i++){
-    const best=runs.map((r,ri)=>({ri,room:r.lengthIn/(perRun[ri]+1)})).filter(c=>panelsOn(runs[c.ri],perRun[c.ri]+1)).sort((p,q)=>q.room-p.room)[0];
+    const best=runs.map((r,ri)=>({ri,room:r.lengthIn/(perRun[ri]+1)})).filter(c=>!runs[c.ri].behindStair&&panelsOn(runs[c.ri],perRun[c.ri]+1)).sort((p,q)=>q.room-p.room)[0];
     if(!best)break;perRun[best.ri]++;
   }
   runs.forEach((r,ri)=>{

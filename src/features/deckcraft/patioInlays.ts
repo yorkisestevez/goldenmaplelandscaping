@@ -3,7 +3,7 @@ import type {PlanPoint} from './lib/deckGeometry';
 import {polygonCut,signedArea} from './lib/polygonCuts';
 import {validateCustomInlayPoints} from './lib/inlayGeometry';
 import {yardFeatureOutline,yardToWorld} from './yardPathGeometry';
-import {hardscapeProblem,hardscapeSelection} from './hardscapeCatalogue';
+import {hardscapeProblem,hardscapeSelection} from './hardscapeLookup';
 import {PAVER_BRANDS} from '../../data/carrPrices';
 
 export const PATIO_INLAY_LIMITS={count:12,spanIn:240,coordinateIn:1200} as const;

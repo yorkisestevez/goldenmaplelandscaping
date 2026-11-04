@@ -102,7 +102,7 @@ function corner(p:ShapePath,i:number){
  if(Math.PI-Math.abs(turn)<1e-6)throw Error('That corner doubles back on itself.');
  return {v,u1,u2,turn,room:Math.min(dist(p.points[before],v),dist(v,after(p,i)))-1};
 }
-/** Fillet a corner with a true arc of the given radius, tangent to both straight edges (RLA “Round Corners”). */
+/** Fillet a corner with a true arc of the given radius, tangent to both straight edges. */
 export function roundCorner(p:ShapePath,i:number,radiusIn:number):ShapePath{
  if(!Number.isFinite(radiusIn)||radiusIn<1)throw Error('Enter a corner radius of at least 1 inch.');
  const {v,u1,u2,turn,room}=corner(p,i),k=Math.tan(Math.abs(turn)/2),t=radiusIn*k;

@@ -1,3 +1,4 @@
+// Designer Mode's CAD workspace on a short desktop: the assistant and the inspector take turns beside the drawing.
 import {test,expect} from '@playwright/test';
 import {openDesignerMode,proMenu} from './nav';
 import {mkdirSync} from 'node:fs';
@@ -6,12 +7,12 @@ test('short desktop switches full side panels and preserves the assistant draft 
  await page.setViewportSize({width:1280,height:720});
  await context.addInitScript(()=>localStorage.clear());
  await context.route('**/.netlify/functions/deck-assistant',r=>r.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{message:'Unavailable during controlled layout test.'}})}));
- await openDesignerMode(page);
+ await openDesignerMode(page,'/deck-designer/?designer=1');
  await proMenu(page,'Edit','Describe a change…');
  const dock=page.getByRole('region',{name:'Design assistant',exact:true});await expect(dock).toBeVisible();
  const input=dock.getByRole('textbox',{name:'What would you like to change?',exact:true});await input.fill('Make the deck slightly wider');
  await proMenu(page,'Add','Deck shape & size');
-  await expect(page.locator('#dd-pro-properties').getByRole('region',{name:/^Deck shape & size/})).toBeVisible();await expect(dock).toBeHidden();
+  await expect(page.locator('#dd-pro-properties').getByRole('tabpanel',{name:'Deck shape & size'})).toBeVisible();await expect(dock).toBeHidden();
  await proMenu(page,'Edit','Describe a change…');await expect(dock).toBeVisible();
  await expect(input).toHaveValue('Make the deck slightly wider');
  expect(await dock.locator('.dd-instructions-body').evaluate(el=>el.clientHeight)).toBeGreaterThan(200);
