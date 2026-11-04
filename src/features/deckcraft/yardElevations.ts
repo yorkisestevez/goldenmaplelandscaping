@@ -1,6 +1,6 @@
 import type {DeckData,YardFeature} from './types';
 import {sampleSiteHeight} from './siteSurface';
-import {hardscapeSelection} from './hardscapeCatalogue';
+import {hardscapeSelection} from './hardscapeLookup';
 import {GUILLOTINED_WALL,wallStoneOf} from './wallStones';
 
 export type YardElevationField='heightIn'|'baseElevationIn';

@@ -2,9 +2,12 @@ import index from '../../data/hardscape-index.json';
 import type {YardFeature} from './types';
 import {shapedBond} from './hardscapeShapes';
 import {wallCapOptions} from './wallCaps';
+import {registerHardscapeCatalogue} from './hardscapeLookup';
+export {rectangularUnit,hardscapeSwatchKey} from './hardscapeLookup';
 
 /** The compact, generated engineering index is the authority for saved selections.
- * Product photos, prose and supplier pattern guides are fetched separately by the picker. */
+ * Product photos, prose and supplier pattern guides are fetched separately by the picker.
+ * The page's first load reads it through hardscapeLookup.ts, which loads this module with a design's yard features. */
 export interface HardscapeUnit {id:string;widthMm:number;lengthMm:number;heightMm:number;role:string;shape?:string;colorIds?:string[]}
 /** `swatch` marks a local manufacturer photo; its path loads with the 3D view (hardscapeSwatchKey). */
 export interface HardscapeColor {id:string;swatch?:boolean;hex?:string}
@@ -21,12 +24,9 @@ const indexedLayouts=(index as unknown as {layouts?:IndexedLayout[]}).layouts??[
 // Resolve against the original unit array before filtering undocumented stock,
 // so a retained pending unit cannot shift the IDs of valid pattern cells.
 export const HARDSCAPE_PRODUCTS:HardscapeProduct[]=(index.products as unknown as Row[]).map(([id,name,brand,category,sourceUrl,finishes])=>({id,name,brand,category,sourceUrl,finishes:finishes.map(([id,colors,units,patterns])=>({id,colors:colors.map(([id,swatch,hex])=>({id,swatch:!!swatch,hex})),units:units.filter(u=>[u[1],u[2],u[3]].every(n=>typeof n==='number'&&n>0)).map(([id,widthMm,lengthMm,heightMm,role,shape,colorIds])=>({id,widthMm:widthMm!,lengthMm:lengthMm!,heightMm:heightMm!,role:role??'standard',shape,colorIds})),patterns:(patterns??[]).map(p=>{const layout=typeof p.layout==='number'?indexedLayouts[p.layout]:p.layout;return {...p,layout:{...layout,cells:layout.cells.map(cell=>Array.isArray(cell)?{unitId:units[cell[0]][0],xMm:cell[1],yMm:cell[2],rotationDeg:cell[3]}:cell)}};})}))}));
-export const rectangularUnit=(u:HardscapeUnit)=>!u.shape||['rectangle','rectangular','rectangular-nominal','square','square-nominal'].includes(u.shape);
 export const hardscapeBody=(role:string)=>!/(^|[- ])(cap|coping|corner|base|step|accessory)([- ]|$)/.test(role);
 export const HARDSCAPE_PATTERNS=[{id:'running-bond',name:'Running bond'},{id:'stack-bond',name:'Stack bond'},{id:'herringbone',name:'Herringbone'},{id:'basket-weave',name:'Basket weave'}] as const;
 export function hardscapeProduct(id:string){return HARDSCAPE_PRODUCTS.find(p=>p.id===id);}
-/** Key of a colour's manufacturer photo in the lazily fetched public/deckcraft/hardscape-swatches.json. */
-export const hardscapeSwatchKey=(productId:string,finishId:string,colorId:string)=>`${productId}/${finishId}/${colorId}`;
 export function hardscapeSelection(f:YardFeature){const product=hardscapeProduct(f.productId),finish=product?.finishes.find(v=>v.id===f.hardscape?.finishId),color=finish?.colors.find(c=>c.id===f.hardscape?.colorId),unit=finish?.units.find(u=>u.id===f.hardscape?.unitId);if(!product||!finish||!color||!unit)return undefined;const caps=f.kind==='retaining-wall'?wallCapOptions(HARDSCAPE_PRODUCTS,product,finish,color.id,unit,f.heightIn):[],cap=caps.find(u=>u.id===f.hardscape?.capUnitId);return {product,finish,color,unit,cap,caps};}
 export function hardscapeProblem(f:YardFeature):string{
  const p=hardscapeProduct(f.productId);if(!p)return f.hardscape?'A supplier variant needs a catalogue product.':'';
@@ -46,3 +46,4 @@ export function hardscapeProblem(f:YardFeature):string{
  return '';
 }
 export function hardscapeName(f:YardFeature){const s=hardscapeSelection(f);return s?`${s.product.brand} ${s.product.name} · ${s.color.id.replaceAll('-',' ')}`:f.productId;}
+registerHardscapeCatalogue({hardscapeProduct,hardscapeSelection,hardscapeProblem,hardscapeName});
