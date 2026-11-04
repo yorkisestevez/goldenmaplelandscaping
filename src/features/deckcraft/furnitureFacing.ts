@@ -14,7 +14,10 @@ export const FURNITURE_MESH_YAW_DEG:Partial<Record<LandscapeAssetId,number>>={
 };
 export const meshYawRad=(id:LandscapeAssetId)=>(FURNITURE_MESH_YAW_DEG[id]??0)*Math.PI/180;
 
-const SEATING=new Set<LandscapeAssetId>(['outdoor-chair','outdoor-sofa','lounge-chair']);
+export const SEATING=new Set<LandscapeAssetId>(['outdoor-chair','outdoor-sofa','lounge-chair','curved-sectional','swivel-lounge-chair','modular-sofa','woven-dining-chair','bar-stool']);
+/** Lounge seats that face a fire when one is within 12 ft. */
+const FIRESIDE=new Set<LandscapeAssetId>(['outdoor-sofa','outdoor-chair','curved-sectional','swivel-lounge-chair','modular-sofa']);
+export const DINING_TABLES=new Set<LandscapeAssetId>(['outdoor-table','teak-dining-table']);
 
 /** World-plan unit vector of the seat front after the mesh yaw. rotationDeg 0 points at +Z. */
 export function seatFront(rotationDeg:number){
@@ -43,8 +46,9 @@ export type SeatTarget={x:number;z:number;label:string};
 
 /** Where a seat should look: the burner, the table centre, the near pool edge, or the facing chair. */
 export function seatTarget(data:DeckData,seat:LandscapeObject):SeatTarget|null{
+ const edgeTarget=(o:LandscapeObject,label:string):SeatTarget=>{const a=(o.rotationDeg??0)*Math.PI/180,c=Math.cos(a),s=Math.sin(a),hw=o.widthIn/2,hd=o.depthIn/2;const ring=[[-hw,-hd],[hw,-hd],[hw,hd],[-hw,hd]].map(([x,z])=>({x:o.xIn+x*c-z*s,y:o.zIn+x*s+z*c}));const q=nearestSeatPoint({x:seat.xIn,y:seat.zIn},ring);return {x:q.x,z:q.y,label};};
  const seats=(data.landscapeObjects??[]).filter(o=>o.enabled&&SEATING.has(o.assetId)&&o.id!==seat.id);
- const tables=(data.landscapeObjects??[]).filter(o=>o.enabled&&(o.assetId==='outdoor-table'||o.assetId==='outdoor-coffee-table'));
+ const tables=(data.landscapeObjects??[]).filter(o=>o.enabled&&(DINING_TABLES.has(o.assetId)||o.assetId==='outdoor-coffee-table'));
  const fires=(data.yardFeatures??[]).filter(f=>f.enabled&&f.kind==='fire-feature');
  const near=(items:{x:number;z:number;label:string}[],maxIn:number)=>items.filter(i=>Math.hypot(i.x-seat.xIn,i.z-seat.zIn)<=maxIn).sort((a,b)=>Math.hypot(a.x-seat.xIn,a.z-seat.zIn)-Math.hypot(b.x-seat.xIn,b.z-seat.zIn))[0]??null;
  if(seat.assetId==='lounge-chair'){
@@ -59,10 +63,16 @@ export function seatTarget(data:DeckData,seat:LandscapeObject):SeatTarget|null{
   }
   return best;
  }
+ if(seat.assetId==='bar-stool'){
+  // A stool faces the bar edge square on, so the nearest point of the island, not its centre.
+  const bars=(data.landscapeObjects??[]).filter(o=>o.enabled&&o.assetId==='kitchen-island').map(o=>edgeTarget(o,'the bar'));
+  return near(bars,4*12);
+ }
  const fire=near(fires.map(f=>({x:f.xFt*12,z:f.zFt*12,label:'the burner'})),12*12);
- if(fire&&(seat.assetId==='outdoor-sofa'||seat.assetId==='outdoor-chair'))return fire;
- const dining=near(tables.filter(t=>t.assetId==='outdoor-table').map(t=>({x:t.xIn,z:t.zIn,label:'the table centre'})),10*12);
- if(dining)return dining;
+ if(fire&&FIRESIDE.has(seat.assetId))return fire;
+ // A dining chair faces the table edge square on (the nearest point of the top), as a pulled-in chair does.
+ const dining=near(tables.filter(t=>DINING_TABLES.has(t.assetId)).map(t=>({x:t.xIn,z:t.zIn,label:'the table'})),10*12);
+ if(dining){const t=tables.find(t=>t.xIn===dining.x&&t.zIn===dining.z&&DINING_TABLES.has(t.assetId))!;return edgeTarget(t,'the table');}
  const coffee=near(tables.filter(t=>t.assetId==='outdoor-coffee-table').map(t=>({x:t.xIn,z:t.zIn,label:'the coffee table'})),8*12);
  if(coffee)return coffee;
  const peer=near(seats.filter(s=>s.assetId!=='lounge-chair').map(s=>({x:s.xIn,z:s.zIn,label:'the facing seat'})),8*12);

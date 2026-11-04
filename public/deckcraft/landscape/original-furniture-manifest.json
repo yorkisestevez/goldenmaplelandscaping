@@ -72,6 +72,282 @@
           "sha256": "02f0cefcfe20a7a0da802ecc36b27f191eb6e201d4100ced249b7f39ae4a46ff"
         }
       ]
+    },
+    {
+      "id": "curved-sectional",
+      "lods": [
+        {
+          "uri": "curved-sectional-lod0.glb",
+          "bytes": 609640,
+          "triangles": 33376,
+          "sha256": "5e08f346ec272e0e976b0a9ca1661e4ec359a09eeb02485266513fd53aac157e"
+        },
+        {
+          "uri": "curved-sectional-lod1.glb",
+          "bytes": 282640,
+          "triangles": 15201,
+          "sha256": "6376f100968454ce8defe1fdbf8718ff62688296f0ff21068effd734cdd2e476"
+        },
+        {
+          "uri": "curved-sectional-lod2.glb",
+          "bytes": 197508,
+          "triangles": 10485,
+          "sha256": "ae3db691701e12f6bca3f4b9e314a7621165216864090bd008df70b1c7306c44"
+        }
+      ]
+    },
+    {
+      "id": "swivel-lounge-chair",
+      "lods": [
+        {
+          "uri": "swivel-lounge-chair-lod0.glb",
+          "bytes": 399072,
+          "triangles": 21776,
+          "sha256": "fadfbd843d3313b62736f302163f04d935336fd11c869a6fc27534b81899c3b7"
+        },
+        {
+          "uri": "swivel-lounge-chair-lod1.glb",
+          "bytes": 109020,
+          "triangles": 5775,
+          "sha256": "2243c66829b40d25c0c5e6979a6261025d0970a8b980f6572050f5e943513f64"
+        },
+        {
+          "uri": "swivel-lounge-chair-lod2.glb",
+          "bytes": 62996,
+          "triangles": 3227,
+          "sha256": "b03f02150d1f83a9afd3961c65befeaf88a9e002e7a2577d270952553ee300a0"
+        }
+      ]
+    },
+    {
+      "id": "modular-sofa",
+      "lods": [
+        {
+          "uri": "modular-sofa-lod0.glb",
+          "bytes": 235540,
+          "triangles": 12732,
+          "sha256": "3c6ad1861358d3a3def2a61f822c36f96c8a57b3c60c782e9b242c2deca18d8a"
+        },
+        {
+          "uri": "modular-sofa-lod1.glb",
+          "bytes": 116824,
+          "triangles": 6127,
+          "sha256": "5ce87ab010ae23d8ee84e308b0592e3feac15c2ac9cc31f18c8196bf94a1d73f"
+        },
+        {
+          "uri": "modular-sofa-lod2.glb",
+          "bytes": 76488,
+          "triangles": 3887,
+          "sha256": "4b429fcc7b8ae8930307844a3091410db76648a5b0114a534f73aae378253caf"
+        }
+      ]
+    },
+    {
+      "id": "side-table",
+      "lods": [
+        {
+          "uri": "side-table-lod0.glb",
+          "bytes": 26880,
+          "triangles": 1436,
+          "sha256": "bfa3e5870be282e83caaaafc746cf4d5ba62dd64cfd846610c772e7ea6871f23"
+        },
+        {
+          "uri": "side-table-lod1.glb",
+          "bytes": 13864,
+          "triangles": 679,
+          "sha256": "2b4565a5ae5a6f70f3dc44b33ebcddb14f1fa1c890b2537d449945ce01c4b589"
+        },
+        {
+          "uri": "side-table-lod2.glb",
+          "bytes": 8480,
+          "triangles": 367,
+          "sha256": "b64d1c71caaf2f1c0fe3448fd86a9bbb92dea11c30ca58bd889dff161e0f606e"
+        }
+      ]
+    },
+    {
+      "id": "cantilever-umbrella",
+      "lods": [
+        {
+          "uri": "cantilever-umbrella-lod0.glb",
+          "bytes": 74952,
+          "triangles": 3444,
+          "sha256": "a70a00455d69ac03e175ccfec812f9b17aa40e1d7a2b4e43442498a059188e0c"
+        },
+        {
+          "uri": "cantilever-umbrella-lod1.glb",
+          "bytes": 33684,
+          "triangles": 1387,
+          "sha256": "a64cf7f27562202d352f2f129f9343a7f353b8bcd0683a6b5b6c21950bd101f5"
+        },
+        {
+          "uri": "cantilever-umbrella-lod2.glb",
+          "bytes": 24444,
+          "triangles": 931,
+          "sha256": "cfcd4a27d36f0e4058b9210867f38d454eb0f8eb385db23ac39e0b516735a198"
+        }
+      ]
+    },
+    {
+      "id": "outdoor-rug",
+      "lods": [
+        {
+          "uri": "outdoor-rug-lod0.glb",
+          "bytes": 24280,
+          "triangles": 1160,
+          "sha256": "bd0091ce9564cb31f51efeddd5c78431f3f33403ec61d1b20247258b29e09a28"
+        },
+        {
+          "uri": "outdoor-rug-lod1.glb",
+          "bytes": 13568,
+          "triangles": 555,
+          "sha256": "40d86779816db870878fea33406e6b54c696685108379d8b5aeae5d24379a5fb"
+        },
+        {
+          "uri": "outdoor-rug-lod2.glb",
+          "bytes": 13568,
+          "triangles": 555,
+          "sha256": "40d86779816db870878fea33406e6b54c696685108379d8b5aeae5d24379a5fb"
+        }
+      ]
+    },
+    {
+      "id": "teak-dining-table",
+      "lods": [
+        {
+          "uri": "teak-dining-table-lod0.glb",
+          "bytes": 99956,
+          "triangles": 5400,
+          "sha256": "a1c8f095b82e24cccfda13d09fb5f1d0c54d5cc73e6023f9cc648162b90567bb"
+        },
+        {
+          "uri": "teak-dining-table-lod1.glb",
+          "bytes": 37976,
+          "triangles": 1947,
+          "sha256": "f2efd2470361bc8c2ee9be29989515be21a604880f96e1612afe81215ed96b61"
+        },
+        {
+          "uri": "teak-dining-table-lod2.glb",
+          "bytes": 37976,
+          "triangles": 1947,
+          "sha256": "f2efd2470361bc8c2ee9be29989515be21a604880f96e1612afe81215ed96b61"
+        }
+      ]
+    },
+    {
+      "id": "woven-dining-chair",
+      "lods": [
+        {
+          "uri": "woven-dining-chair-lod0.glb",
+          "bytes": 87440,
+          "triangles": 4184,
+          "sha256": "777b53837c9332f3e43766702896d68721b71a64cf159b46ee4f7511f36f1a8c"
+        },
+        {
+          "uri": "woven-dining-chair-lod1.glb",
+          "bytes": 37148,
+          "triangles": 1639,
+          "sha256": "53aed9fef68b09b4a698c787f1520fb10388d99e2687e505f75c28f82e5631f0"
+        },
+        {
+          "uri": "woven-dining-chair-lod2.glb",
+          "bytes": 29716,
+          "triangles": 1273,
+          "sha256": "66c994b7d039cf1a67f148d89c29062c0ee3a9840dd0d441e4b162c85a11ebdc"
+        }
+      ]
+    },
+    {
+      "id": "kitchen-island",
+      "lods": [
+        {
+          "uri": "kitchen-island-lod0.glb",
+          "bytes": 833048,
+          "triangles": 44920,
+          "sha256": "21136209750e4cbb49d2070709507506dfdc300d68b3a680384651884be3ac18"
+        },
+        {
+          "uri": "kitchen-island-lod1.glb",
+          "bytes": 315468,
+          "triangles": 16359,
+          "sha256": "993ee47834c750a13b1afab668fb75cada9bb687a0f27b14cb1aaa9fbfd09f25"
+        },
+        {
+          "uri": "kitchen-island-lod2.glb",
+          "bytes": 310068,
+          "triangles": 16171,
+          "sha256": "2bd144b64ba58c40df44241eb1ae4171234d4fcb1ddefeb566e3085d884c9eec"
+        }
+      ]
+    },
+    {
+      "id": "bar-stool",
+      "lods": [
+        {
+          "uri": "bar-stool-lod0.glb",
+          "bytes": 68308,
+          "triangles": 3208,
+          "sha256": "e6fc591abc14d34e7286698537e2852f4ee7aa881239895c89d66222c7a1e576"
+        },
+        {
+          "uri": "bar-stool-lod1.glb",
+          "bytes": 35756,
+          "triangles": 1587,
+          "sha256": "a59f5a5d060ce4dfd16aafea57cae09d377b79f09d7733e52a6438504c3f9b93"
+        },
+        {
+          "uri": "bar-stool-lod2.glb",
+          "bytes": 23748,
+          "triangles": 971,
+          "sha256": "b47527427a9de2864fd01f40e4c6f7c60e8c0f2f8c682c3ed8afe9b151fcbea3"
+        }
+      ]
+    },
+    {
+      "id": "outdoor-lantern",
+      "lods": [
+        {
+          "uri": "outdoor-lantern-lod0.glb",
+          "bytes": 70036,
+          "triangles": 3460,
+          "sha256": "5be80230565ad33c933362abc64663daecc58763722c2e1bf43bb9de62356812"
+        },
+        {
+          "uri": "outdoor-lantern-lod1.glb",
+          "bytes": 34476,
+          "triangles": 1515,
+          "sha256": "a39cee052fc9596a0689b0819f706c944048b126369389fb03aef1a88cf9e84b"
+        },
+        {
+          "uri": "outdoor-lantern-lod2.glb",
+          "bytes": 28164,
+          "triangles": 1183,
+          "sha256": "f5bc5a4afb348a95bc4a1cccd9bd06f91fe47f1d7a8df4c37aa61079f46471d2"
+        }
+      ]
+    },
+    {
+      "id": "infrared-heater",
+      "lods": [
+        {
+          "uri": "infrared-heater-lod0.glb",
+          "bytes": 28396,
+          "triangles": 1285,
+          "sha256": "e0673714a6ae0e9119ff32a2fb47668d459082c707db53849b9732bc367db141"
+        },
+        {
+          "uri": "infrared-heater-lod1.glb",
+          "bytes": 14796,
+          "triangles": 520,
+          "sha256": "511654fe8e0783d6322de3b203ac61bd314776df7e93a7467e712ae0f39ad8d2"
+        },
+        {
+          "uri": "infrared-heater-lod2.glb",
+          "bytes": 14796,
+          "triangles": 520,
+          "sha256": "511654fe8e0783d6322de3b203ac61bd314776df7e93a7467e712ae0f39ad8d2"
+        }
+      ]
     }
   ]
 }

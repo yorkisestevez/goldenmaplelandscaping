@@ -15,7 +15,7 @@ import {HARDSCAPE_PRODUCTS} from './hardscapeCatalogue';
  * change (one undo step); a change the model cannot build is refused with its reason and nothing is saved.
  */
 const TALL={minHeight:44} as const;
-const DEFAULT_NAMES:Record<string,string>={'fire-wood-ring':'Fire pit','fire-gas-bowl':'Fire bowl','fire-gas-linear':'Fire table'};
+const DEFAULT_NAMES:Record<string,string>={'fire-wood-ring':'Fire pit','fire-gas-bowl':'Fire bowl','fire-gas-linear':'Fire table','fire-gas-sculptural':'Fire bowl'};
 const title=(s:string)=>s.toLowerCase().replace(/\b\w/g,m=>m.toUpperCase());
 /** Stone tones from the catalogue's wall products (two per product, eight in all) after the generic yard grey. */
 const STONES=(()=>{

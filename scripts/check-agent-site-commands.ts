@@ -161,7 +161,7 @@ await ensureLiveDesignExtensions(doc);const craighurst=parseDesign(JSON.stringif
  // 10. Plan schema and compilation of the new commands.
  const choices=assistantPlanSchemaForContext(context).anyOf![0].properties!.commands.items!.anyOf!;
  const creates=choices.filter(c=>c.properties!.type.const==='yard.create');
- ok(creates.length===3&&creates.some(c=>c.properties!.kind.const==='fire-feature'&&JSON.stringify(c.properties!.productId.enum)===JSON.stringify(['fire-wood-ring','fire-gas-bowl','fire-gas-linear'])&&!c.properties!.wallPath),'yard.create offered per kind; fire products enumerated, no wall path');
+ ok(creates.length===3&&creates.some(c=>c.properties!.kind.const==='fire-feature'&&JSON.stringify(c.properties!.productId.enum)===JSON.stringify(['fire-wood-ring','fire-gas-bowl','fire-gas-linear','fire-gas-sculptural'])&&!c.properties!.wallPath),'yard.create offered per kind; fire products enumerated, no wall path');
  ok(choices.some(c=>c.properties!.type.const==='yard.update'&&c.properties!.id.const==='bowl'&&c.properties!.productId.enum)&&choices.some(c=>c.properties!.type.const==='yard.update'&&c.properties!.id.const==='landing'&&c.properties!.groundFit&&!c.properties!.supportFeatureId),'yard.update narrowed per current feature');
  const plan=(commands:unknown[])=>{const p=parseAssistantPlan({kind:'edit',message:'Add a gas fire bowl.',assumptions:[],commands});if(p.ok===false)throw Error(p.error);return p.plan;};
  const compiled=assistantPlanRequest(plan([{type:'yard.create',kind:'fire-feature',id:'table',productId:'fire-gas-linear',supportFeatureId:'landing',xFt:4,zFt:9.32}]),{id:'assistant-fire',expectedRevision:snap.revision,snapshot:snap});

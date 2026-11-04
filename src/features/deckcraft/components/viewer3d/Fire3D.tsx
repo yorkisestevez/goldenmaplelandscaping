@@ -33,9 +33,19 @@ function planarUvs(g:THREE.BufferGeometry,repeatIn:number,aroundRadius?:number){
  }
  g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));return g;
 }
+/** The sculptural bowl's outside, centred on its height like the cylinder it replaces: a narrow foot (62 % of the rim)
+ * swelling in a soft S to a 2 in rolled lip at the full radius, so the cap ring and burner sit exactly as on a plain bowl. */
+function sculpturalBowl(r:number,h:number){
+ const pts:THREE.Vector2[]=[],n=28;
+ for(let i=0;i<=n;i++){const t=i/n,y=-h/2+h*t,ease=t<.82?Math.pow(Math.sin(t/.82*Math.PI/2),1.6):1,lip=t>.82?Math.sin((t-.82)/.18*Math.PI/2)*.03:0;pts.push(new THREE.Vector2(r*(.62+.35*ease+lip),y));}
+ pts[pts.length-1].x=r;
+ const g=new THREE.LatheGeometry(pts,64);g.computeVertexNormals();return g;
+}
 /** Additive flame cones [x, base y, z, radius, height], bright yellow at the base to a dark orange tip. */
 function flameGeometry(cones:readonly (readonly [number,number,number,number,number])[]){
- const parts=cones.map(([x,y,z,r,h])=>{const g=new THREE.ConeGeometry(r,h,10,4,true);g.deleteAttribute('uv');g.deleteAttribute('normal');g.translate(x,y+h/2,z);const p=g.getAttribute('position'),c=new Float32Array(p.count*3);
+ // Soft teardrop tongues (a lathe that swells above the burner and rounds off to a tip), not straight cones, so the
+ // gas flame reads as a flame instead of a row of spikes.
+ const parts=cones.map(([x,y,z,r,h])=>{const prof=Array.from({length:9},(_,i)=>{const t=i/8;return new THREE.Vector2(r*1.35*Math.pow(1-t,.85)*(.7+.5*Math.sin(Math.PI*Math.min(1,t*1.7))),h*t);});const g=new THREE.LatheGeometry(prof,12);g.deleteAttribute('uv');g.deleteAttribute('normal');g.translate(x,y,z);const p=g.getAttribute('position'),c=new Float32Array(p.count*3);
   for(let i=0;i<p.count;i++){const t=Math.min(1,Math.max(0,(p.getY(i)-y)/h)),k=Math.pow(1-t,1.6);c[i*3]=k;c[i*3+1]=(.66-.36*t)*k;c[i*3+2]=(.24-.2*t)*k;}
   g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));return g;});
  const merged=mergeGeometries(parts);parts.forEach(g=>g.dispose());return merged;
@@ -44,21 +54,23 @@ function FireFeature({feature,lit,light,inspection}:{feature:YardFeatureModel;li
  const c=feature.config,product=fireProduct(c)!,body=feature.boxes.find(b=>b.role==='fire-body')!,pad=feature.boxes.find(b=>b.role==='fire-pad');
  const r=c.widthFt*6,w=c.widthFt*12,d=c.depthFt*12,h=body.h,top=body.y+h/2,inner=r-4,wood=product.fuel==='wood';
  const invalidate=useThree(s=>s.invalidate),gl=useThree(s=>s.gl),quality=useRenderQuality(),anisotropy=Math.min(quality.anisotropy,gl.capabilities.getMaxAnisotropy());
- const stone=useMemo(()=>applyWallDaylight(scanMaterial('rock',c.color,{roughness:.9,normalScale:.8,anisotropy,onLoad:invalidate})),[c.color,anisotropy,invalidate]);
+ const sculptural=product.id==='fire-gas-sculptural';
+ // A sculptural bowl is smooth cast concrete: the fine masonry scan, barely raised, instead of the rock face.
+ const stone=useMemo(()=>applyWallDaylight(sculptural?scanMaterial('masonry',c.color,{roughness:.82,normalScale:.12,anisotropy,onLoad:invalidate}):scanMaterial('rock',c.color,{roughness:.9,normalScale:.8,anisotropy,onLoad:invalidate})),[c.color,anisotropy,invalidate,sculptural]);
  const gravel=useMemo(()=>scanMaterial('rock','#8f8b82',{roughness:.97,normalScale:.5,anisotropy,onLoad:invalidate}),[anisotropy,invalidate]);
  useFixtureLit(stone);useFixtureLit(gravel);
  useEffect(()=>()=>stone.dispose(),[stone]);useEffect(()=>()=>gravel.dispose(),[gravel]);
  const shape=JSON.stringify([product.id,w,d,h,pad?.h]);
  const geometry=useMemo(()=>{
-  const sides=product.round?planarUvs(new THREE.CylinderGeometry(r,r,h,48,1,true),STONE_REPEAT_IN,r):planarUvs(new THREE.BoxGeometry(w,h,d),STONE_REPEAT_IN);
+  const sides=sculptural?planarUvs(sculpturalBowl(r,h),STONE_REPEAT_IN,r):product.round?planarUvs(new THREE.CylinderGeometry(r,r,h,48,1,true),STONE_REPEAT_IN,r):planarUvs(new THREE.BoxGeometry(w,h,d),STONE_REPEAT_IN);
   // Round bodies: a stone cap ring round the open top that the steel insert or the burner sits in.
   const cap=product.round?planarUvs(new THREE.RingGeometry(inner,r,48,1).rotateX(-Math.PI/2),STONE_REPEAT_IN):null;
   const padGeometry=pad?(product.round?planarUvs(new THREE.CylinderGeometry(r+6,r+6,pad.h,48),GRAVEL_REPEAT_IN,r+6):planarUvs(new THREE.BoxGeometry(w+12,pad.h,d+12),GRAVEL_REPEAT_IN)):null;
   const jitter=(i:number)=>fract(Math.sin(i*12.9898+c.id.length*78.233)*43758.5453);
   type Cone=[number,number,number,number,number];
-  const ringCount=Math.max(10,Math.round(2*Math.PI*inner*.55/3.2)),lineCount=Math.max(8,Math.round((w-16)/3.2));
+  const ringCount=Math.max(10,Math.round(2*Math.PI*inner*.55/4.5)),lineCount=Math.max(8,Math.round((w-16)/3.2));
   const cones:Cone[]=wood?[[0,-7,0,Math.min(5,inner*.3),16],...[0,1,2,3].map((i):Cone=>[Math.cos(i*1.7)*inner*.35,-7,Math.sin(i*1.7)*inner*.35,Math.min(3.4,inner*.2),9+5*jitter(i)])]
-   :product.round?Array.from({length:ringCount},(_,i):Cone=>{const t=i/ringCount*2*Math.PI;return [Math.cos(t)*inner*.55,-.6,Math.sin(t)*inner*.55,1.1,4.5+3.5*jitter(i)];})
+   :product.round?Array.from({length:ringCount},(_,i):Cone=>{const t=i/ringCount*2*Math.PI;return [Math.cos(t)*inner*.55,-.6,Math.sin(t)*inner*.55,1.9,5.5+4*jitter(i)];})
    :Array.from({length:lineCount},(_,i):Cone=>[-(w-16)/2+(w-16)*i/(lineCount-1),.3,0,1.1,4.5+3.5*jitter(i)]);
   return {sides,cap,padGeometry,flames:flameGeometry(cones)};
  },[shape]);// `shape` names every size these depend on; the position moves with the group.

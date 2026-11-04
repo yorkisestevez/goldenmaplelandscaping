@@ -1,0 +1,3 @@
+import type {LandscapeAssetId} from './landscapeTypes';
+/** Triangle counts of the premium furniture LODs. Written by scripts/build-premium-furniture.ts; do not edit. */
+export const PREMIUM_FURNITURE_TRIANGLES:Partial<Record<LandscapeAssetId,[number,number,number]>>={'curved-sectional':[33376,15201,10485],'swivel-lounge-chair':[21776,5775,3227],'modular-sofa':[12732,6127,3887],'side-table':[1436,679,367],'cantilever-umbrella':[3444,1387,931],'outdoor-rug':[1160,555,555],'teak-dining-table':[5400,1947,1947],'woven-dining-chair':[4184,1639,1273],'kitchen-island':[44920,16359,16171],'bar-stool':[3208,1587,971],'outdoor-lantern':[3460,1515,1183],'infrared-heater':[1285,520,520]};
