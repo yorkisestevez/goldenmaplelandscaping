@@ -2,6 +2,7 @@ import {CLADDING_RATES,FASCIA_FINISH_RATES,STAIR_FRAME_RATES} from './claddingPr
 import {FASCIA_RETAIL_RATES} from './supplierRates';
 import {MATERIAL_TIERS} from './types';
 import {DEFAULT_HARDSCAPE_LABOUR} from './hardscapeLabour';
+import {FENCE_HEIGHT_STEP,FENCE_RATES,FENCE_RATE_SOURCE} from './fenceRuntime';
 
 /**
  * Rates the deck estimate uses today that the owner has not confirmed: the list to settle with the owner.
@@ -51,5 +52,11 @@ export function unconfirmedRates():RateNote[]{
       note:'2026-10-08 DeckMart recheck: TCGV5412SM sale $59.25 / compare-at $74.06 — book keeps $74.06 (clearance excluded). Terrain+ remains its own collection. Confirm the configured supply order.'},
     {id:'fascia-boards',rate:'Fascia boards in a chosen colour',value:`${Object.keys(FASCIA_RETAIL_RATES).length} TimberTech colour SKUs have dated DeckMart retail benchmarks; Deckorators and unmatched colours need a supplier quote`,status:'estimate',where:'supplierRates.ts FASCIA_RETAIL_RATES',
       note:'Owner 2026-10-08: DeckMart fascia retail benchmarks. Fitting in labour; fasteners and delivery priced when supply is known. Harvest Kona, Vintage Cypress and Deckorators fascia still need a quote.'},
+    {id:'fence-runs',rate:'Fences, installed per lf at 6 ft',value:`pressure-treated $${FENCE_RATES.pressureTreated}, cedar $${FENCE_RATES.cedar}, horizontal cedar $${FENCE_RATES.horizontalCedar}, vinyl $${FENCE_RATES.vinyl}, aluminum $${FENCE_RATES.aluminum}, chain link $${FENCE_RATES.chainLink}`,status:'unconfirmed',where:'fenceRuntime.ts FENCE_RATES',
+      note:`Owner 2026-11-03: standard rates until the owner sets them (editable per user). ${FENCE_RATE_SOURCE}. Horizontal cedar uses cedar's row.`},
+    {id:'fence-gates',rate:'Fence gates, installed',value:`single (4 ft) $${FENCE_RATES.singleGate}, double (10 ft) $${FENCE_RATES.doubleGate}`,status:'unconfirmed',where:'fenceRuntime.ts FENCE_RATES',
+      note:`Owner 2026-11-03: standard rates until the owner sets them (editable per user). ${FENCE_RATE_SOURCE}.`},
+    {id:'fence-height-step',rate:'Fences under 6 ft',value:`${FENCE_HEIGHT_STEP*100}% less per foot`,status:'unconfirmed',where:'fenceRuntime.ts FENCE_HEIGHT_STEP',
+      note:'The guide gives +8–15% per foot above the usual height; the midpoint is applied per foot under 6 ft.'},
   ];
 }

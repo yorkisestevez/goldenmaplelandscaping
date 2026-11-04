@@ -1,5 +1,5 @@
 import {lazy,Suspense} from 'react';
-const LandscapePlanLayer=lazy(()=>import('./designer/LandscapePlanLayer'));
+const LandscapePlanLayer=lazy(()=>import('./designer/LandscapePlanLayer')),FencePlanLayer=lazy(()=>import('./designer/FencePlanLayer'));
 import {pergolaLayout} from './pergolaLayout';
 import type {DeckTakeoff} from './deckTakeoff';
 import type {DeckData} from './types';
@@ -54,6 +54,8 @@ export function planFrame(model:DeckTakeoff,{data,yard,variant='contractor',lege
   for(const p of pergola?.footprint??[]){b.minX=Math.min(b.minX,p.x);b.maxX=Math.max(b.maxX,p.x);b.minZ=Math.min(b.minZ,p.y);b.maxZ=Math.max(b.maxZ,p.y);}
   for(const p of yard?.features.filter(f=>!f.excluded).flatMap(f=>f.footprints.flat())??[]){b.minX=Math.min(b.minX,p.x);b.maxX=Math.max(b.maxX,p.x);b.minZ=Math.min(b.minZ,p.y);b.maxZ=Math.max(b.maxZ,p.y);}
   if(variant==='site')for(const o of data?.landscapeObjects?.filter(o=>o.enabled)??[]){const reach=Math.hypot(o.widthIn,o.depthIn)/2;b.minX=Math.min(b.minX,o.xIn-reach);b.maxX=Math.max(b.maxX,o.xIn+reach);b.minZ=Math.min(b.minZ,o.zIn-reach);b.maxZ=Math.max(b.maxZ,o.zIn+reach);}
+  // A gate leaf swings up to 5 ft (half a double gate) off the fence line.
+  if(variant==='site')for(const p of data?.fences?.flatMap(f=>f.points)??[]){b.minX=Math.min(b.minX,p.xIn-60);b.maxX=Math.max(b.maxX,p.xIn+60);b.minZ=Math.min(b.minZ,p.zIn-60);b.maxZ=Math.max(b.maxZ,p.zIn+60);}
   const site=variant==='site',house=data&&data.houseVisible!==false?getHousePlacement(data):null,wrap=data?activeWrap(data):null;
   const reach=site?Math.max(SITE_REACH,...(wholeHouse&&house?[b.minX-house.x0,house.x1-b.maxX]:[])):48;
   // A wrap-around runs back along the house side walls, so draw the house deep enough to show them.
@@ -108,7 +110,7 @@ export default function ConstructionPlan({model,yard,data,variant='contractor',w
    {/* The contractor plan's grid shows on screen only (the page's CSS shows it; the PDF's picture has no CSS): a 1 ft
        grid, 5 ft lines bolder, over the yard. The site plan's is always drawn. */}
    {site?<rect className="dd-plan-grid" x={frame.x} y={0} width={frame.w} height={frame.y+frame.h} fill="url(#dd-grid-5)"/>:<rect className="dd-plan-grid" display="none" x={left-40} y={0} width={right-left+80} height={b.maxZ+18} fill="url(#dd-grid-5)"/>}
-   {site&&data?.landscapeObjects?.length&&<Suspense fallback={null}><LandscapePlanLayer data={data}/></Suspense>}
+   {site&&data?.landscapeObjects?.length&&<Suspense fallback={null}><LandscapePlanLayer data={data}/></Suspense>}{site&&!!data?.fences?.length&&<Suspense fallback={null}><FencePlanLayer data={data}/></Suspense>}
    {house&&!site&&<g aria-label="House">
      {blockPolys?blockPolys.map((poly,i)=><polygon key={i} points={poly.map(p=>`${p.x},${p.y}`).join(' ')} fill="url(#dd-house-hatch)" stroke="#6d675c" strokeWidth=".8"/>)
        :<rect x={house.x0} y={-band} width={house.x1-house.x0} height={band} fill="url(#dd-house-hatch)" stroke="#6d675c" strokeWidth=".8"/>}

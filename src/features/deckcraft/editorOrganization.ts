@@ -16,6 +16,6 @@ export const validateEditorOrganization:Runtime['validateEditorOrganization']=va
 export const assertUnlockedChanges:Runtime['assertUnlockedChanges']=(before,after)=>{if(before.editorOrganization)get().assertUnlockedChanges(before,after);};
 
 /** Yard and landscape share the controller, layers and groups identity space. */
-export function assertUniqueObjectIds(data:Pick<DeckData,'yardFeatures'|'landscapeObjects'|'pools'|'siteModel'>){
- const ids=new Set(['deck','house','site']);for(const object of [...(data.yardFeatures??[]),...(data.landscapeObjects??[]),...(data.pools??[]),...(data.siteModel?.transitions??[])]){if(ids.has(object.id))throw Error('Object identifiers must be unique across yard and landscape and cannot use deck, house or site.');ids.add(object.id);}
+export function assertUniqueObjectIds(data:Pick<DeckData,'yardFeatures'|'landscapeObjects'|'pools'|'siteModel'|'fences'>){
+ const ids=new Set(['deck','house','site']);for(const object of [...(data.yardFeatures??[]),...(data.landscapeObjects??[]),...(data.pools??[]),...(data.siteModel?.transitions??[]),...(data.fences??[])]){if(ids.has(object.id))throw Error('Object identifiers must be unique across yard and landscape and cannot use deck, house or site.');ids.add(object.id);}
 }

@@ -42,7 +42,7 @@ const TABS:{name:string;groups:Group[]}[]=[
     {name:'Build',buttons:[{kind:'elevation',area:'build',label:'Sections & earthwork',icon:<Shovel size={size}/>}]},
   ]},
   {name:'Landscape',groups:[
-    {name:'Hardscape',buttons:[tool('yard','Patios & walls',<BrickWall size={size}/>)]},
+    {name:'Hardscape',buttons:[tool('yard','Patios & walls',<BrickWall size={size}/>),section('backyard','Fences & gates',<Fence size={size}/>)]},
     {name:'Planting',buttons:[tool('landscape','Landscape',<Trees size={size}/>)]},
     {name:'Yard',buttons:[section('backyard','Pools & backyard',<Waves size={size}/>)]},
   ]},
@@ -78,7 +78,7 @@ const CAD_TABS:{name:string;groups:Group[]}[]=[
     {name:'House',buttons:[tool('house','House',<House size={size}/>),section('house','Doors & windows',<DoorOpen size={size}/>)]},
   ]},
   {name:'Yard',groups:[
-    {name:'Hardscape',buttons:[tool('yard','Patios & walls',<BrickWall size={size}/>)]},
+    {name:'Hardscape',buttons:[tool('yard','Patios & walls',<BrickWall size={size}/>),section('backyard','Fences & gates',<Fence size={size}/>)]},
     {name:'Planting',buttons:[tool('landscape','Landscape',<Trees size={size}/>)]},
     {name:'Yard',buttons:[section('backyard','Pools & backyard',<Waves size={size}/>)]},
   ]},

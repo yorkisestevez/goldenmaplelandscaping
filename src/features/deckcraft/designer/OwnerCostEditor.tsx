@@ -16,9 +16,13 @@ import {
 import {readFeatureLabourDefaults,saveFeatureLabourDefaults} from '../featureLabourStorage';
 import {DEFAULT_HARDSCAPE_LABOUR,validateHardscapeLabour,type HardscapeLabourSettings,type HardscapeSetting} from '../hardscapeLabour';
 import {readHardscapeLabourDefaults,saveHardscapeLabourDefaults} from '../hardscapeLabourStorage';
+import type {FenceRateId} from '../fences';
+import {FENCE_HEIGHT_STEP,FENCE_RATES,FENCE_RATE_SOURCE} from '../fenceRuntime';
 import {DEFAULT_CREW_MEMBERS,DEFAULT_PERSON_HOUR_RATE,quoteCostFromCrewHours} from './quoteLabourHours';
 import {OWNER_COST_LIMITS,bookInstallationLabour,parseOwnerMarkup,parseOwnerMoney} from './ownerCostLimits';
 import './ownerCostEditor.css';
+
+const FENCE_RATE_LABELS:readonly (readonly [FenceRateId,string])[]=[['pressureTreated','Pressure-treated privacy per lf'],['cedar','Cedar privacy per lf'],['horizontalCedar','Horizontal cedar per lf'],['vinyl','Vinyl privacy per lf'],['aluminum','Aluminum picket per lf'],['chainLink','Chain link per lf'],['singleGate','Single gate (4 ft)'],['doubleGate','Double gate (10 ft)']];
 
 type Props={
   data:DeckData;
@@ -136,13 +140,31 @@ export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant=
     try{const next=await readFeatureLabourDefaults();commitFeature(next);setStatus('Loaded your device defaults onto this job.');}
     catch(e){setError(e instanceof Error?e.message:'Device defaults could not be loaded.');}
   };
+  // Setting labour and fence rates share one stored settings object; each section saves and loads only its own part.
+  const withFenceRates=(base:HardscapeLabourSettings,rates:HardscapeLabourSettings['fenceRates']):HardscapeLabourSettings=>{const {fenceRates:_,...rest}=base;return rates?{...rest,fenceRates:rates}:rest;};
   const saveSettingDefaults=async()=>{
-    try{await saveHardscapeLabourDefaults(hardscape);setStatus('Setting labour saved as your device defaults for new jobs.');setError('');}
+    try{await saveHardscapeLabourDefaults(withFenceRates(hardscape,(await readHardscapeLabourDefaults()).fenceRates));setStatus('Setting labour saved as your device defaults for new jobs.');setError('');}
     catch(e){setError(e instanceof Error?e.message:'Device defaults could not be saved.');}
   };
   const loadSettingDefaults=async()=>{
-    try{commitHardscape(await readHardscapeLabourDefaults(),'Loaded your setting labour defaults onto this job.');}
+    try{commitHardscape(withFenceRates(await readHardscapeLabourDefaults(),hardscape.fenceRates),'Loaded your setting labour defaults onto this job.');}
     catch(e){setError(e instanceof Error?e.message:'Device defaults could not be loaded.');}
+  };
+  const saveFenceDefaults=async()=>{
+    try{await saveHardscapeLabourDefaults(withFenceRates(await readHardscapeLabourDefaults(),hardscape.fenceRates));setStatus('Fence rates saved as your device defaults for new jobs.');setError('');}
+    catch(e){setError(e instanceof Error?e.message:'Device defaults could not be saved.');}
+  };
+  const loadFenceDefaults=async()=>{
+    try{commitHardscape(withFenceRates(hardscape,(await readHardscapeLabourDefaults()).fenceRates),'Loaded your fence rates onto this job.');}
+    catch(e){setError(e instanceof Error?e.message:'Device defaults could not be loaded.');}
+  };
+  const fenceRate=(id:FenceRateId)=>hardscape.fenceRates?.[id]??FENCE_RATES[id];
+  // A field left empty is refused (it would price fences at $0), and leaving a field unchanged saves nothing.
+  const blurFenceRate=(id:FenceRateId,text:string)=>{
+    const value=Number(text);
+    if(!text.trim()||!Number.isFinite(value)){setError('Enter a fence rate, or use Reset fence rates for the standard ones.');return false;}
+    if(value!==fenceRate(id))commitHardscape(withFenceRates(hardscape,{...hardscape.fenceRates,[id]:value}),'Fence rate updated for this job.');
+    return true;
   };
 
   const body=<div className="dd-owner-costs" data-variant={variant}>
@@ -265,7 +287,21 @@ export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant=
       <div className="dd-owner-costs-actions">
         <button type="button" className="dd-secondary" aria-label="Save setting labour as my defaults" onClick={()=>void saveSettingDefaults()}>Save as my defaults</button>
         <button type="button" className="dd-secondary" aria-label="Load my setting labour defaults" onClick={()=>void loadSettingDefaults()}>Load my defaults</button>
-        <button type="button" className="dd-secondary" onClick={()=>commitHardscape(structuredClone(DEFAULT_HARDSCAPE_LABOUR),'Setting labour reset to the built-in defaults.')}>Reset setting labour</button>
+        <button type="button" className="dd-secondary" onClick={()=>commitHardscape(withFenceRates(structuredClone(DEFAULT_HARDSCAPE_LABOUR),hardscape.fenceRates),'Setting labour reset to the built-in defaults.')}>Reset setting labour</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="dd-owner-fence-title">
+      <h4 id="dd-owner-fence-title">Fences &amp; gates</h4>
+      <p>Installed prices with no markup. Until you set your own, these are standard rates: the midpoints of a published Canadian guide, not confirmed for your area. Fences under 6 ft take {FENCE_HEIGHT_STEP*100}% off per foot.</p>
+      <div className="dd-owner-costs-grid">
+        {FENCE_RATE_LABELS.map(([id,label])=><label key={id}>{label} · CAD<input aria-label={`${label} rate`} type="number" min="0" max="100000" step=".01" key={fenceRate(id)} defaultValue={fenceRate(id)} onBlur={e=>{if(!blurFenceRate(id,e.target.value))e.target.value=String(fenceRate(id));}}/></label>)}
+      </div>
+      <small>Standard: {FENCE_RATE_SOURCE}.</small>
+      <div className="dd-owner-costs-actions">
+        <button type="button" className="dd-secondary" onClick={()=>void saveFenceDefaults()}>Save fence rates as my defaults</button>
+        <button type="button" className="dd-secondary" onClick={()=>void loadFenceDefaults()}>Load my fence rates</button>
+        <button type="button" className="dd-secondary" onClick={()=>commitHardscape(withFenceRates(hardscape,undefined),'Fence rates reset to the standard rates.')}>Reset fence rates</button>
       </div>
     </section>
 

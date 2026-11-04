@@ -1,0 +1,10 @@
+/* Fences & gates in Pools & backyard (FenceEditor.tsx). Fields use the yard editor's dd-field / dd-fields styles. */
+.dd-fence-editor{display:grid;gap:10px;margin:16px 0;padding-top:12px;border-top:1px solid var(--dc-rule-soft,#e2e0d8)}
+.dd-fence-editor h3{margin:0}
+.dd-fence-points,.dd-fence-gates{display:grid;gap:8px;margin:0;padding:10px 12px;border:1px solid var(--dc-rule-soft,#e2e0d8);border-radius:10px}
+.dd-fence-points legend,.dd-fence-gates legend{padding:0 4px;font-weight:600}
+.dd-fence-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px}
+.dd-fence-row>strong{min-width:1.5em;align-self:center}
+.dd-fence-row .dd-field{flex:1 1 120px;min-width:0}
+.dd-fence-message{margin:0}
+@media(max-width:800px){.dd-fence-editor button,.dd-fence-editor select,.dd-fence-editor input{min-height:44px}}

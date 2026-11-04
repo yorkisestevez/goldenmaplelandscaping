@@ -12,6 +12,7 @@ import {wallQuoteScopes,yardTakeoffRuntime} from './yardQuoteScopes';
 import {buildYardModel,type YardModel} from './yardModel';
 import {ALLOWANCE_FINISHES,allowanceItems} from './yardSettings';
 import {CARR_PAVER_TRADE_2026,carrPaverFreight2026} from './supplierRates';
+import {fenceTakeoff} from './fences';
 
 export interface PublicYardSection {id:string;label:string;amountCents:number|null;quantity?:number;unit?:string;note?:string;featureIds?:string[]}
 export interface PublicYardMaterial {productId:string;label:string;installedAreaSqft:number;orderAreaSqft:number;skids:number;amountCents:number|null;featureIds:string[]}
@@ -106,9 +107,9 @@ export function buildYardTakeoff(data:DeckData,model:YardModel=buildYardModel(da
   for(const [id,label]of [['excavation','Shared excavation and base installation'],['materials','Paving materials, wall allowances and shared delivery'],['labour','Installation labour'],['disposal','Shared excavation disposal'],['restoration','Shared site restoration']] as const)if(categories[id]>0)sections.push({id:`yard-${id}`,label,amountCents:categories[id],...(id==='disposal'?{quantity:earthwork.pricedYardBins,unit:'bins',note:'Yard-owned excavation disposal benchmark excludes already allowanced deck foundation scope; no per-feature bin minimum. Confirm swell/reuse and usable bin volume/payload.'}:{})});
  }
  // Priced bank rows (never a $0 line).
- const banks=bank?.rows??[],stones=stone?.rows??[];
- sections.push(...banks,...stones,...allowances,...unknown);
- const knownSubtotalCents=Object.values(categories).reduce((n,v)=>n+v,0)+[...banks,...stones,...allowances].reduce((n,a)=>n+(a.amountCents??0),0),knownHstCents=Math.round(knownSubtotalCents*baseline.facts.hstRate),quoteRequired=unknown.length>0||allowances.some(a=>a.amountCents===null);
+ const banks=bank?.rows??[],stones=stone?.rows??[],fences=data.fences?.length?fenceTakeoff(data):[];
+ sections.push(...banks,...stones,...fences,...allowances,...unknown);
+ const knownSubtotalCents=Object.values(categories).reduce((n,v)=>n+v,0)+[...banks,...stones,...fences,...allowances].reduce((n,a)=>n+(a.amountCents??0),0),knownHstCents=Math.round(knownSubtotalCents*baseline.facts.hstRate),quoteRequired=unknown.length>0||allowances.some(a=>a.amountCents===null);
  const floorTopUpCents=common&&!knownWalls.length&&!Object.values(input.conditions).some(Boolean)?Math.max(0,categories.excavation+categories.labour-common.excavationRetailCents-common.installRetailCents):null;
  return {sections,materials,earthwork,landscape,warnings,quoteRequired,knownSubtotalCents,knownHstCents,knownGrandTotalCents:knownSubtotalCents+knownHstCents,subtotalCents:quoteRequired?null:knownSubtotalCents,hstCents:quoteRequired?null:knownHstCents,grandTotalCents:quoteRequired?null:knownSubtotalCents+knownHstCents,quantities:{...model.quantities,polySandBags:common?.quantities.polySandBags||0,fabricRolls:common?.quantities.fabricRolls||0,aggregateTonnes:common?.quantities.aggregateTonnes||0,deliveryLoads:common?.quantities.deliveryLoads||0,edgePieces,skids,bins},sharedSiteWorkCount:input.selectedElements.length||allowances.length?1:0,sharedSiteWork:{floorTopUpCents,note:'Shared crew/excavation floors once; no extra mobilization. Mixed wall/site-condition top-up inseparable; coordinate deck scope.'},wallAllowance:{equivalentLinearFeet:equivalentWallLf,description:'Existing estimator mid-tier height-adjusted assembly allowance; not a unit-material quotation.'}};
 }
