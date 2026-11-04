@@ -34,7 +34,7 @@ await page.getByRole('group',{name:'Camera'}).getByRole('button',{name:'Front',e
 await page.locator('#deck-live-preview canvas').waitFor();
 await page.waitForTimeout(5000);
 await page.locator('#deck-live-preview').screenshot({path:output+'border-lighting-day.png'});
-await page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'}).click();
+await page.getByRole('group',{name:'Time of day'}).getByRole('button',{name:'Night'}).click();
 await page.waitForTimeout(4500);
 await page.locator('#deck-live-preview').screenshot({path:output+'border-lighting-night.png'});
 await openSection('Boards & finish');

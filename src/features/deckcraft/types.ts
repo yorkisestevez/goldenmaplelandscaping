@@ -296,6 +296,8 @@ export interface DeckData {
   stairTargets?:import('./stairTargets').StairTarget[];
   siteModel?:import('./siteModel').SiteModel;
   landscapeObjects?:import('./landscapeTypes').LandscapeObject[];
+  /** Fence runs and their gates (fences.ts). */
+  fences?:import('./fences').Fence[];
   pools?:import('./poolTypes').PoolFeature[];
   poolQuoteInputs?:import('./poolQuoteTypes').PoolQuoteInputs;
   editorOrganization?:import('./editorOrganization').EditorOrganization;
@@ -364,7 +366,7 @@ export interface DeckData {
   houseWallHeightIn?: number;
   houseDoorOffset?: number;
   houseDoorWidthIn?: number;
-  sceneLighting?: 'Daylight' | 'Evening';
+  sceneLighting?: 'Daylight' | 'Golden' | 'Evening';
   scenePresentation?:import('./scenePresentation').ScenePresentation;
   level2Position?: 'Front' | 'Left' | 'Right';
   level2Offset?: number;
