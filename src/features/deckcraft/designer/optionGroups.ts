@@ -15,6 +15,7 @@ export const RAILING_STYLES=['None','Wood Picket','Aluminum','Cable','Glass Pane
 export const STAIR_FLIGHTS=[0,1,2,3] as const;
 export const STAIR_LAYOUTS=['Straight','Landing','Winder'] as const;
 export const FOUNDATIONS=['Concrete Piers','Helical Piles','Deck Blocks'] as const;
+export const DECK_TYPES=['Attached','Freestanding','Floating','Add-on'] as const;
 /** The decking collections offered (hidden ones stay out). */
 export const COLLECTIONS=DECKING_CATALOGUE.filter(m=>!m.isHidden);
 
