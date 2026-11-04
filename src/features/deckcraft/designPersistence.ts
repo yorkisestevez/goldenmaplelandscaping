@@ -20,6 +20,7 @@ import {BUILD_RULES,type BuildRules} from './buildRules';
 import {PICTURE_FRAME_OVERHANG_IN} from './lib/finishedFootprint';
 import {validateSiteModel} from './siteModel';
 import {validateLandscapeObjects} from './landscapeTypes';
+import {validateFences} from './fences';
 import {validateEditorOrganization} from './editorOrganization';
 import {arcGeometry} from './circularArcs';
 import {validateCircularArcs,inspectArcShape} from './circularArcShape';
@@ -68,7 +69,7 @@ const enums: Partial<Record<keyof DeckData, readonly (string | number)[]>> = {
   framingSize:['2x8','2x10','2x12'],framingSpecies:['SPF','Hem-Fir','D.Fir-L'],boardWidth:[5.5,3.5],joistSpacing:[12,16],fasteningSystem:['Face','Hidden'],pictureFrameRows:[0,1,2],
   railingType:['None','Wood Picket','Aluminum','Cable','Glass Panels','Frameless Glass','Trex Select','Trex Transcend','Fortress AL13','TT Classic','TT Impression'],
   stairFlights:[0,1,2,3],stairType:['Straight','Winder','Landing'],stairSides:['Open'],stairPosition:['Front','Left','Right','Back'],
-  sceneLighting:['Daylight','Evening'],level2Position:['Front','Left','Right'],stairTurn:['Left','Right'],
+  sceneLighting:['Daylight','Golden','Evening'],level2Position:['Front','Left','Right'],stairTurn:['Left','Right'],
   borderFinish:['Matching','Dark Slate'],
   glassMount:['Top-mount base shoe','Fascia-mount base shoe','Spigots'],glassFinish:['Black','Silver'],
 };
@@ -97,6 +98,7 @@ export function validateDesign(input:unknown):DeckData {
   const poolsDescriptor=Object.getOwnPropertyDescriptor(input,'pools');if(poolsDescriptor){if(!('value'in poolsDescriptor)||!poolsDescriptor.enumerable)throw Error('Pool settings must be plain saved values.');if(poolsDescriptor.value!==undefined){if(!validatePoolFeatures(poolsDescriptor.value))throw Error('Invalid pool settings.');clean.pools=structuredClone(poolsDescriptor.value);}}
   if(input.siteModel!==undefined)clean.siteModel=validateSiteModel(input.siteModel);
   if(input.landscapeObjects!==undefined){if(!validateLandscapeObjects(input.landscapeObjects))throw Error('Invalid landscape objects.');clean.landscapeObjects=structuredClone(input.landscapeObjects) as NonNullable<DeckData['landscapeObjects']>;}
+  if(input.fences!==undefined)clean.fences=validateFences(input.fences);
   if(input.editorOrganization!==undefined)clean.editorOrganization=validateEditorOrganization(input.editorOrganization);
   if(input.scenePresentation!==undefined)clean.scenePresentation=validateScenePresentation(input.scenePresentation);
   // An optional choice switched off in the editor is still present, as undefined, until the design is saved.
@@ -495,7 +497,7 @@ export function defaultLevel3(data:DeckData):NonNullable<DeckData['level3']>{
 export function serializeDesign(data:DeckData):string {
   const clean=validateDesign(data);
   const configuration:Record<string,unknown>={};
-  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'buildRules','deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','stairPath','stairTargets','level2EdgeId','level3','scenePresentation','pools','siteModel','landscapeObjects','editorOrganization','yardFeatures','yardEarthwork','terrainConfig','yardAllowances','permitSite','customFront','boardColours','inlays','skirting','deckFinishes','underDeck','deckOutlines','deckOutlineOffsets','boardLayout','boundaryLocks','railSections','railDefault','pergola']){
+  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'buildRules','deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','stairPath','stairTargets','level2EdgeId','level3','scenePresentation','pools','siteModel','landscapeObjects','fences','editorOrganization','yardFeatures','yardEarthwork','terrainConfig','yardAllowances','permitSite','customFront','boardColours','inlays','skirting','deckFinishes','underDeck','deckOutlines','deckOutlineOffsets','boardLayout','boundaryLocks','railSections','railDefault','pergola']){
     if(clean[key as keyof DeckData]!==undefined)configuration[key]=clean[key as keyof DeckData];
   }
   return JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration},null,2);

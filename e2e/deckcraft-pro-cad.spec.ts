@@ -106,12 +106,12 @@ test('puts the four cameras on a compass puck and the day, night and lights swit
   await expect.poll(()=>view(page)).toBe('3d');
   const puck=page.getByRole('group',{name:'Camera'});
   await expect(puck).toHaveClass(/dd-cad-puck/);
-  await expect(puck.getByRole('button')).toHaveText(['Above','Overview','Corner','Front']);
+  await expect(puck.getByRole('button')).toHaveText(['Above','Overview','Corner','Front','Walk']);
   await puck.getByRole('button',{name:'Front',exact:true}).click();
   await expect.poll(()=>view(page)).toBe('front');
   await expect(puck.getByRole('button',{name:'Front',exact:true})).toHaveAttribute('aria-pressed','true');
   const bottom=page.locator('.dd-preview-head');
-  await expect(bottom.getByRole('group',{name:'Day or night preview'})).toBeVisible();
+  await expect(bottom.getByRole('group',{name:'Time of day'})).toBeVisible();
   await expect(bottom.getByRole('switch',{name:/Preview lights/})).toBeVisible();
   // Only one set of camera buttons shows.
   await expect(page.getByRole('group',{name:'Camera'})).toHaveCount(1);

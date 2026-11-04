@@ -3,7 +3,7 @@ import {useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import type {LandscapeObject} from '../../landscapeTypes';
-import {getShowcaseFlags,subscribeShowcase} from '../../showcaseMode';
+import {sceneHour,subscribeShowcase} from '../../showcaseMode';
 import {useSceneEvening} from './sceneEvening';
 import {BED_RELIEF,finishGeometry,reliefGround,type BedRelief} from './bedRelief';
 import type {LandscapePoint} from '../../landscapeTypes';
@@ -110,7 +110,7 @@ export function shadeRingMatrix(data:DeckData,o:LandscapeObject,seat:PlantSeat){
 }
 const ringGeometry=new THREE.PlaneGeometry(2,2).rotateX(-Math.PI/2);
 export function PlantShadeRings({data,plants}:{data:DeckData;plants:{object:LandscapeObject;seat:PlantSeat}[]}){
- const invalidate=useThree(s=>s.invalidate),evening=useSceneEvening(data.sceneLighting),hour=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().hour,()=>'day');
+ const invalidate=useThree(s=>s.invalidate),evening=useSceneEvening(data.sceneLighting),hour=useSyncExternalStore(subscribeShowcase,()=>sceneHour(),()=>'day');
  const material=useMemo(()=>createShadeRingMaterial(),[]);useEffect(()=>()=>material.dispose(),[material]);
  const mesh=useMemo(()=>new THREE.InstancedMesh(ringGeometry,material,Math.max(1,plants.length)),[material,plants.length]);
  useEffect(()=>()=>mesh.dispose(),[mesh]);

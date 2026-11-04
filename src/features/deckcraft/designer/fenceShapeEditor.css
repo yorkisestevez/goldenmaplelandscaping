@@ -1,0 +1,16 @@
+/* Fence handles over the plan (FenceShapeEditor.tsx), above the yard shape editor's own overlay. */
+.dd-fence-shape{position:absolute;inset:0;z-index:5;pointer-events:none}
+.dd-fence-shape>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.dd-fence-shape[data-drawing]>svg{pointer-events:auto;touch-action:none;cursor:crosshair}
+.dd-fence-shape-corner,.dd-fence-shape-gate{fill:#fff;stroke:#5a3d22;pointer-events:auto;cursor:grab;touch-action:none}
+.dd-fence-shape-gate{fill:#f4e7d2}
+.dd-fence-shape-corner:focus-visible,.dd-fence-shape-gate:focus-visible{outline:none;stroke:#1f5c8f;fill:#d9ecfb}
+.dd-fence-shape[data-drawing] .dd-fence-shape-corner,.dd-fence-shape[data-drawing] .dd-fence-shape-gate{pointer-events:none}
+.dd-fence-shape-line,.dd-fence-shape-draft{fill:none;stroke:#1f5c8f;stroke-dasharray:6 4;pointer-events:none}
+.dd-fence-shape-draft-corner{fill:#1f5c8f;pointer-events:none}
+.dd-fence-draw{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0;padding:8px 10px;border-radius:12px;background:#fff;border:1px solid #d3d8d0;pointer-events:auto;font-size:13px;color:#14261c}
+/* Without a controls card (none today), the bar sits at the plan's top edge. */
+.dd-fence-draw-dock{position:absolute;left:50%;top:8px;transform:translateX(-50%);max-width:calc(100% - 24px);pointer-events:auto}
+.dd-fence-draw button{min-height:36px;padding:0 12px;border:1px solid #b9c2b6;border-radius:10px;background:#fff;color:#14261c;font:inherit;font-weight:600;cursor:pointer}
+.dd-fence-draw button:disabled{opacity:.5;cursor:default}
+@media(pointer:coarse),(max-width:800px){.dd-fence-draw button{min-height:44px}}

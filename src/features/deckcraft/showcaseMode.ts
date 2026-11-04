@@ -9,8 +9,11 @@ export type ShowcaseHour='day'|'golden'|'night';
  * the device's own render budget. It is on by default where the renderer is high tier, and the viewer's toggle can
  * change it (remembered on the device). `quality` and `context` stay the presentation switches for stills: the top
  * render tier, depth of field, and the fence and neighbour houses. */
-export interface ShowcaseFlags {quality:boolean;context:boolean;hour:ShowcaseHour;post:boolean;realistic:boolean}
-const OFF:ShowcaseFlags={quality:false,context:false,hour:'day',post:true,realistic:false};
+export interface ShowcaseFlags {quality:boolean;context:boolean;hour:ShowcaseHour;post:boolean;realistic:boolean;
+ /** The design's own sky is Golden hour (`sceneLighting: 'Golden'`). The viewer mirrors it here, so the sun, the sky
+  * and the grade read one hour. */
+ designGolden:boolean}
+const OFF:ShowcaseFlags={quality:false,context:false,hour:'day',post:true,realistic:false,designGolden:false};
 let flags:ShowcaseFlags=OFF;
 const listeners=new Set<()=>void>();
 let urlApplied=false;
@@ -18,6 +21,18 @@ let urlApplied=false;
 export function getShowcaseFlags(){return flags;}
 export function getShowcaseServerFlags(){return OFF;}
 export function showcaseQuality(){return flags.quality;}
+/** The hour the scene draws: a presentation hour (stills, ?deck-hour) wins over the design's own sky. Night itself is the
+ * design's Evening (sceneEvening.ts). */
+export function sceneHour(f:ShowcaseFlags=flags):ShowcaseHour{return f.hour!=='day'?f.hour:f.designGolden?'golden':'day';}
+/** Whether golden hour draws: the design's own sky at any quality; a presentation golden hour, as before, only graded. */
+export function goldenHour(f:ShowcaseFlags,graded:boolean){return f.hour==='golden'?graded:f.hour==='day'&&f.designGolden;}
+let goldenViews=0;
+/** A viewer drawing a Golden hour design holds the design's sky golden until it unmounts or the sky changes; a second
+ * viewer (the sketch) closing does not clear the first one's. */
+export function holdDesignGolden(){
+ goldenViews++;setShowcaseFlags({designGolden:true});
+ return ()=>{goldenViews--;setShowcaseFlags({designGolden:goldenViews>0});};
+}
 export function showcaseContext(){return flags.context;}
 /** Neighbourhood lighting hook. Golden hour is the presentation hour, with the grade on. */
 export function showcaseGolden(){return flags.quality&&flags.post&&flags.hour==='golden';}
@@ -34,9 +49,9 @@ export function showcaseDetail(tier:string){if(flags.quality&&!flags.post)return
 export function subscribeShowcase(listener:()=>void){listeners.add(listener);return ()=>listeners.delete(listener);}
 
 export function setShowcaseFlags(next:Partial<ShowcaseFlags>){
- const quality=next.quality??flags.quality,context=next.context??flags.context,hour=next.hour??flags.hour,post=next.post??flags.post,realistic=next.realistic??flags.realistic;
- if(quality===flags.quality&&context===flags.context&&hour===flags.hour&&post===flags.post&&realistic===flags.realistic)return;
- flags={quality,context,hour,post,realistic};
+ const quality=next.quality??flags.quality,context=next.context??flags.context,hour=next.hour??flags.hour,post=next.post??flags.post,realistic=next.realistic??flags.realistic,designGolden=next.designGolden??flags.designGolden;
+ if(quality===flags.quality&&context===flags.context&&hour===flags.hour&&post===flags.post&&realistic===flags.realistic&&designGolden===flags.designGolden)return;
+ flags={quality,context,hour,post,realistic,designGolden};
  for(const listener of listeners)listener();
 }
 

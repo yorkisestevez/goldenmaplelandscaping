@@ -238,7 +238,7 @@ export default function FlythroughRecorder({revision,designEvening}:{revision?:u
     gl.setPixelRatio(ratio);gl.setSize(logical.x,logical.y,false);gl.setViewport(viewport);gl.setScissor(scissor);gl.setScissorTest(scissorTest);gl.setRenderTarget(target);
     delete gl.domElement.dataset.flythrough;
     gl.domElement.removeEventListener('webglcontextlost',onLost);
-    setShowcaseFlags(previousFlags);setSeason(previousSeason);resetFlythrough();
+    setShowcaseFlags({...previousFlags,designGolden:getShowcaseFlags().designGolden});setSeason(previousSeason);resetFlythrough();
     busy.current=false;invalidate();
    }
   };

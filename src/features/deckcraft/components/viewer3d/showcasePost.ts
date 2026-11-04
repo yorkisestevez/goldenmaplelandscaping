@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {FullScreenQuad} from 'three/examples/jsm/postprocessing/Pass.js';
 import {SMAAPass} from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import {SHOWCASE_DOF,SHOWCASE_GRADES,gradeLinear,presentationHour,type ShowcaseGrade} from './showcaseGrade';
-import {getShowcaseFlags,showcasePostEnabled,type ShowcaseHour} from '../../showcaseMode';
+import {getShowcaseFlags,sceneHour,showcasePostEnabled,type ShowcaseHour} from '../../showcaseMode';
 
 /**
  * Showcase-only passes that sit in linear HDR, ahead of OutputPass: depth of field, SMAA, and the
@@ -67,7 +67,7 @@ export function bindGrade(material:THREE.ShaderMaterial,color:THREE.Texture,hour
   u.tColor.value=color;u.slope.value.set(...g.slope);u.offset.value.set(...g.offset);u.power.value.set(...g.power);
   u.contrast.value=g.contrast;u.pivot.value=g.pivot;u.shadowTint.value.set(...g.shadow);u.highlightTint.value.set(...g.highlight);u.split.value=g.split;u.vignette.value=g.vignette;
 }
-export function activeGradeHour(evening:boolean){return presentationHour(evening,getShowcaseFlags().hour);}
+export function activeGradeHour(evening:boolean){return presentationHour(evening,sceneHour());}
 
 let smaa:SMAAPass|null=null,smaaReady:Promise<void>=Promise.resolve(),readyNow=false;
 const readyListeners=new Set<()=>void>();

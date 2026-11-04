@@ -65,7 +65,7 @@ export const SECTIONS:readonly DesignSection[]=[
     fields:['quoteResolutions','municipality','siteType','soilCondition','foundation','foundationDepthIn','buildSeason','intendedLoad','framingSize','joistSpacing','boardWidth'],
     ledger:['Permits & Professional Fees','Foundation & Footings','Confirmed additional quote costs'],related:{id:'backyard',text:'Plan the yard around the deck'}},
   {id:'backyard',name:'Backyard',legacyStep:4,load:loadBackyardStep,
-    fields:['yardFeatures','yardEarthwork','terrainConfig','yardAllowances','siteModel','landscapeObjects','editorOrganization'],
+    fields:['yardFeatures','yardEarthwork','terrainConfig','yardAllowances','siteModel','landscapeObjects','fences','editorOrganization'],
     ledger:['Yard · *'],related:{id:'proposal',text:'See the estimate and send it'}},
   {id:'proposal',name:'Proposal & files',legacyStep:5,load:loadEstimateStep,
     fields:['customerName','projectAddress','scopeOfWork','permitSite'],
@@ -136,8 +136,8 @@ export const FIELD_NAMES:Partial<Record<FieldPath|'sceneLighting'|'lightingPrevi
   autoLighting:'Deck lighting',lightingSystem:'Lighting',lightingZoneEnabled:'Lighting zones',
   privacyScreens:'Privacy screens',privacySqft:'Privacy screen area',skirting:'Skirting',benchLf:'Built-in bench',pergolaSqft:'Pergola',hasDemo:'Remove an existing deck',hasDrainage:'Under-deck drainage',catalogueAccessories:'Manufacturer accessories',
   municipality:'Project area',siteType:'Site conditions',soilCondition:'Soil conditions',foundation:'Foundation',foundationDepthIn:'Footing depth',buildSeason:'Build season',intendedLoad:'Intended load',framingSize:'Joist size',joistSpacing:'Joist spacing',boardWidth:'Board width',
-  stairTargets:'Stair landing elevations',siteModel:'Survey and grading',landscapeObjects:'Landscape objects',editorOrganization:'Layers, groups and locks',yardFeatures:'Backyard features',terrainConfig:'Terrain',yardAllowances:'Backyard allowances',
+  stairTargets:'Stair landing elevations',siteModel:'Survey and grading',landscapeObjects:'Landscape objects',fences:'Fences and gates',editorOrganization:'Layers, groups and locks',yardFeatures:'Backyard features',terrainConfig:'Terrain',yardAllowances:'Backyard allowances',
   customerName:'Your name',projectAddress:'Project address',scopeOfWork:'Scope of work',permitSite:'Lot and setbacks',
-  sceneLighting:'Day or night preview',lightingPreviewOn:'Preview lights',
+  sceneLighting:'Time of day',lightingPreviewOn:'Preview lights',
 };
 export const fieldName=(field:string)=>FIELD_NAMES[field as keyof typeof FIELD_NAMES]??'Design change';

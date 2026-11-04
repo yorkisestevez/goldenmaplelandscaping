@@ -15,8 +15,8 @@ export function yardAllowancesPatch(data:Pick<DeckData,'yardAllowances'>,patch:P
   return {yardAllowances:hasYardAllowances(next)?next:undefined};
 }
 /** Patios, walls, water or terrain settings: the backyard the 3D view draws (allowances are not drawn). */
-export const hasBackyardLayout=(data:Pick<DeckData,'yardFeatures'|'terrainConfig'|'siteModel'|'landscapeObjects'>)=>!!(data.yardFeatures?.length||data.terrainConfig||data.siteModel||data.landscapeObjects?.some(o=>o.enabled));
-export const hasBackyard=(data:Pick<DeckData,'yardFeatures'|'terrainConfig'|'siteModel'|'landscapeObjects'|'yardAllowances'>)=>hasBackyardLayout(data)||hasYardAllowances(data.yardAllowances);
+export const hasBackyardLayout=(data:Pick<DeckData,'yardFeatures'|'terrainConfig'|'siteModel'|'landscapeObjects'|'fences'>)=>!!(data.yardFeatures?.length||data.terrainConfig||data.siteModel||data.landscapeObjects?.some(o=>o.enabled)||data.fences?.length);
+export const hasBackyard=(data:Pick<DeckData,'yardFeatures'|'terrainConfig'|'siteModel'|'landscapeObjects'|'fences'|'yardAllowances'>)=>hasBackyardLayout(data)||hasYardAllowances(data.yardAllowances);
 
 /** Estimate sections from the backyard takeoff start with this. */
 export const BACKYARD_SECTION_PREFIX='Yard ·';

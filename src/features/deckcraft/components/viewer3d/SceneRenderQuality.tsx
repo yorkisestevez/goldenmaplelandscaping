@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useSyncExternalStore} from 'react';
 import {useThree} from '@react-three/fiber';
 import {chooseRenderQuality,rendererFacts} from './renderQuality';
-import {applyShowcaseSearch,getShowcaseFlags,getShowcaseServerFlags,realisticPreference,setShowcaseFlags,subscribeShowcase} from '../../showcaseMode';
+import {applyShowcaseSearch,getShowcaseFlags,getShowcaseServerFlags,holdDesignGolden,realisticPreference,setShowcaseFlags,subscribeShowcase} from '../../showcaseMode';
 
 export function useRenderQuality(){
  const gl=useThree(s=>s.gl),narrow=useThree(s=>s.size.width<600);
@@ -19,11 +19,13 @@ export default function RenderQuality(){
  },[q,gl,setDpr,showcase]);
  return null;
 }
-/** Applies the URL flags once the canvas exists and redraws when the still-export toggles change. */
-export function ShowcaseModeSync(){
+/** Applies the URL flags once the canvas exists, mirrors the design's Golden hour sky, and redraws when the still-export
+ * toggles change. */
+export function ShowcaseModeSync({golden}:{golden:boolean}){
  const invalidate=useThree(s=>s.invalidate),gl=useThree(s=>s.gl);
  const flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags);
  useEffect(()=>{applyShowcaseSearch();},[]);
+ useEffect(()=>golden?holdDesignGolden():undefined,[golden]);
  // The realistic look: on for a high-tier renderer unless the viewer has turned it off on this device.
  const narrow=useThree(s=>s.size.width<600);
  useEffect(()=>{const pref=realisticPreference(),tier=chooseRenderQuality(rendererFacts(gl),narrow,false).tier;setShowcaseFlags({realistic:pref==='on'||(pref===null&&tier==='high')});},[gl,narrow]);

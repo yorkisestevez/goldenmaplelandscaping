@@ -164,6 +164,17 @@ async function main(){
       check(ok(await h.api.execute(request([{type:'design.patch',patch:{length:13}}]))).snapshot.design.buildRules===own&&parseDeckReleaseDesign(serializeDeckReleaseDesign(h.state.data)).buildRules===own,`Edits to a ${own} design save its rules`);
     }
   }
+  // Fences (S9): an agent reads them, keeps them through a whole-design replace, and can set them with a patch.
+  {
+    const {loadFenceRuntime}=await import('../src/features/deckcraft/fences');await loadFenceRuntime();
+    const fence={id:'fence-a',name:'Back fence',style:'vinyl-privacy' as const,heightFt:5 as const,points:[{xIn:0,zIn:300},{xIn:360,zIn:300}],gates:[{id:'gate-a',kind:'single' as const,atIn:180}]};
+    const h=fixture({...deckReleaseData(structuredClone(DEFAULT_DECK)),fences:[fence]}),design=h.api.read().design;
+    check(JSON.stringify(design.fences)===JSON.stringify([fence]),'An agent reads the fences');
+    check(JSON.stringify(ok(await h.api.execute(request([{type:'design.replace',design}]))).snapshot.design.fences)===JSON.stringify([fence]),'A whole-design replace keeps the fences it read');
+    const moved={...fence,points:[{xIn:0,zIn:300},{xIn:480,zIn:300}]};
+    check(ok(await h.api.execute(request([{type:'design.patch',patch:{fences:[moved]}}]))).snapshot.design.fences?.[0].points[1].xIn===480,'A patch can change a fence');
+    check(!(await h.api.execute(request([{type:'design.patch',patch:{fences:[{...fence,heightFt:9 as unknown as 6}]}}]))).ok,'A patch with a 9 ft fence is refused');
+  }
   console.log(`PASS: ${checks} agent control checks (strict validation, atomic history, concurrency, previews, privacy, persistence, all three boundaries, read-only takeoff rules).`);
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});
