@@ -26,12 +26,11 @@ import {useDeckEstimate} from '../features/deckcraft/designer/useDeckEstimate';
 import type {DeltaProps} from '../features/deckcraft/designer/useOptionDeltas';
 import WorkspaceTools from '../features/deckcraft/designer/WorkspaceTools';
 import WorkspacePrice from '../features/deckcraft/designer/WorkspacePrice';
-import {useDesignerMode} from '../features/deckcraft/designer/designerMode';
-import {useNextUi} from '../features/deckcraft/designer/uiMode';
+import {designerModeOn,useDesignerMode} from '../features/deckcraft/designer/designerMode';
 import {assertLeadsAllowed,useInternalMode} from '../features/deckcraft/internalMode';
 import type {ProPage} from '../features/deckcraft/designer/pro/proTypes';
 const noteWarmLead=(...args:Parameters<typeof import('../features/deckcraft/warmLead').noteWarmLead>)=>void import('../features/deckcraft/warmLead').then(m=>m.noteWarmLead(...args));
-import {loadArchitectShortcuts,loadExteriorStudio,loadPlanBoundaryEditor,loadPlanEditingWorkspace,loadPlanToolPicker} from '../features/deckcraft/designer/previewLoaders';
+import {desktopViewer,loadArchitectShortcuts,loadExteriorStudio,loadPlanBoundaryEditor,loadPlanEditingWorkspace,loadPlanToolPicker,loadViewer} from '../features/deckcraft/designer/previewLoaders';
 import {preloadable,whenSettled} from '../features/deckcraft/designer/hydrationLazy';
 const PreviewPanel=preloadable(()=>import('../features/deckcraft/designer/PreviewPanel'));
 import {ESTIMATOR_TABS,HOME_TABS,NEXT_TABS,homeTabLabel,phoneLayout,tabOfSection,tabOfTool,type HomeTabId} from '../features/deckcraft/designer/homeTabs';
@@ -48,6 +47,8 @@ import '../features/deckcraft/designer/workspace.css';
 // The tools ribbon is in the prerendered page, so its styles come with the page's own (render-blocking) stylesheet: with
 // its lazy chunk they landed after the first paint and the ribbon grew from 72 to 129 px, pushing the plan down.
 import '../features/deckcraft/designer/planToolPicker.css';
+// The new look is the prerendered page, so its layout comes with the page's stylesheet too (after the sheets it restyles).
+import '../features/deckcraft/designer/next/nextShell.css';
 
 /**
  * The drawing-set type, on this page only: Archivo (headings, section names, the title block) and IBM Plex Mono
@@ -72,9 +73,9 @@ const IssueReviewDialog=lazy(()=>import('../features/deckcraft/designer/IssueRev
 const PermitSetDialog=lazy(()=>import('../features/deckcraft/drawings/PermitSetDialog'));
 const JobRevisionDialog=lazy(()=>import('../features/deckcraft/designer/JobRevisionDialog'));
 const ProMenuBar=lazy(()=>import('../features/deckcraft/designer/pro/ProMenuBar'));
-// The new look (uiMode.ts) loads only once it is switched on.
+// The new look's controls (next/NextShell.tsx): the homeowner page's own, so the estimator's studio never loads them.
 const nextShell=()=>import('../features/deckcraft/designer/next/NextShell');
-const NextTopBar=lazy(()=>nextShell().then(m=>({default:m.NextTopBar}))),NextRail=lazy(()=>nextShell().then(m=>({default:m.NextRail}))),NextPricePill=lazy(()=>nextShell().then(m=>({default:m.NextPricePill}))),NextViewButton=lazy(()=>nextShell().then(m=>({default:m.NextViewButton})));
+const NextTopBar=preloadable(()=>nextShell().then(m=>({default:m.NextTopBar}))),NextRail=preloadable(()=>nextShell().then(m=>({default:m.NextRail}))),NextPricePill=preloadable(()=>nextShell().then(m=>({default:m.NextPricePill}))),NextViewButton=lazy(()=>nextShell().then(m=>({default:m.NextViewButton})));
 const ProjectFileTools=lazy(()=>import('../features/deckcraft/ProjectFileTools')),LedgerDrawer=lazy(()=>import('../features/deckcraft/designer/PriceLedger').then(m=>({default:m.LedgerDrawer}))),loadQuickPicks=()=>import('../features/deckcraft/designer/next/QuickPicks'),QuickPicks=lazy(loadQuickPicks);
 const loadHomePanel=()=>import('../features/deckcraft/designer/HomePanel');
 const HomePanel=lazy(loadHomePanel);
@@ -88,8 +89,12 @@ const BackyardStep=lazy(loadBackyardStep),SendDesignDialog=lazy(loadSendDialog),
  * throwing it away on the first update and redrawing it when they land: at most 4 s, then as before. The prerender (no
  * document) never waits; the cost estimator's studio waits behind its own loading screen. The drawing's own pieces start
  * with it, not after it. In development a cold start can pass 4 s, and editing this file makes a new gate (one wait).
+ * The homeowner page's prerender is the new look, so its controls (top bar, rail and price pill) are among those pieces;
+ * elsewhere (the estimator's studio, Designer Mode) it is the old screens' stylesheet (classicChrome.css).
  */
-const piecesReady=typeof document==='undefined'?undefined:whenSettled([PreviewPanel.preload().then(panel=>panel.partsReady),DimensionsStep.preload(),loadArchitectShortcuts(),loadPlanToolPicker(),loadPlanEditingWorkspace()],4000);
+const homeownerPage=()=>location.pathname.startsWith('/deck-designer')&&!designerModeOn();
+const loadClassicChrome=()=>import('../features/deckcraft/designer/classicChrome.css');
+const piecesReady=typeof document==='undefined'?undefined:whenSettled([PreviewPanel.preload().then(panel=>panel.partsReady),DimensionsStep.preload(),loadArchitectShortcuts(),loadPlanToolPicker(),loadPlanEditingWorkspace(),...(homeownerPage()?[NextTopBar.preload(),NextRail.preload(),NextPricePill.preload()]:[loadClassicChrome()])],4000);
 // Phones (the layout's single column) show one section at a time; wider screens keep several open.
 const reducedMotion=()=>typeof window!=='undefined'&&!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -183,19 +188,35 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   const [lightingSearch,setLightingSearch]=useState('');
   const [selectedHouseOpeningId,setSelectedHouseOpeningId]=useState('');
   const [exteriorOpen,setExteriorOpen]=useState(false);
-  // The drawing opens on the site plan: the customer sizes the deck against the house first. 3D is a sheet of its own.
+  // The drawing is prerendered on the site plan, where a phone, Designer Mode and the estimator's studio stay.
   const [mode,setMode]=useState<PreviewMode>('plan');
   // Opening the exterior studio shows the 3D view (looks never show on the plan).
   // The site plan's tool (R5). A deck that becomes a custom outline is drawn with the Draw outline tool.
   const [planTool,setPlanTool]=useState<PlanTool>('size');
   const pro=useDesignerMode();
-  // The new look is the homeowner page's only: the estimator's studio and Designer Mode keep their own screens.
-  const nextUi=useNextUi(),next=nextUi&&!pro&&!embed,nextRef=useRef(next);
-  // Designer Mode under the switch gets the CAD workspace (slice S4): the menus join the title bar, the price the inspector.
-  const cad=nextUi&&pro&&!embed;
+  // The new look is the homeowner page; Designer Mode is the CAD workspace (the menus join the title bar, the price the
+  // inspector). The estimator's studio keeps its own screens (its bar, the tabs and the price beside them).
+  const next=!pro&&!embed,nextRef=useRef(next),cad=pro&&!embed;
   nextRef.current=next;
+  // A desktop opens in 3D (owner, 2026-11-02): once the page is running, WebGL works and the 3D viewer (fetched as the plan
+  // opens) has loaded, the plan hands over to the 3D view, unless the visitor has already started on the page (a press, a
+  // key or a wheel). Phones and browsers saving data stay on the plan, with no 3D download at load, and so do automated
+  // browsers (navigator.webdriver, as for the trackers: utils/trackingGate.ts), which would otherwise build the 3D scene
+  // on every load (deck-open-3d.spec.ts poses as a visitor). Settled once: an effect cleaned up before that (React's
+  // development double run) arms it again.
+  const opened3d=useRef(false);
+  useEffect(()=>{
+    if(!next||!mounted||!hasWebGL||opened3d.current||navigator.webdriver||phoneLayout()||!desktopViewer())return;
+    opened3d.current=true;let live=true,settled=false;const started=()=>{live=false;settled=true;},events=['pointerdown','keydown','wheel'];
+    for(const name of events)addEventListener(name,started,{capture:true,passive:true});
+    loadViewer().then(()=>{if(live){settled=true;setMode(m=>m==='plan'?'3d':m);}},()=>{settled=true;/* The plan stays. */});
+    return ()=>{live=false;if(!settled)opened3d.current=false;for(const name of events)removeEventListener(name,started,{capture:true});};
+  },[next,mounted,hasWebGL]);
+  // Designer Mode turned on during a visit: its screens' stylesheet was not among the pieces.
+  useEffect(()=>{if(!next)loadClassicChrome().catch(()=>{/* Loaded again on the next change. */});},[next]);
   // A new design reopens the Deck section; the new look opens each group on its quick picks, so nothing starts open there.
-  // It reads the switch through a ref, since the design loader (useDeckDesign) keeps the callback from the first render.
+  // It reads the look through a ref (Designer Mode can change it), since the design loader (useDeckDesign) keeps the
+  // callback from the first render.
   const closeSections=()=>{setOpen(new Set(nextRef.current?[]:['deck']));setWorkspaceView('canvas');setPanelOpen(false);};
   // The quick picks are fetched as the new look turns on, unless the visitor has asked the browser to save data.
   useEffect(()=>{
@@ -586,7 +607,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   const proPage:ProPage|undefined=pro?{cad,price:priceBar,open,renderSection,data,apply:atomicUpdate,ready:mounted&&designReady,issues:currentIssues,canUndo,canRedo,undo,redo,openSection,setPlanTool,setMode,showCanvas,showFullList,saveJSON,openProposal,downloadPdf,exportModel,exportPermit,setPresetsOpen,setPermitOpen,setJobsOpen,setSendOpen,setQuoteReviewOpen,setIssuesOpen,setSketchOpen,setAgentOpen,setAskOpen,setAskExpert:(expert)=>{setAskExpert(expert);showCanvas();setAskOpen(true);}}:undefined;
   // The new look's rail and price pill: picking the open group (or the quote) again puts the panel away.
   const toggleTab=(id:HomeTabId)=>id===homeTab&&panelOpen?hidePanel():selectHomeTab(id);
-  const fileTools=<WorkspaceTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={()=>saveJSON()} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} autosavePaused={autosavePaused} onDownloadPrevious={unrestoredDesign?()=>downloadFile(unrestoredDesign,'application/json','golden-maple-previous-design.json'):undefined} compact={next} extra={next?<><button type="button" className="dd-secondary dd-next-phone-only" onClick={e=>{const menu=e.currentTarget.closest('details');setMode('drawing');menu?.removeAttribute('open');menu?.querySelector('summary')?.focus();}}>Framing view</button><Suspense fallback={null}><ProjectFileTools data={data} onChange={update}/></Suspense></>:undefined}/>;
+  const fileTools=<WorkspaceTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={()=>saveJSON()} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} autosavePaused={autosavePaused} onDownloadPrevious={unrestoredDesign?()=>downloadFile(unrestoredDesign,'application/json','golden-maple-previous-design.json'):undefined} compact={next} extra={next?<><button type="button" className="dd-secondary dd-next-phone-only" onClick={e=>{const menu=e.currentTarget.closest('details');setMode('drawing');menu?.removeAttribute('open');menu?.querySelector('summary')?.focus();}}>Framing view</button>{mounted&&<Suspense fallback={null}><ProjectFileTools data={data} onChange={update}/></Suspense>}</>:undefined}/>;
   const menu=proPage&&mounted&&<Suspense fallback={null}><ProMenuBar page={proPage}/></Suspense>;
   const saveState=autosavePaused?'Auto-save paused':mounted?'Auto-save on this device':'Loading your design';
   return <div className="deck-designer" data-ui={next?'next':cad?'cad':undefined} data-home-tab={next&&panelOpen?homeTab:undefined} data-drawing-focus={pro||next?undefined:'true'} data-home-panel={!proPage&&panelOpen||undefined} data-pro={pro||undefined} data-customer={customer||undefined} data-workspace-view={workspaceView} data-assistant-open={askOpen||undefined} data-embedded={embed?'estimator':undefined}>

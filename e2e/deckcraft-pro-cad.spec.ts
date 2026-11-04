@@ -2,10 +2,10 @@ import {expect,test,type Page} from '@playwright/test';
 import {open,price,sheet} from './next-ui';
 
 /**
- * The Pro workspace in the new look (slice S4, docs/deckcraft/ui-redesign-2026-10/PLAN.md §5d): Designer Mode with the
- * `?ui=next` switch fills the window like a CAD program. Pro without the switch is covered by deckcraft-pro.spec.ts.
+ * The Pro workspace in the new look (slice S4, docs/deckcraft/ui-redesign-2026-10/PLAN.md §5d): Designer Mode fills the
+ * window like a CAD program. Its menus, ribbon tools, wizards and layers are covered by deckcraft-pro.spec.ts.
  */
-const PATH='/deck-designer/?designer=1&ui=next';
+const PATH='/deck-designer/?designer=1';
 const cad=(page:Page)=>page.locator('.deck-designer[data-ui="cad"]');
 const titleBar=(page:Page)=>page.locator('.dd-cad-title');
 const ribbon=(page:Page)=>page.getByRole('region',{name:'Ribbon',exact:true});
@@ -136,14 +136,9 @@ test('keeps the price and documents on screen in a short window with a drawing t
   expect(await page.evaluate(()=>document.scrollingElement!.scrollHeight-window.innerHeight)).toBeLessThanOrEqual(1);
 });
 
-test('leaves Pro without the switch as it was',async({page,context})=>{
+test('is the only Pro workspace: the retired switch does not bring the old shell back',async({page,context})=>{
   await open(page,context,'/deck-designer/?designer=1&ui=classic');
-  await expect(page.locator('.deck-designer[data-pro]')).toBeVisible();
-  await expect(page.locator('.deck-designer[data-ui]')).toHaveCount(0);
-  await expect(page.locator('.dd-cad-title,.dd-cad-price,.dd-cad-puck,.dd-cad-tabs')).toHaveCount(0);
-  // The menu bar sits under the header, the price bar under the page, and the ribbon keeps its own tabs.
-  await expect(page.locator('header.dd-header [role=menubar]')).toHaveCount(0);
-  await expect(page.getByRole('menubar',{name:'Pro workspace menu'})).toBeVisible();
-  await expect(page.locator('.dd-workspace > .dd-workspace-price')).toBeVisible();
-  await expect(ribbon(page).getByRole('tab',{name:'Plan Detail',exact:true})).toBeVisible();
+  await expect(cad(page)).toBeVisible();
+  await expect(titleBar(page).getByRole('menubar',{name:'Pro workspace menu'})).toBeVisible();
+  await expect(page.locator('.dd-workspace > .dd-workspace-price')).toHaveCount(0);
 });

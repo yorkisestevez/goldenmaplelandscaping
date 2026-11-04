@@ -1,4 +1,4 @@
-import {type KeyboardEvent} from 'react';
+import {useEffect,type KeyboardEvent} from 'react';
 import type {PlanTool} from './constants';
 import type {HomeTab,HomeTabId} from './homeTabs';
 // Styles: planToolPicker.css, imported by the page (DeckDesigner.tsx): the tabs are in the prerendered page, so they must be
@@ -11,10 +11,13 @@ const short:Record<PlanTool,string>={size:'Size',outline:'Points',stairs:'Stairs
  * The homeowner's four tabs (homeTabs.ts) above the drawing, on every sheet, and on the plan the open tab's tools. The page
  * owns the open tab: a tab also opens its panel and view, and a tool picked elsewhere (a located warning, the agent) brings
  * its own tab forward. The arrow keys move between tabs and Enter or Space opens one, since opening Materials or Extras
- * loads the 3D view. The new look (`flat`, uiMode.ts) has its rail instead of tabs, so the plan shows every group's tools.
+ * loads the 3D view. The new look (`flat`, next/NextShell.tsx) has its rail instead of tabs, so the plan shows every group's tools.
  */
 export default function PlanToolPicker({tool,onPick,hint,onSketch,sketchReady=true,tab,tabs,onTab,onPlan,onSettings,flat=false}:{tool:PlanTool;onPick:(tool:PlanTool)=>void;hint:string;onSketch?:()=>void;sketchReady?:boolean;tab:HomeTabId;tabs:readonly HomeTab[];onTab:(tab:HomeTabId)=>void;onPlan:boolean;onSettings?:()=>void;flat?:boolean}){
  const visible=!onPlan?[]:flat?[...new Set(tabs.flatMap(t=>t.tools))]:tabs.find(t=>t.id===tab)?.tools??[],current=tabs.findIndex(t=>t.id===tab);
+ // The new look's one strip scrolls sideways on narrow screens: a tool chosen elsewhere (a section's link, a key) comes
+ // into view in it, or once the plan shows again.
+ useEffect(()=>{if(flat&&onPlan)document.getElementById('dd-tool-'+tool)?.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});},[flat,tool,onPlan]);
  const keys=(e:KeyboardEvent)=>{if(!(e.target instanceof HTMLElement)||e.target.getAttribute('role')!=='radio')return;const i=visible.indexOf(tool),n=visible.length,to=({ArrowLeft:(i+n-1)%n,ArrowUp:(i+n-1)%n,ArrowRight:(i+1)%n,ArrowDown:(i+1)%n,Home:0,End:n-1} as Record<string,number>)[e.key];if(to===undefined)return;e.preventDefault();const id=visible[to];onPick(id);requestAnimationFrame(()=>document.getElementById('dd-tool-'+id)?.focus());};
  return <section className="dd-simple-tools" aria-label="Drawing tools">
   {!flat&&<div className="dd-ribbon-tabs dd-home-tabs" role="tablist" aria-label="Design" onKeyDown={e=>{const n=tabs.length,at=tabs.findIndex(t=>document.activeElement?.id==='dd-home-tab-'+t.id),from=at<0?current:at,next=({ArrowRight:(from+1)%n,ArrowLeft:(from+n-1)%n,Home:0,End:n-1} as Record<string,number>)[e.key];if(next===undefined)return;e.preventDefault();document.getElementById('dd-home-tab-'+tabs[next].id)?.focus();}}>{tabs.map(t=><button type="button" role="tab" id={'dd-home-tab-'+t.id} key={t.id} aria-selected={tab===t.id} aria-controls={visible.length&&tab===t.id?'dd-ribbon-panel':undefined} tabIndex={tab===t.id?0:-1} onClick={()=>onTab(t.id)}>{t.name}</button>)}</div>}

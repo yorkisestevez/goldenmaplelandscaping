@@ -7,10 +7,11 @@ import {phoneLayout,type HomeTab,type HomeTabId} from '../homeTabs';
 import type {Ledger} from '../priceLedgerModel';
 import type {SectionId} from '../sections';
 import {WorkspaceIcon} from '../WorkspaceNavigation';
-import './nextShell.css';
+// The first paint's rules are the page's (nextShell.css, in DeckDesigner); the rest come with these controls.
+import './nextShellLater.css';
 
 /**
- * The new look's floating controls (uiMode.ts, docs/deckcraft/ui-redesign-2026-10/PLAN.md): a top bar, a rail of five
+ * The new look's floating controls (docs/deckcraft/ui-redesign-2026-10/PLAN.md): a top bar, a rail of five
  * design groups and the price pill. They sit over a full-bleed scene and drive the page's own state; the panel they open
  * is the homeowner panel (HomePanel.tsx) with its sections and editors unchanged.
  */

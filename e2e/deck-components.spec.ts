@@ -1,5 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
-import {dismissDesignInspector,savedConfiguration,showProjectControls} from './nav';
+import {dismissDesignInspector,savedConfiguration,showProjectControls,startOnPlan} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
@@ -25,7 +25,7 @@ test.beforeEach(async({context,page})=>{
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(({key,configuration})=>{if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));},{key:'golden-maple.deck-studio.deck-only.v1',configuration:fixture});
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&r.request().method()==='GET'?r.continue():r.fulfill({status:200,body:''}));
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);await selectTool(page);
+ await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);await selectTool(page);
 });
 test.afterEach(async({page})=>{expect(browserErrors.get(page)??[],'Component editing must not throw an uncaught browser error').toEqual([]);});
 
@@ -60,7 +60,7 @@ test('stale/disappeared selections refresh safely; validated agent edits preview
  const rejected=await request(page,[{type:'component.edit',id:'opening:measured-window',edit:{action:'update',fields:{type:'French'}}}]);expect(rejected.ok).toBe(false);expect((await state(page)).design).toEqual(current.design);
  const stale=await request(page,[patch],false,original.revision);expect('error'in stale&&stale.error.code==='stale_revision').toBe(true);expect((await state(page)).design).toEqual(current.design);
  await expect.poll(async()=>(await savedConfiguration(page))?.houseConfig?.openings[0]?.widthIn).toBe(84);const saved=await savedConfiguration(page);expect(saved.customerName).toBe(fixture.customerName);expect(saved.projectAddress).toBe(fixture.projectAddress);
- await page.reload();await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);expect((await state(page)).design.houseConfig!.openings[0].widthIn).toBe(84);await selectTool(page);await choose(page,'opening:measured-window');
+ await page.reload();await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);expect((await state(page)).design.houseConfig!.openings[0].widthIn).toBe(84);await selectTool(page);await choose(page,'opening:measured-window');
  const shared=success(await request(page,[{type:'action',action:'share.create'}])),other=await context.newPage();await other.goto(shared.result!.url!);await expect.poll(()=>other.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);expect((await state(other)).design.houseConfig!.openings[0].widthIn).toBe(84);expect((await state(other)).pricing.total).toBe(current.pricing.total);await other.close();
  success(await request(page,[{type:'component.edit',id:'opening:measured-window',edit:{action:'remove'}}]));await expect(page.getByRole('combobox',{name:'Select plan part',exact:true})).toHaveValue('');await expect(notice(page)).toContainText('no longer');await expect(page.getByRole('button',{name:'Apply part changes',exact:true})).toHaveCount(0);success(await request(page,[{type:'history.undo'}]));expect((await state(page)).design.houseConfig!.openings[0].widthIn).toBe(84);
  await choose(page,'wall:main-right');await page.locator('.dd-component-add summary').click();await page.getByRole('combobox',{name:'New opening preset',exact:true}).selectOption('Window:Casement');await page.getByRole('combobox',{name:'New opening wall',exact:true}).selectOption('main-right');await page.getByRole('button',{name:'Add opening',exact:true}).click();expect((await state(page)).design.houseConfig!.openings).toHaveLength(2);await expect(page.getByRole('combobox',{name:'Select plan part',exact:true})).toHaveValue('opening:part-opening-1');await undo(page);expect((await state(page)).design.houseConfig!.openings).toHaveLength(1);

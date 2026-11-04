@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {startOnPlan} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
@@ -12,7 +13,7 @@ for(const phone of [false,true])test.describe(phone?'phone real local AI':'deskt
   await context.addInitScript(configuration=>{localStorage.clear();localStorage.setItem('golden-maple.deck-studio.deck-only.v1',JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));},{...DEFAULT_DECK,customerName:'Synthetic private client',projectAddress:'Synthetic private address',scopeOfWork:'Synthetic private scope'});
   await context.route('**/*',route=>{const r=route.request(),local=new URL(r.url()).origin===new URL(process.env.PLAYWRIGHT_BASE_URL??`http://127.0.0.1:${process.env.E2E_PORT??4319}`).origin;return local&&(r.method()==='GET'||r.method()==='HEAD'||r.url().includes('/.netlify/functions/deck-assistant'))?route.continue():route.fulfill({status:403,body:'Blocked external QA request'});});
   const read=()=>page.evaluate(()=>(window as unknown as {deckcraft:DeckAgentApi}).deckcraft.read());
-  await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);const before=await read();
+  await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);const before=await read();
   await page.getByRole('button',{name:'Describe a change',exact:true}).click();const dialog=page.getByRole('region',{name:'Design assistant',exact:true});await expect(dialog.locator('[data-source="local-ai"]')).toContainText('qwen3:14b');
   await dialog.getByRole('textbox',{name:'What would you like to change?',exact:true}).fill('Give the main deck a little more width, keeping the depth the same.');
   const modelResponse=page.waitForResponse(r=>r.url().includes('/.netlify/functions/deck-assistant')&&r.request().method()==='POST');await dialog.getByRole('button',{name:'Preview edit',exact:true}).click();const raw=await modelResponse,response=await raw.json(),sent=raw.request().postDataJSON();expect(raw.status()).toBe(200);expect(response.model).toBe('qwen3:14b');expect(response.plan.kind).toBe('edit');

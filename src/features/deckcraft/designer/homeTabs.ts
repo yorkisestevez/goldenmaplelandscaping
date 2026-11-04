@@ -21,7 +21,7 @@ export const HOME_TABS:readonly HomeTab[]=[
  */
 export const ESTIMATOR_TABS:readonly HomeTab[]=HOME_TABS.filter(t=>t.id!=='send').map(t=>t.id==='extras'?{...t,sections:[...t.sections,'site','proposal']}:t);
 /**
- * The new look's five rail groups (uiMode.ts) and the quote the price pill opens. A group names the plan tools it hands
+ * The new look's five rail groups (next/NextShell.tsx) and the quote the price pill opens. A group names the plan tools it hands
  * the plan, its sections and the view it opens; Boards shows the deck in 3D so a colour change is seen at once.
  */
 export const NEXT_TABS:readonly HomeTab[]=[

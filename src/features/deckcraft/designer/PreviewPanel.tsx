@@ -1,4 +1,4 @@
-import {Suspense,lazy,useEffect,useMemo,useRef,useState} from 'react';
+import {Suspense,lazy,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {useArchitectKeys,revealControl} from './architectKeys';
 import {hasBackyardLayout} from '../backyard';
 import {yardShapeFrame} from '../yardShapeGeometry';
@@ -211,7 +211,7 @@ export interface PreviewPanelProps{
   homeTab?:HomeTabId;homeTabs?:readonly HomeTab[];onHomeTab?:(tab:HomeTabId)=>void;
   /** Draw's "Deck settings": its panel at Deck shape & size (height, levels, wrap). */
   onHomeSettings?:()=>void;
-  /** The new look (uiMode.ts): its top bar carries the sheets, so the drawing's own head is left out and the plan shows
+  /** The new look (next/NextShell.tsx): its top bar carries the sheets, so the drawing's own head is left out and the plan shows
    *  every rail group's tools. */
   next?:boolean;
 
@@ -257,7 +257,29 @@ export default function PreviewPanel({pro,previewData,onPreviewData,data,update,
   const [planStatus,setPlanStatus]=useState('');
   const propertiesDock=useRef<HTMLDetailsElement>(null);
   // The new look floats these settings over the scene, so away from the plan they open only for a selection.
-  useEffect(()=>{if(propertiesDock.current)propertiesDock.current.open=tool!=='size'&&(!next||mode==='plan'&&!phoneLayout())/* a phone's plan stays clear */||!!selection.hardscape||!!selection.partIds.length||!!selection.boards.length;},[tool,selection.hardscape?.id,selection.partIds.length,selection.boards.length,!!pro,next&&mode==='plan']);
+  // The open rule runs before the plan's own effects, so a phone's plan measures the space its drawer leaves (phoneArea).
+  // A phone opens it as a drawer for every tool with controls of its own; Stairs and House work on the plan itself.
+  // A desktop's plan steps aside from the open card (data-card). A tool's card always does. A card that only a selection
+  // opened does when the pick sat where the card now is (it would hide it), so other picks never move the drawing from
+  // under the next click; once aside, the plan stays until the card shuts. Changes mid-press wait for the release.
+  // cardShown: the open state this effect set, so the toggle event it queues is not taken for the visitor folding the card.
+  const cardShown=useRef(false),pressed=useRef(false),lastPress=useRef<{x:number;y:number}|null>(null),pending=useRef<boolean|null>(null);
+  const cardInset=(bySelection:boolean)=>{
+    const dock=propertiesDock.current,preview=dock?.closest('.dd-preview');if(!dock||!preview)return;
+    const r=dock.getBoundingClientRect(),p=lastPress.current,hidden=!!p&&p.x>=r.left&&p.x<=r.right&&p.y>=r.top&&p.y<=r.bottom;
+    preview.toggleAttribute('data-card',dock.open&&(!bySelection||hidden||preview.hasAttribute('data-card')));
+  };
+  useEffect(()=>{
+    const down=(event:PointerEvent)=>{pressed.current=true;lastPress.current={x:event.clientX,y:event.clientY};},up=()=>{pressed.current=false;if(pending.current!==null){cardInset(pending.current);pending.current=null;}};
+    addEventListener('pointerdown',down,true);addEventListener('pointerup',up,true);addEventListener('pointercancel',up,true);
+    return ()=>{removeEventListener('pointerdown',down,true);removeEventListener('pointerup',up,true);removeEventListener('pointercancel',up,true);};
+  },[]);
+  // A selection on a phone's plan leaves the drawer folded (its bar names the selection), so it never covers what was picked.
+  useLayoutEffect(()=>{if(propertiesDock.current){
+    const toolCard=tool!=='size'&&(!next||mode==='plan'&&!(phoneLayout()&&(tool==='stairs'||tool==='house')));
+    propertiesDock.current.open=cardShown.current=toolCard||!(next&&mode==='plan'&&phoneLayout())&&(!!selection.hardscape||!!selection.partIds.length||!!selection.boards.length);
+    if(pressed.current)pending.current=!toolCard;else cardInset(!toolCard);
+  }},[tool,selection.hardscape?.id,selection.partIds.length,selection.boards.length,!!pro,next&&mode==='plan']);
   const [elevationsOpen,setElevationsOpen]=useState(false),[elevationArea,setElevationArea]=useState<ElevationArea>();
   /** Opens the Elevations & build workspace at one of its areas (the Pro Terrain tab), or closes it when that area shows. */
   const toggleElevations=(area:ElevationArea)=>{if(elevationsOpen&&elevationArea===area)setElevationsOpen(false);else{setElevationArea(area);setElevationsOpen(true);requestAnimationFrame(()=>document.getElementById('dd-elevation-tools')?.scrollIntoView({block:'nearest'}));}};
@@ -275,7 +297,7 @@ export default function PreviewPanel({pro,previewData,onPreviewData,data,update,
   const phoneLabels=next&&phoneLayout()?14:undefined;
   // There the drawing shows between the tools and inspector under the top bar and the price row above the dock.
   // Until the price row is on the page (its stylesheet comes with it) the layout is not the new look's yet.
-  const phoneArea=()=>{const price=document.querySelector('.dd-next-price');if(!price)return null;const below=(s:string)=>document.querySelector(s)?.getBoundingClientRect().bottom??0;return {top:Math.max(below('.dd-next-top'),below('.dd-simple-tools'),below('.dd-selection-inspector')),bottom:price.getBoundingClientRect().top};};
+  const phoneArea=()=>{const price=document.querySelector('.dd-next-price');if(!price)return null;const below=(s:string)=>document.querySelector(s)?.getBoundingClientRect().bottom??0,dock=document.querySelector('.dd-selection-inspector')?.getBoundingClientRect();const drawer=!!document.querySelector('.dd-selection-inspector[open]');return {top:Math.max(below('.dd-next-top'),below('.dd-simple-tools')),bottom:Math.min(price.getBoundingClientRect().top,dock?.height?dock.top:Infinity),fit:drawer};};
   const mixed=selection.partIds.length>0&&selection.boards.length>0;
   const mixedControls=<div className="dd-3d-selection-card" role="alert"><strong>Mixed part and board selection</strong><p>Select one editing group before Apply. No selected object will be silently left out.</p><button type="button" className="dd-secondary" onClick={()=>selectObjects({partIds:selection.partIds,boards:[]})}>Edit selected parts only</button><button type="button" className="dd-secondary" onClick={()=>selectObjects({partIds:[],boards:selection.boards})}>Edit selected boards only</button><button type="button" className="dd-secondary" onClick={()=>selectObjects({partIds:[],boards:[]})}>Clear all selected objects</button></div>;
   const [outlineFit,setOutlineFit]=useState(0);
@@ -327,7 +349,7 @@ export default function PreviewPanel({pro,previewData,onPreviewData,data,update,
   const loading=<>{flat}<p className="dd-canvas-loading" role="status">Loading the 3D view…</p></>;
 
   // The selected object's dimensions and materials, and the current tool's own options (tools portal them in).
-  const toolOptions=<details ref={propertiesDock} className="dd-selection-inspector" aria-label="Selected object settings"><summary>{selection.hardscape?'Selected shape · dimensions & materials':'Drawing controls · dimensions & materials'}</summary>{mounted&&!snapshotLighting&&<Suspense fallback={null}><HardscapeInspector data={data} selection={selection.hardscape} onSelect={pickHardscape} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})} onClose={()=>{selectObjects({partIds:[],boards:[]});onPreviewData?.(null);}}/></Suspense>}{previewData&&<p role="status">Showing proposed geometry · apply the preview to save one undoable edit.</p>}{mixed&&!snapshotLighting&&mixedControls}{show3d&&!selection.hardscape&&!mixed&&!snapshotLighting&&<Suspense fallback={<p role="status">Loading selected object…</p>}><PreviewedObjectInspector data={data} model={estimate.model} selection={selection} onSelection={selectObjects} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})} onOpenSection={id=>onOpenSection(id.toLowerCase() as 'deck'|'stairs'|'house'|'lighting'|'extras'|'site')} onEditBoundary={level=>{setBoundaryLevel(level??1);}} onEditBoards={level=>{setBoundaryLevel(level??1);}}/></Suspense>}
+  const toolOptions=<details ref={propertiesDock} className="dd-selection-inspector" aria-label="Selected object settings" onToggle={event=>{if(event.currentTarget.open!==cardShown.current){cardShown.current=event.currentTarget.open;cardInset(false);}}}><summary>{selection.hardscape?'Selected shape · dimensions & materials':'Drawing controls · dimensions & materials'}</summary>{mounted&&!snapshotLighting&&<Suspense fallback={null}><HardscapeInspector data={data} selection={selection.hardscape} onSelect={pickHardscape} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})} onClose={()=>{selectObjects({partIds:[],boards:[]});onPreviewData?.(null);}}/></Suspense>}{previewData&&<p role="status">Showing proposed geometry · apply the preview to save one undoable edit.</p>}{mixed&&!snapshotLighting&&mixedControls}{show3d&&!selection.hardscape&&!mixed&&!snapshotLighting&&<Suspense fallback={<p role="status">Loading selected object…</p>}><PreviewedObjectInspector data={data} model={estimate.model} selection={selection} onSelection={selectObjects} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})} onOpenSection={id=>onOpenSection(id.toLowerCase() as 'deck'|'stairs'|'house'|'lighting'|'extras'|'site')} onEditBoundary={level=>{setBoundaryLevel(level??1);}} onEditBoards={level=>{setBoundaryLevel(level??1);}}/></Suspense>}
 
       <div className="dd-plan-tool-extras" ref={toolbar}/></details>;
 

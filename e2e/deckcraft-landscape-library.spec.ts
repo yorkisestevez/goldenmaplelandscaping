@@ -28,7 +28,7 @@ async function openLibrary(page:Page){
   await page.goto('/deck-designer/?designer=1');
   await expect(page.getByRole('button',{name:'Presets',exact:true})).toBeEnabled();
   await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:{read:()=>{ready:boolean}}}).deckcraft?.read().ready??false)).toBe(true);
-  await ribbon(page).getByRole('tab',{name:'Landscape',exact:true}).click();
+  await ribbon(page).getByRole('tab',{name:/^(Landscape|Yard)$/}).click();
   await page.locator('#dd-pro-ribbon-panel').getByRole('button',{name:'Pools & backyard',exact:true}).click();
   await expect(library(page).getByRole('heading',{name:'Plants, beds and outdoor objects'})).toBeVisible();
 }
@@ -53,8 +53,7 @@ test('added landscape objects stay after Day/Night and a saved camera',async({pa
   expect(added.items[0].kind).toBe('plant');
   expect(added.items[0].enabled).toBe(true);
 
-  await ribbon(page).getByRole('tab',{name:'Plan Detail',exact:true}).click();
-  await page.locator('#dd-pro-ribbon-panel').getByRole('button',{name:'3D',exact:true}).click();
+  await page.getByRole('tablist',{name:'Drawing sheets'}).getByRole('tab',{name:/3D$/}).click();
   await page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'}).click();
   await expect.poll(async()=>(await objects(page)).lighting).toBe('Evening');
   await expect.poll(async()=>(await objects(page)).items.map(item=>item.id)).toEqual([added.items[0].id]);
@@ -90,8 +89,8 @@ test('added landscape objects stay after Day/Night and a saved camera',async({pa
   await list.getByRole('button',{name:'Remove object',exact:true}).click();
   await expect.poll(async()=>(await objects(page)).items.length).toBe(2);
 
-  await ribbon(page).getByRole('tab',{name:'Main',exact:true}).click();
-  const undo=page.locator('#dd-pro-ribbon-panel').getByRole('button',{name:'Undo',exact:true});
+  await ribbon(page).getByRole('tab',{name:/^(Main|Home)$/}).click();
+  const undo=ribbon(page).getByRole('button',{name:'Undo',exact:true});
   await undo.click();
   await expect.poll(async()=>(await objects(page)).items.length).toBe(3);
   await undo.click();
@@ -114,8 +113,7 @@ test('a bed size edit stays staged through Day/Night until it is applied',async(
   await width.blur();
   await expect(list.getByRole('group',{name:'Review area changes'})).toBeVisible();
   await expect.poll(async()=>(await objects(page)).items[0]?.widthIn).toBe(120);
-  await ribbon(page).getByRole('tab',{name:'Plan Detail',exact:true}).click();
-  await page.locator('#dd-pro-ribbon-panel').getByRole('button',{name:'3D',exact:true}).click();
+  await page.getByRole('tablist',{name:'Drawing sheets'}).getByRole('tab',{name:/3D$/}).click();
   await page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'}).click();
   await expect.poll(async()=>(await objects(page)).lighting).toBe('Evening');
   await expect(list.getByRole('group',{name:'Review area changes'})).toBeVisible();

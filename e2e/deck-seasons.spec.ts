@@ -1,4 +1,5 @@
 import {expect,test} from '@playwright/test';
+import {startOnPlan} from './nav';
 import {newLandscapeObject,newLandscapePlant} from '../src/features/deckcraft/landscapeCatalogue';
 
 /**
@@ -23,7 +24,7 @@ test('the season switch changes the plants, never the design',async({page})=>{
   page.on('pageerror',e=>problems.push(e.message));
   // three announces each renderer and scene it makes to window.__THREE_DEVTOOLS__, which is how the test reaches them.
   await page.addInitScript(()=>{const w=window as unknown as {__THREE_DEVTOOLS__:EventTarget;__renderers:unknown[];__scenes:unknown[]};w.__renderers=[];w.__scenes=[];w.__THREE_DEVTOOLS__=new EventTarget();w.__THREE_DEVTOOLS__.addEventListener('observe',e=>{const d=(e as CustomEvent).detail;if(d?.isWebGLRenderer)w.__renderers.push(d);else if(d?.isScene)w.__scenes.push(d);});});
-  await page.goto('/deck-designer/');
+  await page.goto('/deck-designer/');await startOnPlan(page);
   await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:{read:()=>{ready:boolean}}}).deckcraft?.read().ready??false),{timeout:60_000}).toBe(true);
   const bed={...newLandscapeObject('mulch-bed','e2e-bed',96,276),widthIn:300,depthIn:96};
   const species=['acer-saccharum','amelanchier-canadensis','cornus-sericea','echinacea-purpurea','thuja-occidentalis-smaragd'];

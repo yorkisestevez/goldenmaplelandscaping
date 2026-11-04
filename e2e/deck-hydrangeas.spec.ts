@@ -1,4 +1,5 @@
 import {expect,test} from '@playwright/test';
+import {startOnPlan} from './nav';
 import {newLandscapeObject,newLandscapePlant} from '../src/features/deckcraft/landscapeCatalogue';
 
 /**
@@ -19,7 +20,7 @@ test('hydrangeas render as canes, leaves and floret heads',async({page})=>{
   page.on('console',m=>{if(/Shader Error|WebGLProgram|ERROR: 0:/.test(m.text()))shaderProblems.push(m.text().slice(0,300));});
   // three announces each scene it makes to window.__THREE_DEVTOOLS__, which is how the test reaches the live one.
   await page.addInitScript(()=>{const w=window as unknown as {__THREE_DEVTOOLS__:EventTarget;__scenes:unknown[]};w.__scenes=[];w.__THREE_DEVTOOLS__=new EventTarget();w.__THREE_DEVTOOLS__.addEventListener('observe',e=>{const d=(e as CustomEvent).detail;if(d?.isScene)w.__scenes.push(d);});});
-  await page.goto('/deck-designer/');
+  await page.goto('/deck-designer/');await startOnPlan(page);
   await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:{read:()=>{ready:boolean}}}).deckcraft?.read().ready??false),{timeout:60_000}).toBe(true);
   const bed={...newLandscapeObject('mulch-bed','e2e-bed',96,276),widthIn:300,depthIn:96};
   const species=['hydrangea-paniculata','hydrangea-arborescens-annabelle','hydrangea-macrophylla-endless-summer'];

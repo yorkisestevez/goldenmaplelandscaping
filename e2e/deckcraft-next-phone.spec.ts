@@ -135,13 +135,52 @@ test('@phone in 3D the view bar folds into one View button',async({page,context}
  await expect(view).toBeHidden();
 });
 
-test('@phone the plan keeps its inspector shut and its zoom controls clear of the price',async({page,context})=>{
+test('@phone the plan opens on Deck size with its controls shut and its zoom controls clear of the price',async({page,context})=>{
  await open(page,context);
  await sheet(page,'Plan').click();
- await page.getByRole('radio',{name:'Shape & points',exact:true}).click();
+ await expect(page.getByRole('radio',{name:'Deck size',exact:true})).toHaveAttribute('aria-checked','true');
  await expect(page.locator('.dd-selection-inspector')).not.toHaveAttribute('open','');
  const zoom=await box(page.getByRole('group',{name:'Drawing navigation',exact:true})),row=await box(price(page));
  expect(overlaps(zoom,row)).toBe(false);
+});
+
+// Owner decision 2026-11-01: on phones a drawing tool's own controls open as a drawer above the price row, and the plan
+// zooms onto the deck in the space left above it.
+test('@phone a drawing tool opens its controls as a drawer above the price row, with the whole deck zoomed into the space above',async({page,context})=>{
+ await open(page,context);
+ await sheet(page,'Plan').click();
+ await page.getByRole('radio',{name:'Board layout',exact:true}).click();
+ const drawer=page.locator('details.dd-selection-inspector');
+ await expect(drawer).toHaveAttribute('open','');
+ await expect(drawer.getByRole('button',{name:'Select board',exact:true})).toBeVisible();
+ const width=await screenWidth(page),height=await viewHeight(page),row=await box(price(page)),top=await box(topBar(page));
+ await expect.poll(async()=>(await box(drawer)).y+(await box(drawer)).height).toBeLessThanOrEqual(row.y+1);
+ const sheetBox=await box(drawer);
+ expect(sheetBox.x).toBeLessThanOrEqual(1);expect(sheetBox.width).toBeGreaterThanOrEqual(width-2);
+ expect(sheetBox.y).toBeGreaterThan(height*.35);
+ // The zoom controls stay usable above the drawer, and the deck is centred in the space between the top bar and it.
+ const zoom=await box(page.getByRole('group',{name:'Drawing navigation',exact:true}));
+ expect(overlaps(zoom,sheetBox)||overlaps(zoom,row)).toBe(false);
+ const deck=await page.evaluate(()=>{const r=[...document.querySelectorAll('.dd-board-hit')].map(e=>e.getBoundingClientRect());return {top:Math.min(...r.map(b=>b.top)),bottom:Math.max(...r.map(b=>b.bottom))};});
+ // The whole deck fits between the plan tools and the drawer, so every edge and point can be reached.
+ const tools=await box(page.locator('.dd-simple-tools'));
+ expect(deck.top).toBeGreaterThanOrEqual(Math.max(top.y+top.height,tools.y+tools.height)-1);expect(deck.bottom).toBeLessThanOrEqual(sheetBox.y+1);
+ await page.screenshot({path:`${shots}/tool-drawer.png`,animations:'disabled'});
+ // Its summary folds it away; Deck size, which works on the plan itself, leaves it shut.
+ await drawer.locator(':scope>summary').click();
+ await expect(drawer).not.toHaveAttribute('open','');
+ await page.getByRole('radio',{name:'Deck size',exact:true}).click();
+ await expect(drawer).not.toHaveAttribute('open','');
+});
+
+test('@phone on a short phone a drawing tool\'s drawer never shrinks the plan below 40 %',async({page,context})=>{
+ // 375 × 667: the band above the drawer is about 130 px, less than the room the edge dimensions ask for.
+ await page.setViewportSize({width:375,height:667});
+ await open(page,context);
+ await page.getByRole('radio',{name:'Shape & points',exact:true}).click();
+ await expect(page.locator('details.dd-selection-inspector')).toHaveAttribute('open','');
+ const zoom=page.getByRole('group',{name:'Drawing navigation',exact:true}).getByLabel('Drawing zoom');
+ await expect.poll(async()=>parseInt(await zoom.textContent()??'0')).toBeGreaterThanOrEqual(40);
 });
 
 test('@phone the narrowest phones keep the top bar, its menu and the price row inside the screen',async({page,context})=>{

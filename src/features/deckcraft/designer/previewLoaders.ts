@@ -9,13 +9,11 @@ export const loadArchitectShortcuts=()=>import('./ArchitectShortcuts');
 export const loadPlanToolPicker=()=>import('./PlanToolPicker');
 export const loadPlanEditingWorkspace=()=>import('./PlanEditingWorkspace');
 
-/** Fetch the 3D viewer while the plan is on screen: a desktop (wide screen, mouse) only, and not when the browser is
- * saving data. Evaluating the viewer starts the day-sky download, so a phone waits until its 3D sheet is chosen to
- * spend that data and keep the plan's first paint quick. Opening the 3D sheet loads it either way. */
+/** A desktop (wide screen, mouse) that is not saving data: it fetches the 3D viewer while the plan is on screen, and the
+ * homeowner page opens on it (DeckDesigner). Evaluating the viewer starts the day-sky download, so a phone waits until its
+ * 3D sheet is chosen to spend that data and keep the plan's first paint quick. Opening the 3D sheet loads it either way. */
+export const desktopViewer=()=>typeof window!=='undefined'&&!(navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData&&!!window.matchMedia?.('(min-width: 761px) and (pointer: fine)').matches;
 export function prefetchViewer(){
-  if(typeof window==='undefined')return;
-  if((navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData)return;
-  if(!window.matchMedia?.('(min-width: 761px) and (pointer: fine)').matches)return;
   // The import is asynchronous, so it does not block the plan.
-  void loadViewer().catch(()=>{/* The 3D sheet loads it again. */});
+  if(desktopViewer())void loadViewer().catch(()=>{/* The 3D sheet loads it again. */});
 }
