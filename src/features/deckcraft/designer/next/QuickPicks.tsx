@@ -12,6 +12,7 @@ import {MaterialSwatch,type Update} from '../fields';
 import type {HomeTabId} from '../homeTabs';
 import {BOARD_LAYOUTS,BORDER_ROWS,COLLECTIONS,DECK_TYPES,FASTENERS,FOUNDATIONS,RAILING_STYLES,STAIR_FLIGHTS,STAIR_LAYOUTS,collectionPatch} from '../optionGroups';
 import {selectPatch} from '../selectPatch';
+import {loadHardscapeCatalogue} from '../../hardscapeLookup';
 import './quickPicks.css';
 
 /**
@@ -155,10 +156,11 @@ const YARD_ADDS:readonly (readonly [YardFeatureKind,string,string])[]=[
 ];
 function YardPicks({data,update,onSelectYard,onPlanTool}:QuickPicksProps){
   const features=data.yardFeatures??[],a=data.yardAllowances??NO_ALLOWANCES,[error,setError]=useState('');
-  const add=(kind:YardFeatureKind)=>{try{const feature=newYardFeature(kind,data);update({yardFeatures:[...features,feature]});onSelectYard(feature.id);setError('');}catch(e){setError((e as Error).message);}};
+  // A first patio or wall is checked and priced at once, so the supplier catalogue (lazy, hardscapeLookup.ts) comes first.
+  const add=async(kind:YardFeatureKind)=>{try{await loadHardscapeCatalogue();const feature=newYardFeature(kind,data);update({yardFeatures:[...features,feature]});onSelectYard(feature.id);setError('');}catch(e){setError((e as Error).message);}};
   const allow=(patch:Partial<YardAllowances>)=>update(yardAllowancesPatch(data,patch));
   return <>
-    <Group look="tiles" label="Add to the yard" items={YARD_ADDS.map(([kind,name,d])=>({text:<Tile d={d} name={name}/>,name:`Add a ${name.toLowerCase()}`,disabled:features.length>=MAX_YARD_FEATURES,onClick:()=>add(kind)}))}/>
+    <Group look="tiles" label="Add to the yard" items={YARD_ADDS.map(([kind,name,d])=>({text:<Tile d={d} name={name}/>,name:`Add a ${name.toLowerCase()}`,disabled:features.length>=MAX_YARD_FEATURES,onClick:()=>void add(kind)}))}/>
     {error&&<p className="dd-next-note" role="alert">{error}</p>}
     <Group look="actions" label="Draw on the plan" items={[{text:'Patios & walls',onClick:()=>onPlanTool('yard')},{text:'Landscape areas',onClick:()=>onPlanTool('landscape')}]}/>
     <Choices label="Fire pit" value={a.firePit} options={[['none','None'],['wood','Wood'],['gas','Gas']] as const} onPick={firePit=>allow({firePit})}/>

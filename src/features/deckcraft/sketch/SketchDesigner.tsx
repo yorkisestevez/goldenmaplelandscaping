@@ -5,6 +5,8 @@ import {lazy,Suspense,useEffect,useRef,useState,type PointerEvent as ReactPointe
 import {createPortal} from 'react-dom';
 import type {DeckData} from '../types';
 import {calculateDeckReleaseEstimate,deckReleaseData} from '../deckRelease';
+// A sketched patio or wall is priced as soon as the sketch is read, so the supplier catalogue comes with sketch mode.
+import '../hardscapeCatalogue';
 import {dollars} from '../designFacts';
 import ConstructionPlan from '../ConstructionPlan';
 import {ViewerBoundary} from '../designer/fields';

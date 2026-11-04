@@ -9,7 +9,7 @@ import {getHousePlacement} from './housePlacement';
 import {hasHouseBlocks,houseOutline} from './houseFootprint';
 import {yardFeatureOutline,yardWallPath,yardPathEnvelope,yardPathBackStrip,pathRun} from './yardPathGeometry';
 import {yardShapeProblem} from './yardShapeGeometry';
-import {hardscapeSelection,hardscapeProblem,hardscapeSwatchKey,rectangularUnit} from './hardscapeCatalogue';
+import {hardscapeSelection,hardscapeProblem,hardscapeSwatchKey,rectangularUnit} from './hardscapeLookup';
 import type {HardscapeUnit} from './hardscapeCatalogue';
 import {hardscapeBlanks} from './hardscapeLayout';
 import {hardscapeProfile,hardscapeStockPolygons} from './hardscapeShapes';

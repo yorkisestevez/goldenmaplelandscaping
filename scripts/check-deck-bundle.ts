@@ -99,6 +99,10 @@ import {basename} from 'node:path';
 // November 2 (open stringer stairs, skirting behind them and the paver pad at the stair foot): the stair cladding,
 // skirting run and pad price ride with the first estimate — option-deltas worker 214.1 KB gzip. Raised to 214.5 KB with
 // the owner's approval; the pad's pavers and their renderer are a chunk of their own, so the viewer stays within 340 KB.
+// October 20: the supplier hardscape catalogue (hardscapeCatalogue.ts: the September 27 engineering index and the wall
+// caps, about 39 KB gzip) loads with a design's yard features (designExtensions.ts), before they are validated or
+// priced, instead of with the page: a plain deck, the first paint, never reads it (hardscapeLookup.ts). Route
+// 275.7 -> 237.0 KB, option-deltas worker graph 212.4 -> 173.6 KB; budgets unchanged.
 const BUDGET_KB={routeInitial:277,routeCss:12,viewer:340,pdf:150,deltaWorker:214.5,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35,splitStone:6.5};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
@@ -138,13 +142,20 @@ ok(cssKB<=BUDGET_KB.routeCss,`Deck designer route CSS is ${cssKB.toFixed(1)} KB 
   const streamed=readFileSync(new URL('../deck-designer/index.html',assets),'utf8').match(/\$RC\("B:\d+"/g)?.length??0;
   ok(streamed===9,`The prerendered designer streams ${streamed} Suspense boundaries; 9 expected (the new look's top bar, rail and price pill, the drawing, the Project controls, the tools, the plan, and React Router's two data handoffs; the group panel opens after the page). Preload any new one before hydration, then update this count.`);
 }
-for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^ProposalDialog-/,/^proposalPdf-/,/^pdfAssets-/,/^proposalModel-/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/,/^optionDeltas-/,/^useOptionDeltas-/,/^splitFaceStone-/,/^HomePanel-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
+for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^ProposalDialog-/,/^proposalPdf-/,/^pdfAssets-/,/^proposalModel-/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/,/^optionDeltas-/,/^useOptionDeltas-/,/^splitFaceStone-/,/^HomePanel-/,/^hardscapeCatalogue-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
 // Each section body, and the site plan's editor, is a chunk of its own (one merged into the route would pass the test
 // above unseen).
-for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep','SiteExtrasStep','BackyardStep','EstimateStep','PlanEditor','BoardLayoutEditor','HardscapePicker','YardShapeEditor','optionDeltas','useOptionDeltas','ProposalDialog','proposalPdf','HomePanel']){
+for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep','SiteExtrasStep','BackyardStep','EstimateStep','PlanEditor','BoardLayoutEditor','HardscapePicker','YardShapeEditor','optionDeltas','useOptionDeltas','ProposalDialog','proposalPdf','HomePanel','hardscapeCatalogue']){
   ok(files.some(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')),`${body} is its own chunk`);
   if(body==='BoardLayoutEditor')ok(!initial.some(f=>f.startsWith(`${body}-`)),'Board-layout interaction controls stay outside the first estimate');
   if(body==='HardscapePicker'||body==='YardShapeEditor'){ok(!initial.some(f=>f.startsWith(`${body}-`)),`${body} stays outside the first estimate`);ok(files.filter(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')).reduce((n,f)=>n+gz(f),0)<=BUDGET_KB.contractorTool,`${body} stays within the optional-tool budget`);}
+}
+// The tools that add a design's first patio or wall apply and price it at once, so each brings the supplier hardscape
+// catalogue with it (hardscapeLookup.ts): the Backyard section, the yard shape editor, sketch mode, the shape tools and
+// the Pro wizards.
+for(const tool of ['BackyardStep','YardShapeEditor','SketchDesigner','DesignerShapePanel','ProWizards']){
+  const chunk=files.find(f=>f.startsWith(`${tool}-`)&&f.endsWith('.js'));
+  ok(chunk&&workerGraph(chunk).some(f=>f.startsWith('hardscapeCatalogue-')),`${tool} brings the supplier hardscape catalogue with it`);
 }
 // The permit drawing set (drawings/) loads only when it is opened, with its PDF renderer loading only for a PDF.
 {
@@ -165,6 +176,7 @@ const proposalCss=files.find(f=>/^ProposalDialog-.*\.css$/.test(f));
 ok(proposalCss&&readFileSync(new URL(proposalCss,assets),'utf8').includes('.dd-proposal-page')&&!css.some(f=>readFileSync(new URL(f,assets),'utf8').includes('.dd-proposal-page')),'The proposal stylesheet loads with its dialog, not with the page');
 const workerFiles=deltaWorker?workerGraph(deltaWorker):[],workerKB=workerFiles.reduce((n,f)=>n+gz(f),0);
 ok(deltaWorker&&!initial.includes(deltaWorker)&&workerKB<=BUDGET_KB.deltaWorker,`Option deltas' full initial worker graph is ${workerKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.deltaWorker} KB), loaded on demand`);
+ok(!workerFiles.some(f=>f.startsWith('hardscapeCatalogue-')),'The option-deltas worker loads the supplier hardscape catalogue with yard features, not with its engine');
 const swatchWorker=files.find(f=>/^swatchMaps\.worker-.*\.js$/.test(f));
 ok(swatchWorker&&!initial.includes(swatchWorker)&&gz(swatchWorker)<=BUDGET_KB.swatchWorker,`Board atlas worker is ${swatchWorker?gz(swatchWorker).toFixed(1):'missing'} KB gzip (budget ${BUDGET_KB.swatchWorker} KB), loaded with the 3D view`);
 const sketchChunks=files.filter(f=>/^(SketchDesigner|sketchToDesign|sketchTypes|sketchGeometry)-.*\.js$/.test(f));
