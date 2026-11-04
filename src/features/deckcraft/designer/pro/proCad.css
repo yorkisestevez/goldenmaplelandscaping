@@ -71,6 +71,7 @@ html .deck-designer[data-ui=cad] .dd-cad-puck button:nth-child(1)[aria-pressed=t
 html .deck-designer[data-ui=cad] .dd-cad-puck button:nth-child(2){grid-area:1/2}
 html .deck-designer[data-ui=cad] .dd-cad-puck button:nth-child(3){grid-area:2/3}
 html .deck-designer[data-ui=cad] .dd-cad-puck button:nth-child(4){grid-area:3/2}
+html .deck-designer[data-ui=cad] .dd-cad-puck button:nth-child(5){grid-area:2/1}
 
 /* Side column: the inspector (the subject's head, its areas as tabs, one editor with the drawing's notes under it) takes
    what the drawing tool's options and the live price leave, so the price and documents never leave the screen. */
