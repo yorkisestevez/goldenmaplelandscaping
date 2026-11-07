@@ -4,10 +4,88 @@
     {
       "name": "golden-maple",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3011,
       "autoPort": true,
-      "cwd": "C:\\Users\\yorki\\Desktop\\Goldenmaplelandscaping.ca\\golden-maple-landscaping"
+      "cwd": ".claude/worktrees/main-dev"
+    },
+    {
+      "name": "frame-overhang",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3013"
+      ],
+      "port": 3013,
+      "cwd": ".claude/worktrees/frame-overhang"
+    },
+    {
+      "name": "viewer-perf",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3014"
+      ],
+      "port": 3014,
+      "cwd": ".claude/worktrees/viewer-perf"
+    },
+    {
+      "name": "aistudio-proto",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "C:/Users/yorki/AppData/Local/Temp/claude/C--Users-yorki-Desktop-Goldenmaplelandscaping-ca-golden-maple-landscaping/d8ae5221-cc9d-4228-b914-dd56eb7cb316/scratchpad/aistudio-proto/node_modules/vite/bin/vite.js",
+        "C:/Users/yorki/AppData/Local/Temp/claude/C--Users-yorki-Desktop-Goldenmaplelandscaping-ca-golden-maple-landscaping/d8ae5221-cc9d-4228-b914-dd56eb7cb316/scratchpad/aistudio-proto",
+        "--port",
+        "3015",
+        "--strictPort"
+      ],
+      "port": 3015
+    },
+    {
+      "name": "new-shell",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3016",
+        "--host",
+        "127.0.0.1"
+      ],
+      "port": 3016,
+      "cwd": ".claude/worktrees/new-shell"
+    },
+    {
+      "name": "stairs-defaults",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3017",
+        "--host",
+        "127.0.0.1"
+      ],
+      "port": 3017,
+      "cwd": ".claude/worktrees/stairs-defaults"
+    },
+    {
+      "name": "patio-edge-acne",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "3018", "--host", "127.0.0.1"],
+      "port": 3018,
+      "cwd": ".claude/worktrees/patio-edge-acne"
     }
   ]
 }
