@@ -2,7 +2,7 @@ import { type ReactNode, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, Facebook, Twitter, Linkedin, Link as LinkIcon, Share2, Check } from 'lucide-react';
 import SEO from './SEO';
-import { breadcrumb, businessRef, canonicalUrl as toCanonical, founderRef, graph, isoDate } from '../utils/schema';
+import { breadcrumb, businessRef, canonicalUrl as toCanonical, displayDate, founderRef, graph, isoDate } from '../utils/schema';
 import { AUTHORED_BY_FOUNDER, reviewFor } from '../data/editorialReviews';
 import { sectionFor } from '../data/library';
 import { FOUNDER } from '../data/founder';
@@ -63,6 +63,7 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
   // Organization. Dates go through isoDate(): posts pass "March 15, 2026", which
   // is not valid schema.org Date and was being emitted verbatim until 2026-09.
   const published = isoDate(date);
+  const modified = dateModified ? isoDate(dateModified) : published;
   const articleSchema: Record<string, unknown> = {
     "@type": "Article",
     "@id": `${canonicalUrl}#article`,
@@ -70,7 +71,7 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
     "description": seoDescription,
     "image": ogImageUrl,
     "datePublished": published,
-    "dateModified": dateModified ? isoDate(dateModified) : published,
+    "dateModified": modified,
     "author": writtenByFounder ? founderRef : businessRef,
     "publisher": businessRef,
     "mainEntityOfPage": review
@@ -144,12 +145,15 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
               </span>
               <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-light text-brand-bonewhite leading-[1.1] mb-10">{title}</h1>
               
-              <div className="flex items-center gap-8 mb-16">
+              <div className="flex flex-wrap items-center gap-x-8 gap-y-3 mb-16">
                 <span className="flex items-center gap-2 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-muted">
                   <Calendar size={14} strokeWidth={1.5} className="text-brand-gold-dark" /> {date}
                 </span>
                 <span className="flex items-center gap-2 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-muted">
                   <Clock size={14} strokeWidth={1.5} className="text-brand-gold-dark" /> {readTime}
+                </span>
+                <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-muted">
+                  Last updated: <time dateTime={modified}>{displayDate(modified)}</time>
                 </span>
               </div>
               {(writtenByFounder || review) && (

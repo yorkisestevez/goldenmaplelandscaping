@@ -5,7 +5,7 @@ be edited for every new route and drifted (trailing-slash 301s, orphaned posts).
 A page is listed when it is indexable (no robots noindex) AND self-canonical: its
 <link rel=canonical> equals its own trailing-slash URL. That automatically leaves
 out the Google Ads aliases (canonical -> /services/*) and the noindex thank-you
-page. lastmod comes from the page's Article dateModified when present.
+page. lastmod comes from the page's Article or WebPage dateModified when present.
 
 Fails the build when an indexable page has no canonical, or when the URL count
 drops below MIN_URLS (a truncated build must not ship a truncated sitemap).
@@ -73,7 +73,9 @@ def lastmod_for(head: Head):
     for schema in head.schemas:
         for node in nodes(schema):
             t = node.get('@type')
-            if t == 'Article' or (isinstance(t, list) and 'Article' in t):
+            types = set(t) if isinstance(t, list) else {t}
+            # Article dates on posts; WebPage.dateModified on pages with an update record (src/data/pageUpdates.ts).
+            if types & {'Article', 'WebPage'}:
                 value = node.get('dateModified') or node.get('datePublished')
                 if isinstance(value, str):
                     try:

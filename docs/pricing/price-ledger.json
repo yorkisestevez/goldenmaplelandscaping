@@ -2453,7 +2453,8 @@
     "src/pages/services/LandscapeDesign.tsx": {
       "$5,000": {
         "count": 1,
-        "status": "unverified",
+        "status": "approved",
+        "note": "Owner approval 2026-11-07 (AiO audit prompt): design-only packages start at $5,000; also used as the Service Offer minPrice",
         "context": "rvice without construction, our packages typically start at $5,000. This includes a full architectural 3D rendering of the pro"
       }
     },

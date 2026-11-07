@@ -29,6 +29,7 @@ export default [
   // Core pages
   route('about', 'pages/About.tsx'),
   route('about/yorkis-estevez', 'pages/AuthorProfile.tsx'),
+  route('faq', 'pages/Faq.tsx'),
   route('service-areas', 'pages/ServiceAreas.tsx'),
   route('portfolio', 'pages/Portfolio.tsx'),
   route('portfolio/:slug', 'pages/ProjectDetail.tsx'),
