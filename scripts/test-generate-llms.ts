@@ -15,4 +15,8 @@ assert.equal(twice, once, 'llms generator must be byte-idempotent on the second 
 assert.match(twice, /Structured Content Map/, 'existing content-map resources must be retained');
 assert.match(twice, /Interlocking stone|interlocking patios/i, 'brief must say what the company builds');
 assert.doesNotMatch(twice, /Ask us for current coverage|Ask for the current written|not validated|disputed claims|Founded:\s*2020/i, 'brief must not publish hedges or the unverified founding year');
+assert.match(twice, /2027[^\n]*regular mowing and lawn care[^\n]*homes and commercial properties/i);
+assert.match(twice, /\/services\/landscape-maintenance-barrie\//);
+assert.doesNotMatch(twice, /not lawn care|residential only|no commercial/i);
+
 console.log('llms generator idempotency: passed');

@@ -11,6 +11,7 @@ import { trackCall } from '../utils/analytics';
 export default function Contact() {
   const [searchParams] = useSearchParams();
   const [porcelainAudience, setPorcelainAudience] = useState<'homeowner' | 'trade' | null>(null);
+  const [isMaintenance, setIsMaintenance] = useState(false);
   // Static contact HTML is shared by every query; personalize after hydration.
   useEffect(() => {
     setPorcelainAudience(searchParams.get('service') === 'porcelain'
@@ -18,29 +19,32 @@ export default function Contact() {
       : null);
   }, [searchParams]);
   const trade = porcelainAudience === 'trade';
-  const heading = trade ? 'Bring us into your porcelain project.'
-    : porcelainAudience ? 'Tell us about your porcelain project.'
-    : 'Tell us what you want built.';
-  const intro = trade
-    ? 'Share your company, site, porcelain product, drawing links and preferred timing in the project details. Yorkis reviews the request so we can discuss installation scope and fit.'
-    : porcelainAudience
-      ? 'Tell us about your patio, entrance or pool surround. Include the approximate area and any porcelain product you have selected. Yorkis reviews the request and replies about scope.'
-      : 'Name, phone, email, town, project type, and timing are enough. Budget is optional. Yorkis reviews the request and replies about scope.';
+  const heading = isMaintenance ? 'Tell us about your property.'
+    : trade ? 'Bring us into your porcelain project.'
+      : porcelainAudience ? 'Tell us about your porcelain project.'
+        : 'Tell us what you want built.';
+  const intro = isMaintenance
+    ? 'Share your town and what you would like maintained in 2027. Yorkis reviews the enquiry and replies about scope.'
+    : trade
+      ? 'Share your company, site, porcelain product, drawing links and preferred timing in the project details. Yorkis reviews the request so we can discuss installation scope and fit.'
+      : porcelainAudience
+        ? 'Tell us about your patio, entrance or pool surround. Include the approximate area and any porcelain product you have selected. Yorkis reviews the request and replies about scope.'
+        : 'Name, phone, email, town, project type, and timing are enough. Budget is optional. Yorkis reviews the request and replies about scope.';
   const extraHours = ownerFact(OWNER_FACTS.extraHours);
   const postalAddress = publicPostalAddress();
 
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO
-        title="Contact Golden Maple | Patios, Walls & Decks in Barrie"
-        description="Send a short project form for interlocking, retaining walls, or composite decks in Barrie and Simcoe County."
+        title="Contact Golden Maple | Hardscaping & Landscape Maintenance"
+        description="Ask about patios, retaining walls, decks or 2027 landscape maintenance for homes and commercial properties in Barrie and Simcoe County."
         canonical="https://goldenmaplelandscaping.ca/contact"
       />
       <section className="pt-28 pb-16 md:pt-36 md:pb-24">
         <div className="container-custom">
           <div className="max-w-3xl mb-8 md:mb-12">
             <p className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-4">
-              Get an estimate
+              {isMaintenance ? '2027 landscape maintenance' : 'Get an estimate'}
             </p>
             <h1 className="font-display text-4xl md:text-6xl font-light text-brand-bonewhite leading-[1.05] mb-4">
               {heading}
@@ -57,8 +61,9 @@ export default function Contact() {
                 source="contact-page"
                 enquiryType={porcelainAudience ? trade ? 'Porcelain trade partner' : 'Porcelain homeowner' : undefined}
                 idPrefix="contact"
-                submitLabel="Send my project"
-                heading="Project form"
+                onMaintenanceSelectionChange={setIsMaintenance}
+                submitLabel={isMaintenance ? 'Send my maintenance enquiry' : 'Send my project'}
+                heading={isMaintenance ? 'Maintenance enquiry' : 'Project form'}
               />
             </div>
 
@@ -82,7 +87,7 @@ export default function Contact() {
                 <div className="flex items-start gap-4">
                   <MapPin size={20} className="text-brand-gold-dark shrink-0 mt-1" strokeWidth={1.5} />
                   <span>
-                    <span className="block font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted">Where we build</span>
+                    <span className="block font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted">{isMaintenance ? 'Service area' : 'Where we build'}</span>
                     <span className="font-sans text-base text-brand-bonewhite">Barrie and Simcoe County, Ontario</span>
                     {'streetAddress' in postalAddress && <span className="block font-sans text-sm text-brand-muted mt-1">{postalAddress.streetAddress}, {postalAddress.addressLocality}, {postalAddress.addressRegion} {postalAddress.postalCode}</span>}
                   </span>

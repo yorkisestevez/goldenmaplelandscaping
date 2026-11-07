@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { maintenanceReply } from '../src/utils/sophieChat';
 import { pickTeaser, shouldShowTeaser, isPriceQuestion, projectFromText, COST_CHIP, BOOK_CHIP } from '../src/data/sophieTeasers';
 
 // Route → which project Sophie preselects.
@@ -12,6 +13,7 @@ const cases: Array<[string, string | undefined]> = [
   ['/full-backyard-transformations-barrie', 'full'],
   ['/resources/paver-walkway-cost-barrie', 'walkway'],
   ['/portfolio', undefined],
+  ['/services/landscape-maintenance-barrie/', undefined],
 ];
 for (const [path, project] of cases) {
   const teaser = pickTeaser(path);
@@ -59,5 +61,19 @@ const named: Array<[string, string | undefined]> = [
   ['how much does it cost', undefined],
 ];
 for (const [q, project] of named) assert.equal(projectFromText(q), project, q);
+
+const maintenancePath = '/services/landscape-maintenance-barrie/';
+assert.equal(pickTeaser(maintenancePath)?.key, 'maintenance');
+assert.match(maintenanceReply(COST_CHIP, [], maintenancePath) ?? '', /\/contact\/\?service=maintenance/);
+assert.equal(maintenanceReply(COST_CHIP, [], '/services/'), null);
+assert.equal(maintenanceReply('How much does a patio cost?', [], maintenancePath), null);
+assert.equal(maintenanceReply('How much does it cost?', [
+  { role: 'user', content: 'Do you offer mowing?' },
+  { role: 'user', content: 'I also want a patio.' },
+], maintenancePath), null);
+assert.match(maintenanceReply('How much is maintenance?', [
+  { role: 'user', content: 'How much does a patio cost?' },
+  { role: 'assistant', content: 'Patio planning range: $10,750–$23,000 + HST' },
+], '/services/') ?? '', /\/contact\/\?service=maintenance/);
 
 console.log(`sophie teasers: ${cases.length} routes mapped, suppression + once-per-session rules hold`);

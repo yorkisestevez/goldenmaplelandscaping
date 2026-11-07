@@ -1,6 +1,6 @@
 # Golden Maple Landscaping
 
-> Residential landscape construction in Barrie, Ontario. Interlocking stone, retaining walls, and composite decks for homeowners. This file states what the company builds and how to reach it. It is not a contract.
+> Residential landscape construction in Barrie, Ontario. Landscape maintenance for homes and commercial properties starts in 2027.
 
 ## Business profile
 
@@ -15,13 +15,18 @@
 - **FAQ (who we are, what we build, why choose us):** https://goldenmaplelandscaping.ca/faq/
 - **Google reviews:** https://www.google.com/maps/search/?api=1&query=Golden+Maple+Landscaping&query_place_id=ChIJF79Eei2jKogRfcgR8pCR2qc
 
-## What we build
+## Construction and property care
 
-Golden Maple builds outdoor spaces for houses in Barrie and nearby Simcoe County towns: interlocking patios, walkways and driveways, retaining walls, composite decks, and full backyard projects that combine those pieces. Seasonal spring and fall clean-ups (debris, beds, and interlock care — not lawn care) are quoted per property in Barrie, Innisfil, Oro-Medonte and Springwater.
+Golden Maple builds outdoor spaces for houses in Barrie and nearby Simcoe County towns: interlocking patios, walkways and driveways, retaining walls, composite decks, and full backyard projects that combine those pieces. Spring and fall clean-ups for debris, beds and interlock care are a separate service.
+
+Starting in 2027, we offer regular mowing and lawn care as part of full property maintenance for homes and commercial properties. Maintenance enquiries cover Barrie, Innisfil, Oro-Medonte and Springwater. Scope and timing are confirmed for each property.
+
+- **Landscape maintenance:** https://goldenmaplelandscaping.ca/services/landscape-maintenance-barrie/
+- **Request a written maintenance scope:** https://goldenmaplelandscaping.ca/contact/?service=maintenance
 
 Towns with pages on this site: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood, Bradford West Gwillimbury, Newmarket.
 
-## How a project starts
+## How a construction project starts
 
 1. Send the form at https://goldenmaplelandscaping.ca/contact/ or call (705) 500-3581.
 2. Use the cost estimator at https://goldenmaplelandscaping.ca/cost-estimator/ for a planning range. It is not a quote.
@@ -31,7 +36,7 @@ Towns with pages on this site: Barrie, Innisfil, Oro-Medonte, Springwater, Orill
 ## Questions
 
 - **What do you build?** Interlock, retaining walls and composite decks for residential properties.
-- **Who is it for?** Homeowners in Barrie and the towns listed above.
+- **Who is it for?** We build for homeowners. The 2027 landscape maintenance service covers homes and commercial properties in the maintenance area listed above.
 - **Permits:** Permit needs and responsibilities are confirmed for each project.
 - **Reviews:** Read them on Google (https://www.google.com/maps/search/?api=1&query=Golden+Maple+Landscaping&query_place_id=ChIJF79Eei2jKogRfcgR8pCR2qc). This site does not republish review text.
 - **Photos:** Portfolio images under /images/portfolio are owner-photographed Golden Maple jobs.

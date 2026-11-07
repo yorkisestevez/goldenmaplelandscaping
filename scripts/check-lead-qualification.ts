@@ -3,6 +3,7 @@
 // honeypot / instant-bot Netlify 200s again.
 
 import assert from 'node:assert/strict';
+import { scoreGoldenMapleLead } from '../src/utils/leadScoring';
 import {
   isQualifiedFormLead,
   shouldFireLeadConversion,
@@ -29,5 +30,37 @@ assert.equal(shouldFireLeadConversion('contact', { ...qualified, 'bot-field': 'b
 assert.equal(shouldFireLeadConversion('sophie-chat', { 'bot-field': 'bot' }), true, 'Sophie is ungated');
 assert.equal(shouldFireLeadConversion('booking', {}), true, 'booking is ungated');
 assert.equal(shouldFireLeadConversion('contact', {}, true), true, 'explicit skip still fires');
+
+const maintenance = scoreGoldenMapleLead({
+  service: 'Landscape maintenance (2027)',
+  budget: 'under-13k',
+  details: 'Property type: Commercial\nMowing, lawn care and garden beds',
+  city: 'Barrie',
+});
+assert.deepEqual(maintenance.reasons, ['premium_service_area'], 'selected maintenance is a fit below the construction budget');
+
+const priceShopping = scoreGoldenMapleLead({
+  service: 'Landscape maintenance (2027)',
+  details: 'Just pricing for lawn care',
+});
+assert.deepEqual(priceShopping.reasons, ['low_fit_language'], 'non-service low-fit phrases still count for maintenance');
+
+const lowMaintenanceDeck = scoreGoldenMapleLead({
+  service: 'Composite deck',
+  budget: 'under-13k',
+  details: 'Interested in low-maintenance decking',
+});
+assert.deepEqual(
+  lowMaintenanceDeck.reasons,
+  ['below_target_budget', 'priority_hardscape_scope', 'low_fit_language'],
+  'low-maintenance decking stays construction-scored',
+);
+
+const seasonalCleanup = scoreGoldenMapleLead({
+  service: 'Seasonal clean-up',
+  budget: 'under-13k',
+  details: 'Lawn and garden bed clean-up',
+});
+assert.deepEqual(seasonalCleanup.reasons, ['seasonal_cleanup'], 'seasonal clean-ups keep their existing scoring');
 
 console.log('  PASS  lead qualification gate');

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BUSINESS, publicClaimCopy } from '../data/business';
+import { BUSINESS, LANDSCAPE_MAINTENANCE, publicClaimCopy } from '../data/business';
 import { Grid, Hexagon, AlignJustify, ListTree, Layout, ChefHat, Flame, Sun, Leaf, Lightbulb, Map, ArrowRight, Layers } from 'lucide-react';
 import SEO from '../components/SEO';
 import PublicationTrustBar from '../components/PublicationTrustBar';
@@ -74,6 +74,13 @@ const SERVICE_CARDS: Array<{ id: string; title: string; desc: string; icon: type
     link: '/services/outdoor-kitchens-barrie'
   },
   {
+    id: 'maintenance',
+    title: 'Landscape Maintenance',
+    desc: LANDSCAPE_MAINTENANCE.summary,
+    icon: Leaf,
+    link: LANDSCAPE_MAINTENANCE.path,
+  },
+  {
     id: 'cleanups',
     title: 'Seasonal Clean-Ups',
     desc: 'Spring and fall clean-ups: debris hauled away, beds and shrubs tidied, patios swept and joints re-sanded, with a builder\'s eye on the hardscape.',
@@ -101,7 +108,7 @@ export default function Services() {
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
         title="Landscaping Services in Barrie"
-        description="Interlocking stone, composite decking, retaining walls & landscape design. Premium outdoor construction for Barrie & Simcoe County homeowners. View our services."
+        description="Patios, decks, retaining walls and landscape design in Barrie. Explore 2027 landscape maintenance for homes and commercial properties."
         canonical="https://goldenmaplelandscaping.ca/services"
       />
       <PublicationTrustBar />
@@ -117,7 +124,7 @@ export default function Services() {
               <span className="italic text-brand-gold-dark">in Barrie ON.</span>
             </h1>
             <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
-              From interlocking stone driveways to complex multi-level retaining walls, we provide the engineering and craftsmanship your property deserves.
+              We build patios, decks, driveways and retaining walls. Starting in 2027, we also look after lawns and outdoor spaces at homes and commercial properties.
             </p>
           </Reveal>
 

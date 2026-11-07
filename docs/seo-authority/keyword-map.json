@@ -226,6 +226,19 @@
       }
     },
     {
+      "keyword": "landscape maintenance Barrie",
+      "owner": "/services/landscape-maintenance-barrie/",
+      "h1Contains": "Landscape Maintenance",
+      "baseline90d": {
+        "queries": 0,
+        "impressions": 0,
+        "clicks": 0,
+        "weightedPosition": null,
+        "topPage": null,
+        "topQueries": []
+      }
+    },
+    {
       "keyword": "seasonal clean-up Barrie",
       "owner": "/services/seasonal-cleanup-barrie/",
       "h1Contains": "Seasonal Clean-Up",

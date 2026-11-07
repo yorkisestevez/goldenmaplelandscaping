@@ -1,4 +1,5 @@
-import { underPath } from '../utils/trailingSlash';
+import { samePath, underPath } from '../utils/trailingSlash';
+import { LANDSCAPE_MAINTENANCE } from './business';
 import type { QuickProject } from './sophieQuoteOptions';
 
 /** Sophie's one proactive nudge per session: a page-aware line beside the launcher. Copy stays
@@ -51,6 +52,9 @@ export function pickTeaser(pathname: string): Teaser | null {
   const path = normalize(pathname);
   // underPath, not quoted comparisons: the build rewrites quoted paths here to their slashed form (utils/trailingSlash.ts).
   if (SUPPRESSED.some((p) => underPath(path, p))) return null;
+  if (samePath(path, LANDSCAPE_MAINTENANCE.path)) {
+    return { key: 'maintenance', line: 'I can help you request a written quote for 2027 landscape maintenance.', chips: CHIPS };
+  }
   const project = PROJECT_KEYWORDS.find(([re]) => re.test(path))?.[1];
 
   if (underPath(path, '/portfolio')) {

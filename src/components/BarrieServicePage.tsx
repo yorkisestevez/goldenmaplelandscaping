@@ -3,6 +3,9 @@ import { ArrowRight, Check } from 'lucide-react';
 import SEO from './SEO';
 import RelatedProjects from './RelatedProjects';
 import PlanningQuote from './PlanningQuote';
+import ResponsiveImage from './ResponsiveImage';
+import { getProject, projectCoverFull } from '../data/projects';
+import { BUSINESS, canPublish } from '../data/business';
 import { breadcrumb, faqPage, graph, serviceNode } from '../utils/schema';
 import type { BarrieServiceDef } from '../data/barrieServices';
 import { ServicePageFreshness, ServiceReviewer, pageUpdateNode } from './PageFreshness';
@@ -16,6 +19,7 @@ import { ServicePageFreshness, ServiceReviewer, pageUpdateNode } from './PageFre
  */
 export default function BarrieServicePage({ def }: { def: BarrieServiceDef }) {
   const path = `/services/${def.slug}/`;
+  const updateKey = def.updateKey ?? 'barrieServiceTemplate';
   // Estimator-priced pages keep the planning-range CTA; others (e.g. seasonal clean-ups) supply their own.
   const cta = def.cta ?? {
     label: 'See My Cost Range',
@@ -23,15 +27,18 @@ export default function BarrieServicePage({ def }: { def: BarrieServiceDef }) {
     band: ['Start with a planning range.', 'Then we walk the site.'] as [string, string],
     bandBody: 'The cost estimator gives you a planning range first. If the number works, we visit, measure, and put the base, drainage and materials in a written scope for your property.',
   };
+  const photoProject = def.scopePhoto && canPublish(BUSINESS.reviews.portfolio) && canPublish(BUSINESS.reviews.photoRights)
+    ? getProject(def.scopePhoto.projectSlug)
+    : undefined;
   const schema = graph(
-    serviceNode({ path, name: def.h1, serviceType: def.serviceType, description: def.description, areaServed: 'Barrie' }),
+    serviceNode({ path, name: def.h1, serviceType: def.serviceType, description: def.description, areaServed: def.areaServed ?? 'Barrie' }),
     breadcrumb([
       { name: 'Home', path: '/' },
       { name: 'Services', path: '/services/' },
       { name: def.h1, path },
     ]),
     faqPage(path, def.faqs),
-    pageUpdateNode('barrieServiceTemplate', path, def.h1),
+    pageUpdateNode(updateKey, path, def.h1),
   );
 
   return (
@@ -52,34 +59,51 @@ export default function BarrieServicePage({ def }: { def: BarrieServiceDef }) {
               ))}
               <div className="flex flex-col sm:flex-row gap-10 mt-12">
                 <Link to={cta.to} className="btn-primary">{cta.label}</Link>
-                <Link to="/contact" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
-                  Talk to us about your project <ArrowRight size={16} strokeWidth={1.5} />
-                </Link>
+                {!def.enquiryOnly && (
+                  <Link to="/contact" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
+                    Talk to us about your project <ArrowRight size={16} strokeWidth={1.5} />
+                  </Link>
+                )}
               </div>
-              <ServicePageFreshness updateKey="barrieServiceTemplate" className="mt-12" />
+              <ServicePageFreshness updateKey={updateKey} showBookingWindow={!def.enquiryOnly} className="mt-12" />
             </div>
 
-            <div className="bg-brand-surface p-10 md:p-14 rounded-[2px] border border-brand-dim/40 shadow-2xl">
-              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">{def.scopeHeading}</h2>
-              <ul className="space-y-6">
-                {def.scope.map((item) => (
-                  <li key={item} className="flex items-start gap-5 font-sans text-[15px] text-brand-bonewhite leading-snug font-light">
-                    <Check size={18} className="text-brand-gold-dark shrink-0 mt-0.5" strokeWidth={1.5} aria-hidden="true" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
+            <div>
+              <div className="bg-brand-surface p-10 md:p-14 rounded-[2px] border border-brand-dim/40 shadow-2xl">
+                <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">{def.scopeHeading}</h2>
+                <ul className="space-y-6">
+                  {def.scope.map((item) => (
+                    <li key={item} className="flex items-start gap-5 font-sans text-[15px] text-brand-bonewhite leading-snug font-light">
+                      <Check size={18} className="text-brand-gold-dark shrink-0 mt-0.5" strokeWidth={1.5} aria-hidden="true" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {def.scopePhoto && photoProject && (
+                <figure className="mt-6">
+                  <ResponsiveImage
+                    image={projectCoverFull(photoProject)}
+                    sizes="(min-width: 1024px) 40vw, 100vw"
+                    aspect="3/2"
+                    wrapperClassName="overflow-hidden rounded-[2px]"
+                  />
+                  <figcaption className="mt-3 text-sm leading-relaxed text-brand-muted">{def.scopePhoto.caption}</figcaption>
+                </figure>
+              )}
             </div>
           </div>
 
-          <div className="max-w-xl mb-24">
-            <PlanningQuote
-              source={def.slug}
-              categories={def.projectCategories}
-              defaultService={def.slug === 'interlocking-driveways-barrie' ? 'Interlock driveway' : def.slug === 'seasonal-cleanup-barrie' ? 'Seasonal clean-up' : def.slug === 'outdoor-kitchens-barrie' ? 'Outdoor kitchen' : def.slug === 'porcelain-patios-barrie' ? 'Interlocking patio' : 'Not sure yet'}
-              repairHref={def.slug === 'interlocking-driveways-barrie' || def.slug === 'porcelain-patios-barrie' ? '/premium-patio-rebuild-barrie/' : undefined}
-            />
-          </div>
+          {!def.enquiryOnly && (
+            <div className="max-w-xl mb-24">
+              <PlanningQuote
+                source={def.slug}
+                categories={def.projectCategories}
+                defaultService={def.slug === 'interlocking-driveways-barrie' ? 'Interlock driveway' : def.slug === 'seasonal-cleanup-barrie' ? 'Seasonal clean-up' : def.slug === 'outdoor-kitchens-barrie' ? 'Outdoor kitchen' : def.slug === 'porcelain-patios-barrie' ? 'Interlocking patio' : 'Not sure yet'}
+                repairHref={def.slug === 'interlocking-driveways-barrie' || def.slug === 'porcelain-patios-barrie' ? '/premium-patio-rebuild-barrie/' : undefined}
+              />
+            </div>
+          )}
 
           <div className="max-w-4xl mx-auto mb-32 space-y-20">
             {def.sections.map((section) => (
@@ -123,7 +147,7 @@ export default function BarrieServicePage({ def }: { def: BarrieServiceDef }) {
             </ul>
           </nav>
 
-          <ServiceReviewer updateKey="barrieServiceTemplate" />
+          <ServiceReviewer updateKey={updateKey} />
         </div>
       </section>
 
@@ -138,7 +162,9 @@ export default function BarrieServicePage({ def }: { def: BarrieServiceDef }) {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to={cta.to} className="btn-primary px-12 py-4">{cta.label}</Link>
-            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Or contact us →</Link>
+            {!def.enquiryOnly && (
+              <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Or contact us →</Link>
+            )}
           </div>
         </div>
       </section>

@@ -39,7 +39,11 @@ export const PAGE_UPDATES = {
   '/services/retaining-walls-barrie/': REVIEWED_2026_11_07,
   '/services/landscape-design-barrie/': REVIEWED_2026_11_07,
   '/services/composite-decking-barrie/': REVIEWED_2026_11_07,
-  /** All pages rendered by BarrieServicePage (src/data/barrieServices.ts). Shared date: bump it on any template edit. */
+  '/services/landscape-maintenance-barrie/': {
+    updatedOn: '2026-11-07',
+    source: 'Created for the owner-confirmed 2027 residential and commercial landscape maintenance rollout.',
+  },
+  /** Default for pages rendered by BarrieServicePage. Shared date: bump it on template edits that affect those pages. */
   barrieServiceTemplate: UPDATED_2026_11_07,
   /** All /services/<service>-<town>/ pages rendered by ServiceLocation. Shared date: bump it on any template edit. */
   serviceLocationTemplate: UPDATED_2026_11_07,

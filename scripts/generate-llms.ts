@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { BUSINESS, publicAddressLine, publicContact, publicClaimCopy, publicHoursLine } from '../src/data/business.ts';
+import { BUSINESS, LANDSCAPE_MAINTENANCE, publicAddressLine, publicContact, publicClaimCopy, publicHoursLine } from '../src/data/business.ts';
 import { OWNER_FACTS, googleReviewBadge, ownerFact, ownerLink } from '../src/data/ownerFacts.ts';
 import { BOOKING_WINDOW } from '../src/data/pageUpdates.ts';
 
@@ -26,7 +26,7 @@ function renderBusinessBrief() {
   const response = ownerFact(OWNER_FACTS.responseTime);
   return `# ${BUSINESS.publicName.value}
 
-> Residential landscape construction in Barrie, Ontario. Interlocking stone, retaining walls, and composite decks for homeowners. This file states what the company builds and how to reach it. It is not a contract.
+> Residential landscape construction in Barrie, Ontario. Landscape maintenance for homes and commercial properties starts in 2027.
 
 ## Business profile
 
@@ -40,13 +40,18 @@ ${line('Founded', founded)}- **Phone:** ${publicContact.phoneDisplay} (${publicC
 - **Booking:** ${BOOKING_WINDOW}
 - **FAQ (who we are, what we build, why choose us):** ${BUSINESS.canonicalUrl}/faq/
 ${line('Response', response)}${reviewsUrl ? `- **Google reviews:** ${reviewsUrl}${reviewLine ? ` (${reviewLine})` : ''}\n` : ''}${line('Liability coverage', insurance)}${line('WSIB', wsib)}${line('Workmanship terms', warranty)}${line('Certifications', certs)}${line('Project minimum', minimum)}
-## What we build
+## Construction and property care
 
-Golden Maple builds outdoor spaces for houses in Barrie and nearby Simcoe County towns: interlocking patios, walkways and driveways, retaining walls, composite decks, and full backyard projects that combine those pieces. Seasonal spring and fall clean-ups (debris, beds, and interlock care — not lawn care) are quoted per property in Barrie, Innisfil, Oro-Medonte and Springwater.
+Golden Maple builds outdoor spaces for houses in Barrie and nearby Simcoe County towns: interlocking patios, walkways and driveways, retaining walls, composite decks, and full backyard projects that combine those pieces. Spring and fall clean-ups for debris, beds and interlock care are a separate service.
+
+${LANDSCAPE_MAINTENANCE.summary} Maintenance enquiries cover Barrie, Innisfil, Oro-Medonte and Springwater. Scope and timing are confirmed for each property.
+
+- **Landscape maintenance:** ${BUSINESS.canonicalUrl}${LANDSCAPE_MAINTENANCE.path}
+- **Request a written maintenance scope:** ${BUSINESS.canonicalUrl}${LANDSCAPE_MAINTENANCE.enquiryPath}
 
 Towns with pages on this site: ${areas}.
 
-## How a project starts
+## How a construction project starts
 
 1. Send the form at ${BUSINESS.canonicalUrl}/contact/ or call ${publicContact.phoneDisplay}.
 2. Use the cost estimator at ${BUSINESS.canonicalUrl}/cost-estimator/ for a planning range. It is not a quote.
@@ -56,7 +61,7 @@ Towns with pages on this site: ${areas}.
 ## Questions
 
 - **What do you build?** Interlock, retaining walls and composite decks for residential properties.
-- **Who is it for?** Homeowners in Barrie and the towns listed above.
+- **Who is it for?** We build for homeowners. The 2027 landscape maintenance service covers homes and commercial properties in the maintenance area listed above.
 ${warranty ? `- **Warranty:** ${warranty}\n` : ''}${insurance ? `- **Insurance:** ${insurance}\n` : ''}- **Permits:** ${publicClaimCopy(BUSINESS.commercialPolicies.permits, 'Permit needs and responsibilities are confirmed for each project.')}
 - **Reviews:** Read them on Google${reviewsUrl ? ` (${reviewsUrl})` : ''}. This site does not republish review text.
 - **Photos:** Portfolio images under /images/portfolio are owner-photographed Golden Maple jobs.
