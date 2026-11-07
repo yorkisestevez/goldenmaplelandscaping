@@ -34,12 +34,16 @@ export function BookingWindow({ className = '' }: { className?: string }) {
 }
 
 /** Service-page freshness strip: last updated + reviewer, then the booking window. */
-export function ServicePageFreshness({ updateKey, className = '' }: { updateKey: PageUpdateKey; className?: string }) {
+export function ServicePageFreshness({
+  updateKey,
+  className = '',
+  showBookingWindow = true,
+}: { updateKey: PageUpdateKey; className?: string; showBookingWindow?: boolean }) {
   const update = PAGE_UPDATES[updateKey];
   return (
     <div className={`space-y-2 ${className}`}>
       <LastUpdatedLine updatedOn={update.updatedOn} reviewed={'reviewedBy' in update} />
-      <BookingWindow />
+      {showBookingWindow && <BookingWindow />}
     </div>
   );
 }

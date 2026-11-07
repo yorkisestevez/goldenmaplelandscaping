@@ -5,6 +5,7 @@ import { PROJECT_BUDGET_RANGES } from '../data/projectBudgets';
 import { OWNER_FACTS, ownerFact } from '../data/ownerFacts';
 import { publicContact } from '../data/business';
 import { trackLead } from '../utils/analytics';
+import { MAINTENANCE_LEAD_SERVICE } from '../utils/leadScoring';
 import { postNetlifyForm, type NetlifyFormName } from '../utils/postNetlifyForm';
 import GoogleReviewsLink from './GoogleReviewsLink';
 
@@ -18,6 +19,7 @@ export const LEAD_SERVICES = [
   'Outdoor kitchen',
   'Patio repair or re-level',
   'Seasonal clean-up',
+  MAINTENANCE_LEAD_SERVICE,
   'Not sure yet',
 ] as const;
 
@@ -28,8 +30,23 @@ const TIMING = [
   'Just researching',
 ] as const;
 
+const MAINTENANCE_TIMING = [
+  'At the start of the 2027 season',
+  'Later in the 2027 season',
+  'Flexible',
+  'Just researching',
+] as const;
+
+const PROPERTY_TYPES = {
+  residential: 'Residential',
+  commercial: 'Commercial',
+} as const;
+
+type PropertyType = keyof typeof PROPERTY_TYPES;
+
 const SERVICE_FROM_QUERY: Record<string, (typeof LEAD_SERVICES)[number]> = {
   'seasonal-cleanup': 'Seasonal clean-up',
+  maintenance: MAINTENANCE_LEAD_SERVICE,
   patio: 'Interlocking patio',
   porcelain: 'Outdoor porcelain installation',
   driveway: 'Interlock driveway',
@@ -66,7 +83,12 @@ const emptyFields = (service = ''): Fields => ({
   botField: '',
 });
 
-function validate(fields: Fields): Errors {
+function selectService(fields: Fields, service: string): Fields {
+  const maintenanceChanged = (fields.service === MAINTENANCE_LEAD_SERVICE) !== (service === MAINTENANCE_LEAD_SERVICE);
+  return { ...fields, service, timing: maintenanceChanged ? '' : fields.timing };
+}
+
+function validate(fields: Fields, isMaintenance: boolean): Errors {
   const errors: Errors = {};
   if (fields.name.trim().length < 2) errors.name = 'Add your name so we know who to call.';
   const digits = fields.phone.replace(/\D/g, '');
@@ -74,7 +96,7 @@ function validate(fields: Fields): Errors {
   if (!EMAIL_RE.test(fields.email.trim())) errors.email = 'Enter an email like name@email.com.';
   if (fields.town.trim().length < 2) errors.town = 'Add your town or postal code.';
   if (!fields.service) errors.service = 'Choose the kind of project.';
-  if (!fields.timing) errors.timing = 'Choose when you want to build.';
+  if (!fields.timing) errors.timing = isMaintenance ? 'Choose your preferred timing.' : 'Choose when you want to build.';
   return errors;
 }
 
@@ -87,6 +109,7 @@ export default function LeadForm({
   idPrefix,
   defaultService = '',
   enquiryType,
+  onMaintenanceSelectionChange,
   intent,
   extra,
   variant = 'light',
@@ -99,6 +122,7 @@ export default function LeadForm({
   idPrefix: string;
   defaultService?: string;
   enquiryType?: 'Porcelain homeowner' | 'Porcelain trade partner';
+  onMaintenanceSelectionChange?: (isMaintenance: boolean) => void;
   intent?: 'high-intent' | 'top-of-funnel';
   extra?: Record<string, string>;
   variant?: 'light' | 'dark';
@@ -106,14 +130,26 @@ export default function LeadForm({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [fields, setFields] = useState<Fields>(() => emptyFields(defaultService));
+  const [propertyType, setPropertyType] = useState<PropertyType | ''>('');
+  const isMaintenance = fields.service === MAINTENANCE_LEAD_SERVICE;
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<'idle' | 'submitting' | 'error'>('idle');
   const [formError, setFormError] = useState('');
 
   useEffect(() => {
-    const preset = SERVICE_FROM_QUERY[searchParams.get('service') ?? ''];
-    if (preset) setFields((current) => ({ ...current, service: preset }));
+    const service = searchParams.get('service') ?? '';
+    if (!Object.hasOwn(SERVICE_FROM_QUERY, service)) return;
+    const preset = SERVICE_FROM_QUERY[service];
+    setFields((current) => selectService(current, preset));
+    if (preset === MAINTENANCE_LEAD_SERVICE) {
+      const property = searchParams.get('property');
+      setPropertyType(property === 'residential' || property === 'commercial' ? property : '');
+    }
   }, [searchParams]);
+
+  useEffect(() => {
+    onMaintenanceSelectionChange?.(isMaintenance);
+  }, [isMaintenance, onMaintenanceSelectionChange]);
 
   const dark = variant === 'dark';
   const labelCls = dark
@@ -125,13 +161,13 @@ export default function LeadForm({
   const errorCls = 'font-sans text-[13px] text-brand-error mt-1.5';
 
   const set = (key: keyof Fields, value: string) => {
-    setFields((current) => ({ ...current, [key]: value }));
+    setFields((current) => key === 'service' ? selectService(current, value) : { ...current, [key]: value });
     setErrors((current) => ({ ...current, [key]: undefined }));
   };
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const nextErrors = validate(fields);
+    const nextErrors = validate(fields, isMaintenance);
     setErrors(nextErrors);
     if (Object.values(nextErrors).some(Boolean)) {
       setStatus('error');
@@ -150,9 +186,13 @@ export default function LeadForm({
         service: fields.service,
         town: fields.town.trim(),
         timing: fields.timing,
-        budget: fields.budget,
+        budget: isMaintenance ? '' : fields.budget,
         // Keep enquiry intent in Netlify's registered notes field, separate from acquisition attribution.
-        details: [enquiryType && `Enquiry type: ${enquiryType}`, fields.details.trim()].filter(Boolean).join('\n'),
+        details: [
+          !isMaintenance && enquiryType && `Enquiry type: ${enquiryType}`,
+          isMaintenance && propertyType && `Property type: ${PROPERTY_TYPES[propertyType]}`,
+          fields.details.trim(),
+        ].filter(Boolean).join('\n'),
         botField: fields.botField,
         extra,
       });
@@ -183,7 +223,7 @@ export default function LeadForm({
       {heading && <h2 className={`font-display text-2xl md:text-3xl font-light leading-tight ${dark ? 'text-brand-porcelain' : 'text-brand-bonewhite'}`}>{heading}</h2>}
       {intro && <p className={`font-sans text-sm leading-relaxed font-light ${dark ? 'text-brand-porcelain/80' : 'text-brand-muted'}`}>{intro}</p>}
       {response && <p className={`font-sans text-sm ${dark ? 'text-brand-gold' : 'text-brand-gold-dark'}`}>{response}</p>}
-      {minimum && <p className={`font-sans text-sm ${dark ? 'text-brand-porcelain/80' : 'text-brand-muted'}`}>{minimum}</p>}
+      {!isMaintenance && minimum && <p className={`font-sans text-sm ${dark ? 'text-brand-porcelain/80' : 'text-brand-muted'}`}>{minimum}</p>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Full name" id={id('name')} error={errors.name} labelCls={labelCls} errorCls={errorCls}>
@@ -207,29 +247,50 @@ export default function LeadForm({
             <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-brand-gold-dark" aria-hidden="true" />
           </div>
         </Field>
-        <Field label="When do you want to build?" id={id('timing')} error={errors.timing} labelCls={labelCls} errorCls={errorCls}>
+        <Field label={isMaintenance ? 'When would you like maintenance to start?' : 'When do you want to build?'} id={id('timing')} error={errors.timing} labelCls={labelCls} errorCls={errorCls}>
           <div className="relative">
             <select id={id('timing')} name="timing" value={fields.timing} onChange={(event) => set('timing', event.target.value)} className={`${fieldCls} appearance-none pr-10`} aria-invalid={!!errors.timing}>
               <option value="">Choose timing</option>
-              {TIMING.map((timing) => <option key={timing} value={timing}>{timing}</option>)}
+              {(isMaintenance ? MAINTENANCE_TIMING : TIMING).map((timing) => <option key={timing} value={timing}>{timing}</option>)}
             </select>
             <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-brand-gold-dark" aria-hidden="true" />
           </div>
         </Field>
       </div>
 
-      <Field label="Budget (optional)" id={id('budget')} labelCls={labelCls} errorCls={errorCls}>
-        <div className="relative">
-          <select id={id('budget')} name="budget" value={fields.budget} onChange={(event) => set('budget', event.target.value)} className={`${fieldCls} appearance-none pr-10`}>
-            <option value="">Not sure yet</option>
-            {PROJECT_BUDGET_RANGES.map((range) => <option key={range.value} value={range.value}>{range.label}</option>)}
-          </select>
-          <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-brand-gold-dark" aria-hidden="true" />
-        </div>
-      </Field>
+      {isMaintenance ? (
+        <fieldset className="min-w-0">
+          <legend className={labelCls}>Property type (optional)</legend>
+          <div className="flex flex-wrap gap-3">
+            {(Object.keys(PROPERTY_TYPES) as PropertyType[]).map((property) => (
+              <label key={property} className="inline-flex min-h-11 items-center gap-2 px-3 border border-brand-dim rounded-[2px] font-sans text-sm">
+                <input
+                  type="radio"
+                  name={id('property-type')}
+                  value={property}
+                  checked={propertyType === property}
+                  onChange={() => setPropertyType(property)}
+                  className="accent-brand-gold focus-visible:ring-2 focus-visible:ring-brand-gold/40"
+                />
+                {PROPERTY_TYPES[property]}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ) : (
+        <Field label="Budget (optional)" id={id('budget')} labelCls={labelCls} errorCls={errorCls}>
+          <div className="relative">
+            <select id={id('budget')} name="budget" value={fields.budget} onChange={(event) => set('budget', event.target.value)} className={`${fieldCls} appearance-none pr-10`}>
+              <option value="">Not sure yet</option>
+              {PROJECT_BUDGET_RANGES.map((range) => <option key={range.value} value={range.value}>{range.label}</option>)}
+            </select>
+            <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-brand-gold-dark" aria-hidden="true" />
+          </div>
+        </Field>
+      )}
 
       <Field label="Anything we should know? (optional)" id={id('details')} labelCls={labelCls} errorCls={errorCls}>
-        <textarea id={id('details')} name="details" rows={3} value={fields.details} onChange={(event) => set('details', event.target.value)} placeholder="Size, access, or what you want the space to do." className={fieldCls} />
+        <textarea id={id('details')} name="details" rows={3} value={fields.details} onChange={(event) => set('details', event.target.value)} placeholder={isMaintenance ? 'Approximate property size and areas you would like maintained.' : 'Size, access, or what you want the space to do.'} className={fieldCls} />
       </Field>
 
       {formError && <p className={errorCls} role="alert">{formError}</p>}

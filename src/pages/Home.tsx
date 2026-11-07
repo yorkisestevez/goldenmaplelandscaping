@@ -5,7 +5,7 @@ import HeroDepth from '../components/HeroDepth';
 import GoogleReviewsLink from '../components/GoogleReviewsLink';
 import { Link } from 'react-router-dom';
 import Reveal from '../components/Reveal';
-import { BUSINESS, publicClaimCopy } from '../data/business';
+import { BUSINESS, LANDSCAPE_MAINTENANCE, publicClaimCopy } from '../data/business';
 import { HOME_FAQS } from '../data/homeFaqs';
 import { OWNER_FACTS, ownerFact } from '../data/ownerFacts';
 import ResponsiveImage from '../components/ResponsiveImage';
@@ -38,6 +38,17 @@ const ServicesGrid = () => {
             </Link>
           ))}
         </div>
+        <Link
+          to={LANDSCAPE_MAINTENANCE.path}
+          className="group mt-10 flex flex-wrap items-center justify-between gap-6 rounded-[2px] border border-brand-dim bg-brand-surface px-6 py-7 transition-colors hover:border-brand-gold-dark md:px-9"
+        >
+          <div>
+            <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.22em] text-brand-gold-dark">New for 2027</p>
+            <h3 className="mb-2 font-display text-3xl text-brand-ink">Landscape maintenance</h3>
+            <p className="text-sm leading-relaxed text-brand-muted">Regular mowing and lawn care for homes and commercial properties.</p>
+          </div>
+          <span className="home-project-link">Explore maintenance <ArrowRight size={15} aria-hidden="true" /></span>
+        </Link>
         <div className="flex flex-wrap gap-x-8 gap-y-4 mt-12 pt-6 border-t border-brand-dim text-xs text-brand-muted">
           <span className="text-brand-gold-dark uppercase tracking-widest text-[10px] font-medium">Complete the space</span>
           <Link to="/services/landscape-design-barrie" className="hover:text-brand-ink">Landscape design</Link>
@@ -284,7 +295,7 @@ export default function Home() {
     <>
       <SEO
         title="Barrie Landscaping | Patios, Walls & Decks"
-        description="Golden Maple builds interlocking patios, driveways, retaining walls and composite decks for homeowners in Barrie and Simcoe County."
+        description="Patios, retaining walls and composite decks in Barrie and Simcoe County. Landscape maintenance for homes and commercial properties starts in 2027."
         canonical="https://goldenmaplelandscaping.ca/"
         schema={faqSchema}
       />

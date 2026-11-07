@@ -95,6 +95,17 @@ const offeredPerOwner = (value: string): BusinessFact<string> => ({
   notes: 'Confirms the service is offered. Pricing, timelines and specs on the page stay project-specific unless separately confirmed.',
 });
 
+export const LANDSCAPE_MAINTENANCE = {
+  value: 'Landscape maintenance (2027)',
+  status: 'confirmed' as const,
+  lastVerified: '2026-11-07',
+  source: 'Owner confirmed the 2027 landscape maintenance offering, including regular mowing and lawn care for residential and commercial properties.',
+  notes: 'Scope and timing are confirmed for each property. The spring and fall clean-up service remains a separate offering.',
+  summary: 'Starting in 2027, we offer regular mowing and lawn care as part of full property maintenance for homes and commercial properties.',
+  path: '/services/landscape-maintenance-barrie/',
+  enquiryPath: '/contact/?service=maintenance',
+} as const;
+
 export const BUSINESS = {
   canonicalUrl: 'https://goldenmaplelandscaping.ca',
   publicName: published('Golden Maple Landscaping', 'Existing site-wide public copy'),
@@ -191,7 +202,7 @@ export const BUSINESS = {
     secondary: published(['Orillia', 'Wasaga Beach', 'Midland', 'Collingwood', 'Bradford West Gwillimbury', 'Newmarket'], 'Existing service-location matrix and root schema; Bradford West Gwillimbury + Newmarket added per owner direction 2026-09-25', 'Active service coverage needs owner confirmation.'),
   },
   services: published(
-    ['Interlocking stone', 'Composite decking', 'Retaining walls', 'Landscape design', 'Outdoor living / backyard transformations'],
+    ['Interlocking stone', 'Composite decking', 'Retaining walls', 'Landscape design', 'Outdoor living / backyard transformations', LANDSCAPE_MAINTENANCE.value],
     'Existing services and navigation',
   ),
   /**
@@ -203,12 +214,13 @@ export const BUSINESS = {
     porcelainPatios: offeredPerOwner('Porcelain patios'),
     outdoorKitchens: offeredPerOwner('Outdoor kitchens'),
     frontEntrances: offeredPerOwner('Front entrance landscaping (steps, landings, walkways)'),
+    landscapeMaintenance: LANDSCAPE_MAINTENANCE,
     seasonalCleanups: {
       value: 'Seasonal clean-ups (spring and fall)',
       status: 'confirmed' as const,
       lastVerified: '2026-09-28',
       source: 'Owner instruction 2026-09-28 (Claude Code session): "we now offer seasonal clean up, make sure thats part of our website"; scope, seasons, pricing and area answered in the same session',
-      notes: 'Spring and fall. Scope: leaves and debris (hauled away), garden beds and shrubs (weeding, cutting back, pruning, edging, mulch), patio and interlock care (sweep or wash, polymeric sand top-up, flag heaving or settlement). NOT lawn care (no aeration or overseeding). Area: Barrie, Innisfil, Oro-Medonte, Springwater. Quoted per property; no published prices.',
+      notes: 'Spring and fall. Scope: leaves and debris (hauled away), garden beds and shrubs (weeding, cutting back, pruning, edging, mulch), patio and interlock care (sweep or wash, polymeric sand top-up, flag heaving or settlement). This standalone service covers the clean-up scope listed here. Area: Barrie, Innisfil, Oro-Medonte, Springwater. Quoted per property; no published prices.',
     },
   },
 

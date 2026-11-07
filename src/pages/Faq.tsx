@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { BookingWindow, LastUpdatedLine, pageUpdateNode } from '../components/PageFreshness';
-import { BUSINESS, publicAddressLine, publicContact } from '../data/business';
+import { BUSINESS, LANDSCAPE_MAINTENANCE, publicAddressLine, publicContact } from '../data/business';
 import { HOME_FAQS } from '../data/homeFaqs';
 import { BOOKING_WINDOW, PAGE_UPDATES } from '../data/pageUpdates';
 import { breadcrumb, faqPage, graph } from '../utils/schema';
@@ -17,11 +17,15 @@ const FOUNDER = BUSINESS.founder.value;
 const IDENTITY_FAQS = [
   {
     q: `Who is ${NAME}?`,
-    a: `${NAME} is a residential landscape construction company in Barrie, Ontario, at ${publicAddressLine()}. It was founded by ${FOUNDER.name}, its ${FOUNDER.role}, and builds for homeowners in Barrie and nearby Simcoe County towns. You can reach it at ${publicContact.phoneDisplay} or ${publicContact.email}.`,
+    a: `${NAME} is a landscaping company based at ${publicAddressLine()}. Its ${FOUNDER.role.toLowerCase()}, ${FOUNDER.name}, leads residential landscape construction in Barrie and nearby Simcoe County towns. In 2027, the company is adding landscape maintenance for homes and commercial properties. You can reach it at ${publicContact.phoneDisplay} or ${publicContact.email}.`,
   },
   {
     q: `What does ${NAME} do?`,
-    a: `${NAME} builds outdoor spaces for houses: interlocking patios, walkways and driveways, retaining walls, composite decks, landscape design, and full backyard projects that combine those pieces. It also does seasonal spring and fall clean-ups (debris, beds and interlock care, not lawn care) in Barrie, Innisfil, Oro-Medonte and Springwater.`,
+    a: `${NAME} builds outdoor spaces for houses: interlocking patios, walkways and driveways, retaining walls, composite decks, landscape design, and full backyard projects that combine those pieces. It also does spring and fall clean-ups for debris, beds and interlock care in Barrie, Innisfil, Oro-Medonte and Springwater.`,
+  },
+  {
+    q: 'Do you offer regular mowing and lawn care?',
+    a: LANDSCAPE_MAINTENANCE.summary + ' Tell us the property address and which areas need care so we can confirm the scope and visit schedule.',
   },
   {
     q: `Why choose ${NAME}?`,
@@ -62,7 +66,7 @@ export default function Faq() {
     <div className="bg-brand-nearblack min-h-screen">
       <SEO
         title={`FAQ | Who Is ${NAME}?`}
-        description={`Who ${NAME} is, what it builds in Barrie and Simcoe County, why homeowners choose it, and when it is booking projects.`}
+        description={`Who ${NAME} is, what it builds in Barrie and Simcoe County, and what to know about its 2027 landscape maintenance service.`}
         canonical={`${BUSINESS.canonicalUrl}${PATH}`}
         schema={pageSchema}
       />
@@ -76,6 +80,9 @@ export default function Faq() {
 
           <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8">About the company</h2>
           <FaqList items={IDENTITY_FAQS} />
+          <Link to={LANDSCAPE_MAINTENANCE.path} className="mt-6 inline-block text-sm font-medium text-brand-green-dark underline underline-offset-4">
+            Explore 2027 landscape maintenance
+          </Link>
 
           <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mt-20 mb-8">Before you ask for a quote</h2>
           <FaqList items={HOME_FAQS} />

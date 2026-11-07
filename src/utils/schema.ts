@@ -80,6 +80,8 @@ export const BUSINESS_KNOWS_ABOUT = [
   'Natural stone',
   'Outdoor living spaces',
   'Seasonal property clean-ups',
+  'Landscape maintenance',
+  'Lawn mowing and care',
 ] as const;
 
 export const FOUNDER_KNOWS_ABOUT = [

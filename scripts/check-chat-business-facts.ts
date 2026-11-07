@@ -17,6 +17,27 @@ for (const question of ['How much does a patio cost?', 'What does your warranty 
   assert.ok(body.reply.includes(publicContact.phoneDisplay));
   assert.doesNotMatch(body.reply, /No job minimum|Every build carries|WSIB certified|\$5M|12–16|\$99|free call/i);
 }
+const askFallback = async (content: string, history: { role: 'user' | 'assistant'; content: string }[] = []) => {
+  const response = await handler({ httpMethod: 'POST', body: JSON.stringify({ messages: [...history, { role: 'user', content }] }) });
+  assert.equal(response.statusCode, 200);
+  const body = JSON.parse(response.body);
+  assert.equal(body.source, 'fallback');
+  return body.reply as string;
+};
+const maintenance = await askFallback('How much do you charge for mowing at a commercial property?');
+assert.match(maintenance, /2027.*regular mowing and lawn care.*homes and commercial properties/i);
+assert.match(maintenance, /\/contact\/\?service=maintenance/);
+assert.doesNotMatch(maintenance, /cost-estimator|\$\d|fertili[sz]|pesticide|snow removal/i);
+const deck = await askFallback('How much does a low-maintenance deck cost?');
+assert.match(deck, /\/cost-estimator/);
+assert.doesNotMatch(deck, /service=maintenance/);
+const maintenanceHistory = [
+  { role: 'user', content: 'Do you offer lawn care?' },
+  { role: 'assistant', content: maintenance },
+] as const;
+assert.match(await askFallback('How much does it cost?', [...maintenanceHistory]), /\/contact\/\?service=maintenance/);
+assert.match(await askFallback('How much is maintenance?'), /\/contact\/\?service=maintenance/);
+assert.match(await askFallback('What would a patio cost?', [...maintenanceHistory]), /\/cost-estimator/);
 assert.equal(requests, 0);
 assert.equal((await handler({ httpMethod:'GET',body:null })).statusCode,405);
 assert.equal((await handler({ httpMethod:'POST',body:'{' })).statusCode,400);
@@ -36,6 +57,9 @@ assert.match(capturedPrompt,/Do not assert a minimum investment/);
 assert.match(capturedPrompt,/Do not characterize the appointment as free or paid/);
 assert.ok(capturedPrompt.includes(publicContact.phoneDisplay));
 assert.doesNotMatch(capturedPrompt,/\$99|\$5M|No job minimum:|They excavate a 12/);
+assert.match(capturedPrompt, /2027[^\n]*regular mowing and lawn care[^\n]*homes and commercial properties/i);
+assert.match(capturedPrompt, /\/contact\/\?service=maintenance/);
+
 assert.equal(requests,1);
 
 // Sophie's estimator range: the browser sends only the 3 tap choices; the server re-runs the engine,
@@ -85,4 +109,4 @@ assert.equal(requests,8);
   assert.equal(afterDeck, both, 'earlier ranges survive a deck tap');
   assert.equal(requests, 10);
 }
-console.log('PASS: 3 real fallback paths, 3 validation boundaries, 1 synthetic prompt-assembly path, pricing context 1 accepted + 5 rejected, model reply guarded; zero external network requests.');
+console.log('PASS: 8 real fallback paths, 3 validation boundaries, 1 synthetic prompt-assembly path, pricing context 1 accepted + 5 rejected, model reply guarded; zero external network requests.');

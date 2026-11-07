@@ -17,8 +17,9 @@
  *
  * Side-effect-free: react-router.config.ts may import it at build time.
  */
-import { BUSINESS, publicClaimCopy, type BusinessFact } from './business';
+import { BUSINESS, LANDSCAPE_MAINTENANCE, publicClaimCopy, type BusinessFact } from './business';
 import type { ProjectCategory } from './projects';
+import type { PageUpdateKey } from './pageUpdates';
 
 export interface BarrieServiceDef {
   /** URL slug under /services/ — always ends in -barrie. */
@@ -48,6 +49,10 @@ export interface BarrieServiceDef {
   /** For services the estimator doesn't price: replaces the estimator buttons and the dark band copy. */
   cta?: { label: string; to: string; band: [string, string]; bandBody: string };
   offering: BusinessFact<string>;
+  enquiryOnly?: true;
+  updateKey?: PageUpdateKey;
+  areaServed?: string[];
+  scopePhoto?: { projectSlug: string; caption: string };
 }
 
 const PERMITS = publicClaimCopy(BUSINESS.commercialPolicies.permits, 'Permit needs and responsibilities are confirmed for each project.');
@@ -355,8 +360,8 @@ export const BARRIE_SERVICES: readonly BarrieServiceDef[] = [
   },
   {
     // Scope, seasons, area and quote-per-property are the owner's 2026-09-28 answers
-    // (BUSINESS.serviceOfferings.seasonalCleanups.notes). No lawn care: never list
-    // aeration, overseeding or mowing as included.
+    // (BUSINESS.serviceOfferings.seasonalCleanups.notes). This standalone
+    // clean-up scope is separate from the 2027 maintenance offering.
     slug: 'seasonal-cleanup-barrie',
     primaryKeyword: 'Seasonal Clean-Ups',
     title: 'Seasonal Clean-Ups Barrie | Spring & Fall Yard Clean-Up',
@@ -434,6 +439,65 @@ export const BARRIE_SERVICES: readonly BarrieServiceDef[] = [
       bandBody: 'Tell us the address, the season and what needs doing. We confirm the scope and the price for your property before the crew arrives.',
     },
     offering: BUSINESS.serviceOfferings.seasonalCleanups,
+  },
+  {
+    slug: 'landscape-maintenance-barrie',
+    primaryKeyword: 'Landscape Maintenance',
+    title: 'Landscape Maintenance in Barrie',
+    description: '2027 landscape maintenance in Barrie, Innisfil, Oro-Medonte and Springwater. Regular mowing and lawn care for homes and commercial properties.',
+    h1: 'Landscape Maintenance in Barrie',
+    tagline: ['Regular care for', 'the property you have.'],
+    serviceType: 'Residential and commercial landscape maintenance',
+    intro: [
+      LANDSCAPE_MAINTENANCE.summary,
+      'Tell us what needs attention each visit, from the lawn to the entrance. We’ll confirm what we can look after, which parts of the property are included, and when visits make sense.',
+    ],
+    scopeHeading: 'What we can look after',
+    scope: [
+      'Regular mowing and lawn care',
+      'Garden beds, shrubs and edges',
+      'Leaves and debris on the property',
+      'Upkeep around patios, walkways and entrances',
+    ],
+    areaServed: [...BUSINESS.serviceArea.primary.value],
+    scopePhoto: {
+      projectSlug: 'midhurst-front-entrance',
+      caption: 'A walkway and planting beds we installed in Midhurst.',
+    },
+    sections: [
+      {
+        heading: 'At home',
+        body: [
+          'Tell us which lawns you want mowed, which beds need attention and how we’ll get to them. A note about a side gate, a steep bank or a backyard you use every afternoon helps us put together a scope that fits the property.',
+        ],
+      },
+      {
+        heading: 'At a commercial property',
+        body: [
+          'Start with the parts of the site people use every day. A storefront entrance, a strip of lawn along the road and the beds beside a parking area can each need different attention. Let us know who coordinates access and when those areas are busiest.',
+        ],
+      },
+    ],
+    faqs: [
+      { q: 'Does landscape maintenance include regular mowing?', a: 'Yes. Regular mowing and lawn care are part of our 2027 landscape maintenance service for homes and commercial properties. We confirm the work and visit schedule for your property.' },
+      { q: 'Where do you offer landscape maintenance?', a: 'We take maintenance enquiries in Barrie, Innisfil, Oro-Medonte and Springwater. Include the property address so we can confirm coverage.' },
+      { q: 'Can I still request a one-time spring or fall clean-up?', a: 'Yes. Spring and fall clean-ups are a separate service for leaves and debris, garden beds and shrubs, and patio and interlock care.' },
+      { q: 'How do I get a maintenance quote?', a: 'Send us the address, property type and what you want looked after. We’ll confirm the scope, timing and price with you in writing.' },
+    ],
+    projectCategories: [],
+    projectsHeading: '',
+    related: [
+      { label: 'Spring and fall clean-ups', to: '/services/seasonal-cleanup-barrie/' },
+    ],
+    cta: {
+      label: 'Request a Maintenance Quote',
+      to: LANDSCAPE_MAINTENANCE.enquiryPath,
+      band: ['Tell us what needs', 'looking after.'],
+      bandBody: 'Send the address and a short description of the property. We’ll use that to discuss the visits and put the scope in writing.',
+    },
+    enquiryOnly: true,
+    updateKey: LANDSCAPE_MAINTENANCE.path,
+    offering: BUSINESS.serviceOfferings.landscapeMaintenance,
   },
 ];
 

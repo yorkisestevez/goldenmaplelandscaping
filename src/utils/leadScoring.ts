@@ -1,5 +1,7 @@
 import { PROJECT_BUDGET_TARGET } from '../data/projectBudgets';
 
+export const MAINTENANCE_LEAD_SERVICE = 'Landscape maintenance (2027)';
+
 export type LeadScoreInput = {
   budget?: string;
   service?: string;
@@ -17,7 +19,8 @@ export type LeadScoreInput = {
 const premiumLocations = ['barrie', 'innisfil', 'springwater', 'oro-medonte', 'midhurst', 'horseshoe', 'shanty bay'];
 // 'deck' joined 2026-09-23 (owner): decks are a priority service like patios and walls.
 const moneyServices = ['outdoor', 'backyard', 'patio', 'interlock', 'retaining', 'wall', 'slope', 'drainage', 'hardscape', 'deck'];
-const lowFitWords = ['cheap', 'small repair', 'just pricing', 'lawn', 'maintenance', 'garden bed', 'sod only'];
+const lowFitWords = ['cheap', 'small repair', 'just pricing', 'sod only'];
+const maintenanceScopeWords = ['lawn', 'maintenance', 'garden bed'];
 // Seasonal clean-ups joined 2026-09-28 (owner): a real, small-ticket service. Tag the lead
 // instead of burying it under the budget and low-fit penalties (its wording naturally
 // mentions beds, lawns and maintenance). Needs a seasonal word so "is site clean-up
@@ -41,6 +44,7 @@ export function scoreGoldenMapleLead(input: LeadScoreInput) {
   let score = 0;
   const reasons: string[] = [];
   const isCleanup = cleanupPattern.test(haystack);
+  const isMaintenance = input.service === MAINTENANCE_LEAD_SERVICE;
   if (isCleanup) reasons.push('seasonal_cleanup');
 
   // Historical under-25k submissions span both sides of the new target;
@@ -53,7 +57,7 @@ export function scoreGoldenMapleLead(input: LeadScoreInput) {
     score += 15; reasons.push('budget_or_estimate_35k_plus');
   } else if (budget === '13k-25k' || (estimateHigh >= PROJECT_BUDGET_TARGET && estimateHigh < 35000)) {
     score += 10; reasons.push('budget_or_estimate_13k_plus');
-  } else if (!isCleanup && (budget === 'under-13k' || (estimateHigh > 0 && estimateHigh < PROJECT_BUDGET_TARGET))) {
+  } else if (!isCleanup && !isMaintenance && (budget === 'under-13k' || (estimateHigh > 0 && estimateHigh < PROJECT_BUDGET_TARGET))) {
     score -= 30; reasons.push('below_target_budget');
   }
 
@@ -72,7 +76,9 @@ export function scoreGoldenMapleLead(input: LeadScoreInput) {
   if (input.hasPhotos) {
     score += 10; reasons.push('photos_supplied');
   }
-  if (!isCleanup && lowFitWords.some(w => haystack.includes(w))) {
+  const hasLowFitLanguage = lowFitWords.some(w => haystack.includes(w))
+    || (!isMaintenance && maintenanceScopeWords.some(w => haystack.includes(w)));
+  if (!isCleanup && hasLowFitLanguage) {
     score -= 25; reasons.push('low_fit_language');
   }
 

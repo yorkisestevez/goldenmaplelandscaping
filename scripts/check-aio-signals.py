@@ -4,6 +4,7 @@ Each rule maps to a point of the 2026-11 AiO audit:
   * /faq/ exists, answers the identity questions, and carries FAQPage + BreadcrumbList.
   * The four hand-built service pages carry a HowTo whose step count equals the
     visible process cards, plus the founder block, "Last updated" and availability lines.
+  * The maintenance page shows its update date without a construction booking or reviewer claim.
   * Offers carry a CAD price range only where the page publishes one.
   * The Unilock vs Techo-Bloc vs Permacon guide has its at-a-glance table; the
     contractor guide has its comparison checklist table.
@@ -155,6 +156,15 @@ def main():
         # No review is recorded for template pages (src/data/pageUpdates.ts) — never stamp one.
         if 'Reviewed by' in page.body or 'reviewedBy' in json.dumps(page.blocks):
             problems.append(f'{path}: template page claims a review that is not recorded')
+
+    maintenance_path = '/services/landscape-maintenance-barrie/'
+    maintenance = load(maintenance_path)
+    if not LAST_UPDATED.search(maintenance.body):
+        problems.append(f'{maintenance_path}: update date missing')
+    if 'Now booking Spring 2027' in maintenance.body or 'scope and budget are confirmed' in maintenance.body:
+        problems.append(f'{maintenance_path}: construction booking language is visible')
+    if 'Reviewed by' in maintenance.body or 'reviewed the scope' in maintenance.body or any('reviewedBy' in node for node in typed(maintenance, 'WebPage')):
+        problems.append(f'{maintenance_path}: claims a review that is not recorded')
 
     brands = load('/resources/unilock-vs-techo-bloc-vs-permacon/')
     if 'The Three Brands at a Glance' not in brands.body or 'Price position' not in brands.body:

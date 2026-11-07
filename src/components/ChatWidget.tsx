@@ -3,8 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { X, Send, ArrowRight } from 'lucide-react';
 import { trackEngagement, trackCall, trackLead } from '../utils/analytics';
-import { openSophieSession, type SophieSession } from '../utils/sophieChat';
-import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
+import { MAINTENANCE_CHAT_REPLY, maintenanceReply, openSophieSession, type SophieSession } from '../utils/sophieChat';
+import { BUSINESS, LANDSCAPE_MAINTENANCE, publicClaimCopy, publicContact } from '../data/business';
 import { ESTIMATOR_LOCATIONS, type EstimatorLocationKey } from '../data/locations';
 import {
   QUICK_PROJECTS, QUICK_SIZES, type QuickProject, type QuickRangeInput, type QuickSize,
@@ -330,6 +330,13 @@ export default function ChatWidget() {
     setInput('');
     trackEngagement('chat_message', content.slice(0, 60));
 
+    const maintenance = maintenanceReply(content, messages, pathname);
+    if (maintenance) {
+      setFlow(null);
+      addReply(maintenance, false);
+      return;
+    }
+
     // A price question before any range gets the estimator's number, not the model's guess.
     if (!lastRangeRef.current && isPriceQuestion(content)) {
       startQuote(projectFromText(content) ?? pickTeaser(pathname)?.project);
@@ -350,6 +357,7 @@ export default function ChatWidget() {
             sessionRef.current = null;
           },
         });
+        sessionRef.current.sendContext(MAINTENANCE_CHAT_REPLY);
       }
       if (pendingContextRef.current) {
         sessionRef.current.sendContext(pendingContextRef.current);
@@ -365,7 +373,13 @@ export default function ChatWidget() {
   };
 
   const onChip = (chip: string) => {
-    if (chip === COST_CHIP) { say({ role: 'user', content: chip }); startQuote(pickTeaser(pathname)?.project); return; }
+    if (chip === COST_CHIP) {
+      say({ role: 'user', content: chip });
+      const maintenance = maintenanceReply(chip, messages, pathname);
+      if (maintenance) addReply(maintenance, false);
+      else startQuote(pickTeaser(pathname)?.project);
+      return;
+    }
     if (chip === BOOK_CHIP) { goBook('chip'); return; }
     void send(chip);
   };
@@ -384,8 +398,11 @@ export default function ChatWidget() {
   // Linkify /cost-estimator, /book, /contact and tel: mentions inside replies. Pages are matched by name: the build
   // slashes quoted paths ('/book' becomes '/book/', buildTools/trailingSlashLinks.ts), which the split pieces never equal.
   const renderContent = (text: string) => {
-    const parts = text.split(new RegExp(`(\\/cost-estimator|\\/book|\\/contact|${publicContact.phoneDisplay.replace(/[()]/g, '\\$&')})`));
+    const parts = text.split(new RegExp(`(\\/contact\\/\\?service=maintenance|\\/cost-estimator|\\/book|\\/contact|${publicContact.phoneDisplay.replace(/[()]/g, '\\$&')})`));
     return parts.map((p, i) => {
+      if (p === LANDSCAPE_MAINTENANCE.enquiryPath) {
+        return <button key={i} onClick={() => goTo(p, 'maintenance')} className="text-brand-green-dark underline underline-offset-2">request a maintenance quote</button>;
+      }
       const page = /^\/(cost-estimator|book|contact)$/.exec(p)?.[1];
       if (page === 'book') {
         return <button key={i} onClick={() => goBook('reply')} className="text-brand-green-dark underline underline-offset-2">book a site visit</button>;

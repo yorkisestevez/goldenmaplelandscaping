@@ -15,7 +15,8 @@
 //   4. Deploy.
 
 import crypto from 'node:crypto';
-import { BUSINESS, publicContact } from '../../src/data/business';
+import { BUSINESS, LANDSCAPE_MAINTENANCE, publicContact } from '../../src/data/business';
+import { maintenanceReply } from '../../src/utils/sophieChat';
 import { parseQuickRangeInput, quickRange } from '../../src/utils/sophieQuote';
 import { guardReply, MAX_SHOWN_RANGES, type AllowedRange } from '../../src/utils/sophieGuard';
 
@@ -41,9 +42,10 @@ VOICE: warm, plain-spoken, concise and helpful. Usually 2–4 sentences. No inve
 BUSINESS FACTS AND PUBLICATION LIMITS:
 - The central business configuration is the source of truth. Previously published claims are not automatically verified.
 - Topics visitors may ask about include ${BUSINESS.services.value.join(', ')}. Confirm the precise scope and municipality with the team rather than asserting every service is offered everywhere.
+- ${LANDSCAPE_MAINTENANCE.summary} For maintenance enquiries, use ${LANDSCAPE_MAINTENANCE.enquiryPath} for a written scope. Confirm the address and timing with the team. Never use the construction estimator for maintenance or assume specific treatments, prices, visit schedules or snow services.
 - Do not assert a minimum investment or no minimum, free property visits, a design fee or credit, formal financing, insurance amount, WSIB status, credentials, manufacturer authorization, review ratings, universal warranty coverage, base depths, permit responsibility, subcontractor policy, availability or start dates. These need owner confirmation.
 - Do not promise that every project carries a five-year warranty. Ask the team for the written terms applicable to the project.
-- Pricing is project-specific. Refer to /cost-estimator for an indicative itemized estimate, not a binding quote. Do not invent or repeat legacy price ranges.
+- Construction pricing is project-specific. Refer to /cost-estimator for an indicative itemized estimate, not a binding quote. Do not invent or repeat legacy price ranges.
 - Use /book or /contact for a discussion. Do not characterize the appointment as free or paid before its terms are confirmed.
 - Ask the visitor's town and have the team confirm current service coverage.
 
@@ -182,13 +184,14 @@ export const handler = async (event: NetlifyEvent) => {
     return { statusCode: 400, body: JSON.stringify({ error: 'no user message' }) };
   }
 
+  const maintenance = maintenanceReply(lastUser.content, convo.slice(0, -1));
   const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
-  // No key configured → safe canned reply (keeps the widget useful pre-setup).
-  if (!apiKey) {
+  // Answer maintenance directly. Use a canned construction reply if the model is unavailable.
+  if (maintenance || !apiKey) {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reply: canned(lastUser.content), source: 'fallback' }),
+      body: JSON.stringify({ reply: maintenance ?? canned(lastUser.content), source: 'fallback' }),
     };
   }
 

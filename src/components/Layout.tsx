@@ -7,7 +7,7 @@ import { onInteractOrIdle } from '../utils/defer';
 const ChatWidget = lazy(() => import('./ChatWidget'));
 import { cn } from '../utils/cn';
 import { samePath, underPath } from '../utils/trailingSlash';
-import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
+import { BUSINESS, LANDSCAPE_MAINTENANCE, publicClaimCopy, publicContact } from '../data/business';
 
 // Canonical profile URLs live in src/data/business.ts — never hardcode handles here.
 const SOCIAL_LINKS = [
@@ -25,6 +25,7 @@ const SERVICE_LINKS = [
   { href: "/services/retaining-walls-barrie", label: "Retaining Walls" },
   { href: "/services/outdoor-kitchens-barrie", label: "Outdoor Kitchens" },
   { href: "/services/front-entrance-landscaping-barrie", label: "Front Entrances" },
+  { href: LANDSCAPE_MAINTENANCE.path, label: "Landscape Maintenance" },
   { href: "/services/seasonal-cleanup-barrie", label: "Seasonal Clean-Ups" },
   { href: "/services/landscape-design-barrie", label: "Landscape Design" },
 ];
@@ -69,6 +70,7 @@ const Navbar = () => {
     { href: "/services/interlocking-barrie", label: "Interlocking Stone", desc: "Patios, walkways, driveways" },
     { href: "/services/composite-decking-barrie", label: "Composite Decking", desc: "TimberTech & Trex builds" },
     { href: "/services/retaining-walls-barrie", label: "Retaining Walls", desc: "Engineered with geogrid" },
+    { href: LANDSCAPE_MAINTENANCE.path, label: "Landscape Maintenance", desc: "2027 mowing and property care" },
     { href: "/services/landscape-design-barrie", label: "Landscape Design", desc: "3D plans + fixed quotes" },
   ];
 
@@ -408,7 +410,7 @@ const Footer = () => {
               </span>
             </Link>
             <p className="font-sans font-light text-sm text-brand-muted leading-relaxed max-w-xs">
-              Architectural outdoor construction serving Barrie, Simcoe County, and Cottage Country. Crafted for Canadian seasons. Designed to last a lifetime.
+              Outdoor construction in Barrie, Simcoe County and Cottage Country. In 2027, we’re adding landscape maintenance for homes and commercial properties in the Barrie area.
             </p>
             <div className="flex flex-col gap-4">
               {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, '') && (

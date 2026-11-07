@@ -26,6 +26,16 @@ const keywordMap = JSON.parse(readFileSync(join(ROOT, 'docs/seo-authority/keywor
   keywords: { keyword: string; owner: string; h1Contains: string | null }[];
 };
 
+const maintenance = BARRIE_SERVICES.find((service) => service.slug === 'landscape-maintenance-barrie');
+assert.ok(maintenance, '2027 landscape maintenance must have its own service page');
+assert.equal(maintenance.cta?.to, '/contact/?service=maintenance');
+assert.equal(maintenance.estimatorType, undefined);
+assert.equal(maintenance.enquiryOnly, true);
+assert.deepEqual(maintenance.areaServed, ['Barrie', 'Innisfil', 'Oro-Medonte', 'Springwater']);
+assert.deepEqual(maintenance.projectCategories, [], 'construction projects cannot be shown as maintenance proof');
+assert.match(maintenance.intro.join(' '), /2027.*regular mowing and lawn care.*homes and commercial properties/i);
+assert.ok(BARRIE_SERVICES.some((service) => service.slug === 'seasonal-cleanup-barrie'), 'the seasonal clean-up offering stays separate');
+
 const matrixSlugs = new Set([...getAutoCombos().map((c) => c.slug), ...HAND_BUILT_COMBOS]);
 const titles = new Set<string>();
 const questions = new Map<string, string>();
