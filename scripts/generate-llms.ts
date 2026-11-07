@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { BUSINESS, publicContact, publicClaimCopy, publicHoursLine, publicPostalAddress } from '../src/data/business.ts';
+import { BUSINESS, publicAddressLine, publicContact, publicClaimCopy, publicHoursLine } from '../src/data/business.ts';
 import { OWNER_FACTS, googleReviewBadge, ownerFact, ownerLink } from '../src/data/ownerFacts.ts';
 import { BOOKING_WINDOW } from '../src/data/pageUpdates.ts';
 
@@ -13,7 +13,6 @@ function line(label: string, value: string | null): string {
 
 function renderBusinessBrief() {
   const hours = publicHoursLine();
-  const address = publicPostalAddress();
   const extraHours = ownerFact(OWNER_FACTS.extraHours);
   const areas = [...BUSINESS.serviceArea.primary.value, ...BUSINESS.serviceArea.secondary.value].join(', ');
   const reviewsUrl = ownerLink(OWNER_FACTS.googleReviewsUrl);
@@ -36,7 +35,7 @@ function renderBusinessBrief() {
 ${line('Founded', founded)}- **Phone:** ${publicContact.phoneDisplay} (${publicContact.phoneTel})
 - **Email:** ${publicContact.email}
 - **Website:** ${BUSINESS.canonicalUrl}
-- **Address:** ${'streetAddress' in address ? `${address.streetAddress}, ${address.addressLocality}, ${address.addressRegion} ${address.postalCode}` : `${address.addressLocality}, ${address.addressRegion}`}
+- **Address:** ${publicAddressLine()}
 - **Office hours:** ${hours}${extraHours ? `; ${extraHours}` : ''}
 - **Booking:** ${BOOKING_WINDOW}
 - **FAQ (who we are, what we build, why choose us):** ${BUSINESS.canonicalUrl}/faq/

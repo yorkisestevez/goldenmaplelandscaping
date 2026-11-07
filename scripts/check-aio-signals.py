@@ -140,6 +140,8 @@ def main():
                 problems.append(f'{path}: publishes no range but its Offer has a price')
             continue
         lo, hi = offer
+        if f'${lo:,}' not in page.body:
+            problems.append(f'{path}: Offer minPrice {lo} is not a figure the page shows')
         match = [s for s in specs if s.get('priceCurrency') == 'CAD' and s.get('minPrice') == lo and s.get('maxPrice') == hi
                  and s.get('valueAddedTaxIncluded') is False]
         if not match:
@@ -150,6 +152,9 @@ def main():
         check_signals(page, path, problems)
         if 'About Yorkis Estevez' not in page.body:
             problems.append(f'{path}: founder block missing')
+        # No review is recorded for template pages (src/data/pageUpdates.ts) — never stamp one.
+        if 'Reviewed by' in page.body or 'reviewedBy' in json.dumps(page.blocks):
+            problems.append(f'{path}: template page claims a review that is not recorded')
 
     brands = load('/resources/unilock-vs-techo-bloc-vs-permacon/')
     if 'The Three Brands at a Glance' not in brands.body or 'Price position' not in brands.body:

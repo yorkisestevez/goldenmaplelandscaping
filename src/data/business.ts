@@ -280,6 +280,12 @@ export function publicHoursLine(): string {
 }
 
 /** Service landing-page arguments are kept compatible, never used as branch addresses. */
+/** The public address as one line, e.g. for prose and llms.txt. Locality only when no street address is published. */
+export function publicAddressLine(): string {
+  const a = publicPostalAddress();
+  return 'streetAddress' in a ? `${a.streetAddress}, ${a.addressLocality}, ${a.addressRegion} ${a.postalCode}` : `${a.addressLocality}, ${a.addressRegion}`;
+}
+
 export function publicPostalAddress(_serviceLocality?: string, _servicePostalCode?: string) {
   const policy = BUSINESS.addressPolicy;
   return {

@@ -19,23 +19,30 @@ export interface PageUpdate {
   source: string;
 }
 
-const AIO_PASS_2026_11_07: PageUpdate = {
+/** The four hand-built service pages: the owner confirmed he reviewed these. */
+const REVIEWED_2026_11_07: PageUpdate = {
   updatedOn: '2026-11-07',
   reviewedBy: 'yorkis-estevez',
   source:
-    'Owner instruction 2026-11-07 (AiO audit prompt): service pages show "Last updated · Reviewed by Yorkis Estevez". Content changed that day in the AiO PR (process schema, founder block, booking window).',
+    'Owner answer 2026-11-07 (Claude Code AiO session): Yorkis reviewed the 4 hand-built service pages only. Content changed that day in the AiO PR (process schema, founder block, booking window).',
+};
+
+/** Template-rendered pages: content changed in the AiO PR, but no owner review is recorded. */
+const UPDATED_2026_11_07: PageUpdate = {
+  updatedOn: '2026-11-07',
+  source: 'AiO PR 2026-11-07: template gained the freshness strip, founder block and booking window. Owner did not review these pages (answer 2026-11-07).',
 };
 
 /** Keyed by page path, or by template for the data-driven service pages. */
 export const PAGE_UPDATES = {
-  '/services/interlocking-barrie/': AIO_PASS_2026_11_07,
-  '/services/retaining-walls-barrie/': AIO_PASS_2026_11_07,
-  '/services/landscape-design-barrie/': AIO_PASS_2026_11_07,
-  '/services/composite-decking-barrie/': AIO_PASS_2026_11_07,
-  /** All pages rendered by BarrieServicePage (src/data/barrieServices.ts). */
-  barrieServiceTemplate: AIO_PASS_2026_11_07,
-  /** All /services/<service>-<town>/ pages rendered by ServiceLocation. */
-  serviceLocationTemplate: AIO_PASS_2026_11_07,
+  '/services/interlocking-barrie/': REVIEWED_2026_11_07,
+  '/services/retaining-walls-barrie/': REVIEWED_2026_11_07,
+  '/services/landscape-design-barrie/': REVIEWED_2026_11_07,
+  '/services/composite-decking-barrie/': REVIEWED_2026_11_07,
+  /** All pages rendered by BarrieServicePage (src/data/barrieServices.ts). Shared date: bump it on any template edit. */
+  barrieServiceTemplate: UPDATED_2026_11_07,
+  /** All /services/<service>-<town>/ pages rendered by ServiceLocation. Shared date: bump it on any template edit. */
+  serviceLocationTemplate: UPDATED_2026_11_07,
   '/faq/': {
     updatedOn: '2026-11-07',
     source: 'Page created 2026-11-07 in the AiO PR from business.ts, the About page, llms.txt and the homepage questions.',

@@ -1,17 +1,12 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
 import { Link } from 'react-router-dom';
-import { BUSINESS, publicPostalAddress } from '../../data/business';
+import { BUSINESS, publicAddressLine } from '../../data/business';
 import { OWNER_FACTS, ownerFact } from '../../data/ownerFacts';
 import { BOOKING_WINDOW } from '../../data/pageUpdates';
 import type { ReactNode } from 'react';
 
 const NOT_PUBLISHED = 'Not published on this site yet. Ask for the current document.';
-
-function addressLine(): string {
-  const a = publicPostalAddress();
-  return 'streetAddress' in a ? `${a.streetAddress}, ${a.addressLocality}, ${a.addressRegion} ${a.postalCode}` : `${a.addressLocality}, ${a.addressRegion}`;
-}
 
 /**
  * The comparison checklist. The third column states only what Golden Maple itself
@@ -22,7 +17,7 @@ const COMPARE_ROWS: { criterion: string; ask: string; publishes: ReactNode }[] =
   {
     criterion: 'Who runs the business, and where',
     ask: 'What is your business address, and who is responsible for my job?',
-    publishes: `${addressLine()}. ${BUSINESS.founder.value.name}, ${BUSINESS.founder.value.role}, is named on the site.`,
+    publishes: `${publicAddressLine()}. ${BUSINESS.founder.value.name}, ${BUSINESS.founder.value.role}, is named on the site.`,
   },
   {
     criterion: 'WSIB',

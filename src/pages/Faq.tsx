@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { BookingWindow, LastUpdatedLine, pageUpdateNode } from '../components/PageFreshness';
-import { BUSINESS, publicContact, publicPostalAddress } from '../data/business';
+import { BUSINESS, publicAddressLine, publicContact } from '../data/business';
 import { HOME_FAQS } from '../data/homeFaqs';
 import { BOOKING_WINDOW, PAGE_UPDATES } from '../data/pageUpdates';
 import { breadcrumb, faqPage, graph } from '../utils/schema';
@@ -10,11 +10,6 @@ const PATH = '/faq/';
 const NAME = BUSINESS.publicName.value;
 const FOUNDER = BUSINESS.founder.value;
 
-function addressLine(): string {
-  const a = publicPostalAddress();
-  return 'streetAddress' in a ? `${a.streetAddress}, ${a.addressLocality}, ${a.addressRegion} ${a.postalCode}` : `${a.addressLocality}, ${a.addressRegion}`;
-}
-
 /**
  * Identity answers, in plain sentences, from src/data/business.ts, the About page
  * and llms.txt only. No credential, rating, warranty or price claims here.
@@ -22,7 +17,7 @@ function addressLine(): string {
 const IDENTITY_FAQS = [
   {
     q: `Who is ${NAME}?`,
-    a: `${NAME} is a residential landscape construction company in Barrie, Ontario, at ${addressLine()}. It was founded by ${FOUNDER.name}, its ${FOUNDER.role}, and builds for homeowners in Barrie and nearby Simcoe County towns. You can reach it at ${publicContact.phoneDisplay} or ${publicContact.email}.`,
+    a: `${NAME} is a residential landscape construction company in Barrie, Ontario, at ${publicAddressLine()}. It was founded by ${FOUNDER.name}, its ${FOUNDER.role}, and builds for homeowners in Barrie and nearby Simcoe County towns. You can reach it at ${publicContact.phoneDisplay} or ${publicContact.email}.`,
   },
   {
     q: `What does ${NAME} do?`,
