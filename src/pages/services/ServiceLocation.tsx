@@ -3,6 +3,7 @@ import { ArrowRight, CheckCircle, MapPin, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
 import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import PlanningQuote from '../../components/PlanningQuote';
+import { ServicePageFreshness, ServiceReviewer, pageUpdateNode } from '../../components/PageFreshness';
 import type { ProjectCategory } from '../../data/projects';
 import Testimonials from '../../components/Testimonials';
 import PublicationTrustBar from '../../components/PublicationTrustBar';
@@ -81,6 +82,7 @@ export default function ServiceLocation() {
       { name: 'Services', path: '/services/' },
       { name: titleHero, path: pagePath },
     ]),
+    pageUpdateNode('serviceLocationTemplate', pagePath, titleHero),
   );
 
 
@@ -134,6 +136,7 @@ export default function ServiceLocation() {
                   <span>{service.perUnitText}</span>
                 </span>
               </div>
+              <ServicePageFreshness updateKey="serviceLocationTemplate" className="mt-10" />
             </div>
 
             <div className="lg:col-span-5 w-full">
@@ -372,6 +375,10 @@ export default function ServiceLocation() {
             })}
           </div>
         </div>
+      </section>
+
+      <section className="container-custom pb-8">
+        <ServiceReviewer updateKey="serviceLocationTemplate" />
       </section>
 
       {/* Final CTA */}

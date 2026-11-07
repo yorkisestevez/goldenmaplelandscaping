@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
-import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
+import { breadcrumb, faqPage, graph, howToNode, serviceNode } from '../../utils/schema';
+import { ServicePageFreshness, ServiceReviewer, pageUpdateNode } from '../../components/PageFreshness';
 import Testimonials from '../../components/Testimonials';
 import PlanningQuote from '../../components/PlanningQuote';
 import { publicContact } from '../../data/business';
@@ -13,21 +14,32 @@ const FAQ = [
   { q: 'How is timing determined?', a: 'Timing depends on design, approvals, access, materials, weather, and the project scope. We can discuss a current schedule after reviewing your project.' },
 ];
 
+const PATH = '/services/composite-decking-barrie/';
+const NAME = 'Composite deck building in Barrie';
+
+// One list drives the visible process cards and the HowTo schema.
+const PROCESS_STEPS = [
+  { title: "Structural Framing", desc: "Structural framing, materials, and applicable code requirements are confirmed for the specific project scope." },
+  { title: "TimberTech Selection", desc: "Choose from the Advanced PVC or Composite collections, featuring realistic wood grains and multi-width options." },
+  { title: "Precision Installation", desc: "Using hidden fastener systems for a clean, screw-free surface that highlights the architectural lines of your deck." },
+  { title: "Finishing Details", desc: "Custom fascia wrapping, integrated LED lighting, and high-end railing systems to complete the luxury look." }
+];
+
 // Page-level nodes only; they reference the single #business declared in root.tsx.
 const pageSchema = graph(
-  serviceNode({ path: '/services/composite-decking-barrie/', name: 'Composite deck building in Barrie', serviceType: 'Composite deck construction', areaServed: 'Barrie' }),
-  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Composite deck building in Barrie', path: '/services/composite-decking-barrie/' }]),
-  faqPage('/services/composite-decking-barrie/', FAQ),
+  serviceNode({
+    path: PATH,
+    name: NAME,
+    serviceType: 'Composite deck construction',
+    areaServed: 'Barrie',
+  }),
+  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: NAME, path: PATH }]),
+  faqPage(PATH, FAQ),
+  howToNode({ path: PATH, name: 'How Golden Maple builds a composite deck', steps: PROCESS_STEPS }),
+  pageUpdateNode(PATH, PATH, NAME),
 );
 
 export default function CompositeDecking() {
-  const processSteps = [
-    { title: "Structural Framing", desc: "Structural framing, materials, and applicable code requirements are confirmed for the specific project scope." },
-    { title: "TimberTech Selection", desc: "Choose from the Advanced PVC or Composite collections, featuring realistic wood grains and multi-width options." },
-    { title: "Precision Installation", desc: "Using hidden fastener systems for a clean, screw-free surface that highlights the architectural lines of your deck." },
-    { title: "Finishing Details", desc: "Custom fascia wrapping, integrated LED lighting, and high-end railing systems to complete the luxury look." }
-  ];
-
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
@@ -65,6 +77,7 @@ export default function CompositeDecking() {
                   <Phone size={14} strokeWidth={1.5} /> Call {publicContact.phoneDisplay}
                 </a>
               </div>
+              <ServicePageFreshness updateKey={PATH} className="mt-12" />
             </div>
 
             <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
@@ -105,7 +118,7 @@ export default function CompositeDecking() {
               defaultService="Composite deck"
             />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-              {processSteps.map((step, idx) => (
+              {PROCESS_STEPS.map((step, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
                   <span className="font-display text-6xl font-light text-brand-gold-dark/10 block mb-10">0{idx + 1}</span>
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{step.title}</h3>
@@ -166,6 +179,8 @@ export default function CompositeDecking() {
               ))}
             </div>
           </div>
+
+          <ServiceReviewer updateKey={PATH} />
         </div>
       </section>
 

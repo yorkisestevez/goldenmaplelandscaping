@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Grid, Check, ArrowRight, Shield, Award, CheckCircle } from 'lucide-react';
 import SEO from '../../components/SEO';
-import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
+import { breadcrumb, faqPage, graph, howToNode, serviceNode } from '../../utils/schema';
+import { engineFactRange } from '../../data/publishedPrices';
+import { ServicePageFreshness, ServiceReviewer, pageUpdateNode } from '../../components/PageFreshness';
 import Testimonials from '../../components/Testimonials';
 import PlanningQuote from '../../components/PlanningQuote';
 
@@ -10,21 +12,34 @@ const FAQ = [
   { q: 'How are base details determined?', a: 'Excavation and base details are project-specific. They are reviewed from site conditions and the written scope rather than offered as a universal standard.' },
 ];
 
+const PATH = '/services/interlocking-barrie/';
+const NAME = 'Interlocking patios, walkways & driveways in Barrie';
+
+// One list drives the visible process cards and the HowTo schema.
+const PROCESS_STEPS = [
+  { title: "Excavation", desc: "We review excavation depth, drainage, and subgrade conditions as part of the project-specific written scope." },
+  { title: "Base Preparation", desc: "Multiple layers of crushed aggregate, each meticulously compacted to engineering standards." },
+  { title: "Laying & Patterning", desc: "Precision placement of premium pavers with laser-guided grading." },
+  { title: "Polymeric Sanding", desc: "Jointing materials and maintenance expectations confirmed for the project scope." }
+];
+
 // Page-level nodes only; they reference the single #business declared in root.tsx.
 const pageSchema = graph(
-  serviceNode({ path: '/services/interlocking-barrie/', name: 'Interlocking patios, walkways & driveways in Barrie', serviceType: 'Interlocking paver installation', areaServed: 'Barrie' }),
-  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Interlocking patios, walkways & driveways in Barrie', path: '/services/interlocking-barrie/' }]),
-  faqPage('/services/interlocking-barrie/', FAQ),
+  serviceNode({
+    path: PATH,
+    name: NAME,
+    serviceType: 'Interlocking paver installation',
+    areaServed: 'Barrie',
+    price: engineFactRange('patio.rate', 'per square foot'),
+    priceDescription: 'Planning range for most 300–1,000 sq ft interlocking patios with mid-tier pavers, before HST. Not a quote for a specific property.',
+  }),
+  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: NAME, path: PATH }]),
+  faqPage(PATH, FAQ),
+  howToNode({ path: PATH, name: 'How Golden Maple builds an interlocking patio', steps: PROCESS_STEPS }),
+  pageUpdateNode(PATH, PATH, NAME),
 );
 
 export default function Interlocking() {
-  const processSteps = [
-    { title: "Excavation", desc: "We review excavation depth, drainage, and subgrade conditions as part of the project-specific written scope." },
-    { title: "Base Preparation", desc: "Multiple layers of crushed aggregate, each meticulously compacted to engineering standards." },
-    { title: "Laying & Patterning", desc: "Precision placement of premium pavers with laser-guided grading." },
-    { title: "Polymeric Sanding", desc: "Jointing materials and maintenance expectations confirmed for the project scope." }
-  ];
-
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
@@ -55,6 +70,7 @@ export default function Interlocking() {
                   Interlock driveways <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
               </div>
+              <ServicePageFreshness updateKey={PATH} className="mt-12" />
             </div>
 
             <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
@@ -93,7 +109,7 @@ export default function Interlocking() {
               </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-              {processSteps.map((step, idx) => (
+              {PROCESS_STEPS.map((step, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
                   <span className="font-display text-6xl font-light text-brand-gold-dark/10 block mb-10">0{idx + 1}</span>
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{step.title}</h3>
@@ -154,6 +170,8 @@ export default function Interlocking() {
               ))}
             </div>
           </div>
+
+          <ServiceReviewer updateKey={PATH} />
         </div>
       </section>
 

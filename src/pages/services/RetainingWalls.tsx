@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
-import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
+import { breadcrumb, faqPage, graph, howToNode, serviceNode } from '../../utils/schema';
+import { engineFactRange } from '../../data/publishedPrices';
+import { ServicePageFreshness, ServiceReviewer, pageUpdateNode } from '../../components/PageFreshness';
 import Testimonials from '../../components/Testimonials';
 import PlanningQuote from '../../components/PlanningQuote';
 import { publicContact } from '../../data/business';
@@ -22,21 +24,34 @@ const FAQ = [
   }
 ];
 
+const PATH = '/services/retaining-walls-barrie/';
+const NAME = 'Retaining wall construction in Barrie';
+
+// One list drives the visible process cards and the HowTo schema.
+const PROCESS_STEPS = [
+  { title: "Drainage Systems", desc: "We install perforated drainage pipes and clear stone backfill to prevent hydrostatic pressure buildup." },
+  { title: "Base Engineering", desc: "A minimum 12-inch compacted aggregate base ensures the wall remains level for decades." },
+  { title: "Geogrid Reinforcement", desc: "For taller walls, we use high-strength geogrid to tie the wall into the soil for maximum stability." },
+  { title: "Precision Leveling", desc: "Every block is laser-leveled to ensure architectural perfection and structural balance." }
+];
+
 // Page-level nodes only; they reference the single #business declared in root.tsx.
 const pageSchema = graph(
-  serviceNode({ path: '/services/retaining-walls-barrie/', name: 'Retaining wall construction in Barrie', serviceType: 'Retaining wall construction', areaServed: 'Barrie' }),
-  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Retaining wall construction in Barrie', path: '/services/retaining-walls-barrie/' }]),
-  faqPage('/services/retaining-walls-barrie/', FAQ),
+  serviceNode({
+    path: PATH,
+    name: NAME,
+    serviceType: 'Retaining wall construction',
+    areaServed: 'Barrie',
+    price: engineFactRange('wall.rate', 'per linear foot'),
+    priceDescription: 'Planning range per linear foot for walls from under 2 ft up to 4–6 ft high, about 50 ft on an accessible site, before HST. Not a quote for a specific property.',
+  }),
+  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: NAME, path: PATH }]),
+  faqPage(PATH, FAQ),
+  howToNode({ path: PATH, name: 'How Golden Maple builds a retaining wall', steps: PROCESS_STEPS }),
+  pageUpdateNode(PATH, PATH, NAME),
 );
 
 export default function RetainingWalls() {
-  const engineeringSteps = [
-    { title: "Drainage Systems", desc: "We install perforated drainage pipes and clear stone backfill to prevent hydrostatic pressure buildup." },
-    { title: "Base Engineering", desc: "A minimum 12-inch compacted aggregate base ensures the wall remains level for decades." },
-    { title: "Geogrid Reinforcement", desc: "For taller walls, we use high-strength geogrid to tie the wall into the soil for maximum stability." },
-    { title: "Precision Leveling", desc: "Every block is laser-leveled to ensure architectural perfection and structural balance." }
-  ];
-
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
@@ -74,6 +89,7 @@ export default function RetainingWalls() {
                   <Phone size={14} strokeWidth={1.5} /> Call {publicContact.phoneDisplay}
                 </a>
               </div>
+              <ServicePageFreshness updateKey={PATH} className="mt-12" />
             </div>
 
             <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
@@ -110,7 +126,7 @@ export default function RetainingWalls() {
               defaultService="Retaining wall"
             />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-              {engineeringSteps.map((step, idx) => (
+              {PROCESS_STEPS.map((step, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
                   <span className="font-display text-6xl font-light text-brand-gold-dark/10 block mb-10">0{idx + 1}</span>
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{step.title}</h3>
@@ -171,6 +187,8 @@ export default function RetainingWalls() {
               ))}
             </div>
           </div>
+
+          <ServiceReviewer updateKey={PATH} />
         </div>
       </section>
 

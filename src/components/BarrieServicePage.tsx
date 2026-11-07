@@ -5,6 +5,7 @@ import RelatedProjects from './RelatedProjects';
 import PlanningQuote from './PlanningQuote';
 import { breadcrumb, faqPage, graph, serviceNode } from '../utils/schema';
 import type { BarrieServiceDef } from '../data/barrieServices';
+import { ServicePageFreshness, ServiceReviewer, pageUpdateNode } from './PageFreshness';
 
 /**
  * Template for the data-driven Barrie money pages (src/data/barrieServices.ts).
@@ -30,6 +31,7 @@ export default function BarrieServicePage({ def }: { def: BarrieServiceDef }) {
       { name: def.h1, path },
     ]),
     faqPage(path, def.faqs),
+    pageUpdateNode('barrieServiceTemplate', path, def.h1),
   );
 
   return (
@@ -54,6 +56,7 @@ export default function BarrieServicePage({ def }: { def: BarrieServiceDef }) {
                   Talk to us about your project <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
               </div>
+              <ServicePageFreshness updateKey="barrieServiceTemplate" className="mt-12" />
             </div>
 
             <div className="bg-brand-surface p-10 md:p-14 rounded-[2px] border border-brand-dim/40 shadow-2xl">
@@ -119,6 +122,8 @@ export default function BarrieServicePage({ def }: { def: BarrieServiceDef }) {
               ))}
             </ul>
           </nav>
+
+          <ServiceReviewer updateKey="barrieServiceTemplate" />
         </div>
       </section>
 

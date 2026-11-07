@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
-import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
+import { breadcrumb, faqPage, graph, howToNode, serviceNode } from '../../utils/schema';
+import { ServicePageFreshness, ServiceReviewer, pageUpdateNode } from '../../components/PageFreshness';
 import Testimonials from '../../components/Testimonials';
 import { publicContact } from '../../data/business';
 import { trackCall, trackEngagement } from '../../utils/analytics';
@@ -25,21 +26,37 @@ const FAQ = [
   }
 ];
 
+const PATH = '/services/landscape-design-barrie/';
+const NAME = 'Landscape design in Barrie';
+
+// The design-only starting price the FAQ below publishes (price ledger: approved 2026-11-07).
+const DESIGN_ONLY_FROM = { minPrice: 5000 };
+
+// One list drives the visible process cards and the HowTo schema.
+const PROCESS_STEPS = [
+  { title: "Consultation", desc: "We meet on-site to understand your vision, lifestyle needs, and the unique characteristics of your property." },
+  { title: "Conceptual Design", desc: "The landscape designer we keep on retainer creates a 3D model that allows you to walk through your new backyard before a single stone is laid." },
+  { title: "Material Selection", desc: "We guide you through choosing the perfect pavers, natural stone, and plantings to match your aesthetic." },
+  { title: "Final Presentation", desc: "A comprehensive plan including 3D renders, technical drawings, and a detailed construction quote." }
+];
+
 // Page-level nodes only; they reference the single #business declared in root.tsx.
 const pageSchema = graph(
-  serviceNode({ path: '/services/landscape-design-barrie/', name: 'Landscape design in Barrie', serviceType: 'Landscape design', areaServed: 'Barrie' }),
-  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Landscape design in Barrie', path: '/services/landscape-design-barrie/' }]),
-  faqPage('/services/landscape-design-barrie/', FAQ),
+  serviceNode({
+    path: PATH,
+    name: NAME,
+    serviceType: 'Landscape design',
+    areaServed: 'Barrie',
+    price: DESIGN_ONLY_FROM,
+    priceDescription: 'Design-only packages (no construction) typically start at this amount, before HST: 3D rendering, two design revisions and one final render revision.',
+  }),
+  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: NAME, path: PATH }]),
+  faqPage(PATH, FAQ),
+  howToNode({ path: PATH, name: 'How Golden Maple runs a landscape design project', steps: PROCESS_STEPS }),
+  pageUpdateNode(PATH, PATH, NAME),
 );
 
 export default function LandscapeDesign() {
-  const designSteps = [
-    { title: "Consultation", desc: "We meet on-site to understand your vision, lifestyle needs, and the unique characteristics of your property." },
-    { title: "Conceptual Design", desc: "The landscape designer we keep on retainer creates a 3D model that allows you to walk through your new backyard before a single stone is laid." },
-    { title: "Material Selection", desc: "We guide you through choosing the perfect pavers, natural stone, and plantings to match your aesthetic." },
-    { title: "Final Presentation", desc: "A comprehensive plan including 3D renders, technical drawings, and a detailed construction quote." }
-  ];
-
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
@@ -82,6 +99,7 @@ export default function LandscapeDesign() {
                   <Phone size={14} strokeWidth={1.5} /> Call {publicContact.phoneDisplay}
                 </a>
               </div>
+              <ServicePageFreshness updateKey={PATH} className="mt-12" />
             </div>
 
             <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
@@ -111,7 +129,7 @@ export default function LandscapeDesign() {
               </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-              {designSteps.map((step, idx) => (
+              {PROCESS_STEPS.map((step, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
                   <span className="font-display text-6xl font-light text-brand-gold-dark/10 block mb-10">0{idx + 1}</span>
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{step.title}</h3>
@@ -171,6 +189,8 @@ export default function LandscapeDesign() {
               ))}
             </div>
           </div>
+
+          <ServiceReviewer updateKey={PATH} />
         </div>
       </section>
 

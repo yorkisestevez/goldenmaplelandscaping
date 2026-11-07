@@ -57,6 +57,14 @@ export function isoDate(input: string): string {
   return `${m[3]}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
+/** '2026-11-07' → 'November 7, 2026' (visible "Last updated" lines). Throws on a non-ISO date. */
+export function displayDate(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  const month = m ? MONTHS[Number(m[2]) - 1] : undefined;
+  if (!m || !month) throw new Error(`displayDate: expected YYYY-MM-DD, got "${iso}"`);
+  return `${month[0].toUpperCase()}${month.slice(1)} ${Number(m[3])}, ${m[1]}`;
+}
+
 /** Topics the business demonstrably covers on this site. Topics, not claims — no credential or rating language. */
 export const BUSINESS_KNOWS_ABOUT = [
   'Hardscaping',
@@ -110,7 +118,7 @@ const nonEmpty = <K extends string>(key: K, list: unknown[]) => (list.length ? {
 /** The one typed business node. Emitted by root.tsx only. */
 export function businessNode(r: Register = BUSINESS): JsonLd {
   return {
-    '@type': ['LocalBusiness', 'HomeAndConstructionBusiness', 'GeneralContractor'],
+    '@type': ['Organization', 'LocalBusiness', 'HomeAndConstructionBusiness', 'GeneralContractor'],
     '@id': BUSINESS_ID,
     name: r.publicName.value,
     description: `${r.publicName.value}: discuss ${r.services.value.join(', ')}. Confirm project scope and availability for your address.`,
@@ -180,6 +188,8 @@ export function serviceNode(o: {
   description?: string;
   areaServed: string | JsonLd | (string | JsonLd)[];
   priceDescription?: string;
+  /** Only where the page itself publishes the range. CAD, before HST. */
+  price?: PriceRange;
 }): JsonLd {
   const toPlace = (a: string | JsonLd) => (typeof a === 'string' ? { '@type': 'City', name: a } : a);
   const areas = Array.isArray(o.areaServed) ? o.areaServed.map(toPlace) : toPlace(o.areaServed);
@@ -191,9 +201,62 @@ export function serviceNode(o: {
     ...(o.description ? { description: o.description } : {}),
     provider: businessRef,
     areaServed: areas,
-    ...(o.priceDescription
-      ? { offers: { '@type': 'Offer', priceSpecification: { '@type': 'PriceSpecification', priceCurrency: 'CAD', description: o.priceDescription } } }
-      : {}),
+    ...(o.price
+      ? { offers: { '@type': 'Offer', priceCurrency: 'CAD', priceSpecification: priceSpecification(o.price, o.priceDescription) } }
+      : o.priceDescription
+        ? { offers: { '@type': 'Offer', priceSpecification: { '@type': 'PriceSpecification', priceCurrency: 'CAD', description: o.priceDescription } } }
+        : {}),
+  };
+}
+
+export interface PriceRange {
+  minPrice: number;
+  maxPrice?: number;
+  /** e.g. 'per square foot'; omitted for a whole-package starting price. */
+  unitText?: string;
+}
+
+function priceSpecification(p: PriceRange, description?: string): JsonLd {
+  return {
+    '@type': p.unitText ? 'UnitPriceSpecification' : 'PriceSpecification',
+    priceCurrency: 'CAD',
+    minPrice: p.minPrice,
+    ...(p.maxPrice !== undefined ? { maxPrice: p.maxPrice } : {}),
+    ...(p.unitText ? { unitText: p.unitText } : {}),
+    valueAddedTaxIncluded: false,
+    ...(description ? { description } : {}),
+  };
+}
+
+/** Reads a published figure (a single dollar amount or a dollar range) into a PriceRange. Throws on anything else. */
+export function priceRangeFromFigure(figure: string, unitText?: string): PriceRange {
+  const m = /^\$([\d,]+)(?:\s*[–-]\s*\$([\d,]+))?$/.exec(figure.trim());
+  if (!m) throw new Error(`priceRangeFromFigure: unreadable figure "${figure}"`);
+  const num = (v: string) => Number(v.replace(/,/g, ''));
+  return { minPrice: num(m[1]), ...(m[2] ? { maxPrice: num(m[2]) } : {}), ...(unitText ? { unitText } : {}) };
+}
+
+/** HowTo built from the same step list the page renders, so the schema can't drift from the visible process. */
+export function howToNode(o: { path: string; name: string; steps: readonly { title: string; desc: string }[] }): JsonLd {
+  return {
+    '@type': 'HowTo',
+    '@id': `${canonicalUrl(o.path)}#howto`,
+    name: o.name,
+    step: o.steps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.title, text: s.desc })),
+  };
+}
+
+/** WebPage with its real update date (and founder review, only when recorded). Feeds the sitemap lastmod. */
+export function webPageNode(o: { path: string; name: string; dateModified: string; reviewed: boolean }): JsonLd {
+  const url = canonicalUrl(o.path);
+  return {
+    '@type': 'WebPage',
+    '@id': url,
+    url,
+    name: o.name,
+    isPartOf: { '@id': WEBSITE_ID },
+    dateModified: o.dateModified,
+    ...(o.reviewed ? { reviewedBy: founderRef, lastReviewed: o.dateModified } : {}),
   };
 }
 
