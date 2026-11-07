@@ -10,6 +10,7 @@ import GoogleReviewsLink from './GoogleReviewsLink';
 
 export const LEAD_SERVICES = [
   'Interlocking patio',
+  'Outdoor porcelain installation',
   'Interlock driveway',
   'Retaining wall',
   'Composite deck',
@@ -30,6 +31,7 @@ const TIMING = [
 const SERVICE_FROM_QUERY: Record<string, (typeof LEAD_SERVICES)[number]> = {
   'seasonal-cleanup': 'Seasonal clean-up',
   patio: 'Interlocking patio',
+  porcelain: 'Outdoor porcelain installation',
   driveway: 'Interlock driveway',
   wall: 'Retaining wall',
   deck: 'Composite deck',
@@ -84,6 +86,7 @@ export default function LeadForm({
   intro,
   idPrefix,
   defaultService = '',
+  enquiryType,
   intent,
   extra,
   variant = 'light',
@@ -95,6 +98,7 @@ export default function LeadForm({
   intro?: string;
   idPrefix: string;
   defaultService?: string;
+  enquiryType?: 'Porcelain homeowner' | 'Porcelain trade partner';
   intent?: 'high-intent' | 'top-of-funnel';
   extra?: Record<string, string>;
   variant?: 'light' | 'dark';
@@ -147,7 +151,8 @@ export default function LeadForm({
         town: fields.town.trim(),
         timing: fields.timing,
         budget: fields.budget,
-        details: fields.details.trim(),
+        // Keep enquiry intent in Netlify's registered notes field, separate from acquisition attribution.
+        details: [enquiryType && `Enquiry type: ${enquiryType}`, fields.details.trim()].filter(Boolean).join('\n'),
         botField: fields.botField,
         extra,
       });

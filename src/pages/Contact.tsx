@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
 import LeadForm from '../components/LeadForm';
@@ -7,6 +9,23 @@ import { OWNER_FACTS, ownerFact } from '../data/ownerFacts';
 import { trackCall } from '../utils/analytics';
 
 export default function Contact() {
+  const [searchParams] = useSearchParams();
+  const [porcelainAudience, setPorcelainAudience] = useState<'homeowner' | 'trade' | null>(null);
+  // Static contact HTML is shared by every query; personalize after hydration.
+  useEffect(() => {
+    setPorcelainAudience(searchParams.get('service') === 'porcelain'
+      ? searchParams.get('audience') === 'trade' ? 'trade' : 'homeowner'
+      : null);
+  }, [searchParams]);
+  const trade = porcelainAudience === 'trade';
+  const heading = trade ? 'Bring us into your porcelain project.'
+    : porcelainAudience ? 'Tell us about your porcelain project.'
+    : 'Tell us what you want built.';
+  const intro = trade
+    ? 'Share your company, site, porcelain product, drawing links and preferred timing in the project details. Yorkis reviews the request so we can discuss installation scope and fit.'
+    : porcelainAudience
+      ? 'Tell us about your patio, entrance or pool surround. Include the approximate area and any porcelain product you have selected. Yorkis reviews the request and replies about scope.'
+      : 'Name, phone, email, town, project type, and timing are enough. Budget is optional. Yorkis reviews the request and replies about scope.';
   const extraHours = ownerFact(OWNER_FACTS.extraHours);
   const postalAddress = publicPostalAddress();
 
@@ -24,10 +43,10 @@ export default function Contact() {
               Get an estimate
             </p>
             <h1 className="font-display text-4xl md:text-6xl font-light text-brand-bonewhite leading-[1.05] mb-4">
-              Tell us what you want built.
+              {heading}
             </h1>
             <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed font-light">
-              Name, phone, email, town, project type, and timing are enough. Budget is optional. Yorkis reviews the request and replies about scope.
+              {intro}
             </p>
           </div>
 
@@ -36,6 +55,7 @@ export default function Contact() {
               <LeadForm
                 formName="contact"
                 source="contact-page"
+                enquiryType={porcelainAudience ? trade ? 'Porcelain trade partner' : 'Porcelain homeowner' : undefined}
                 idPrefix="contact"
                 submitLabel="Send my project"
                 heading="Project form"
