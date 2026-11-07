@@ -82,9 +82,9 @@ describe('publisher pipeline shape', () => {
       `pipeline order broken: generate(${genIdx}) → review(${reviewIdx}) → inject(${injectIdx})`);
   });
 
-  test('cli.cjs honors SKIP_ADVERSARIAL_REVIEW env var (escape hatch)', () => {
+  test('cli.cjs rejects the reviewer bypass escape hatch for publication', () => {
     const cliSrc = fs.readFileSync(path.join(__dirname, '..', 'cli.cjs'), 'utf8');
-    assert.ok(/SKIP_ADVERSARIAL_REVIEW/.test(cliSrc));
+    assert.ok(/SKIP_ADVERSARIAL_REVIEW.*prohibited/.test(cliSrc), 'publication must reject reviewer bypass');
   });
 
   test('generate.cjs requires the new SEO-quality fields (tldr, author_bio)', () => {

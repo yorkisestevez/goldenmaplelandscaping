@@ -100,7 +100,8 @@ ${filesList}
 
 async function cmdWorkflowRun() {
   const forced = process.env.FORCE_TOPIC_ID || null;
-  const skipReview = process.env.SKIP_ADVERSARIAL_REVIEW === 'true';
+  if (process.env.SKIP_ADVERSARIAL_REVIEW === 'true') throw new Error('SKIP_ADVERSARIAL_REVIEW is prohibited for publication runs');
+  const skipReview = false;
   let draft, review, injection, branch, prUrl;
 
   // 0) Sync to origin/main BEFORE generating.
@@ -155,6 +156,12 @@ async function cmdWorkflowRun() {
       draft.review = review;
       console.log(`[workflow] adversarial review: ${review.verdict} (score ${review.score})`);
 
+      if (review.verdict !== 'pass') {
+        const summary = `Automated publication held: adversarial review returned ${review.verdict}; draft=${draft.slug}. ${review.summary || ''}`;
+        try { await telegram.sendMessage(summary, { parseMode: undefined }); } catch {}
+        throw new Error(`adversarial review did not pass: ${review.verdict}: ${review.summary || 'no summary'}`);
+      }
+
       if (review.verdict === 'block') {
         // Cross-check: if all blocking-severity issues are dedup/originality
         // related, downgrade to warn. Slug uniqueness is hard-guaranteed by
@@ -190,10 +197,9 @@ async function cmdWorkflowRun() {
         }
       }
     } catch (e) {
-      if (e.message.startsWith('adversarial review blocked')) throw e;
-      // Reviewer itself crashed — fail open with warning. Don't halt the pipeline.
-      console.warn('[workflow] reviewer crashed (failing open):', e.message);
-      draft.review = { verdict: 'warn', score: null, issues: [], summary: `Reviewer crashed: ${e.message}` };
+      if (e.message.startsWith('adversarial review did not pass') || e.message.startsWith('adversarial review blocked')) throw e;
+      try { await telegram.sendErrorAlert('review', e); } catch {}
+      throw new Error(`adversarial review unavailable; publication held: ${e.message}`);
     }
   }
 

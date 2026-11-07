@@ -39,6 +39,7 @@ function writeJson(p, obj) { fs.writeFileSync(p, JSON.stringify(obj, null, 2)); 
 // and response shape, so every call site and extractText() work unchanged.
 // Original implementation preserved in generate.cjs.bak-gemini-20260728.
 const { geminiCompatPost } = require('./claude-provider.cjs');
+const { validateEditorialDraft, sitePaths } = require('./quality-gate.cjs');
 function geminiPost(apiKey, body) {
   return geminiCompatPost(apiKey, body);
 }
@@ -162,8 +163,14 @@ function estimatorPathFor(topic) {
 
 function buildPrompt(topic) {
   const linkHints = (topic.internal_link_hints || []).join(', ') || '(none)';
+  const sourceList = (topic.source_urls || []).map(url => `- ${url}`).join('\\n') || '(no approved sources configured; stop and report blocker)';
+  const editorialBrief = topic.editorial_brief || 'Provide practical guidance, distinguish general information from product-specific requirements, and avoid unsupported business claims.';
   const estimatorPath = estimatorPathFor(topic);
-  return `You are Yorkis Estevez writing for the Golden Maple Landscaping blog. You are a working hardscape contractor in Barrie, Ontario. Your readers are real homeowners in Simcoe County making a buying decision in the next 90 days.
+  return `You are an editorial writer preparing practical homeowner guidance for the Golden Maple Landscaping blog in Barrie, Ontario. Do not impersonate the founder or claim first-hand porcelain project experience. Readers are homeowners comparing options and planning work.
+
+EDITORIAL BRIEF: ${editorialBrief}
+APPROVED SOURCES: cite these exact URLs as helpful links in the body (at least two, each once):
+${sourceList}
 
 OUTPUT FORMAT — return ONE JSON object only. No prose before or after. No markdown fences.
 
@@ -209,6 +216,7 @@ HARD CONSTRAINTS:
 - 4 to 6 sections.
 - 5 to 8 FAQs.
 - Internal links: place at least 3 anchor links pointing to paths from this list (use only these paths, exactly as written): ${linkHints}, /contact, ${estimatorPath}, /portfolio
+- Cite at least two APPROVED SOURCES above using exact URLs in descriptive inline links; do not invent sources or claim a source supports more than it says.
 - The cost-estimator link (${estimatorPath}) MUST appear in the cta_paragraph${estimatorPath.includes('?type=') ? ` — it opens the calculator with this topic's project type already selected, so anchor it with copy like "price out your own ${topic.category.toLowerCase()} project" rather than generic "click here"` : ' — this topic has no matching prefill, so the link opens the calculator on its first step; anchor it with general copy like "get a real price on your project" rather than claiming a preselected type'}.
 - **Numeric specificity (critical for SEO + AI citation):** every section should contain at least one specific number, range, measurement, percentage, or brand/product name. Generic statements like "many homeowners" or "high-quality materials" are banned — replace with "homeowners in Bayfield-Street neighbourhoods" or "ICPI-rated 80mm pavers".
 - **Featured-snippet optimization:** FAQ answers and section opening sentences should be self-contained — readable as an extracted quote without surrounding context. Lead with the answer, then explain.
@@ -216,8 +224,9 @@ HARD CONSTRAINTS:
 - Use Canadian English (metre, colour, neighbour, kilometre, centimetre).
 - No fake stats. No fake testimonials. If you need a number, give a range like "$X-$Y per square foot" and say what drives the variance.
 - Reference real local context: Lake Simcoe, freeze-thaw cycles, Barrie's clay soil, Highway 400 corridor, Bayfield Street, City of Barrie bylaws, Simcoe County weather. Don't fabricate addresses or named clients.
-- Founder is Yorkis Estevez. Company is Golden Maple Landscaping (founded 2020). Service area: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood. We install Permacon, Unilock, Techo-Bloc pavers + TimberTech composite decking. We use 12-16" compacted clear stone bases (not granular A). Supplier: Carr Landscape Depot in Barrie. WSIB certified, $5M liability, 5.0 Google rating.
-- Don't mention competitors as superior. Don't recommend specific products outside this list.
+- Do not claim Golden Maple completed porcelain installations, give business-specific porcelain pricing, state warranty/engineering outcomes, invent reviews, or promise Google ranking/AI citations. Identify general education as general; keep methods and product specifications tied to the cited manufacturer's current documentation. Attribute articles to Golden Maple Landscaping, not Yorkis personally, unless authorship is explicitly confirmed.
+- Mention no service/product availability or stock unless a current source confirms it. Do not use first-person project anecdotes for porcelain.
+- Do not mention competitors as superior. Don't recommend specific products outside this list.
 
 ALLOWED hero image paths (pick the single most relevant one):
 ${ALLOWED_HEROES.map(h => '- ' + h).join('\n')}
@@ -229,7 +238,7 @@ function htmlPlainTextLength(html) {
   return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean).length;
 }
 
-function validateDraft(draft) {
+function validateDraft(draft, { topic = null, existingSlugs = [] } = {}) {
   const errors = [];
   const required = ['title', 'seoTitle', 'seoDescription', 'category', 'readTime', 'heroImage', 'tldr', 'intro', 'sections', 'faqs', 'author_bio', 'cta_paragraph'];
   for (const k of required) if (!draft[k]) errors.push(`missing ${k}`);
@@ -263,7 +272,16 @@ function validateDraft(draft) {
   const hasTable = !!draft.comparison_table?.include && !!draft.comparison_table?.html;
   const numericMatches = (bodyHtml.match(/\b\d+([.,]\d+)?\s*(%|mm|cm|m|ft|in|"|sq\.?\s*ft|sqft|\$|CAD|years?|hours?|days?)\b/gi) || []).length;
 
-  return { ok: errors.length === 0, errors, wordCount: words, linkCount: linkMatches.length, hasTable, numericCount: numericMatches };
+  const hardGate = validateEditorialDraft(draft, {
+    topic: topic || {},
+    knownPaths: sitePaths(fs.readFileSync(path.resolve(__dirname, '../../src/routes.ts'), 'utf8')),
+    existingSlugs,
+    scheduledFor: topic?.scheduled_for || null,
+    runDate: new Date().toISOString().slice(0, 10),
+  });
+  errors.push(...hardGate.errors);
+
+  return { ok: errors.length === 0, errors, wordCount: words, linkCount: linkMatches.length, hasTable, numericCount: numericMatches, hardGate };
 }
 
 async function generateDraft({ topicId = null } = {}) {
@@ -334,8 +352,15 @@ async function generateDraft({ topicId = null } = {}) {
   draft.slug = topic.slug;
   draft.topicId = topic.id;
   draft.generatedAt = new Date().toISOString();
-  draft.author = 'Yorkis Estevez';
-  draft.validation = validateDraft(draft);
+  draft.author = 'Golden Maple Landscaping';
+  draft.scheduledFor = topic.scheduled_for || null;
+  const routesText = fs.readFileSync(path.resolve(__dirname, '../../src/routes.ts'), 'utf8');
+  const routedSlugs = [...routesText.matchAll(/route\('resources\/([^']+)'/g)].map(m => m[1]);
+  const historicalSlugs = (state.history || []).map(h => h.slug).filter(Boolean);
+  draft.validation = validateDraft(draft, { topic, existingSlugs: [...new Set([...routedSlugs, ...historicalSlugs])] });
+  if (!draft.validation.ok) {
+    throw new Error(`draft failed closed quality gate (${draft.validation.errors.length} issue(s)): ${draft.validation.errors.join('; ')}`);
+  }
 
   // Queue-low awareness: count topics still unused AFTER this run (i.e. topics
   // that won't be picked by future cron firings). Used by the PR-body builder
