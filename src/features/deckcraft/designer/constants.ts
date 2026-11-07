@@ -5,8 +5,8 @@ import type {LightingZone} from '../types';
  * section's `legacyStep` indexes it, so the GA4 step labels (stepLabel) keep their meaning across the change.
  */
 export const STEPS=['Dimensions','Materials','Stairs & railings','Site & extras','Backyard','Your estimate'];
-export const LIGHTING_ZONES:readonly [LightingZone,string][]=[['deck','Deck / recessed'],['posts','Railing posts'],['stairs','Stairs'],['privacy','Privacy screens'],['border','Picture-frame edge'],['landscape','Landscape'],['house','House']];
-export const allowedLightingZones=(geometry:string):LightingZone[]=>geometry==='recessed'?['deck','stairs','posts','landscape']:geometry==='wall'?['deck','stairs','posts','privacy','house']:geometry==='undercap'?['deck','stairs','posts','privacy']:geometry==='bollard'||geometry==='spot'?['landscape']:['house'];
+export const LIGHTING_ZONES:readonly [LightingZone,string][]=[['deck','Deck / recessed'],['posts','Railing posts'],['stairs','Stairs'],['privacy','Privacy screens'],['border','Picture-frame edge'],['landscape','Landscape'],['house','House'],['pool','Pool (underwater)'],['pool-deck','Pool deck'],['pergola-dining','Pergola & dining'],['fire-lounge','Fire lounge'],['paths','Paths & edges'],['accent-trees','Tree accents'],['facade','House wall & doors']];
+export const allowedLightingZones=(geometry:string):LightingZone[]=>geometry==='recessed'?['deck','stairs','posts','landscape','pool-deck','paths','pergola-dining','fire-lounge']:geometry==='wall'?['deck','stairs','posts','privacy','house','pool','fire-lounge','facade']:geometry==='undercap'?['deck','stairs','posts','privacy','fire-lounge']:geometry==='bollard'?['landscape','paths']:geometry==='spot'?['landscape','accent-trees']:['house','pergola-dining'];
 /**
  * What the drawing shows. The Plan sheet is 'plan' (the site plan). The 3D sheet is a camera: '3d' (the corner view),
  * 'overview', 'front' or 'top'. The Framing sheet is 'drawing' (the 2D framing plan) or a 3D contractor view:

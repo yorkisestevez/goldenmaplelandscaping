@@ -1,13 +1,15 @@
 import {usePergolaQuote} from './usePergolaQuote';
 import {pergolaQuoteKey} from '../pergolaPricing';
-import {useEffect,useMemo,type Dispatch,type SetStateAction} from 'react';
+import {useEffect,useMemo,useState,type Dispatch,type SetStateAction} from 'react';
 import {calculateDeckReleaseEstimate as calculateEstimate,deckReleaseData} from '../deckRelease';
 import {DECK_SETTINGS} from '../defaults';
 import {describeDesign} from '../designFacts';
-import {extrasLayout} from '../extrasLayout';
+import {extrasLayout,treadNose} from '../extrasLayout';
 import {houseRailingReviewFlags} from '../houseRailingClearance';
 import {isSystemProduct,lightingSystemCheck,syncAutoLighting} from '../lightingSystem';
+import {houseOutline} from '../houseFootprint';
 import type {DeckData} from '../types';
+type PlacementRules=typeof import('../lightingPlacementRules');
 
 /**
  * What re-prices the design: the design without its appearance (house looks and openings, screen positions, scene
@@ -42,7 +44,13 @@ export function useDeckEstimate(data:DeckData,setData:Dispatch<SetStateAction<De
     setData(prev=>deckReleaseData({...prev,lightingSystem:{...prev.lightingSystem,selectedItems:syncAutoLighting(prev,autoCounts)}}));
   },[autoKey]);
   const hasFixtures=lightingCheck.items.some(p=>!isSystemProduct(p));
-  const reviewFlags=[...new Set([...houseRailingReviewFlags(data,estimate.model,estimate.flags),...extras.warnings])];
+  // Where the lights sit against the lighting best practices (lightingPlacementRules.ts): pool, floors, steps, beds, pool clearance.
+  // The checker is advisory and never blocks a save, so it loads after the first paint (the route's bundle budget) and
+  // its flags join the list once it is here.
+  const [placementRules,setPlacementRules]=useState<PlacementRules>();
+  useEffect(()=>{let alive=true;import('../lightingPlacementRules').then(rules=>{if(alive)setPlacementRules(rules);});return ()=>{alive=false;};},[]);
+  const placementFlags=useMemo(()=>placementRules?placementRules.lightingPlacementIssues(data,estimate.model,extras.fixtures,{treadWidths:estimate.model.treads.map(t=>treadNose(t).width),houseRings:data.houseVisible!==false?houseOutline(data):[]}):[],[placementRules,data,estimate.model,extras.fixtures]);
+  const reviewFlags=[...new Set([...houseRailingReviewFlags(data,estimate.model,estimate.flags),...extras.warnings,...placementFlags])];
   // One description of the design feeds the estimate step, the summary download, the proposal and a sent design.
   const described=describeDesign(data,estimate);
   // The estimate key also keys the option deltas (R6): a delta is shown only for the design it was priced for.
