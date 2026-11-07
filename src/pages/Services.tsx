@@ -21,6 +21,13 @@ const SERVICE_CARDS: Array<{ id: string; title: string; desc: string; icon: type
     link: '/services/interlocking-barrie'
   },
   {
+    id: 'porcelain',
+    title: 'Porcelain Patio Planning',
+    desc: 'Compare porcelain patio options, project fit, and written scope for your Barrie-area property. Ask about current product availability and project-specific pricing.',
+    icon: Grid,
+    link: '/services/porcelain-patios-barrie'
+  },
+  {
     id: 'walls',
     title: 'Retaining Walls',
     desc: 'That slope in your yard isn\'t a problem — it\'s your home\'s best architectural feature waiting to happen.',

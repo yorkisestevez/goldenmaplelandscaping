@@ -1,6 +1,6 @@
 import { PROJECT_BUDGET_RANGES } from '../data/projectBudgets';
-import { useState, type ChangeEvent, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { MapPin, Phone, Mail, Clock, Shield, Award, CheckCircle, ChevronDown } from 'lucide-react';
 import SEO from '../components/SEO';
@@ -20,17 +20,38 @@ const encode = (data: Record<string, string>) =>
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
 export default function Contact() {
+  const [searchParams] = useSearchParams();
+  const requestedService = searchParams.get('service');
+  const serviceOptions = [
+    'Backyard Outdoor Living / Premium Patio',
+    'Patio + Retaining Wall / Steps / Drainage',
+    'Sloped Backyard / Retaining Wall Solution',
+    'Premium Patio Rebuild',
+    'Full Backyard Transformation',
+    'Front Entrance / Walkway Package',
+    'Porcelain Patio / Pavers',
+    'Other Hardscape Project',
+  ];
+  const initialService = requestedService && serviceOptions.includes(requestedService)
+    ? requestedService
+    : serviceOptions[0];
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [form, setForm] = useState({
     name: '',
     phone: '',
     email: '',
-    service: 'Backyard Outdoor Living / Premium Patio',
+    service: initialService,
     budget: '',
     details: '',
     'bot-field': '',
   });
+
+  useEffect(() => {
+    if (requestedService && serviceOptions.includes(requestedService)) {
+      setForm((current) => ({ ...current, service: requestedService }));
+    }
+  }, [requestedService]);
 
   const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -216,6 +237,7 @@ export default function Contact() {
                         <option>Premium Patio Rebuild</option>
                         <option>Full Backyard Transformation</option>
                         <option>Front Entrance / Walkway Package</option>
+                        <option>Porcelain Patio / Pavers</option>
                         <option>Other Hardscape Project</option>
                       </select>
                       <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-gold-dark pointer-events-none" />

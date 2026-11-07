@@ -8,6 +8,7 @@ export default [
   // Services
   route('services', 'pages/Services.tsx'),
   route('services/interlocking-barrie', 'pages/services/Interlocking.tsx'),
+  route('services/porcelain-patios-barrie', 'pages/services/PorcelainPatiosBarrie.tsx'),
   route('interlocking-barrie', 'pages/InterlockingBarrieAds.tsx'),
   route('services/retaining-walls-barrie', 'pages/services/RetainingWalls.tsx'),
   route('retaining-walls-barrie', 'pages/RetainingWallsBarrieAds.tsx'),
