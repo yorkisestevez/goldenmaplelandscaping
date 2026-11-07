@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {buildYardModel} from '../src/features/deckcraft/yardModel';
 import {groundEdgeGeometry} from '../src/features/deckcraft/components/viewer3d/lawnSurface';
-import {patioEdgeGeometry,edgeCourseMaterial} from '../src/features/deckcraft/components/viewer3d/PatioEdges3D';
+import {patioEdgeGeometry,baseFaceMaterial,edgeCourseMaterial} from '../src/features/deckcraft/components/viewer3d/PatioEdges3D';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {insideRings} from '../src/features/deckcraft/patioGroundContact';
 import type {DeckData,YardFeature} from '../src/features/deckcraft/types';
@@ -67,6 +67,16 @@ verify([{...grade('crossing',20,20,80,80,0),originXIn:60,slopeXPct:100}],9600,tr
  const ys=e3.edge.getAttribute('position');let top=-Infinity;for(let i=0;i<ys.count;i++)top=Math.max(top,ys.getY(i));assert.ok(top<=30-thick+1e-6,'the course stands below the pavers');checks++;
  assert.ok(y3.features[0].quantities.edgeCourseLf>0,'and the yard model measures it');checks++;
  const m=edgeCourseMaterial();assert.ok(m.customProgramCacheKey().includes('edge-course-v1')&&m.side===2,'stone course material: patched, both sides');checks++;m.dispose();
+ // 4. Every edge face is wound to face out onto the lawn, and the gravel and stone cast from their back faces only, so a
+ // sunlit side never shadows itself (shadow acne: near-black speckle) yet the far sides still throw the patio's shadow.
+ const outward=(g:BufferGeometry,rings:{x:number;y:number}[][])=>{const p=g.getAttribute('position');let n=0;for(let i=0;i<p.count;i+=3){
+  const ax=p.getX(i+1)-p.getX(i),ay=p.getY(i+1)-p.getY(i),az=p.getZ(i+1)-p.getZ(i),bx=p.getX(i+2)-p.getX(i),by=p.getY(i+2)-p.getY(i),bz=p.getZ(i+2)-p.getZ(i),nx=ay*bz-az*by,nz=ax*by-ay*bx,len=Math.hypot(nx,nz);
+  if(len<1e-9)continue;const cx=(p.getX(i)+p.getX(i+1)+p.getX(i+2))/3,cz=(p.getZ(i)+p.getZ(i+1)+p.getZ(i+2))/3;
+  assert.ok(!insideRings(rings,cx+nx/len*.5,cz+nz/len*.5)&&insideRings(rings,cx-nx/len*.5,cz-nz/len*.5),`edge face at ${cx.toFixed(1)}, ${cz.toFixed(1)} faces into the patio`);n++;}
+  return n;};
+ const y4=buildYardModel(plain);
+ for(const [g,y] of [[e2.dig,y2],[e3.edge,y3],[e4.base,y4]] as const){assert.ok(outward(g,y.features.flatMap(f=>f.footprints))>0,'edge faces present and facing out');checks++;}
+ for(const make of [baseFaceMaterial,edgeCourseMaterial]){const mat=make();assert.equal(mat.shadowSide,1,`${make.name}: casts from back faces`);checks++;mat.dispose();}
  for(const e of [e1,e2,e3,e4])for(const g of [e.dig,e.base,e.edge])g.dispose();
 }
 console.log(`SITE RENDERING OK — ${checks} checks; actual internal grade jumps, a survey edge feathered into the lawn and shared continuous edges; patio edges read open lawn only and a stone edge draws as stone; quantities unchanged.`);
