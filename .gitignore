@@ -47,4 +47,5 @@ playwright-report/
 /work/
 /work-inspect-hardscape.ts
 .photo-cache/
+/src/pages/blog/porcelain-scheduled/
 /artifacts/
