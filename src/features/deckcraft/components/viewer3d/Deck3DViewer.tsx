@@ -412,19 +412,6 @@ function LandscapeCameraView({preset,saved,yard,pools,...props}:{preset?:'terrac
 
 }
 
-/** Starts every material's shader compile at once when the 3D view opens. With KHR_parallel_shader_compile the first
- * frames then wait for the slowest program instead of compiling each one in turn on the main thread (measured on a
- * desktop GPU: the page froze 2.1 s opening 3D without this, 1.4 s with it). Scene parts that arrive later compile as
- * they draw. Not three's compileAsync: its readiness poll throws when a material's program is replaced mid-poll. */
-function ShaderWarmup(){
-  const gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),camera=useThree(s=>s.camera),invalidate=useThree(s=>s.invalidate);
-  useLayoutEffect(()=>{
-    let live=true;const pending=gl.compile(scene,camera);
-    const poll=()=>{if(!live)return;for(const m of pending){const program=(gl.properties.get(m) as {currentProgram?:{isReady:()=>boolean}}).currentProgram;if(!program||program.isReady())pending.delete(m);}if(pending.size)setTimeout(poll,10);else invalidate();};
-    poll();return ()=>{live=false;};
-  },[gl,scene,camera,invalidate]);
-  return null;
-}
 /** Draws a frame when a surface's 2K relief arrives from its worker: the canvas only draws on demand. */
 function ReliefFrames(){const invalidate=useThree(s=>s.invalidate);useEffect(()=>onSurfaceReliefReady(invalidate),[invalidate]);return null;}
 
@@ -749,8 +736,6 @@ export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calcu
       <color attach="background" args={[evening?'#28374a':DAY_BACKGROUND]}/>
 
       <ReliefFrames/>
-
-      <ShaderWarmup/>
 
       {/* The real sky (Real Life G3); the studio light stands in while it loads. */}
 

@@ -12,6 +12,7 @@ import {fitSun,shadowKey} from './shadowCache';
 import {renderWindowReflections} from './windowReflections';
 import {SHOWCASE_STILL_SAMPLES,bloomFor} from './showcaseGrade';
 import {loadShowcasePost,onShowcasePostLoaded,showcasePostActive,showcasePostModule,showcaseShadowsModule} from './showcasePostLoader';
+import {FIRST_FRAME_WAIT_MS,compileFor,passScene} from './firstFrame';
 
 /**
  * The live 3D view's renderer. The scene goes into a multisampled half-float image, ambient occlusion is worked out
@@ -20,6 +21,8 @@ import {loadShowcasePost,onShowcasePostLoaded,showcasePostActive,showcasePostMod
  * redraws them, and the sun's shadow is fitted to what casts. Any failure falls back to a plain gl.render for good.
  */
 const {ao:AO,bloom:BLOOM}=SCENE_LOOK;
+/** How often the opening frame checks whether its shaders have compiled. */
+const FIRST_FRAME_POLL_MS=16;
 
 /** One set of targets and passes at one size: the live view keeps one; a large proposal capture builds its own. */
 export class Chain{
@@ -48,6 +51,8 @@ export class Chain{
     // The denoise radius is in shade pixels: a capture drawn larger blurs the same share of the picture.
     this.gtao.updatePdMaterial({radius:this.budget.denoiseRadius*scale});
   }
+  /** The ambient occlusion's own shaders, compiled with the scene's before the first frame (firstFrame.ts). */
+  aoMaterials(){return [this.gtao.gtaoMaterial,this.gtao.pdMaterial,this.gtao.copyMaterial,this.gtao.blendMaterial];}
   /** Allocates the showcase passes. Call before a still so SMAA's lookups can finish decoding. */
   prepareShowcase(){if(!showcasePostActive())return Promise.resolve();return loadShowcasePost().then(()=>{const P=showcasePostModule()!;this.ensureShowcase(P);return P.ensureShowcaseSmaa(Math.max(1,this.w),Math.max(1,this.h));});}
   private buffer(){return new THREE.WebGLRenderTarget(Math.max(1,this.w),Math.max(1,this.h),{type:this.post.texture.type,depthBuffer:false});}
@@ -129,7 +134,7 @@ export function releaseDrawnResources(gl:THREE.WebGLRenderer){
 
 export default function RenderPipeline({evening}:{evening:boolean}){
   const gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),camera=useThree(s=>s.camera),invalidate=useThree(s=>s.invalidate),quality=useRenderQuality(),controls=useThree(s=>s.controls);
-  const ref=useRef({chain:null as Chain|null,broken:false,primed:false,evening,key:NaN,sequence:false}),controlsRef=useRef(controls);controlsRef.current=controls;
+  const ref=useRef({chain:null as Chain|null,broken:false,opened:false,since:0,evening,key:NaN,sequence:false}),controlsRef=useRef(controls);controlsRef.current=controls;
   ref.current.evening=evening;
   useEffect(()=>{
     const state=ref.current,size=new THREE.Vector2(),budget=sceneQuality(quality,gl.capabilities),controls=()=>controlsRef.current;
@@ -148,15 +153,35 @@ export default function RenderPipeline({evening}:{evening:boolean}){
       if(!state.broken)try{state.chain??=new Chain(gl,scene,camera,quality.msaaSamples,quality);draw(state.chain,1);gl.domElement.dataset.photographicPipeline='active';return;}catch(error){fail(error);}
       gl.render(scene,camera);
     };
+    let retry=0;
+    const later=()=>{window.clearTimeout(retry);retry=window.setTimeout(invalidate,FIRST_FRAME_POLL_MS);};
+    // The opening frame (firstFrame.ts) waits for the showcase shadows and the sky, then for every scene shader it draws
+    // with to compile, all started at once and none of them for a state it is about to leave. The shadow type is part of
+    // every program's key, so nothing compiles before it is final. The ambient occlusion's own shaders do not need the
+    // sky, so they start before it arrives (its denoise takes about 0.5 s to compile) but are not waited for: from the
+    // GPU's cache they are usable at once, while their parallel-compile status reports done only ~0.6 s later.
+    const ready=()=>{
+      if(performance.now()-state.since>=FIRST_FRAME_WAIT_MS)return true;
+      const shadows=showcaseShadowsModule();
+      if(showcasePostActive()&&!shadows)return false;
+      shadows?.syncShowcaseShadows(gl,scene);
+      if(!state.broken)try{state.chain??=new Chain(gl,scene,camera,quality.msaaSamples,quality);}catch(error){fail(error);}
+      const target=state.chain?.beauty??null,chain=state.chain;
+      if(chain)compileFor(gl,target,()=>gl.compile(passScene(chain.aoMaterials()),camera));
+      if(!gl.domElement.dataset.sky)return false;
+      scene.updateMatrixWorld();
+      return compileFor(gl,target,()=>gl.compile(scene,camera))===0;
+    };
     const frame=()=>{
       // Photo mode path-traces the same canvas. Holding the raster here leaves the shadow-map line below untouched.
       if(gl.domElement.dataset.photoTrace==='1'||state.sequence)return;
-      // One plain frame first, so the deck is on screen before the occlusion chain compiles its shaders.
-      // Snapshots call paint() and always use the photographic chain.
-      if(!state.broken&&!state.chain&&!state.primed){state.primed=true;scene.updateMatrixWorld();gl.setRenderTarget(null);gl.render(scene,camera);invalidate();return;}
+      // Snapshots call paint() directly and always draw.
+      if(!state.opened){let go=true;try{go=ready();}catch(error){fail(error);}if(!go){later();return;}state.opened=true;}
       paint();
     };
     gl.shadowMap.autoUpdate=false;state.key=NaN;
+    // Armed once per view (and again after a lost context), not each time the quality changes.
+    if(!state.since)state.since=performance.now();
     gl.domElement.dataset.pipelineGeneration=String(Number(gl.domElement.dataset.pipelineGeneration??0)+1);
     pipelines.set(gl,{capture:scale=>{
       if(state.broken||scale<=1){paint();return;}
@@ -170,10 +195,10 @@ export default function RenderPipeline({evening}:{evening:boolean}){
       let chain:Chain|null=null;state.sequence=true;state.key=NaN;
       return {draw(evening){const previous=state.evening;state.evening=evening;try{if(state.broken){gl.render(scene,camera);return;}chain??=new Chain(gl,scene,camera,msaa?quality.msaaSamples:0,quality);draw(chain,1);}catch(error){gl.setRenderTarget(null);gl.render(scene,camera);console.warn('DeckCraft 3D: a fly-through frame drew without effects.',error);}finally{state.evening=previous;}},close(){chain?.dispose();chain=null;state.sequence=false;state.key=NaN;gl.setRenderTarget(null);}};
     }});
-    const restored=()=>{state.chain?.dispose();state.chain=null;state.broken=false;state.primed=false;state.key=NaN;gl.shadowMap.autoUpdate=false;invalidate();};
+    const restored=()=>{state.chain?.dispose();state.chain=null;state.broken=false;state.opened=false;state.since=performance.now();state.key=NaN;gl.shadowMap.autoUpdate=false;invalidate();};
     gl.domElement.addEventListener('webglcontextrestored',restored);
     renderers.set(gl,frame);invalidate();
-    return ()=>{gl.domElement.removeEventListener('webglcontextrestored',restored);delete gl.domElement.dataset.photographicPipeline;pipelines.delete(gl);renderers.delete(gl);state.chain?.dispose();state.chain=null;gl.shadowMap.autoUpdate=true;};
+    return ()=>{window.clearTimeout(retry);gl.domElement.removeEventListener('webglcontextrestored',restored);delete gl.domElement.dataset.photographicPipeline;pipelines.delete(gl);renderers.delete(gl);state.chain?.dispose();state.chain=null;gl.shadowMap.autoUpdate=true;};
   },[gl,scene,camera,invalidate,quality]);
   // A layout effect starts watching before the first frame: stand-ins drawn only then (a board's flat normal map before
   // its swatch arrives) would otherwise be missed and keep this renderer alive.
@@ -181,6 +206,8 @@ export default function RenderPipeline({evening}:{evening:boolean}){
   useEffect(()=>{invalidate();},[evening,invalidate]);
   useEffect(()=>onShowcasePostLoaded(()=>invalidate()),[invalidate]);
   // Priority 1 takes over drawing from R3F; with frameloop="demand" it still runs only when something invalidates.
-  useFrame(()=>{(renderers.get(gl)??(()=>gl.render(scene,camera)))();},1);
+  // Nothing draws until the effect above installs the frame (it then asks for one): a plain frame before that compiled
+  // every scene shader for the screen's tone mapping, one by one, on a busy first open.
+  useFrame(()=>{renderers.get(gl)?.();},1);
   return null;
 }
