@@ -1,0 +1,4 @@
+node_modules/
+release/
+# The installer icon lives in build/, which the site ignores at the root.
+!build/
