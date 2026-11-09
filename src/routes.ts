@@ -121,6 +121,7 @@ export default [
   // BEGIN PORCELAIN PUBLICATION
   // END PORCELAIN PUBLICATION
   route('resources/porcelain-vs-concrete-pavers-barrie', 'pages/blog/PorcelainVsConcretePaversBarrie.tsx'),
+    route('resources/retaining-wall-permit-barrie', 'pages/blog/RetainingWallPermitBarrie.tsx'),
   
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),
