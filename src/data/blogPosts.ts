@@ -15,6 +15,7 @@ export interface BlogPostMeta {
 }
 
 export const BLOG_POSTS: BlogPostMeta[] = [
+  { slug: 'retaining-wall-permit-barrie', title: 'Do You Need a Permit for a Retaining Wall in Barrie?', excerpt: 'Do you need a permit for a retaining wall in Barrie? The 1.0-metre rule, engineer drawings, LSRCA checks and timelines — explained for Simcoe County homeowners.', category: 'Regulations', readTime: '9 min', image: '/images/projects/garden-wall.JPEG' },
   { slug: 'porcelain-vs-concrete-pavers-barrie', title: 'Porcelain Pavers vs Concrete Pavers: Which Patio Suits a Barrie Backyard?', excerpt: 'Porcelain vs concrete pavers for a Barrie patio: absorption under 0.5% vs porous concrete, 20 mm porcelain, 60 mm concrete, base, cost and winter durability.', category: 'Materials', readTime: '10 min', image: '/images/projects/patio-pergola.jpg' },
   // BEGIN PORCELAIN PUBLICATION
   // END PORCELAIN PUBLICATION
