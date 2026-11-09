@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-11-02T15:27:00.000Z",
+  "lastRunAt": "2026-11-09T14:04:00.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -29,7 +29,8 @@
     "auto-025",
     "auto-026",
         "auto-027",
-    "auto-028"
+    "auto-028",
+        "auto-029"
   ],
   "publishedSlugs": [],
   "currentDraft": "backyard-entertaining-wasaga-beach",
@@ -390,7 +391,8 @@
       "generatedBy": "muse-autopilot"
     },
         {"topicId":"auto-027","slug":"outdoor-kitchen-gas-electrical-ontario","at":"2026-10-26T13:51:00.000Z","validation":{"ok":true},"generatedBy":"muse-autopilot"},
-    {"topicId":"auto-028","slug":"porcelain-vs-concrete-pavers-barrie","at":"2026-11-02T15:27:00.000Z","validation":{"ok":true},"generatedBy":"muse-autopilot"}
+    {"topicId":"auto-028","slug":"porcelain-vs-concrete-pavers-barrie","at":"2026-11-02T15:27:00.000Z","validation":{"ok":true},"generatedBy":"muse-autopilot"},
+        {"topicId":"auto-029","slug":"retaining-wall-permit-barrie","at":"2026-11-09T14:04:00.000Z","validation":{"ok":true},"generatedBy":"muse-autopilot"}
   ]
   
 }
