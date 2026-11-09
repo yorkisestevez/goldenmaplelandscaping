@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-11-09T14:04:00.000Z",
+  "lastRunAt": "2026-11-09T14:08:29.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -28,12 +28,13 @@
     "auto-024",
     "auto-025",
     "auto-026",
-        "auto-027",
+    "auto-027",
     "auto-028",
-        "auto-029"
+    "auto-029",
+    "auto-030"
   ],
   "publishedSlugs": [],
-  "currentDraft": "backyard-entertaining-wasaga-beach",
+  "currentDraft": "patio-heater-vs-firepit-vs-fireplace",
   "history": [
     {
       "topicId": "auto-001",
@@ -392,7 +393,8 @@
     },
         {"topicId":"auto-027","slug":"outdoor-kitchen-gas-electrical-ontario","at":"2026-10-26T13:51:00.000Z","validation":{"ok":true},"generatedBy":"muse-autopilot"},
     {"topicId":"auto-028","slug":"porcelain-vs-concrete-pavers-barrie","at":"2026-11-02T15:27:00.000Z","validation":{"ok":true},"generatedBy":"muse-autopilot"},
-        {"topicId":"auto-029","slug":"retaining-wall-permit-barrie","at":"2026-11-09T14:04:00.000Z","validation":{"ok":true},"generatedBy":"muse-autopilot"}
+        {"topicId":"auto-029","slug":"retaining-wall-permit-barrie","at":"2026-11-09T14:04:00.000Z","validation":{"ok":true},"generatedBy":"muse-autopilot"},
+    {"topicId":"auto-030","slug":"patio-heater-vs-firepit-vs-fireplace","at":"2026-11-09T14:08:29.000Z","validation":{"ok":true,"errors":[],"priceIssues":[],"wordCount":3461,"linkCount":12,"hasTable":true,"numericCount":2},"generatedBy":"claude-cloud-routine","mode":"draft-pr"}
   ]
-  
+
 }

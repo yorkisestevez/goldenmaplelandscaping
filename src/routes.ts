@@ -119,9 +119,12 @@ export default [
   route('resources/geogrid-retaining-wall-explained', 'pages/blog/GeogridRetainingWallExplained.tsx'),
         route('resources/outdoor-kitchen-gas-electrical-ontario', 'pages/blog/OutdoorKitchenGasElectricalOntario.tsx'),
   // BEGIN PORCELAIN PUBLICATION
+  route('resources/before-you-buy-porcelain-for-your-patio-settle-these-five-details', 'pages/blog/porcelain-scheduled/before-you-buy-porcelain-for-your-patio-settle-these-five-details.tsx'),
+  route('resources/a-porcelain-installation-brief-your-trade-partner-can-actually-price', 'pages/blog/porcelain-scheduled/a-porcelain-installation-brief-your-trade-partner-can-actually-price.tsx'),
   // END PORCELAIN PUBLICATION
   route('resources/porcelain-vs-concrete-pavers-barrie', 'pages/blog/PorcelainVsConcretePaversBarrie.tsx'),
     route('resources/retaining-wall-permit-barrie', 'pages/blog/RetainingWallPermitBarrie.tsx'),
+  route('resources/patio-heater-vs-firepit-vs-fireplace', 'pages/blog/PatioHeaterVsFirepitVsFireplace.tsx'),
   
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),
