@@ -288,7 +288,7 @@ const Navbar = () => {
               <span>{publicContact.phoneDisplay}</span>
             </a>
 
-            <Link to="/contact" onClick={() => trackEngagement('cta_click', 'get_estimate_nav')} className="btn-primary !py-2 !px-3 2xl:!py-2.5 2xl:!px-5 whitespace-nowrap !text-[9px] 2xl:!text-[10px]">
+            <Link to="/contact" onClick={() => trackEngagement('cta_click', 'get_estimate_nav')} className="btn-primary !py-2 !px-3 2xl:!py-2.5 2xl:!px-5 whitespace-nowrap !text-xs 2xl:!text-[13px]">
               <span className="2xl:hidden">Get estimate</span>
               <span className="hidden 2xl:inline">Get my estimate</span>
             </Link>

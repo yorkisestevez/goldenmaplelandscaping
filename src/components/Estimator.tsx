@@ -1835,7 +1835,7 @@ function ReceiptRail({ precise, deckLabel, displayLow, displayHigh, confidence, 
         </div>
         {canSkip && (
           // btn-primary, not btn-secondary — the secondary button is bright
-          // gold text for dark surfaces and reads ~1.9:1 on this light card.
+          // copper text for dark surfaces and reads ~2.3:1 on this light card.
           <button type="button" onClick={onSkip} className="btn-primary !rounded-full w-full justify-center text-center mt-5 !py-3">
             See full breakdown →
           </button>

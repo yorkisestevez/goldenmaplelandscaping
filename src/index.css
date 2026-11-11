@@ -222,7 +222,7 @@ html, body {
   .gm-blob, .gm-float { animation: none; }
 }
 
-/* The opening is editorial: readable type on ivory, unobscured photography. */
+/* The opening is editorial: readable type on limestone, unobscured photography. */
 .home-hero { padding: 6.5rem 0 3rem; }
 .home-hero-grid { display: grid; gap: 3rem; align-items: center; }
 .home-hero h1 { font-size: 3.375rem; line-height: 0.98; letter-spacing: -0.045em; }

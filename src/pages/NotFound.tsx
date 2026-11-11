@@ -20,7 +20,7 @@ export default function NotFound() {
         </p>
         <div className="flex flex-wrap items-center gap-4">
           <Link to="/" className="btn-primary">Back to home</Link>
-          <Link to="/contact" className="btn-secondary">Request an estimate</Link>
+          <Link to="/contact" className="btn-ghost">Request an estimate</Link>
           <a href={`tel:${publicContact.phoneTel}`} className="inline-flex items-center gap-2 font-sans text-sm text-brand-ink">
             <Phone size={16} aria-hidden="true" />
             {publicContact.phoneDisplay}
