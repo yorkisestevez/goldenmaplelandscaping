@@ -82,7 +82,7 @@ export default function LocationLanding() {
 
               <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-light text-brand-bonewhite leading-[1.05] mb-10">
                 Premium landscaping <br />
-                in <span className="text-brand-gold-dark italic">{location.name}.</span>
+                in <span className="text-brand-gold-dark italic">{`${location.name}.`}</span>
               </h1>
 
               <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed font-light max-w-xl mb-10">
@@ -118,7 +118,7 @@ export default function LocationLanding() {
                 Local context
               </span>
               <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite leading-tight mb-12">
-                Building in <span className="italic text-brand-gold-dark">{location.name}.</span>
+                Building in <span className="italic text-brand-gold-dark">{`${location.name}.`}</span>
               </h2>
 
               <div className="space-y-10">
@@ -274,7 +274,7 @@ export default function LocationLanding() {
         <div className="container-custom py-32 text-center">
           <h2 className="font-display text-4xl md:text-6xl font-light text-brand-bonewhite leading-tight mb-10">
             Ready to start your <br />
-            <span className="italic text-brand-gold-dark">{location.name} project?</span>
+            <span className="italic text-brand-gold-dark">{`${location.name} project?`}</span>
           </h2>
           <p className="font-sans text-base md:text-lg text-brand-muted font-light max-w-xl mx-auto mb-14 leading-relaxed">
             Contact us to discuss your project and confirm the current estimate process.

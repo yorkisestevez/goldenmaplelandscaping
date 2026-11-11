@@ -56,7 +56,7 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
   // photoRights is confirmed ONLY for register-backed photos (owner-attested portfolio +
   // Instagram bake). Legacy blog heroes under /images/projects stay on the logo.
   const photoApproved = canPublish(BUSINESS.reviews.photoRights) && isOwnedPhoto(heroImage);
-  const ogImageUrl = photoApproved ? (heroImage.startsWith('http') ? heroImage : `${origin}${heroImage}`) : `${origin}/logo.svg`;
+  const ogImageUrl = photoApproved ? (heroImage.startsWith('http') ? heroImage : `${origin}${heroImage}`) : `${origin}/images/og/default-1200x630.jpg`;
 
   // Article + BreadcrumbList (+ the post's own FAQPage/HowTo) in one @graph.
   // author/publisher reference root.tsx's #business rather than re-declaring an
