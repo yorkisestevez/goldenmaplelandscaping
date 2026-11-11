@@ -70,7 +70,7 @@ export default function HeroEstimator() {
                 onClick={() => setProjectType(opt.id)}
                 className={`p-3 rounded-2xl border transition-all duration-150 flex flex-col items-center gap-1.5 ${
                   selected
-                    ? 'bg-gradient-to-b from-brand-gold/35 to-brand-gold/10 border-brand-gold text-brand-bonewhite shadow-[0_0_0_1px_rgba(212,175,99,0.45)]'
+                    ? 'bg-gradient-to-b from-brand-gold/35 to-brand-gold/10 border-brand-gold text-brand-bonewhite shadow-[0_0_0_1px_rgba(217,150,106,0.45)]'
                     : 'bg-brand-cream-light border-brand-dim text-brand-bonewhite/80 hover:border-brand-gold/60 hover:bg-brand-midsurface hover:text-brand-bonewhite'
                 }`}
               >
@@ -100,7 +100,7 @@ export default function HeroEstimator() {
                 onClick={() => setSizeBucket(s.id)}
                 className={`p-3 rounded-2xl border transition-all duration-150 ${
                   selected
-                    ? 'bg-gradient-to-b from-brand-gold/35 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.45)]'
+                    ? 'bg-gradient-to-b from-brand-gold/35 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(217,150,106,0.45)]'
                     : 'bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface'
                 }`}
               >
@@ -136,7 +136,7 @@ export default function HeroEstimator() {
           </select>
           <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
             <svg width="10" height="6" viewBox="0 0 12 8" fill="none">
-              <path d="M1 1.5L6 6.5L11 1.5" stroke="#D4AF63" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M1 1.5L6 6.5L11 1.5" stroke="#D9966A" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </div>
         </div>
@@ -146,7 +146,7 @@ export default function HeroEstimator() {
         type="button"
         onClick={onContinue}
         disabled={!ready}
-        className="btn-primary !rounded-full w-full py-4 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 group shadow-[0_8px_24px_-8px_rgba(212,175,99,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(212,175,99,0.55)] transition-shadow"
+        className="btn-primary !rounded-full w-full py-4 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 group shadow-[0_8px_24px_-8px_rgba(217,150,106,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(217,150,106,0.55)] transition-shadow"
       >
         {ready ? 'See My Estimate Range' : 'Pick a project & size to continue'}
         {ready && <ArrowRight size={16} strokeWidth={1.5} className="transition-transform group-hover:translate-x-1" />}

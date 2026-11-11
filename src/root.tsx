@@ -34,7 +34,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="theme-color" content="#F7F5F0" />
+        <meta name="theme-color" content="#F2EEE5" />
         <meta name="msvalidate.01" content="F7FE7E3677ED01FC13ECAF1154E928B8" />
         {gscToken ? <meta name="google-site-verification" content={gscToken} /> : null}
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
@@ -51,7 +51,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <noscript>
           <link
             rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=DM+Sans:wght@300..600&display=swap"
           />
         </noscript>
         <Meta />
@@ -97,7 +97,7 @@ export default function App() {
       link.id = 'gm-fonts';
       link.rel = 'stylesheet';
       link.href =
-        'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap';
+        'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=DM+Sans:wght@300..600&display=swap';
       document.head.appendChild(link);
     }, 8000);
   }, []);

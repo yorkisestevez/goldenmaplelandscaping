@@ -504,7 +504,7 @@ export default function ChatWidget() {
             transition={{ duration: unread ? 0.9 : 0.25 }}
             onClick={() => setOpen(true)}
             aria-label={unread ? 'Open chat with Sophie (1 new message)' : 'Open chat with Sophie'}
-            className="group fixed z-[60] left-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))] xl:left-auto xl:right-6 xl:bottom-6 w-14 h-14 rounded-full bg-brand-black text-brand-gold-light ring-1 ring-inset ring-brand-gold/40 flex items-center justify-center shadow-[0_10px_30px_-6px_rgba(198,164,125,0.55)] hover:shadow-[0_14px_38px_-6px_rgba(198,164,125,0.75)] hover:-translate-y-0.5 transition-[box-shadow,translate] gm-live-dot"
+            className="group fixed z-[60] left-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))] xl:left-auto xl:right-6 xl:bottom-6 w-14 h-14 rounded-full bg-brand-black text-brand-gold-light ring-1 ring-inset ring-brand-gold/40 flex items-center justify-center shadow-[0_10px_30px_-6px_rgba(217,150,106,0.55)] hover:shadow-[0_14px_38px_-6px_rgba(217,150,106,0.75)] hover:-translate-y-0.5 transition-[box-shadow,translate] gm-live-dot"
           >
             <SophieMark size={30} />
             {unread ? (

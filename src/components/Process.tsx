@@ -5,7 +5,7 @@ export default function Process() {
   return (
     <section id="process" className="py-24 md:py-64 bg-brand-burgundy text-brand-porcelain relative overflow-hidden">
       {/* Subtle background pattern/texture */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#D4AF63 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#D9966A 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
       
       <div className="max-w-[1200px] mx-auto px-6 md:px-12 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center">
