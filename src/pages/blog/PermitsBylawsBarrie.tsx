@@ -76,7 +76,7 @@ export default function PermitsBylawsBarrie() {
         </p>
       </div>
 
-      <p>This guide is a non-legal reference. Bylaws change, lot conditions vary, and the responsibility to verify rests with the property owner. Contractors have installed in every municipality covered below; the rules summarized here reflect what contractors file day-to-day in 2025–2026 — but always confirm with your local building department before signing anything.</p>
+      <p>This guide is a non-legal reference. Bylaws change, lot conditions vary, and the responsibility to verify rests with the property owner. Confirm the current requirements for the property and project directly with the relevant building department or conservation authority before design, excavation, or signing.</p>
 
       <div className="not-prose my-10 p-7 rounded-2xl border border-brand-gold/30 bg-brand-surface flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
         <p className="font-sans text-sm text-brand-bonewhite/85 font-light mb-0 max-w-md">
