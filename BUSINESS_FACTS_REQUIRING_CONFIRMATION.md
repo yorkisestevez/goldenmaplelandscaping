@@ -4,7 +4,7 @@
 
 ## Decisions needed
 
-1. **Public phone — resolved by owner, 2026-09-05:** Publish **(705) 300-8015**, Sophie’s voice-agent number. **(705) 500-3581** is Yorkis’s personal number and must not appear in public contact outputs. This is publication approval, not independently tested telephony routing. **(705) 790-3838** remains unconfirmed and must not be published or routed without approval.
+1. **Public phone — resolved by owner, updated 2026-10-25:** Publish **(705) 500-3581** as Golden Maple’s public number. **(705) 300-8015** is Sophie’s Telnyx number for texts/AI only and must not appear as the public contact number. This supersedes the 2026-09-05 publication decision. **(705) 790-3838** remains unconfirmed and must not be published or routed without approval.
 2. **Address policy** — Is the business operated from a residential address? Should a street address be public, or should the site remain a service-area business showing only Barrie, Ontario?
 3. **First visit / consultation** — Is the first on-site visit free? Confirm the distinction among a free discovery call, a free estimate request, an on-site consultation, and a paid design session.
 4. **Design** — What is the current paid design price (or range), what is included, and is any fee credited to construction? If credited, is it full or partial and under what conditions?
