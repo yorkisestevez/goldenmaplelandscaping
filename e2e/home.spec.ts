@@ -78,8 +78,30 @@ test('reading patio pages, then opening the homepage, shows the patio hero',asyn
  await page.goto('/patios-barrie/');
  await viewed('/patios-barrie');
  await page.getByRole('link',{name:/Golden Maple/}).first().click();
- await expect(page).toHaveURL(/\/$/);
+ await expect(page).toHaveURL(/:\d+\/$/);
  await expect(page.locator('h1')).toHaveText(HEADLINE.patios);
+});
+
+const DAY_MS=24*60*60*1000;
+
+test('a stored interest paints on a hard load, and an expired one does not',async({page})=>{
+ await page.evaluate(expiry=>localStorage.setItem('gm_intent_segment','decks|'+expiry),Date.now()+DAY_MS);
+ await page.goto('/');
+ await expect(page.locator('h1')).toHaveText(HEADLINE.decks);
+ await page.evaluate(expiry=>localStorage.setItem('gm_intent_segment','decks|'+expiry),Date.now()-DAY_MS);
+ await page.goto('/');
+ await expect(page.locator('h1')).toHaveText(HEADLINE.default);
+ await page.locator('[data-home-block="final-cta"]').scrollIntoViewIfNeeded();
+ await expect(page.locator('h1')).toHaveText(HEADLINE.default);
+});
+
+test('a parameter that is not a segment leaves the default hero whole, whatever is stored',async({page})=>{
+ await page.evaluate(expiry=>localStorage.setItem('gm_intent_segment','walls|'+expiry),Date.now()+DAY_MS);
+ for(const value of ['constructor','__proto__','pools','']){
+  await page.goto('/?gm_intent='+value);
+  await expect(page.locator('h1')).toHaveText(HEADLINE.default);
+  await expect(page.locator('[data-hero="eyebrow"]')).toHaveText(/Residential landscape construction/);
+ }
 });
 
 test('the debug view explains the choice',async({page})=>{

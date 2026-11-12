@@ -6,7 +6,7 @@ import { getProject, projectCoverFull } from './projects';
 /**
  * Home hero copy. Every headline and subhead here is owner copy:
  *   - default: owner-chosen, restored 2026-10-28.
- *   - decks / walls / driveways / patios: approved by the owner 2026-11-12.
+ *   - decks / walls / driveways / patios: approved by the owner 2026-11-11.
  * Nothing else may add or reword a headline. The intent engine and the weekly
  * evolution job only choose between these entries.
  */

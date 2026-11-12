@@ -10,6 +10,9 @@ import type { HomeSegment } from './home/intent';
  * layers. The picture is the mobile LCP element, so it is eager and
  * fetchpriority=high at every viewport. React hoists one imagesrcset preload
  * into <head> for that img; a second link would download the picture twice.
+ * That preload is always the default picture, so a visitor who gets a service
+ * hero on a hard load fetches both. Accepted: it costs them one extra image and
+ * keeps the default page, which most visitors and every crawler get, at its best.
  *
  * The prerender always emits the default hero. For a visitor whose interest is
  * known, the inline script at the end rewrites the `data-hero` nodes before
