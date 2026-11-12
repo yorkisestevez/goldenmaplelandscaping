@@ -13,7 +13,7 @@ import EstimateWorkbench from './EstimateWorkbench';
 import BudgetTarget from './BudgetTarget';
 import BudgetGapCoach from './BudgetGapCoach';
 import { buildPermalink, decodeBuild } from '../utils/buildPermalink';
-import { PROJECT_TYPE_IMAGES, PAVER_SWATCHES } from '../data/estimatorImages';
+import { PROJECT_TYPE_IMAGES, PAVER_SWATCHES, projectCardSources } from '../data/estimatorImages';
 import { PAVER_BRANDS, ADD_ONS, defaultPaverForTier, sortPaversForDisplay, type PaverTier } from '../data/carrPrices';
 import { ESTIMATOR_LOCATIONS, type EstimatorLocationKey } from '../data/locations';
 import {
@@ -157,16 +157,26 @@ const fmt = (n: number) =>
 const preciseMoney = (cents: number) =>
   `$${(Math.round(cents / 10000) * 100).toLocaleString('en-CA')}`;
 
-/** Large, service-specific concept photograph for every project choice. */
-function TypeThumb({ typeId, eager = false }: { typeId: string; eager?: boolean }) {
+/** Card widths measured on the built page. Both grids are two columns below lg; from lg, step 1 is three columns
+ *  in a 920px column and step 2 is two beside the estimate rail. Re-measure if either grid changes. */
+const STEP1_THUMB_SIZES = '(min-width: 1024px) 243px, (min-width: 920px) 375px, (min-width: 768px) calc(50vw - 85px), calc(50vw - 53px)';
+const STEP2_THUMB_SIZES = '(min-width: 1024px) 371px, (min-width: 768px) calc(50vw - 83px), calc(50vw - 53px)';
+
+/** Large, service-specific concept photograph for every project choice, served card-sized. Anything that is not
+ *  `eager` waits at low priority, so it never competes with the scripts that make the page usable. */
+function TypeThumb({ typeId, sizes, eager = false }: { typeId: string; sizes: string; eager?: boolean }) {
   const img = PROJECT_TYPE_IMAGES[typeId];
+  const { src, srcSet } = projectCardSources(img.src);
   return (
     <img
-      src={img.src}
+      src={src}
+      srcSet={srcSet}
+      sizes={sizes}
       alt={img.alt}
       width={960}
       height={720}
       loading={eager ? 'eager' : 'lazy'}
+      fetchPriority={eager ? 'auto' : 'low'}
       decoding="async"
       className="w-full aspect-[4/3] object-cover shrink-0"
     />
@@ -1215,7 +1225,8 @@ export default function Estimator({ onStudioChange }: {
                         isSelected ? 'bg-brand-gold/10 border-brand-gold-dark ring-1 ring-brand-gold-dark' : 'bg-brand-surface border-brand-dim hover:border-brand-gold-dark hover:shadow-md'
                       )}
                     >
-                      <TypeThumb typeId={pt.id} eager={idx < 3} />
+                      {/* Only the first row ever reaches the fold, and on phones and tablets that row is two cards. */}
+                      <TypeThumb typeId={pt.id} sizes={STEP1_THUMB_SIZES} eager={idx < 2} />
                       {isSelected && <span className="absolute top-3 right-3 w-7 h-7 rounded-full bg-brand-ink text-brand-porcelain flex items-center justify-center shadow-sm"><Check size={16} aria-hidden="true" /></span>}
                       <span className="block p-3 md:p-4">
                         <span className="block font-sans text-[12px] md:text-[14px] text-brand-ink font-medium mb-1.5 leading-snug">{pt.label}</span>
@@ -1267,7 +1278,7 @@ export default function Estimator({ onStudioChange }: {
                           selectedElements.includes(pt.id) ? 'bg-brand-gold/10 border-brand-gold-dark ring-1 ring-brand-gold-dark' : 'bg-brand-surface border-brand-dim hover:border-brand-gold-dark'
                         )}
                       >
-                        <TypeThumb typeId={pt.id} />
+                        <TypeThumb typeId={pt.id} sizes={STEP2_THUMB_SIZES} />
                         <span className="flex items-center gap-2 p-3 md:p-4">
                           <span className={cn('w-5 h-5 rounded-md border flex items-center justify-center shrink-0', selectedElements.includes(pt.id) ? 'bg-brand-ink border-brand-ink' : 'border-brand-muted')}>
                             {selectedElements.includes(pt.id) && <Check size={14} className="text-brand-porcelain" aria-hidden="true" />}
