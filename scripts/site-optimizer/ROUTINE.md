@@ -25,6 +25,12 @@ exactly as wide as this file says and no wider.
     (Netlify silently drops undeclared fields — see that file's header).
   - Blog content (`src/pages/blog/**` new posts) — the blog autopilot owns it. You MAY
     fix a broken link/image in an existing post as a P0.
+  - Homepage hero copy and photos: `src/data/homeHeroVariants.ts` is owner copy
+    (default headline chosen by Yorkis, four service variants approved by him
+    2026-11-11). Never add, reword or re-order a headline, subhead or hero photo.
+  - `src/data/homeCompositions.json` and `scripts/site-optimizer/home-evolve-state.json`:
+    never edit either by hand. They change only through `home-evolve.cjs` (Step 3b),
+    and `dryRunsRemaining` in the state file is Yorkis's to set.
   - Anything outside this repo; any outbound message to a customer; any spend.
 - **Kill switch:** if `scripts/site-optimizer/HALT` exists, send the Telegram line
   "GM optimizer: HALTED by kill switch — no action taken", write the state heartbeat,
@@ -172,6 +178,54 @@ week with a green site is a successful no-op run.
      the only blog thing the exclusion list reserves for the autopilot.
   6. Findings-driven whole-site improvements within the exclusions.
 - **P3 — polish**: micro-copy, a11y, performance. Only on a week with nothing above.
+
+## Step 3b — homepage evolution (optimize mode only; added 2026-11-11, owner-approved plan)
+
+The homepage shows each visitor segment (`default`, `patios`, `decks`, `walls`,
+`driveways`) one or two versions ("arms") of its block order, listed in
+`src/data/homeCompositions.json`. Once a week you feed last week's counts to
+`home-evolve.cjs`, which alone decides whether to start a test, promote a winner or
+retire a loser. You collect and report; you do not decide and you do not edit the file.
+
+1. **Skip conditions.** `HALT` exists → skip. The script also refuses to write then.
+2. **Week.** `weekEnding` = the last day of the GA4 weekly window from Step 2
+   (`YYYY-MM-DD`). The script refuses a week it has already counted, so a re-run is safe.
+3. **Counts per arm**, for those seven days:
+   - `views` and `acts`: GA4 event counts for the names printed by
+     `node scripts/site-optimizer/home-evolve.cjs --events`
+     (`home_view_<segment>_<arm>`, `home_act_<segment>_<arm>`). Pass that list as
+     `funnelEvents` to the Step 2 collector and read the counts from `funnel.current`.
+   - `leads`: verified ("ham") Netlify submissions in the window whose data has
+     `home_segment` and `home_arm`, counted per `<segment>/<arm>`. Use the default
+     `listFormSubmissions` list for every form; never the `state=spam` bucket, and never
+     GA4 `generate_lead` (contaminated, see Step 3).
+   - If either source failed this run, do not guess: skip Step 3b and say so in the digest.
+4. **Write the stats file** (outside the repo, e.g. your scratch dir):
+   `{ "default/a": { "views": 210, "acts": 31, "leads": 2 }, "decks/a": { ... } }`.
+   Leave out arms with no data; they count as zero.
+5. **Run it:**
+   `node scripts/site-optimizer/home-evolve.cjs --stats <file> --week-ending <date> --write`
+   - `mode: "dry-run"`: nothing on the site changed. Put the `digest` lines in the
+     Telegram report under "Homepage evolution (dry run, N left)". Commit the state
+     file with the Step 7 state commit.
+   - `mode: "applied"`, `changed: false`: same, without "dry run".
+   - `mode: "applied"`, `changed: true`: this is ONE of your two changes for the run.
+     Take it through Step 4 (lint runs `check-home-compositions` and
+     `check-home-evolve`; also run `npx playwright test e2e/home.spec.ts` after the
+     build), Step 5 (branch `auto/opt-home-evolve-<date>`, PR body = the digest
+     lines), and Step 6 (marker: the new arm id appears in the live homepage's
+     route chunk, or for a promote/retire the retired id no longer does).
+   - Non-zero exit: report the message, change nothing.
+6. **Never** pass counts you did not measure, re-run with a different date to force a
+   result, edit the thresholds in `home-evolve-core.cjs`, or raise `dryRunsRemaining`.
+   If the job's behaviour looks wrong, create `HALT` and report.
+
+What the script can do is deliberately narrow: swap two neighbouring blocks (never the
+first or last), split a segment 50/50, and keep or drop the challenger. A challenger is
+promoted at a 90% chance of a better action rate with at least 100 views per arm,
+and not while the original is getting real enquiries and the challenger none; a test
+with no result in 42 days ends with the original kept. Local traffic is small, so
+expect most weeks to say "idle" or "hold". That is the correct outcome, not a fault.
 
 ## Step 4 — implement + verify (ALL mandatory before any push)
 
