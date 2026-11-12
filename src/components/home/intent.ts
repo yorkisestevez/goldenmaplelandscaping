@@ -48,7 +48,7 @@ export const INTENT_RULES: ReadonlyArray<{ service: HomeService; pattern: RegExp
 const ESTIMATE_TYPE_SERVICE: Record<string, HomeService> = { patio: 'patios', deck: 'decks', wall: 'walls' };
 
 const UTM_POINTS = 5;
-/** Pricing a project is the strongest signal there is; it outranks a search term until it fades. */
+/** Pricing a project is the strongest single signal: on its own it decides the page for about eight days. */
 const ESTIMATE_POINTS = 6;
 const PAGE_POINTS = 2;
 const PAGE_CAP = 6;
@@ -95,9 +95,18 @@ export function scoreSignals(signals: IntentSignals): IntentScores {
   return scores;
 }
 
-/** Store a session's latest score, keeping only the most recent sessions. */
+/**
+ * Store a session's latest score, keeping only the most recent sessions. A
+ * session that showed no interest is not stored, so idle visits cannot push a
+ * real interest out of the few slots. Timestamps from the future (a changed
+ * clock) are pulled back to now so they fade like everything else.
+ */
 export function recordSession(prior: IntentProfile | null, sessionId: string, scores: IntentScores, now: number): IntentProfile {
-  const sessions = { ...(prior?.sessions ?? {}), [sessionId]: { scores, at: now } };
+  const sessions: IntentProfile['sessions'] = {};
+  for (const [id, entry] of Object.entries(prior?.sessions ?? {})) {
+    if (id !== sessionId) sessions[id] = { scores: entry.scores, at: Math.min(entry.at, now) };
+  }
+  if (HOME_SERVICES.some((service) => scores[service] > 0)) sessions[sessionId] = { scores, at: now };
   const newest = Object.entries(sessions).sort((a, b) => b[1].at - a[1].at).slice(0, MAX_SESSIONS);
   return { sessions: Object.fromEntries(newest) };
 }
@@ -114,8 +123,9 @@ export function totalAt(profile: IntentProfile, now: number, estimate: SavedEsti
   }
   for (const service of HOME_SERVICES) out[service] = Math.min(HISTORY_CAP, out[service]);
 
-  const priced = estimate ? ESTIMATE_TYPE_SERVICE[estimate.projectType] : undefined;
-  if (estimate && priced) out[priced] += ESTIMATE_POINTS * fade(now - estimate.savedAt);
+  if (estimate && Object.prototype.hasOwnProperty.call(ESTIMATE_TYPE_SERVICE, estimate.projectType)) {
+    out[ESTIMATE_TYPE_SERVICE[estimate.projectType]] += ESTIMATE_POINTS * fade(now - estimate.savedAt);
+  }
   return out;
 }
 

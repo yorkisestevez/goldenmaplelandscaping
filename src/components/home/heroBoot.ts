@@ -20,17 +20,18 @@ export function storedSegmentValue(segment: HomeService, now: number): string {
 /**
  * The prerendered homepage always carries the default hero. This script sits
  * right after the hero markup and runs before first paint: when the visitor's
- * interest is already known (forced by URL, stored from earlier pages and not
- * expired, or plain from their search term) it rewrites the hero text and
- * photo in place, so they never see the default flash by. It is a plain ES5
+ * interest is already known it rewrites the hero text and photo in place, so
+ * they never see the default flash by. The order is: a segment forced by URL,
+ * then the search term they just arrived on (what they want right now), then
+ * the one stored from earlier pages if it has not expired. It is a plain ES5
  * string so the prerender and the browser bundle emit byte-identical markup.
  */
 const BOOT = `(function(V,R,K){try{
 var d=document.documentElement;d.setAttribute(K.b,'1');
 var q=new URLSearchParams(location.search),s=q.get(K.p);
-if(s==null){try{var p=(localStorage.getItem(K.s)||'').split('|');if(+p[1]>Date.now())s=p[0]}catch(e){}}
-if(!s){var t=[q.get('utm_term'),q.get('utm_campaign'),q.get('utm_content')].join(' ').toLowerCase();
+if(s==null){var t=[q.get('utm_term'),q.get('utm_campaign'),q.get('utm_content')].join(' ').toLowerCase();
 for(var i=0;i<R.length;i++){if(new RegExp(R[i][1]).test(t)){s=R[i][0];break}}}
+if(s==null){try{var p=(localStorage.getItem(K.s)||'').split('|');if(+p[1]>Date.now())s=p[0]}catch(e){}}
 if(!s||!Object.prototype.hasOwnProperty.call(V,s))return;
 var v=V[s];d.setAttribute(K.a,s);
 var set=function(k,x){var el=document.querySelector('[data-hero="'+k+'"]');if(el)el.textContent=x};

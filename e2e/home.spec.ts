@@ -83,20 +83,36 @@ test('reading patio pages, then opening the homepage, shows the patio hero',asyn
 });
 
 const DAY_MS=24*60*60*1000;
+/**
+ * Store a segment as if an earlier visit had left it. The app re-scores the visitor once it has started up and rewrites
+ * its storage then, so the seed goes in only after that has happened; otherwise the start-up would overwrite it.
+ */
+async function seedSegment(page:import('@playwright/test').Page,segment:string,expiresInMs:number){
+ await page.waitForFunction(()=>localStorage.getItem('gm_intent_profile')!==null);
+ await page.evaluate(value=>{localStorage.removeItem('gm_intent_profile');localStorage.setItem('gm_intent_segment',value);},segment+'|'+(Date.now()+expiresInMs));
+}
 
 test('a stored interest paints on a hard load, and an expired one does not',async({page})=>{
- await page.evaluate(expiry=>localStorage.setItem('gm_intent_segment','decks|'+expiry),Date.now()+DAY_MS);
+ await seedSegment(page,'decks',DAY_MS);
  await page.goto('/');
  await expect(page.locator('h1')).toHaveText(HEADLINE.decks);
- await page.evaluate(expiry=>localStorage.setItem('gm_intent_segment','decks|'+expiry),Date.now()-DAY_MS);
+ await seedSegment(page,'decks',-DAY_MS);
  await page.goto('/');
  await expect(page.locator('h1')).toHaveText(HEADLINE.default);
  await page.locator('[data-home-block="final-cta"]').scrollIntoViewIfNeeded();
  await expect(page.locator('h1')).toHaveText(HEADLINE.default);
 });
 
+test('the search term a visitor just arrived on beats an older stored interest',async({page})=>{
+ await seedSegment(page,'patios',DAY_MS);
+ await page.goto('/?utm_source=google&utm_term=composite+deck+builder');
+ await expect(page.locator('h1')).toHaveText(HEADLINE.decks);
+ await page.locator('[data-home-block="final-cta"]').scrollIntoViewIfNeeded();
+ await expect(page.locator('h1')).toHaveText(HEADLINE.decks);
+});
+
 test('a parameter that is not a segment leaves the default hero whole, whatever is stored',async({page})=>{
- await page.evaluate(expiry=>localStorage.setItem('gm_intent_segment','walls|'+expiry),Date.now()+DAY_MS);
+ await seedSegment(page,'walls',DAY_MS);
  for(const value of ['constructor','__proto__','pools','']){
   await page.goto('/?gm_intent='+value);
   await expect(page.locator('h1')).toHaveText(HEADLINE.default);

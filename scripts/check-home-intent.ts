@@ -27,6 +27,7 @@ function ok(condition: boolean, name: string): void {
 const NONE: IntentSignals = { utmText: '', pagePaths: [], clickLabels: [] };
 const segment = (signals: Partial<IntentSignals>) => segmentOf(scoreSignals({ ...NONE, ...signals }));
 const DAY = 24 * 60 * 60 * 1000;
+const EMPTY_PROFILE = { sessions: {} };
 
 // Scoring one visit.
 ok(segment({}) === 'default', 'no signals gives the default page');
@@ -61,11 +62,17 @@ ok(totalAt(regular, 40).decks <= 16, 'remembered interest is capped however ofte
 const switched = recordSession(regular, 'new', scoreSignals({ ...NONE, utmText: 'retaining wall', pagePaths: ['/services/retaining-walls-barrie/', '/retaining-walls-barrie/', '/sloped-backyard-solutions-barrie/'] }), 30 * DAY);
 ok(segmentOf(totalAt(switched, 30 * DAY)) === 'walls', 'a strong new interest overtakes an old one');
 
+let idle = first;
+for (let i = 0; i < 10; i += 1) idle = recordSession(idle, `idle${i}`, scoreSignals(NONE), i + 1);
+ok(segmentOf(totalAt(idle, 11)) === 'decks', 'visits that show no interest do not push a real one out of memory');
+const skewed = recordSession({ sessions: { ahead: { scores: DECK_VISIT, at: 400 * DAY } } }, 'now', scoreSignals(NONE), 0);
+ok(skewed.sessions.ahead.at === 0, 'a timestamp from the future is pulled back to now');
+ok(Object.values(totalAt(EMPTY_PROFILE, DAY, { projectType: 'constructor', savedAt: 0 })).every((n) => n === 0), 'an unknown estimate type scores nothing');
+
 // A saved estimate counts, and fades from the day it was saved.
-const EMPTY = recordSession(null, 's', scoreSignals(NONE), 0);
-ok(segmentOf(totalAt(EMPTY, DAY, { projectType: 'wall', savedAt: 0 })) === 'walls', 'a wall estimate saved yesterday selects walls');
-ok(segmentOf(totalAt(EMPTY, 90 * DAY, { projectType: 'wall', savedAt: 0 })) === 'default', 'an estimate saved three months ago no longer decides the page');
-ok(segmentOf(totalAt(EMPTY, DAY, { projectType: 'full', savedAt: 0 })) === 'default', 'a full-backyard estimate stays on the default page');
+ok(segmentOf(totalAt(EMPTY_PROFILE, DAY, { projectType: 'wall', savedAt: 0 })) === 'walls', 'a wall estimate saved yesterday selects walls');
+ok(segmentOf(totalAt(EMPTY_PROFILE, 90 * DAY, { projectType: 'wall', savedAt: 0 })) === 'default', 'an estimate saved three months ago no longer decides the page');
+ok(segmentOf(totalAt(EMPTY_PROFILE, DAY, { projectType: 'full', savedAt: 0 })) === 'default', 'a full-backyard estimate stays on the default page');
 
 // Reading a stored profile back.
 ok(sanitizeProfile(null) === null && sanitizeProfile({}) === null && sanitizeProfile('x') === null, 'a missing or foreign stored value is ignored');
