@@ -2015,6 +2015,58 @@ const VERIFIED_ADDITIONS:LightingRuntimeProduct[]=[
     ],
     "requiredCableGauge": "10/2",
     "requiresSmartHub": true
+  },
+  {
+    "id": "paver_40",
+    "name": "PAVER 40",
+    "category": "Recessed",
+    "cost": null,
+    "laborCost": null,
+    "geometry": "recessed",
+    "dimensionsIn": {
+      "height": 1.2598,
+      "diameter": 1.5748,
+      "mountingDepth": 1.9685
+    },
+    "supported": true,
+    "legacyRate": false,
+    "specWarnings": [],
+    "va": 1
+  },
+  {
+    "id": "inground_2ss",
+    "name": "INGROUND 2 SS",
+    "category": "Recessed",
+    "cost": null,
+    "laborCost": null,
+    "geometry": "recessed",
+    "dimensionsIn": {
+      "height": 4.5,
+      "diameter": 2.75,
+      "mountingDepth": 4.25
+    },
+    "supported": true,
+    "legacyRate": false,
+    "specWarnings": [],
+    "va": 1
+  },
+  {
+    "id": "pool_niche_led",
+    "name": "POOL NICHE LED",
+    "category": "Recessed",
+    "cost": null,
+    "laborCost": null,
+    "geometry": "wall",
+    "dimensionsIn": {
+      "diameter": 10,
+      "length": 4.5
+    },
+    "supported": true,
+    "legacyRate": false,
+    "specWarnings": [
+      "Wet-niche pool light: it runs on the pool builder's listed 12 V pool-light transformer, GFCI-protected and bonded, not on this landscape lighting hub. Installed by a licensed electrical contractor under an ESA permit (CEC 68-060, 68-066).",
+      "Set the top of the lens 18 in (450 mm) below the normal water level, and no deeper than 600 mm unless the fixture is rated for it. Use the fibreglass shell maker's approved niche locations."
+    ]
   }
 ];
 const LEGACY_METADATA:Record<string,Partial<LightingRuntimeProduct>>={

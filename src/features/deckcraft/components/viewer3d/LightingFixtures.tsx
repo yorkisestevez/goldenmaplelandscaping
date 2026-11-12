@@ -1,14 +1,16 @@
 import type {FixturePlacement} from '../../extrasLayout';
-import {useMemo} from 'react';
+import {lazy,Suspense,useMemo} from 'react';
 import * as THREE from 'three';
 import {getLightingProduct} from '../../lightingCatalogue';
 import {previewLightPlan} from '../../lightingPreview';
 import {fixtureNight,LEGACY_FIXTURE_SHAPES,LEGACY_HYDE,WEDGE_HOUSING,type FixtureSource} from '../../fixtureLight';
-import CatalogueFixture from './CatalogueFixture';
 import {SCENE_LOOK} from './sceneLook';
 import {kelvinColour,lensGlow} from './fixtureLighting';
 
 export {MAX_PREVIEW_LIGHTS,isIlluminatingFixture} from '../../lightingPreview';
+
+// The catalogue housings come with the first catalogue light, like Pool3D and Fire3D, so they stay out of the viewer chunk's budget.
+const CatalogueFixture=lazy(()=>import('./CatalogueFixture'));
 
 /** A long-throw fixture's light as a real three light (fixtureLight.ts decides which fixtures get one). */
 function RealLight({productId,source,kelvin,shadow}:{productId:string;source:FixtureSource;kelvin:number;shadow:boolean}){
@@ -30,7 +32,7 @@ export default function LightingFixtures({items,evening,enabled=true}:{items:Fix
     const light=<meshStandardMaterial color="#fff6e8" emissive={kelvinColour(night.kelvin)} emissiveIntensity={glow}/>;
     const dark=<meshPhysicalMaterial color="#252a29" {...SCENE_LOOK.powderCoat}/>;
     return <group key={`${id}-${i}`} userData={{pickPartId:`lighting:${p.zone}:${id}`}} name={`${id}-${i+1}`} position={[p.x,p.y,p.z]} rotation={[0,p.angle,0]}>
-      {!legacy&&product&&<CatalogueFixture product={product} evening={evening&&enabled} enabled={enabled}/>}
+      {!legacy&&product&&<Suspense fallback={null}><CatalogueFixture product={product} evening={evening&&enabled} enabled={enabled}/></Suspense>}
       <group scale={id==='blink'?[blinkScale,blinkScale,1]:id==='liv'?[1,livScale,1]:[1,1,1]}>
       {recessed&&<><mesh><cylinderGeometry args={[id==='puck'?.55:1.3,id==='puck'?.55:1.3,.28,20]}/>{dark}</mesh><mesh position={[0,.17,0]}><cylinderGeometry args={[id==='puck'?.35:1.02,id==='puck'?.35:1.02,.08,20]}/>{light}</mesh>{id==='hyve'&&[-.5,0,.5].map(x=><mesh key={x} position={[x,.23,0]}><boxGeometry args={[.06,.05,1.75]}/>{dark}</mesh>)}</>}
       {/* The diffuser faces straight down under the tread nose: from standing height you see the lit riser, not the bar. */}
