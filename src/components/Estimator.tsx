@@ -31,9 +31,13 @@ import { BUSINESS, canPublish } from '../data/business';
 import { DECK_AREA, designHash, type EstimatorDeck } from '../features/deckcraft/estimatorHandoff';
 import { withDeckPrecise, withDeckRange, type PreciseWithDeck } from '../utils/deckInEstimate';
 
-/** The deck designer, opened inside the estimator (its code loads only when a deck is designed). */
-const EstimatorDeckStudio = lazy(() => import('../features/deckcraft/EstimatorDeckStudio'));
-/** The designer's price engine, for a full backyard's deck (loaded only when a backyard has one). */
+/** The deck estimator, opened inside the estimator (its code loads only when a deck is priced). Its price engine is
+ *  requested at the same moment as the form, not after it, so the two downloads overlap. */
+const DeckQuickEstimator = lazy(() => {
+  void import('../features/deck-estimator/quickDeckPrice').catch(() => {});
+  return import('../features/deck-estimator/DeckQuickEstimator');
+});
+/** The deck designer's price engine, for a full backyard's deck (loaded only when a backyard has one). */
 const loadEstimatorDeck = () => import('../features/deckcraft/estimatorDeck');
 
 
@@ -42,7 +46,7 @@ const PROJECT_TYPES = [
   { id: 'stone', label: 'Natural Stone / Flagstone', desc: 'Irregular or cut stone', icon: Hexagon },
   { id: 'wall', label: 'Retaining Wall', desc: 'Block or armour stone', icon: AlignJustify },
   { id: 'steps', label: 'Steps & Walkway', desc: 'Precast or natural stone', icon: ListTree },
-  { id: 'deck', label: 'Composite Deck', desc: 'Designed in 3D, right here', icon: Layout },
+  { id: 'deck', label: 'Composite Deck', desc: 'Priced live, right here', icon: Layout },
   { id: 'kitchen', label: 'Outdoor Kitchen', desc: 'Cooking and dining', icon: ChefHat },
   { id: 'firepit', label: 'Fire Pit', desc: 'Prefab or custom built', icon: Flame },
   { id: 'pergola', label: 'Pergola / Shade Structure', desc: 'Wood or aluminum', icon: Sun },
@@ -225,7 +229,7 @@ const DETAIL_DIAGRAMS: Record<string, ReactNode> = {
 };
 
 const VALID_PROJECT_TYPES = new Set(['patio', 'stone', 'wall', 'steps', 'deck', 'kitchen', 'firepit', 'pergola', 'turf', 'lighting', 'full']);
-/** A deck on its own: the deck designer (opened inside the estimator) is the whole estimate. */
+/** A deck on its own: the deck estimator (opened inside the estimator) is the whole estimate. */
 const onlyDeck = (projectType: string | null, elements: string[]) =>
   projectType === 'deck' || (projectType === 'full' && elements.length > 0 && elements.every(e => e === 'deck'));
 
@@ -233,7 +237,7 @@ type StudioMode = 'deck' | 'full';
 type StudioVia = 'type' | 'full_only' | 'design';
 
 export default function Estimator({ onStudioChange }: {
-  /** Told when the deck designer takes over the page, so the page can step its own frame aside. */
+  /** Told when the deck estimator takes over the page, so the page can step its own frame aside. */
   onStudioChange?: (open: boolean) => void;
 } = {}) {
   const navigate = useNavigate();
@@ -286,14 +290,15 @@ export default function Estimator({ onStudioChange }: {
   const restoredRef = useRef(false);
   const refreshVault = () => setVaultEstimates(readVault().estimates);
 
-  // ---- The deck designer, inside the estimator ----
-  // A deck is priced only by the deck designer (the site's one deck price).
-  // Choosing a deck opens the designer right here (?studio=deck); a full
-  // backyard's deck is priced by the designer's engine and added to the
-  // estimate: a plain starter deck at the chosen size until the visitor draws
-  // theirs (?studio=full) and uses it. The studio lives in the address so the
-  // browser's Back closes it; it opens only after mount, so the prerendered
-  // page always hydrates as the wizard.
+  // ---- The deck estimator, inside the estimator ----
+  // A deck is priced only by the deck designer's engine (the site's one deck
+  // price), through the light deck estimator; the 3D designer itself is the
+  // owner's private tool. Choosing a deck opens the deck estimator right here
+  // (?studio=deck); a full backyard's deck is priced by the same engine and
+  // added to the estimate: a plain starter deck at the chosen size until the
+  // visitor sets theirs (?studio=full) and uses it. The studio lives in the
+  // address so the browser's Back closes it; it opens only after mount, so the
+  // prerendered page always hydrates as the wizard.
   const [mounted, setMounted] = useState(false);
   const [deck, setDeck] = useState<EstimatorDeck | null>(null);
   const [deckFailed, setDeckFailed] = useState(false);
@@ -326,16 +331,15 @@ export default function Estimator({ onStudioChange }: {
     trackEngagement('estimator_deck_studio', `${mode}_${via}`);
     const next = new URLSearchParams({ studio: mode });
     if (typeof sqft === 'number' && sqft >= DECK_AREA.min && sqft <= DECK_AREA.max) next.set('sqft', String(Math.round(sqft)));
-    // Someone else's saved estimate opens its drawn deck; the visitor's own deck is already the designer's autosave.
-    const hash = mode === 'full' && restoredRef.current && deck?.design ? designHash(deck.design) : '';
+    // A backyard's own deck is handed to the deck estimator directly (initialDesign), not through the address.
     studioPushed.current = true;
-    navigate({ search: `?${next}`, hash });
+    navigate({ search: `?${next}` });
   };
   const closeStudio = () => {
     if (studioPushed.current) { studioPushed.current = false; navigate(-1); return; }
     setSearchParams(prev => { prev.delete('studio'); prev.delete('sqft'); prev.delete('type'); return prev; }, { replace: true });
   };
-  // Back from the designer lands on the estimate card, not wherever the page last scrolled.
+  // Back from the deck estimator lands on the estimate card, not wherever the page last scrolled.
   const wasInStudio = useRef(false);
   useEffect(() => {
     if (studio) { wasInStudio.current = true; return; }
@@ -366,7 +370,7 @@ export default function Estimator({ onStudioChange }: {
     const buildParam = searchParams.get('build');
     if (buildParam) {
       const saved = decodeBuild(buildParam);
-      // A saved deck on its own reopens in the deck designer (the site's one deck price), with its drawn deck.
+      // A saved deck on its own reopens in the deck estimator (the site's one deck price), with its deck.
       if (saved && onlyDeck(saved.projectType, saved.selectedElements)) {
         setProjectType('deck');
         trackEngagement('estimator_deck_studio', 'deck_restored');
@@ -388,7 +392,7 @@ export default function Estimator({ onStudioChange }: {
         setDeckBrandId(saved.deckBrandId);
         setAddOns(saved.addOns);
         setTargetBudget(saved.targetBudget);
-        // A drawn deck reprices with today's designer price book; if it can't be read, the starter deck stands in.
+        // A saved deck reprices with today's price book; if it can't be read, the starter deck stands in.
         if (saved.deckDesign && saved.selectedElements.includes('deck')) {
           const payload = saved.deckDesign;
           loadEstimatorDeck().then(m => m.deckFromDesign(payload)).then(d => setDeck(d)).catch(() => {});
@@ -403,12 +407,15 @@ export default function Estimator({ onStudioChange }: {
       // half-applied one — a wrong restore is worse than no restore.
     }
 
-    // A deck link (?type=deck&sqft=300, e.g. the home-page quick estimator) opens the deck designer here, at that
-    // size (the designer reads ?sqft= itself).
+    // A deck link (?type=deck&sqft=300, e.g. the home-page quick estimator) opens the deck estimator here, at that
+    // size (it reads ?sqft= itself). The hash stays: a shared deck (#d=…, also the 3D designer's old links) opens in it.
     if (searchParams.get('type') === 'deck') {
       setProjectType('deck');
       trackEngagement('estimator_deck_studio', 'deck_link');
-      setSearchParams(prev => { prev.delete('type'); prev.set('studio', 'deck'); return prev; }, { replace: true });
+      const next = new URLSearchParams(searchParams);
+      next.delete('type');
+      next.set('studio', 'deck');
+      navigate({ search: `?${next}`, hash: window.location.hash }, { replace: true });
       return;
     }
 
@@ -486,16 +493,16 @@ export default function Estimator({ onStudioChange }: {
 
   const isHardscape = projectType === 'patio' || projectType === 'stone' || projectType === 'wall' || projectType === 'steps';
   /** A deck in a full backyard stays one of the visitor's choices but is never priced here: the deck
-   *  designer is the site's one deck price (owner decision 2026-09-23). Everything the engine prices,
-   *  and every size and answer that moves it, comes from these elements. */
+   *  designer's engine is the site's one deck price (owner decision 2026-09-23). Everything the engine
+   *  prices, and every size and answer that moves it, comes from these elements. */
   const pricedElements = useMemo(() => selectedElements.filter(e => e !== 'deck'), [selectedElements]);
   const hasDeckElement = projectType === 'full' && selectedElements.includes('deck');
-  /** The deck this estimate includes: a full backyard's, as the deck designer priced it. */
+  /** The deck this estimate includes: a full backyard's, as the deck designer's engine priced it. */
   const deckInBuild = hasDeckElement ? deck : null;
   const deckCents = deckInBuild?.subtotalCents ?? 0;
 
-  // Until a deck is drawn, a full backyard's deck is the designer's own default deck at the chosen area (the deck
-  // the designer would open at), priced by the designer's engine. A drawn deck is never replaced by a starter.
+  // Until the visitor sets a deck, a full backyard's deck is the default deck at the chosen area (the deck the deck
+  // estimator opens at), priced by the designer's engine. A deck the visitor set is never replaced by a starter.
   const deckSqft = Number(sizes.deck);
   useEffect(() => {
     if (!hasDeckElement || deck?.source === 'design') return;
@@ -535,7 +542,7 @@ export default function Estimator({ onStudioChange }: {
   }), [projectType, pricedElements, sizes, details, conditions, location, tier, paverBrandId, deckBrandId, addOns]);
 
   const estimate = useMemo(() => computeEstimate(build), [build]);
-  /** The invoice every total shows: the engine's, with a full backyard's deck added as the designer priced it. */
+  /** The invoice every total shows: the engine's, with a full backyard's deck added as the deck engine priced it. */
   const precise = useMemo(() => withDeckPrecise(estimate.precise, deckCents), [estimate.precise, deckCents]);
 
   /** What would ONE change do to this build, in real dollars? Pure arithmetic,
@@ -664,14 +671,14 @@ export default function Estimator({ onStudioChange }: {
     setStep(1);
   };
 
-  /** The designer's "Use this deck in my estimate" (a full backyard's deck). */
+  /** The deck estimator's "Use this deck in my estimate" (a full backyard's deck). */
   const takeDeckFromStudio = (drawn: EstimatorDeck) => {
     setDeck(drawn);
     setDeckFailed(false);
     trackEngagement('estimator_deck_studio', 'full_used');
     closeStudio();
   };
-  /** The designer's "Add patio, walls & more": the deck becomes the first element of a full backyard. */
+  /** The deck estimator's "Add a patio, walls & more": the deck becomes the first element of a full backyard. */
   const carryDeckIntoBackyard = (drawn: EstimatorDeck) => {
     setProjectType('full');
     setSelectedElements(prev => (prev.includes('deck') ? prev : ['deck', ...prev]));
@@ -684,7 +691,7 @@ export default function Estimator({ onStudioChange }: {
     fireStep(2);
     setStep(2);
   };
-  /** Back to a plain deck at the chosen size (drops the drawn one from this estimate; the designer keeps it). */
+  /** Back to a plain deck at the chosen size (drops the deck the visitor set from this estimate). */
   const switchToStarterDeck = () => {
     starterFor.current = null;
     setDeck(null);
@@ -771,30 +778,30 @@ export default function Estimator({ onStudioChange }: {
     />
   );
 
-  /** A full backyard's deck: priced by the deck designer and included in this estimate. Until the visitor draws
-   *  their deck it is the designer's default deck at the chosen size; "Design your deck in 3D" opens the designer
-   *  right here, and the estimate in progress waits for them. */
+  /** A full backyard's deck: priced by the deck designer's engine and included in this estimate. Until the visitor
+   *  sets their deck it is the default deck at the chosen size; "Set your deck" opens the deck estimator right here,
+   *  and the estimate in progress waits for them. */
   const renderDeckCard = () => {
     const drawn = deck?.source === 'design';
     return (
       <div className="rounded-2xl border border-brand-gold/40 bg-brand-gold/10 p-5" data-estimator-deck={deck?.source ?? 'pending'}>
         <div className="flex items-baseline justify-between gap-4 mb-2">
           <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark">
-            {drawn ? 'Your 3D deck design' : 'Starter deck · 3D deck designer'}
+            {drawn ? 'Your deck' : 'Starter deck · deck estimator'}
           </span>
           <span className="font-display text-[17px] text-brand-bone tabular-nums whitespace-nowrap">
             {deck ? preciseMoney(deck.subtotalCents) : deckFailed ? '—' : 'Pricing…'}
           </span>
         </div>
         <p className="font-sans text-[13px] text-brand-bone leading-relaxed mb-1.5">
-          {deck ? deck.label : deckFailed ? 'The deck price could not load. Design your deck in 3D to price it.' : 'Pricing your deck in the 3D deck designer…'}
+          {deck ? deck.label : deckFailed ? 'The deck price could not load. Open the deck estimator to price it.' : 'Pricing your deck…'}
         </p>
         <p className="font-sans text-[12px] font-normal text-brand-muted leading-relaxed mb-3">
           {drawn
-            ? 'Priced by our 3D deck designer and included in this estimate.'
-            : 'Priced by our 3D deck designer at the size above and included in this estimate. Design it in 3D to price your exact deck: shape, height, stairs, railing and boards.'}
+            ? 'Priced by our deck estimator and included in this estimate.'
+            : 'Priced by our deck estimator at the size above and included in this estimate. Set your deck to price it exactly: height, decking, railing and stairs.'}
           {deck && deck.quoteRequired.length > 0 ? ` This is the priced portion: ${deck.quoteRequired.length} item${deck.quoteRequired.length === 1 ? ' is' : 's are'} still to quote.` : ''}
-          {deck && deck.backyardCents > 0 ? ' Includes the backyard features you drew in the designer.' : ''}
+          {deck && deck.backyardCents > 0 ? ' Includes the backyard features drawn in the deck design.' : ''}
         </p>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           <button
@@ -802,7 +809,7 @@ export default function Estimator({ onStudioChange }: {
             onClick={() => openStudio('full', 'design', drawn ? undefined : deckSqft)}
             className="font-sans text-[12px] uppercase tracking-[0.15em] text-brand-gold-dark underline underline-offset-4"
           >
-            {drawn ? 'Edit your deck in 3D' : 'Design your deck in 3D'} →
+            {drawn ? 'Change your deck' : 'Set your deck'} →
           </button>
           {drawn && (
             <button type="button" onClick={switchToStarterDeck} className="font-sans text-[12px] text-brand-muted underline underline-offset-4">
@@ -909,7 +916,7 @@ export default function Estimator({ onStudioChange }: {
 
   const nextStep = () => {
     if (step === 1 && projectType === 'deck') { openStudio('deck', 'type'); return; }
-    // A backyard of just a deck is the deck designer's whole estimate.
+    // A backyard of just a deck is the deck estimator's whole estimate.
     if (step === 2 && onlyDeck(projectType, selectedElements)) { openStudio('deck', 'full_only', deck?.source === 'design' ? undefined : deckSqft); return; }
     if (canAdvance() && step < TOTAL_STEPS) {
       const next = step + 1;
@@ -1013,11 +1020,11 @@ export default function Estimator({ onStudioChange }: {
 
   const vaultMoney = (cents: number) => `$${Math.round(cents / 100).toLocaleString('en-CA')}`;
 
-  // The deck designer takes the page. Every hook above has run, so the estimate in progress keeps its state.
+  // The deck estimator takes the page. Every hook above has run, so the estimate in progress keeps its state.
   if (studio) {
     return (
       <Suspense fallback={<StudioLoading />}>
-        <EstimatorDeckStudio mode={studio} onBack={closeStudio} onUse={studio === 'full' ? takeDeckFromStudio : carryDeckIntoBackyard} />
+        <DeckQuickEstimator mode={studio} initialDesign={deck?.design} onBack={closeStudio} onUse={studio === 'full' ? takeDeckFromStudio : carryDeckIntoBackyard} />
       </Suspense>
     );
   }
@@ -1082,7 +1089,7 @@ export default function Estimator({ onStudioChange }: {
       {showRail && (
         <ReceiptRail
           precise={precise!}
-          deckLabel={deckInBuild ? (deckInBuild.source === 'design' ? 'Deck (your 3D design)' : 'Deck (starter)') : null}
+          deckLabel={deckInBuild ? (deckInBuild.source === 'design' ? 'Deck (as you set it)' : 'Deck (starter)') : null}
           displayLow={display.low}
           displayHigh={display.high}
           confidence={confidence}
@@ -1272,7 +1279,7 @@ export default function Estimator({ onStudioChange }: {
                   </div>
                   {onlyDeck(projectType, selectedElements) && (
                     <p className="font-sans text-[12px] font-normal text-brand-muted -mt-4 leading-relaxed">
-                      A deck on its own is designed and priced in the 3D deck designer, and Continue opens it here. Add a patio, wall or anything else to price your whole backyard with the deck in it.
+                      A deck on its own is priced in the deck estimator, and Continue opens it here. Add a patio, wall or anything else to price your whole backyard with the deck in it.
                     </p>
                   )}
                   {selectedElements.length > 0 && (
@@ -1767,7 +1774,7 @@ export default function Estimator({ onStudioChange }: {
  *  and tablet running bar carry the same number below that. */
 function ReceiptRail({ precise, deckLabel, displayLow, displayHigh, confidence, delta, targetBudget, canSkip, onSkip }: {
   precise: PreciseWithDeck;
-  /** The deck's line when a full backyard has one (the deck designer's price). */
+  /** The deck's line when a full backyard has one (the deck engine's price). */
   deckLabel: string | null;
   displayLow: number;
   displayHigh: number;
@@ -1932,12 +1939,12 @@ function MobileStickyBar({ low, high, delta, confidence, label, onContinue, sele
   );
 }
 
-/** While the deck designer's code arrives (the first time it opens on a visit). */
+/** While the deck estimator's code arrives (the first time it opens on a visit). */
 function StudioLoading() {
   return (
     <div role="status" className="min-h-screen flex flex-col items-center justify-center gap-4 bg-brand-nearblack px-6 text-center">
       <span className="w-10 h-10 rounded-full border-2 border-brand-gold/30 border-t-brand-gold animate-spin" aria-hidden="true" />
-      <p className="font-display text-2xl text-brand-bone">Opening the 3D deck designer…</p>
+      <p className="font-display text-2xl text-brand-bone">Opening the deck estimator…</p>
     </div>
   );
 }

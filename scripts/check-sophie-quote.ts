@@ -45,8 +45,8 @@ for (const project of QUICK_PROJECTS) {
     for (const city of [ESTIMATOR_LOCATIONS[0].key, ESTIMATOR_LOCATIONS[ESTIMATOR_LOCATIONS.length - 1].key]) {
       const result = quickRange({ project: project.id, size: size.id, city });
       if (project.id === 'deck') {
-        assert.equal(result.kind, 'designer', 'decks are priced only by the deck designer');
-        assert.equal(result.href, `/deck-designer?sqft=${size.amount}`);
+        assert.equal(result.kind, 'designer', 'decks are priced only by the deck estimator');
+        assert.equal(result.href, `/cost-estimator?type=deck&sqft=${size.amount}`, 'a deck opens the deck estimator, never the private designer');
         assert.ok(!('low' in result), 'a deck result must carry no price');
         continue;
       }
@@ -86,4 +86,4 @@ for (const project of QUICK_PROJECTS.filter((p) => p.id !== 'deck')) {
   assert.deepEqual([...highs].sort((a, b) => a - b), highs, `${project.id} ranges must grow with size`);
 }
 
-console.log(`sophie quick range: ${priced} priced cases match the estimator engine (links verified to reopen the same range or flagged); decks route to the designer`);
+console.log(`sophie quick range: ${priced} priced cases match the estimator engine (links verified to reopen the same range or flagged); decks route to the deck estimator`);

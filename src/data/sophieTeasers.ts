@@ -40,7 +40,7 @@ const PROJECT_LINES: Record<QuickProject, string> = {
   patio: "Our estimator prices a patio's dig-out, base, pavers, labour and disposal. Give me a rough size and your town for your range.",
   walkway: "Our estimator prices a walkway's dig-out, base, pavers, labour and disposal. Give me a rough size and your town for your range.",
   wall: "Our estimator prices a retaining wall by its length and height. Give me a rough length and your town for your planning range.",
-  deck: "Decks are priced in our deck designer. Give me a rough size and I'll open it at that size for you.",
+  deck: "Decks are priced in our deck estimator. Give me a rough size and I'll open it at that size for you.",
   full: "For a full backyard (patio, wall and lighting), give me a rough patio size and your town and I'll pull a planning range.",
 };
 

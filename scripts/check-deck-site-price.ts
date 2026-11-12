@@ -1,21 +1,26 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,readdirSync} from 'node:fs';
+import {isDeepStrictEqual} from 'node:util';
 import {DEFAULT_DECK,NEW_DECK} from '../src/features/deckcraft/defaults';
 import {calculateDeckReleaseEstimate,deckReleaseData} from '../src/features/deckcraft/deckRelease';
-import {DECK_AREA,deckDesignerHref,deckSizeForArea,designHash,estimatorDeckHref,readDeckArea} from '../src/features/deckcraft/estimatorHandoff';
+import {DECK_AREA,deckSizeForArea,designFromHash,designHash,estimatorDeckHref,readDeckArea} from '../src/features/deckcraft/estimatorHandoff';
 import {deckFromDesign,drawnDeck,starterDeck} from '../src/features/deckcraft/estimatorDeck';
 import {DESIGN_LINK_PARAM,designLinkFromHash} from '../src/features/deckcraft/designLink';
-import {MATERIAL_TIERS} from '../src/features/deckcraft/types';
+import {DECKING_CATALOGUE} from '../src/features/deckcraft/manufacturerRuntimeCatalogue';
+import {MATERIAL_TIERS,type DeckData} from '../src/features/deckcraft/types';
+import {QUICK_DECK_DEFAULT,QUICK_DECK_FT,QUICK_HEIGHTS,QUICK_MATERIALS,QUICK_RAILINGS,normalizeQuickDeck,quickDeckForArea,railingAllowed,type QuickDeck} from '../src/features/deck-estimator/quickDeck';
+import {openDesign,priceQuickDeck,quickDeckFromData,quickDeckWithLink} from '../src/features/deck-estimator/quickDeckPrice';
 import {withDeckPrecise,withDeckRange} from '../src/utils/deckInEstimate';
 import {computeEstimate,type EstimateInput} from '../src/utils/estimateEngine';
 import {decodeBuild,encodeBuild} from '../src/utils/buildPermalink';
 import {designerSource} from './deck-designer-source';
 
 /**
- * One deck price on the site (owner decision 2026-09-23): the deck designer's. The cost estimator never prices a
- * deck with a rate of its own: choosing a deck opens the designer inside the estimator, and a full backyard's deck
- * is the designer's price (a starter deck at the chosen area until the visitor draws theirs), added to the
- * estimate's totals (owner decision 2026-09-28). The deck figures the site quotes are the designer's own,
+ * One deck price on the site (owner decision 2026-09-23): DeckCraft's price engine. The 3D designer itself is the
+ * owner's private tool (owner decision 2026-11-11: "local only"): it stays out of the production build, and visitors
+ * price a deck in the light deck estimator inside the cost estimator, which runs the same engine without the 3D. A
+ * full backyard's deck is that engine's price (a starter deck at the chosen area until the visitor sets theirs), added
+ * to the estimate's totals (owner decision 2026-09-28). The deck figures the site quotes are the engine's own,
  * recomputed here so a rate change cannot leave them behind.
  */
 let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);checks++;};
@@ -23,7 +28,7 @@ const read=(p:string)=>readFileSync(new URL(`../${p}`,import.meta.url),'utf8');
 const dollars=(n:number)=>`$${(Math.round(n/100)*100).toLocaleString('en-CA')}`;
 const cents=(n:number)=>Math.round(n*100);
 
-// 1. The cost-estimator FAQ quotes the designer's price for the deck it describes.
+// 1. The cost-estimator FAQ quotes the engine's price for the deck it describes.
 {
   const page=read('src/pages/CostEstimator.tsx');
   const answer=/"name": "What does a composite deck cost in Simcoe County\?",[\s\S]*?"text": "([^"]+)"/.exec(page)?.[1]??'';
@@ -35,7 +40,8 @@ const cents=(n:number)=>Math.round(n*100);
   ok(answer.includes(`the same deck 8 ft up as a walkout has a priced portion of about ${dollars(high.subtotal)}`),`The FAQ's walkout price is the designer's priced portion (${dollars(high.subtotal)})`);
   ok(ground.quoteRequired.length>0===answer.includes('confirmed by supplier quote'),'The FAQ says what is left to a supplier quote exactly when the designer leaves something to one');
   ok(!/\$\d+\s*\/\s*sq\s*ft/i.test(answer)&&!/19,500|30,500/.test(answer),'The FAQ no longer quotes the estimator\'s flat deck rate');
-  ok(/<Link to="\/deck-designer">3D deck designer<\/Link> opens right here, the one deck price on this site/.test(page),'The page tells visitors where decks are priced');
+  ok(answer.startsWith('Our deck estimator gives the one deck price on this site:'),'The FAQ sends visitors to the deck estimator, not the private designer');
+  ok(/Choose a composite deck and our deck estimator opens right here, the one deck price on this site\./.test(page)&&!page.includes('/deck-designer'),'The page tells visitors where decks are priced, and never links the private designer');
 }
 
 // 2. The hand-off: an area becomes a 4:3 deck of about that size, and only a clean area is read.
@@ -45,36 +51,53 @@ const cents=(n:number)=>Math.round(n*100);
     const {width,length}=deckSizeForArea(sqft);
     ok(Number.isInteger(width)&&Number.isInteger(length)&&width>=length&&width<=60&&length>=8&&Math.abs(width*length-sqft)/sqft<.06,`${sqft} sq ft becomes ${width} × ${length} ft, within 6%`);
   }
-  ok(deckDesignerHref(300)==='/deck-designer?sqft=300'&&deckDesignerHref(612.4)==='/deck-designer?sqft=612','The designer link carries the area');
-  ok([undefined,NaN,50,2500,'300',null].every(v=>deckDesignerHref(v)==='/deck-designer'),'A missing or out-of-range area opens the designer as usual');
   ok(estimatorDeckHref(300)==='/cost-estimator?type=deck&sqft=300'&&[undefined,NaN,50,2500,'300',null].every(v=>estimatorDeckHref(v)==='/cost-estimator?type=deck'),'The estimator\'s deck link carries a clean area only');
   ok(readDeckArea('?sqft=300')===300&&readDeckArea('?city=barrie&sqft=1000')===1000&&readDeckArea('?studio=deck&sqft=640')===640,'The designer reads the handed-over area');
   ok(['','?sqft=','?sqft=abc','?sqft=99','?sqft=2001','?sqft=300.5','?sqft=-300','?sqft=3e2'].every(s=>readDeckArea(s)===null),'Anything else is ignored');
   ok(designHash('1zAbC_-')===`#${DESIGN_LINK_PARAM}=1zAbC_-`&&designLinkFromHash(designHash('1zAbC_-'))==='1zAbC_-','The estimator opens a drawn deck through the designer\'s own link hash');
+  ok(['',`#${DESIGN_LINK_PARAM}=`,designHash('1zAbC_-'),`#x=1&${DESIGN_LINK_PARAM}=1jQ`,'#d','#other=1zAbC'].every(h=>designFromHash(h)===designLinkFromHash(h)),'The deck estimator reads a deck link from the address exactly as the designer does');
 }
 
-// 3. Wiring: the estimator never prices a deck with a rate of its own, and every way in opens the designer here.
+// 3. Wiring: the estimator never prices a deck with a rate of its own, every way in opens the light deck estimator
+// here, and nothing a visitor loads reaches the private 3D designer.
 {
-  const estimator=read('src/components/Estimator.tsx'),hero=read('src/components/HeroEstimator.tsx'),designer=designerSource(),studio=read('src/features/deckcraft/EstimatorDeckStudio.tsx');
+  const estimator=read('src/components/Estimator.tsx'),hero=read('src/components/HeroEstimator.tsx'),designer=designerSource();
+  const quick=readdirSync(new URL('../src/features/deck-estimator/',import.meta.url)).map(f=>read(`src/features/deck-estimator/${f}`)).join('\n');
   ok(/const pricedElements = useMemo\(\(\) => selectedElements\.filter\(e => e !== 'deck'\), \[selectedElements\]\);/.test(estimator)&&estimator.includes('projectType, selectedElements: pricedElements, sizes'),'The estimator\'s engine prices every chosen element except the deck');
   ok(!/installedPerSqft|DECK_BRANDS|showDeckPicker/.test(estimator),'The estimator has no deck rate or deck brand picker');
-  ok(!/from '\.\.\/features\/deckcraft\/(estimatorDeck|deckRelease|calculations|EstimatorDeckStudio)'/.test(estimator)&&estimator.includes("const loadEstimatorDeck = () => import('../features/deckcraft/estimatorDeck');")&&estimator.includes("lazy(() => import('../features/deckcraft/EstimatorDeckStudio'))"),'The designer and its price engine load only when a deck is chosen, never with the estimator');
+  ok(!/from '\.\.\/features\/(deckcraft\/(estimatorDeck|deckRelease|calculations)|deck-estimator\/(DeckQuickEstimator|quickDeckPrice))'/.test(estimator)&&estimator.includes("const loadEstimatorDeck = () => import('../features/deckcraft/estimatorDeck');")&&/const DeckQuickEstimator = lazy\(\(\) => \{\s*void import\('\.\.\/features\/deck-estimator\/quickDeckPrice'\)[^\n]*\n\s*return import\('\.\.\/features\/deck-estimator\/DeckQuickEstimator'\);/.test(estimator),'The deck estimator and its price engine load only when a deck is chosen, never with the estimator, and both at once');
+  ok(!/EstimatorDeckStudio|pages\/DeckDesigner|DeckCraftWorkspace/.test(estimator)&&!/deckcraft\/(designer|components)\/|pages\/DeckDesigner|DeckCraftWorkspace|from 'three'|@react-three/.test(quick),'Neither the estimator nor the deck estimator imports the 3D designer');
+  ok(/import\('\.\/quickDeckPrice'\)/.test(read('src/features/deck-estimator/DeckQuickEstimator.tsx'))&&!/^import (?!type )[^\n]*from '\.\/quickDeckPrice'/m.test(read('src/features/deck-estimator/DeckQuickEstimator.tsx')),'The deck estimator draws its form at once and loads the price engine beside it');
   ok(estimator.includes('withDeckPrecise(estimate.precise, deckCents)')&&estimator.includes('...withDeckRange(widenTotals(estimate, confidence), deckCents)')&&estimator.includes('withDeckRange(widenTotals(computeEstimate({ ...build, ...patch }), confidence), deckCents)'),'A full backyard\'s deck is in every total: the invoice, the range and every scenario range');
   ok(estimator.includes("const hasDeckElement = projectType === 'full' && selectedElements.includes('deck');")&&estimator.includes('const deckInBuild = hasDeckElement ? deck : null;'),'Only a full backyard with a deck carries one');
   ok(estimator.includes('buildPermalink({ ...build, selectedElements }, targetBudget, deckInBuild?.design)'),'A saved estimate keeps the deck, with its drawn design');
-  ok(/if \(saved && onlyDeck\(saved\.projectType, saved\.selectedElements\)\) \{[\s\S]{0,500}studio: 'deck'[\s\S]{0,500}hash: saved\.deckDesign \? designHash\(saved\.deckDesign\)/.test(estimator),'A saved deck-only estimate reopens its deck in the designer, here');
-  ok(/if \(searchParams\.get\('type'\) === 'deck'\) \{[\s\S]{0,240}prev\.set\('studio', 'deck'\)/.test(estimator),'A ?type=deck link opens the designer here, keeping its area for the designer to read');
-  ok(estimator.includes("if (step === 1 && projectType === 'deck') { openStudio('deck', 'type'); return; }")&&/if \(step === 2 && onlyDeck\(projectType, selectedElements\)\) \{ openStudio\('deck', 'full_only'/.test(estimator),'Choosing a deck, or a backyard that is only a deck, opens the designer here');
-  ok(/\{el === 'deck' \? \(\s*<>\s*\{deck\?\.source !== 'design' && renderSizeInputs\(el\)\}\s*\{renderDeckCard\(\)\}/.test(estimator)&&/onClick=\{\(\) => openStudio\('full', 'design'/.test(estimator),'A full backyard\'s deck shows its designer price and opens the designer without losing the estimate');
-  ok(/if \(studio\) \{\s*return \(\s*<Suspense fallback=\{<StudioLoading \/>\}>\s*<EstimatorDeckStudio mode=\{studio\}/.test(estimator)&&estimator.includes('const studio: StudioMode | null = !mounted ? null'),'The studio takes over the page only after mount, after every hook has run');
-  ok(studio.includes("import {DeckCraftWorkspace} from '../../pages/DeckDesigner';")&&/<DeckCraftWorkspace embed=\{\{renderBar:/.test(studio)&&studio.includes('drawnDeck(data,estimate)'),'The studio is the /deck-designer workspace itself, and hands back the deck exactly as it priced it');
-  ok(/export default function DeckDesigner\(\)\{\s*return <DeckCraftWorkspace\/>;\s*\}/.test(designer)&&designer.includes('{embed?embed.renderBar({data,estimate}):<SEO title="Design Your Deck in 3D'),'The /deck-designer page is the same workspace, with its own title only when not embedded');
-  ok(/if \(projectType === 'deck'\) \{ navigate\(estimatorDeckHref\(sqft\)\); return; \}/.test(hero),'The home-page quick estimator opens the designer in the estimator');
-  ok(/if \(projectType === 'deck'\) \{\s*navigate\(estimatorDeckHref\(sqft\)\);\s*return;\s*\}/.test(read('src/components/home/blocks/InstantEstimate.tsx')),'The home page estimate panel opens the designer in the estimator');
-  ok(/const area=readDeckArea\(window\.location\.search\),link=designLinkFromHash\(window\.location\.hash\);/.test(designer)&&designer.includes('if(!link&&!stored){update(size);')&&designer.includes("query.delete('sqft')"),'The designer starts a new visitor at the handed-over size, never replaces a saved or shared design, and clears the size from the address');
+  ok(/if \(saved && onlyDeck\(saved\.projectType, saved\.selectedElements\)\) \{[\s\S]{0,500}studio: 'deck'[\s\S]{0,500}hash: saved\.deckDesign \? designHash\(saved\.deckDesign\)/.test(estimator),'A saved deck-only estimate reopens its deck in the deck estimator, here');
+  ok(/if \(searchParams\.get\('type'\) === 'deck'\) \{[\s\S]{0,320}next\.set\('studio', 'deck'\);\s*navigate\(\{ search: `\?\$\{next\}`, hash: window\.location\.hash \}, \{ replace: true \}\);/.test(estimator),'A ?type=deck link opens the deck estimator here, keeping its area and any shared deck in the address');
+  ok(estimator.includes("if (step === 1 && projectType === 'deck') { openStudio('deck', 'type'); return; }")&&/if \(step === 2 && onlyDeck\(projectType, selectedElements\)\) \{ openStudio\('deck', 'full_only'/.test(estimator),'Choosing a deck, or a backyard that is only a deck, opens the deck estimator here');
+  ok(/\{el === 'deck' \? \(\s*<>\s*\{deck\?\.source !== 'design' && renderSizeInputs\(el\)\}\s*\{renderDeckCard\(\)\}/.test(estimator)&&/onClick=\{\(\) => openStudio\('full', 'design'/.test(estimator),'A full backyard\'s deck shows its engine price and opens the deck estimator without losing the estimate');
+  ok(/if \(studio\) \{\s*return \(\s*<Suspense fallback=\{<StudioLoading \/>\}>\s*<DeckQuickEstimator mode=\{studio\} initialDesign=\{deck\?\.design\}/.test(estimator)&&estimator.includes('const studio: StudioMode | null = !mounted ? null'),'The deck estimator takes over the page only after mount, after every hook has run, and opens a backyard\'s own deck');
+  ok(/if \(projectType === 'deck'\) \{ navigate\(estimatorDeckHref\(sqft\)\); return; \}/.test(hero),'The home-page quick estimator opens the deck estimator');
+  ok(/if \(projectType === 'deck'\) \{\s*navigate\(estimatorDeckHref\(sqft\)\);\s*return;\s*\}/.test(read('src/components/home/blocks/InstantEstimate.tsx')),'The home page estimate panel opens the deck estimator');
+  ok(/const area=readDeckArea\(window\.location\.search\),link=designLinkFromHash\(window\.location\.hash\);/.test(designer)&&designer.includes('if(!link&&!stored){update(size);')&&designer.includes("query.delete('sqft')"),'The private designer still starts at a handed-over size and never replaces a saved or shared design');
+  // The designer is the owner's private tool: out of the production build, and its old address sends visitors on.
+  const routes=read('src/routes.ts'),netlify=read('netlify.toml');
+  ok(/process\.env\.GM_DECKCRAFT_ROUTE !== 'off'/.test(routes)&&/route\('deck-designer', 'pages\/DeckDesigner\.tsx'\)/.test(routes),'The /deck-designer route is built only when GM_DECKCRAFT_ROUTE is not "off"');
+  ok(/\[build\.environment\][^[]*GM_DECKCRAFT_ROUTE = "off"/.test(netlify),'Netlify builds the live site without the designer');
+  for(const from of ['/deck-designer','/deck-designer/*'])ok(new RegExp(`\\[\\[redirects\\]\\]\\s*from = "${from.replace(/[*/]/g,'\\$&')}"\\s*to = "/cost-estimator/\\?type=deck"\\s*status = 301\\s*force = true`).test(netlify),`${from} sends visitors to the deck estimator (forced 301)`);
+  const filesIn=(dir:string):string[]=>readdirSync(new URL(`../${dir}/`,import.meta.url),{withFileTypes:true}).flatMap(e=>e.isDirectory()?filesIn(`${dir}/${e.name}`):/\.(tsx?|json)$/.test(e.name)?[`${dir}/${e.name}`]:[]);
+  const site=['src/pages','src/components','src/data','src/utils'].flatMap(filesIn);
+  const PRIVATE_OK=['src/pages/DeckDesigner.tsx','src/root.tsx','src/data/sophieTeasers.ts'];
+  const links=site.filter(f=>read(f).includes('/deck-designer')&&!PRIVATE_OK.includes(f));
+  ok(links.length===0,`No public page, component or fact points at /deck-designer (${links.join(', ')})`);
+  // What visitors read (code comments aside) never sends them to the 3D designer. The privacy policy keeps naming it
+  // (check-deck-send.ts: designs sent through it are still held), and business.ts's CASL note is for the owner.
+  const SAYS_DESIGNER_OK=['src/pages/DeckDesigner.tsx','src/pages/Privacy.tsx','src/data/business.ts'];
+  const withoutComments=(f:string)=>read(f).replace(/\/\*[\s\S]*?\*\//g,'').replace(/(^|[^:])\/\/.*$/gm,'$1');
+  const says=site.filter(f=>!SAYS_DESIGNER_OK.includes(f)&&/deck designer/i.test(withoutComments(f)));
+  ok(says.length===0,`No visitor-facing text calls the deck estimator the deck designer (${says.join(', ')})`);
 }
 
-// 4. The deck in an estimate is the designer's price, to the cent, and the totals reconcile.
+// 4. The deck in an estimate is the engine's price, to the cent, and the totals reconcile.
 await (async()=>{
   for(const sqft of [100,300,612,1000,2000]){
     const deck=starterDeck(sqft),data=deckReleaseData({...structuredClone(NEW_DECK),...deckSizeForArea(sqft)});
@@ -101,4 +124,66 @@ await (async()=>{
   ok(decodeBuild(encodeBuild(build,null,'<script>'))?.deckDesign===null,'A malformed deck design in a link is ignored');
 })();
 
-console.log(`DECK SITE PRICE OK — one deck price: the FAQ quotes the designer, the estimator opens it and adds its price, ${checks} checks.`);
+// 5. The light deck estimator: every choice is a real DeckCraft deck, priced by the engine to the cent.
+await (async()=>{
+  // Its options: the priced composite and PVC collections, the railings the engine prices in full, four heights.
+  const priced=DECKING_CATALOGUE.filter(m=>!m.isHidden&&m.isComposite&&m.costPerSqft!==null).map(m=>m.id);
+  ok(isDeepStrictEqual(QUICK_MATERIALS.map(m=>m.id),priced)&&priced.includes(QUICK_DECK_DEFAULT.material),`The decking choices are every priced composite and PVC collection (${priced.length})`);
+  ok(!QUICK_MATERIALS.some(m=>['pressure_treated','cedar'].includes(m.id)),'No wood decking: the project is a composite deck');
+  ok(!QUICK_RAILINGS.some(r=>(r.value as string)==='Frameless Glass')&&QUICK_RAILINGS.some(r=>r.value==='None'),'No railing that is left to a supplier quote; no railing at all is a choice');
+  ok(QUICK_HEIGHTS.map(h=>h.inches).join()==='18,36,60,96','Four heights: low, raised, high and walkout');
+  ok(railingAllowed('None',18)&&!railingAllowed('None',36)&&railingAllowed('Aluminum',96),'No railing only below the 600 mm guard height');
+
+  // At a handed-over area it opens on the designer's own starter deck: the same deck, the same cents.
+  ok(isDeepStrictEqual(quickDeckForArea(null),QUICK_DECK_DEFAULT)&&QUICK_DECK_DEFAULT.width===NEW_DECK.width&&QUICK_DECK_DEFAULT.length===NEW_DECK.length&&QUICK_DECK_DEFAULT.height===NEW_DECK.height,'Without an area it opens on the designer\'s new deck');
+  for(const sqft of [100,300,612,2000]){
+    const q=quickDeckForArea(sqft),size=deckSizeForArea(sqft),starter=starterDeck(sqft);
+    ok(q.width===size.width&&q.length===size.length,`${sqft} sq ft opens as ${size.width} × ${size.length} ft`);
+    ok(priceQuickDeck(q).deck.subtotalCents===starter.subtotalCents,`At ${sqft} sq ft its price is the designer's starter deck, to the cent (${starter.subtotalCents})`);
+  }
+
+  // Each choice is the patch the designer's own editors apply (selectPatch, collectionPatch), priced by the engine.
+  const q0=quickDeckForArea(300),base={...structuredClone(NEW_DECK),width:20,length:15};
+  const engine=(patch:Partial<DeckData>)=>cents(calculateDeckReleaseEstimate(deckReleaseData({...base,...patch})).subtotal);
+  const cases:[Partial<QuickDeck>,Partial<DeckData>,string][]=[
+    [{},{},'the starter deck'],
+    [{height:96},{height:96},'a walkout'],
+    [{height:18,railing:'None'},{height:18,railingType:'None'},'a low deck with no railing'],
+    [{railing:'Glass Panels'},{railingType:'Glass Panels'},'glass panels'],
+    [{deckType:'Freestanding'},{deckType:'Freestanding'},'a freestanding deck'],
+    [{stairs:0},{stairFlights:0},'no stairs'],
+    [{stairs:2},{stairFlights:2},'two stairs'],
+    [{skirting:false},{skirting:undefined},'no skirting'],
+    [{removeOld:true},{hasDemo:true},'an old deck removed'],
+    [{border:false},{pictureFrameRows:0,borderFinish:'Matching'},'no picture-frame border'],
+    [{material:'tt_reserve'},{deckingMaterial:'tt_reserve',deckingColor:'Antique Leather'},'TimberTech PRO Reserve'],
+    [{width:24,length:12,height:60,material:'deck_vista',railing:'Cable',stairs:2},{width:24,length:12,height:60,deckingMaterial:'deck_vista',deckingColor:'Dunewood',railingType:'Cable',stairFlights:2},'a mix of choices'],
+  ];
+  for(const [change,patch,name] of cases)ok(priceQuickDeck({...q0,...change}).deck.subtotalCents===engine(patch),`${name}: the deck estimator's price is the designer's, to the cent`);
+  const p=priceQuickDeck(q0);
+  ok(p.hstCents===Math.round(p.deck.subtotalCents*0.13)&&p.totalCents===p.deck.subtotalCents+p.hstCents,'Subtotal, 13% HST and total reconcile to the cent');
+  ok(p.deck.label.startsWith('300 sq ft')&&p.deck.label.includes('20 × 15 ft')&&p.deck.label.includes('36 in above grade'),`It says what the deck is: ${p.deck.label}`);
+
+  // Choices are held to what can be built and priced.
+  const held=normalizeQuickDeck({...q0,width:100,length:2.4,height:30,railing:'None',stairs:5 as 2,material:'pressure_treated'});
+  ok(held.width===QUICK_DECK_FT.width.max&&held.length===QUICK_DECK_FT.length.min&&held.height===36&&held.railing===QUICK_DECK_DEFAULT.railing&&held.stairs===2&&held.material===QUICK_DECK_DEFAULT.material,`Sizes are held to the limits, a height snaps to the nearest choice, no railing above guard height takes the default railing, an unknown collection the default (${JSON.stringify(held)})`);
+  ok(normalizeQuickDeck({...q0,height:18,railing:'None'}).railing==='None'&&normalizeQuickDeck({...q0,width:20.4}).width===20,'A low deck may have no railing; sizes are whole feet');
+
+  // A deck's link reopens the same choices at the same price; an older drawn design opens as its nearest light deck.
+  for(const [change] of cases){
+    const q=normalizeQuickDeck({...q0,...change}),linked=await quickDeckWithLink(q);
+    ok(linked.source==='design'&&typeof linked.design==='string'&&linked.subtotalCents===priceQuickDeck(q).deck.subtotalCents,`A deck handed on carries its link and its price (${JSON.stringify(change)})`);
+    const opened=await openDesign(linked.design!);
+    ok(isDeepStrictEqual(opened,{deck:q,exact:true}),`Its link reopens the same choices, exactly (${JSON.stringify(change)})`);
+    ok((await deckFromDesign(linked.design!)).subtotalCents===linked.subtotalCents,'A saved estimate reprices it to the same cents');
+  }
+  const older=quickDeckFromData(deckReleaseData({...structuredClone(DEFAULT_DECK),width:20,length:15,height:30,deckType:'Floating',railingType:'Trex Select',stairFlights:3}));
+  ok(isDeepStrictEqual(older,{width:20,length:15,height:36,deckType:'Freestanding',material:'tt_harvest',railing:'Aluminum',stairs:2,skirting:false,removeOld:false,border:true}),`An older design opens as its nearest light deck (${JSON.stringify(older)})`);
+  // The form says so when a link's design is more than it can show (another shape, height, railing or stair count).
+  const olderLink=await drawnDeck(deckReleaseData({...structuredClone(DEFAULT_DECK),width:20,length:15,height:30,railingType:'Trex Select'}),calculateDeckReleaseEstimate(deckReleaseData({...structuredClone(DEFAULT_DECK),width:20,length:15,height:30,railingType:'Trex Select'})));
+  const approximated=await openDesign(olderLink.design!);
+  ok(approximated.exact===false&&approximated.deck.height===36&&approximated.deck.railing==='Aluminum','An older design the form cannot show exactly opens as its nearest deck, flagged as approximate');
+  ok(await openDesign('not-a-deck-link').then(()=>false,()=>true),'A link that is not a deck is refused, never opened as some other deck');
+})();
+
+console.log(`DECK SITE PRICE OK — one deck price: the FAQ quotes the engine, the deck estimator prices with it to the cent, the 3D designer stays private, ${checks} checks.`);

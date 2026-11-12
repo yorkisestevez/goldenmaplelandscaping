@@ -112,8 +112,8 @@ export default function CompositeDecking() {
             </div>
             <PlanningQuote
               source="composite-decking-barrie"
-              rate="Priced in 3D"
-              rateDetail="Decks are priced in our 3D deck designer, the one deck price on this site. A planning figure, not a quote for your property."
+              rate="Priced online"
+              rateDetail="Decks are priced in our deck estimator, the one deck price on this site. A planning figure, not a quote for your property."
               categories={['Decks']}
               defaultService="Composite deck"
             />

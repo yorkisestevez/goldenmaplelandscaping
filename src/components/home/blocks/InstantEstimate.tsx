@@ -62,7 +62,7 @@ export default function InstantEstimate() {
   const open = () => {
     const sqft = SIZES.find((s) => s.id === size)?.sqft ?? SIZES[1].sqft;
     trackEngagement('cta_click', `home_estimate_${projectType}_${size}_${city}`);
-    // Decks are priced only by the deck designer, which opens inside the estimator.
+    // Decks are priced only by the deck estimator, which opens inside the estimator.
     if (projectType === 'deck') {
       navigate(estimatorDeckHref(sqft));
       return;

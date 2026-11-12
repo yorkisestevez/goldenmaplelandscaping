@@ -99,8 +99,8 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     shortName: 'Composite Decking',
     blurb:
       'Composite deck options for Ontario weather; available products and any manufacturer warranty are confirmed with the selected product documentation.',
-    startingPriceText: 'Priced in 3D',
-    perUnitText: 'in the deck designer',
+    startingPriceText: 'Priced online',
+    perUnitText: 'in the deck estimator',
     scope: [
       'Pressure-treated structural framing on engineered concrete piers',
       'TimberTech AZEK Vintage or Trex Transcend deck boards',

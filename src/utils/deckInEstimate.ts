@@ -1,5 +1,5 @@
 /**
- * A full backyard's deck, added to the estimate. The deck designer prices the deck (the site's one deck price, see
+ * A full backyard's deck, added to the estimate. The deck designer's engine prices the deck (the site's one deck price, see
  * features/deckcraft/estimatorHandoff.ts); the estimator's engine prices everything else and never sees the deck.
  * These add the designer's figure to the engine's so every total on screen (the range, the invoice, the live rail)
  * includes the deck and still reconciles to the cent. No engine coefficient or snapshot is touched.

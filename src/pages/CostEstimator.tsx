@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import Estimator from '../components/Estimator';
 import Reveal from '../components/Reveal';
 
 export default function CostEstimator() {
-  // While the 3D deck designer is open inside the estimator it is the whole
-  // page, with its own bar back to the estimate (Estimator reports it).
+  // While the deck estimator is open inside the estimator it is the whole
+  // page, with its own way back to the estimate (Estimator reports it).
   const [studioOpen, setStudioOpen] = useState(false);
   const schema = {
     "@context": "https://schema.org",
@@ -25,7 +24,7 @@ export default function CostEstimator() {
         "name": "What does a composite deck cost in Simcoe County?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Our 3D deck designer gives the one deck price on this site: it prices your exact size, height, stairs, railing and TimberTech collection from our price book. For example, a 20 × 15 ft (300 sq ft) attached deck 18 in off the ground in TimberTech AZEK Harvest decking, with aluminum railing, one stair and a one-row picture-frame border, has a priced portion of about $38,800 before HST; the same deck 8 ft up as a walkout has a priced portion of about $57,400. Unpriced connections, installation and order-specific adjustments are confirmed by supplier quote or builder quote before a final quotation."
+          "text": "Our deck estimator gives the one deck price on this site: it prices your size, height, stairs, railing and decking collection from our price book. For example, a 20 × 15 ft (300 sq ft) attached deck 18 in off the ground in TimberTech AZEK Harvest decking, with aluminum railing, one stair and a one-row picture-frame border, has a priced portion of about $38,800 before HST; the same deck 8 ft up as a walkout has a priced portion of about $57,400. Unpriced connections, installation and order-specific adjustments are confirmed by supplier quote or builder quote before a final quotation."
         }
       },
       {
@@ -77,9 +76,9 @@ export default function CostEstimator() {
               <li><strong>Elevated:</strong> Mondrian Plus, Wilfred, Rosebel — refined textures and modern profiles. Our most popular tier.</li>
               <li><strong>Premium:</strong> Mega Melville, Brooklyn, Metrik — large-format flagship and statement-finish slabs.</li>
             </ul>
-            <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Decks are designed in 3D, right in the estimator</h3>
+            <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Decks are priced right in the estimator</h3>
             <p>
-              Choose a composite deck and our <Link to="/deck-designer">3D deck designer</Link> opens right here, the one deck price on this site. It prices your exact size, height, stairs, railing and TimberTech collection. Add a deck to a full backyard and the designer prices it into your total: a starter deck at your size to begin with, then the exact deck you draw.
+              Choose a composite deck and our deck estimator opens right here, the one deck price on this site. It prices your size, height, stairs, railing and decking collection, and the price changes as you answer. Add a deck to a full backyard and the deck estimator prices it into your total: a starter deck at your size to begin with, then the deck you set.
             </p>
             <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">From estimate to exact quote</h3>
             <p>

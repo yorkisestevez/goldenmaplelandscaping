@@ -81,7 +81,7 @@ const facts: Fact[] = [
     ['4-6ft', '4–6 ft', String.raw`\b4\s?(?:–|—|-|to)\s?6\s?(?:ft|feet|')`],
     ['6ft+', '6 ft+', String.raw`\b6\s?(?:ft|feet|')\s?(?:\+|plus|or\s+(?:more|taller|higher)|and\s+(?:up|over))|(?:over|above|taller\s+than|more\s+than)\s+6\s?(?:ft|feet|')`],
   ] as const).map(([h, label, height]) => ({ id: `wall.${h}`, keywords: WALL, requires: both(PER_LINEAR_FT, height), excludes: [...PATIO, ...WALKWAY], statement: `A retaining wall ${label} high is around ${wallFoot(h)} per linear foot (typically ${wallTypical(h)}) for about 50 ft of wall.` })),
-  { id: 'deck', statement: 'Decks are priced only in the 3D deck designer at /deck-designer. Never quote a deck price per square foot.' },
+  { id: 'deck', statement: 'Decks are priced only in the deck estimator at /cost-estimator?type=deck. Never quote a deck price per square foot.' },
   { id: 'everything-else', statement: 'Anything not listed here (driveways, porcelain, natural stone, pergolas, kitchens, fire pits, drainage, lighting, sod, permits, repairs) has NO published price: say it is confirmed at a site visit and link the cost estimator.' },
 ];
 

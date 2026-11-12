@@ -463,12 +463,16 @@ test('@phone fits a 375 px screen with each section open',async({page})=>{
 
 /**
  * Controls under 44 px tall inside `scope`, by name and height. A checkbox or radio is tapped through its label, so the
- * label is measured; controls that are not shown (the design file picker) are skipped.
+ * label is measured; controls that are not shown (the design file picker) are skipped. Measured once running animations
+ * end: a section's panel slides up as it opens, and mid-slide a 44 px control can measure 43.99 px.
  */
-const underTouchSize=(scope:Locator)=>scope.evaluate(root=>[...root.querySelectorAll('button,input,select,textarea')].flatMap(el=>{
-  const target=el.matches('[type=checkbox],[type=radio]')?el.closest('label')??el:el,box=target.getBoundingClientRect();
-  return box.width&&box.height<44?[`${el.tagName.toLowerCase()} "${(el.getAttribute('aria-label')??el.textContent??'').trim().slice(0,40)}": ${Math.round(box.height)} px`]:[];
-}));
+const underTouchSize=(scope:Locator)=>scope.evaluate(async root=>{
+  await Promise.all(document.getAnimations().filter(a=>Number.isFinite(Number(a.effect?.getComputedTiming().endTime))).map(a=>a.finished.catch(()=>{})));
+  return [...root.querySelectorAll('button,input,select,textarea')].flatMap(el=>{
+    const target=el.matches('[type=checkbox],[type=radio]')?el.closest('label')??el:el,box=target.getBoundingClientRect();
+    return box.width&&box.height<44?[`${el.tagName.toLowerCase()} "${(el.getAttribute('aria-label')??el.textContent??'').trim().slice(0,40)}": ${Math.round(box.height)} px`]:[];
+  });
+});
 
 test('@phone keeps every control at least 44 px tall at 375 px',async({page})=>{
   await page.setViewportSize({width:375,height:812});
@@ -645,59 +649,6 @@ test('adds a fire pit and turf as labelled estimator allowances, and takes them 
   await page.getByRole('checkbox',{name:/Artificial turf/}).uncheck();
   await expect(backyardSubtotal(page)).toHaveCount(0);
   await expect((await price(page))).toHaveText(before??'');
-  expect(problems).toEqual([]);
-});
-
-// One deck price on the site: the designer's. It opens inside the cost estimator, and prices a full backyard's deck.
-test('a deck link to the cost estimator opens the designer there, at that size',async({page})=>{
-  const problems:string[]=[];
-  page.on('pageerror',e=>problems.push(String(e)));
-  await page.goto('/cost-estimator?type=deck&sqft=300');
-  await expect(page).toHaveURL(/\/cost-estimator\/?\?studio=deck$/);
-  await expect(page.getByRole('region',{name:'Cost estimator'})).toContainText('Cost estimator · deck');
-  await expect(size(page)).toContainText('20 × 15 ft');
-  await openFiles(page);
-  await expect(page.getByText(/Started from your cost estimate: a deck of about 300 sq ft \(20 × 15 ft\)/)).toBeVisible();
-  // Back returns to the estimator, with the deck still chosen.
-  await page.getByRole('button',{name:'Project types'}).click();
-  await expect(page.getByRole('button',{name:'Composite Deck',pressed:true})).toBeVisible();
-  expect(problems).toEqual([]);
-});
-
-test('a full-backyard estimate prices its deck with the designer and adds it to the total',async({page})=>{
-  const problems:string[]=[];
-  page.on('pageerror',e=>problems.push(String(e)));
-  await page.goto('/cost-estimator?type=full');
-  const live=page.getByRole('complementary',{name:'Live estimate'});
-  await expect(live).toContainText('$');
-  await page.getByRole('button',{name:'Composite Deck',pressed:false}).click();
-  await expect(page.getByRole('button',{name:'Composite Deck',pressed:true})).toBeVisible();
-  // A starter deck at the chosen 300 sq ft, priced by the designer and on the live receipt.
-  const card=page.locator('[data-estimator-deck="starter"]');
-  await expect(card).toContainText('20 × 15 ft');
-  await expect(card).toContainText('included in this estimate');
-  await expect(live).toContainText('Deck (starter)');
-  const starterText=(await card.locator('.tabular-nums').textContent())?.match(/\$([\d,]+)/)?.[1];
-  expect(starterText).toBeTruthy();
-  // Displayed estimator totals round to the nearest $100. The designer bar still shows whole dollars.
-  const shown=Number(starterText!.replace(/,/g,''));
-  await expect(page.getByText('How high off the ground?')).toHaveCount(0);
-  // Designing it opens the designer in the estimator, at that size and that price; using it brings it back.
-  await page.getByRole('button',{name:/Design your deck in 3D/}).click();
-  await expect(page).toHaveURL(/studio=full/);
-  await expect(size(page)).toContainText('20 × 15 ft');
-  const designerText=await page.getByRole('region',{name:'Cost estimator'}).locator('strong').textContent();
-  const designer=Number((designerText??'').replace(/[^\d]/g,''));
-  expect(designer).toBeGreaterThan(0);
-  expect(shown).toBe(Math.round(designer/100)*100);
-  await page.getByRole('button',{name:'Use this deck in my estimate'}).click();
-  await expect(page.locator('[data-estimator-deck="design"]')).toContainText('Your 3D deck design',{ignoreCase:true});
-  await expect(live).toContainText('Deck (your 3D design)');
-  // A backyard that is only a deck is the designer's whole estimate.
-  for(const name of ['Patio / Interlock','Retaining Wall','Landscape Lighting'])await page.getByRole('button',{name,exact:true,pressed:true}).click();
-  await page.getByRole('button',{name:'Continue →'}).first().click();
-  await expect(page).toHaveURL(/studio=deck/);
-  await expect(size(page)).toContainText('20 × 15 ft');
   expect(problems).toEqual([]);
 });
 

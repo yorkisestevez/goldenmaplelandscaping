@@ -7,9 +7,9 @@
  * quantity detail, vault recording, NO repeat-pricing gate
  * (the estimator is fully unlocked since 2026-09-28: no email to price again, on
  * return visits or old vaults), the My-estimates drawer, ?type= prefill, the mobile
- * sticky bar, and the 3D deck designer inside the estimator: a deck opens the
- * designer here (and Back returns), ?type=deck links open it at their size, and a
- * full backyard's deck is priced by the designer into the totals (starter deck,
+ * sticky bar, and the light deck estimator inside the estimator: a deck opens the
+ * deck estimator here (and Back returns), ?type=deck links open it at their size, and a
+ * full backyard's deck is priced by it into the totals (starter deck,
  * then "Use this deck in my estimate"). Selector notes (hard-won): project-type
  * cards are DIVs, not buttons — use text locators; input values do NOT appear in
  * innerText — read inputValue() off input[inputmode="numeric"]; the Claude-Preview
@@ -19,8 +19,8 @@
  *   - Prices are SHOWN rounded to the nearest $100. The exact cents are still what
  *     the engine computes and what the vault stores, so the invoice is checked
  *     against the vault's exact subtotal, rounded the way the page rounds it.
- *   - The estimator keeps the site header (logo, menu, phone), also while the 3D
- *     deck designer is open inside it.
+ *   - The estimator keeps the site header (logo, menu, phone), also while the deck
+ *     estimator is open inside it.
  */
 const { chromium } = require('playwright');
 
@@ -146,41 +146,41 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const sticky = await p4.locator('div.md\\:hidden.fixed').innerText().catch(() => '');
   ok('mobile sticky shows precise dollars + HST tag', /\$[\d,]+/.test(sticky) && sticky.includes('+HST'), sticky.replace(/\n/g, ' | '));
 
-  // ---- 8. A deck opens the 3D designer inside the estimator; Back returns ----
+  // ---- 8. A deck opens the light deck estimator inside the estimator; Back returns ----
   const ctx5 = await browser.newContext({ viewport: { width: 1440, height: 950 } });
   const p5 = await ctx5.newPage();
+  const scripts5 = [];
+  p5.on('request', r => { if (r.resourceType() === 'script') scripts5.push(new URL(r.url()).pathname); });
   await p5.goto(`${BASE}/cost-estimator/`, { waitUntil: 'networkidle' });
   await p5.locator('text=Composite Deck').first().click();
   await p5.getByRole('button', { name: /^Continue/ }).first().click();
-  await p5.locator('.deck-designer[data-embedded]').waitFor({ timeout: 30000 });
-  ok('deck opens the designer on the estimator page', new URL(p5.url()).pathname.startsWith('/cost-estimator') && new URL(p5.url()).searchParams.get('studio') === 'deck', p5.url());
-  ok('designer workspace rendered', await p5.locator('text=Draw your deck on your house.').count() > 0);
-  ok('estimator bar over the designer', await p5.locator('[aria-label="Cost estimator"] >> text=Cost estimator · deck').count() > 0);
+  await p5.locator('[data-deck-estimator="ready"]').waitFor({ timeout: 30000 });
+  ok('deck opens the deck estimator on the estimator page', new URL(p5.url()).pathname.startsWith('/cost-estimator') && new URL(p5.url()).searchParams.get('studio') === 'deck', p5.url());
+  ok('deck form rendered', await p5.locator('h1 >> text=Price your deck').count() > 0);
   ok('estimator intro steps aside, site header stays', !(await p5.locator('text=Plan your landscaping investment').count()) && await p5.locator('nav >> text=Portfolio').count() > 0);
-  await p5.waitForTimeout(1500);
-  const barPrice = await p5.locator('.dd-estimator-price strong').innerText();
-  ok('bar shows the live deck price', /^\$[\d,]+$/.test(barPrice), barPrice);
+  const deckTotal = await p5.locator('[aria-label="Your deck price"] dl dd').last().innerText();
+  ok('price card shows the live deck total', /^\$[\d,]+\.\d{2}$/.test(deckTotal), deckTotal);
+  const designer5 = scripts5.filter(s => /\/assets\/(DeckDesigner|three)[-.]/.test(s));
+  ok('no 3D designer code loads', designer5.length === 0, designer5.join(', '));
   await p5.goBack();
   await p5.waitForTimeout(800);
-  ok('browser Back closes the designer', await p5.locator('text=What are you looking to build?').isVisible() && !(await p5.locator('.deck-designer').count()));
+  ok('browser Back closes the deck estimator', await p5.locator('text=What are you looking to build?').isVisible() && !(await p5.locator('[data-deck-estimator]').count()));
   await p5.getByRole('button', { name: /^Continue/ }).first().click();
-  await p5.locator('.deck-designer[data-embedded]').waitFor({ timeout: 30000 });
+  await p5.locator('[data-deck-estimator="ready"]').waitFor({ timeout: 30000 });
   await p5.getByRole('button', { name: /Project types/ }).click();
   await p5.waitForTimeout(800);
-  ok('bar Back returns to the estimator', await p5.locator('text=What are you looking to build?').isVisible());
+  ok('its Back button returns to the estimator', await p5.locator('text=What are you looking to build?').isVisible());
 
-  // ---- 9. ?type=deck (home-page quick estimator) opens the designer at its size ----
+  // ---- 9. ?type=deck (home-page quick estimator) opens the deck estimator at its size ----
   const ctx6 = await browser.newContext({ viewport: { width: 1440, height: 950 } });
   const p6 = await ctx6.newPage();
   await p6.goto(`${BASE}/cost-estimator/?type=deck&sqft=300`, { waitUntil: 'networkidle' });
-  await p6.locator('.deck-designer[data-embedded]').waitFor({ timeout: 30000 });
-  await p6.waitForTimeout(1200);
-  // The designer's status line is visually quiet (not in innerText); read the DOM text and the size field.
-  const b6 = await p6.evaluate(() => document.body.textContent);
-  ok('?type=deck opens the designer at the handed-over size', b6.includes('Started from your cost estimate: a deck of about 300 sq ft (20 × 15 ft)'), (b6.match(/Started from[^.]{0,120}/) || ['no "Started from" line'])[0]);
-  ok('the size leaves the address once read', !new URL(p6.url()).searchParams.has('sqft') && new URL(p6.url()).searchParams.get('studio') === 'deck', p6.url());
+  await p6.locator('[data-deck-estimator="ready"]').waitFor({ timeout: 30000 });
+  const width6 = await p6.getByLabel('Width, along the house').inputValue().catch(e => String(e).slice(0, 80));
+  const depth6 = await p6.getByLabel('Depth, out from the house').inputValue().catch(e => String(e).slice(0, 80));
+  ok('?type=deck opens the deck estimator at the handed-over size', width6 === '20' && depth6 === '15' && new URL(p6.url()).searchParams.get('studio') === 'deck', `width=${width6} depth=${depth6} ${p6.url()}`);
 
-  // ---- 10. Full backyard: the deck is priced by the designer, in the totals ----
+  // ---- 10. Full backyard: the deck is priced by the deck estimator, in the totals ----
   const ctx7 = await browser.newContext({ viewport: { width: 1440, height: 950 } });
   const p7 = await ctx7.newPage();
   await p7.goto(`${BASE}/cost-estimator/`, { waitUntil: 'networkidle' });
@@ -191,7 +191,7 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   await p7.getByRole('button', { name: 'Composite Deck' }).click();
   await p7.locator('[data-estimator-deck="starter"]').waitFor({ timeout: 30000 });
   const card = await p7.locator('[data-estimator-deck="starter"]').innerText();
-  ok('deck card shows the designer starter price', /Starter deck/i.test(card) && /\$\d{1,3},\d{3}\b/.test(card) && card.includes('included in this estimate'), card.replace(/\n/g, ' | ').slice(0, 200));
+  ok('deck card shows the starter deck price', /Starter deck/i.test(card) && /\$\d{1,3},\d{3}\b/.test(card) && card.includes('included in this estimate'), card.replace(/\n/g, ' | ').slice(0, 200));
   const railDeck = await p7.locator('aside[aria-label="Live estimate"]').innerText();
   ok('receipt rail has the deck line', railDeck.includes('Deck (starter)'), railDeck.replace(/\n/g, ' | ').slice(0, 300));
   for (let i = 0; i < 4; i++) { await p7.getByRole('button', { name: /^Continue/ }).first().click(); await p7.waitForTimeout(450); }
@@ -204,14 +204,14 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const vault7 = await p7.evaluate(() => JSON.parse(localStorage.getItem('gm_estimator') || 'null'));
   const exact7 = vault7?.estimates[0]?.subtotalCents;
   ok('vault records the total with the deck', Number.isInteger(exact7) && same(inv7, invoiceFor(exact7)), `shown ${JSON.stringify(inv7)} vs ${JSON.stringify(Number.isInteger(exact7) ? invoiceFor(exact7) : null)} from ${exact7} cents`);
-  await p7.getByRole('button', { name: /Design your deck in 3D/ }).first().click();
-  await p7.locator('.deck-designer[data-embedded]').waitFor({ timeout: 30000 });
-  await p7.waitForTimeout(1200);
-  ok('full backyard opens the designer in full mode', new URL(p7.url()).searchParams.get('studio') === 'full', p7.url());
+  await p7.getByRole('button', { name: /Set your deck/ }).first().click();
+  await p7.locator('[data-deck-estimator="ready"]').waitFor({ timeout: 30000 });
+  ok('full backyard opens the deck estimator in full mode', new URL(p7.url()).searchParams.get('studio') === 'full', p7.url());
+  await p7.getByRole('group', { name: /^Railing/ }).getByText('Cable', { exact: true }).click();
   await p7.getByRole('button', { name: /Use this deck in my estimate/ }).click();
   await p7.locator('[data-estimator-deck="design"]').first().waitFor({ timeout: 30000 });
   const b7b = await p7.locator('body').innerText();
-  ok('drawn deck replaces the starter in the estimate', b7b.includes('Composite Deck · your 3D design') && /your 3d deck design/i.test(b7b) && !b7b.includes('Composite Deck · starter deck'));
+  ok('the deck the visitor set replaces the starter in the estimate', b7b.includes('Composite Deck · as you set it') && b7b.includes('Cable') && !b7b.includes('Composite Deck · starter deck'));
   const inv7b = invoice(b7b);
   ok('invoice with the drawn deck agrees within rounding', agrees(inv7b), JSON.stringify(inv7b));
 

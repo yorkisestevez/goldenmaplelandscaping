@@ -305,7 +305,7 @@
     },
     {
       "id": "deck",
-      "statement": "Decks are priced only in the 3D deck designer at /deck-designer. Never quote a deck price per square foot.",
+      "statement": "Decks are priced only in the deck estimator at /cost-estimator?type=deck. Never quote a deck price per square foot.",
       "figures": []
     },
     {
