@@ -7,6 +7,8 @@ import compositions from '../src/data/homeCompositions.json';
 import { BLOCK_IDS, DEFAULT_SEGMENT } from '../src/components/home/composition';
 
 const known = new Set<string>(BLOCK_IDS);
+/** Blocks other parts of the page depend on: the hero links to #selected-work, and Home always emits FAQ schema. */
+const REQUIRED = ['selected-work', 'faq', 'final-cta'];
 const errors: string[] = [];
 const segments = compositions as Record<string, { blocks?: unknown }>;
 
@@ -24,6 +26,7 @@ for (const [segment, composition] of Object.entries(segments)) {
     if (seen.has(id)) errors.push(`${segment}: block "${id}" listed twice`);
     seen.add(id);
   }
+  for (const id of REQUIRED) if (!seen.has(id)) errors.push(`${segment}: required block "${id}" is missing`);
   if (blocks[blocks.length - 1] !== 'final-cta') errors.push(`${segment}: last block must be "final-cta"`);
 }
 

@@ -70,6 +70,7 @@ const cents=(n:number)=>Math.round(n*100);
   ok(studio.includes("import {DeckCraftWorkspace} from '../../pages/DeckDesigner';")&&/<DeckCraftWorkspace embed=\{\{renderBar:/.test(studio)&&studio.includes('drawnDeck(data,estimate)'),'The studio is the /deck-designer workspace itself, and hands back the deck exactly as it priced it');
   ok(/export default function DeckDesigner\(\)\{\s*return <DeckCraftWorkspace\/>;\s*\}/.test(designer)&&designer.includes('{embed?embed.renderBar({data,estimate}):<SEO title="Design Your Deck in 3D'),'The /deck-designer page is the same workspace, with its own title only when not embedded');
   ok(/if \(projectType === 'deck'\) \{ navigate\(estimatorDeckHref\(sqft\)\); return; \}/.test(hero),'The home-page quick estimator opens the designer in the estimator');
+  ok(/if \(projectType === 'deck'\) \{\s*navigate\(estimatorDeckHref\(sqft\)\);\s*return;\s*\}/.test(read('src/components/home/blocks/InstantEstimate.tsx')),'The home page estimate panel opens the designer in the estimator');
   ok(/const area=readDeckArea\(window\.location\.search\),link=designLinkFromHash\(window\.location\.hash\);/.test(designer)&&designer.includes('if(!link&&!stored){update(size);')&&designer.includes("query.delete('sqft')"),'The designer starts a new visitor at the handed-over size, never replaces a saved or shared design, and clears the size from the address');
 }
 
