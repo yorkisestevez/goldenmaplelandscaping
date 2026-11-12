@@ -43,11 +43,15 @@ exactly as wide as this file says and no wider.
 
 ## Constants
 
-- Repo: `C:\Users\yorki\Desktop\Goldenmaplelandscaping.ca\golden-maple-landscaping`
+- Repo: `C:\Users\yorki\Desktop\Goldenmaplelandscaping.ca\gm-optimizer`. This is a git
+  worktree kept on `main` for this routine alone (since 2026-11-12). Do all your work
+  here. Never run in `...\golden-maple-landscaping`: that folder is Yorkis's interactive
+  checkout, usually on a feature branch with work in progress.
 - Production: https://goldenmaplelandscaping.ca (Netlify auto-builds on push to main;
   its build command runs the pricing gates — a bad push fails the build, not the site)
 - Hermes lib: `C:\Users\yorki\Hermes Agent\skills\_lib\`
-- GA4 property `519541477`; dev server port 3011 (`.claude/launch.json`, name `golden-maple`)
+- GA4 property `519541477`; dev server port 3011, started from the repo folder with
+  `npm run dev -- --port 3011` (Step 4 item 4)
 - Git identity for your commits: `gm-site-optimizer[bot]` / `noreply@goldenmaplelandscaping.ca`
 - Telegram: `require('C:/Users/yorki/Hermes Agent/skills/_lib/telegram').sendAs('default',{text})`
   — chunk ≤3500 chars; on a parse_mode error retry without parse_mode. If Telegram
@@ -274,7 +278,9 @@ dry run does not add to a running test's counts, so Yorkis should only set
    means YOUR CHANGE is aborted (revert the working tree), never a regen.
 3. `npm run build` — must pass (prerender is SSR-strict: no bare window/localStorage
    at module/render top level; use the mounted-gate pattern).
-4. `node scripts/site-optimizer/estimator-e2e.cjs` — 25-check funnel suite (dev server
+4. `node scripts/site-optimizer/estimator-e2e.cjs` — the estimator funnel suite; every
+   check must pass (43 checks as of 2026-11-12, when it was brought back in line with
+   the estimator: prices shown rounded to $100, site header kept) (dev server
    must be running). Start it with an EXPLICIT port — `npm run dev -- --port 3011` —
    because `npm run dev` alone does NOT honor `.claude/launch.json` and binds :3000,
    which on this host is also held by an unrelated TrovEdge server (2026-08-30).
@@ -282,10 +288,20 @@ dry run does not add to a running test's counts, so Yorkis should only set
    confirm by `Get-NetTCPConnection -LocalPort 3011` + `Win32_Process.CommandLine`
    that the listener is YOUR react-router process — never infer liveness from a port
    probe alone, since a port can have multiple owners and a stale server answers 200.
-   After killing it, assert by CommandLine that no `*golden-maple-landscaping*react-router*`
+   After killing it, assert by CommandLine that no `*gm-optimizer*react-router*`
    node process survives; `TaskStop` on a backgrounded `npm run dev` does NOT kill the
    underlying node (leaked servers found on 2026-08-30 AND again on 2026-08-31).
 5. `node scripts/site-optimizer/contrast-audit-run.cjs` — zero criticals required.
+
+   Two rules for items 1-5 (both learned the hard way):
+   - Run lint, build and the dev server ONE AT A TIME. They all run `react-router typegen`
+     and race on `.react-router/types` when overlapped (2026-09-03).
+   - `npm run dev` and `npm run build` first run `scripts/porcelain-publisher/materialize.cjs`,
+     which rewrites four tracked files: `src/data/blogPosts.ts`, `src/routes.ts`,
+     `public/llms.txt` and `docs/business-facts-audit/build-claim-gate.json`. They are
+     build by-products, not your change. Never commit them, and before you finish (on
+     every path) put them back, or the next run's Step 1 finds a dirty tree and stops:
+     `git checkout -- src/data/blogPosts.ts src/routes.ts public/llms.txt docs/business-facts-audit/build-claim-gate.json`
 6. Customer-facing copy you wrote or changed → judge with the `gm-voice-judge` agent;
    `revise` = apply its hints once and re-judge; `block` = don't ship that copy.
 
