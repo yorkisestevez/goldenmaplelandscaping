@@ -18,7 +18,7 @@ test('the owner headline is the only h1',async({page})=>{
 
 test('blocks render in the default composition order',async({page})=>{
  const ids=await page.locator('[data-home-block]').evaluateAll(els=>els.map(el=>(el as HTMLElement).dataset.homeBlock));
- expect(ids).toEqual(compositions.default.blocks);
+ expect(ids).toEqual(compositions.default.arms[0].blocks);
 });
 
 test('the estimate panel opens the estimator with type, size and town',async({page})=>{
@@ -118,6 +118,46 @@ test('a parameter that is not a segment leaves the default hero whole, whatever 
   await expect(page.locator('h1')).toHaveText(HEADLINE.default);
   await expect(page.locator('[data-hero="eyebrow"]')).toHaveText(/Residential landscape construction/);
  }
+});
+
+/**
+ * Measurement. The version a visitor saw is kept for the session and travels with any enquiry they send, so a lead can
+ * be credited to the homepage version behind it. Tracking is off on a local host, so the events themselves are not sent.
+ */
+test('the version a visitor saw is remembered and stays the same on a return visit',async({page})=>{
+ await page.goto('/?gm_intent=decks');
+ await expect.poll(()=>page.evaluate(()=>sessionStorage.getItem('gm_home_exposure'))).toBe('decks|a');
+ expect(JSON.parse(await page.evaluate(()=>localStorage.getItem('gm_home_arm')??'{}'))).toMatchObject({decks:'a'});
+ await page.goto('/');
+ await expect.poll(()=>page.evaluate(()=>sessionStorage.getItem('gm_home_exposure'))).toMatch(/^(default|decks)\|a$/);
+});
+
+test('an enquiry sent after the homepage carries the version the visitor saw',async({page})=>{
+ let body='';
+ await page.route('**/*',async route=>{
+  const request=route.request();
+  if(request.method()!=='POST')return route.fallback();
+  body=request.postData()??'';
+  await route.fulfill({status:200,body:'ok'});
+ });
+ await page.goto('/?gm_intent=walls');
+ await expect(page.locator('h1')).toHaveText(HEADLINE.walls);
+ await page.locator('.home-hero').getByRole('link',{name:/Get my estimate/}).click();
+ await expect(page).toHaveURL(/\/contact\/?$/);
+ const form=page.locator('form').filter({has:page.locator('input[name="form-name"][value="contact"]')}).first();
+ await form.locator('[name="name"]').fill('Test Visitor');
+ await form.locator('[name="phone"]').fill('705-555-0100');
+ await form.locator('[name="email"]').fill('test@example.com');
+ await form.locator('[name="town"]').fill('Barrie');
+ for(const name of ['service','timing']){
+  const select=form.locator(`select[name="${name}"]`);
+  if(await select.count())await select.selectOption({index:1});
+ }
+ await form.locator('[name="details"]').fill('Automated test of the enquiry form. Not a real request.');
+ await form.getByRole('button',{name:/./}).last().click();
+ await expect.poll(()=>body).toContain('home_segment=walls');
+ expect(body).toContain('home_arm=a');
+ expect(body).toContain('form-name=contact');
 });
 
 test('the debug view explains the choice',async({page})=>{

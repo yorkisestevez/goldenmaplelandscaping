@@ -1,14 +1,18 @@
-import { useEffect, useMemo, useState, type ComponentType } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentType, type MouseEvent } from 'react';
 import { Shield, CheckCircle, Compass, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
 import HeroDepth from '../components/HeroDepth';
 import Reveal from '../components/Reveal';
 import { HOME_FAQS } from '../data/homeFaqs';
-import { compositionFor, type BlockId } from '../components/home/composition';
+import type { BlockId } from '../components/home/composition';
+import { recordHomeAction, recordHomeView, releaseHomeArm, useHomeArm } from '../components/home/homeArm';
 import { BLOCKS } from '../components/home/registry';
 import { HomeIntentProvider } from '../components/home/HomeIntentContext';
 import IntentDebug from '../components/home/IntentDebug';
-import { preferredCity, releaseHomeSegment, useHomeSegment } from '../components/home/intentStore';
+import { currentHomeSegment, preferredCity, releaseHomeSegment, useHomeSegment } from '../components/home/intentStore';
+
+/** Links that count as a first step toward an enquiry when clicked from the homepage. */
+const ACTION_HREF = /^(tel:|\/(contact|cost-estimator|deck-designer|book)(\/|\?|$))/;
 
 /* This block stays in this file on purpose. Its copy quotes two dollar figures
    that the owner approved in the price ledger (scripts/check-price-ledger.ts)
@@ -103,10 +107,26 @@ export default function Home() {
   const [city, setCity] = useState<string | null>(null);
   useEffect(() => {
     setCity(preferredCity());
-    return releaseHomeSegment;
+    // The store's own value, not this render's: the first render after hydration still holds the prerendered default.
+    recordHomeView(currentHomeSegment());
+    return () => {
+      releaseHomeArm();
+      releaseHomeSegment();
+    };
   }, []);
   const intent = useMemo(() => ({ segment, city }), [segment, city]);
-  const { blocks } = compositionFor(segment);
+  const { blocks } = useHomeArm(segment);
+
+  // One "act" per view: the first click on a link or button that leads toward an enquiry.
+  const acted = useRef(false);
+  const onClickCapture = (event: MouseEvent<HTMLDivElement>) => {
+    if (acted.current) return;
+    const target = (event.target as HTMLElement).closest('a[href], [data-home-action]');
+    if (!target) return;
+    if (!target.hasAttribute('data-home-action') && !ACTION_HREF.test(target.getAttribute('href') ?? '')) return;
+    acted.current = true;
+    recordHomeAction(currentHomeSegment());
+  };
 
   return (
     <HomeIntentProvider value={intent}>
@@ -116,6 +136,7 @@ export default function Home() {
         canonical="https://goldenmaplelandscaping.ca/"
         schema={faqSchema}
       />
+      <div onClickCapture={onClickCapture}>
       <HeroDepth segment={segment} />
       {blocks.map((id) => {
         const Block = HOME_BLOCKS[id];
@@ -125,6 +146,7 @@ export default function Home() {
           </div>
         );
       })}
+      </div>
       <IntentDebug segment={segment} />
     </HomeIntentProvider>
   );

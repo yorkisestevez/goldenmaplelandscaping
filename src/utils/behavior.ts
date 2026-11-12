@@ -18,6 +18,8 @@
 
 const VISITOR_KEY = 'gm_visitor';
 const SESSION_KEY = 'gm_session_behavior';
+/** The homepage version this visitor last saw, as `segment|arm`. Session-scoped, like the trail it belongs to. */
+const HOME_EXPOSURE_KEY = 'gm_home_exposure';
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 min idle = new session
 const MAX_PAGES = 30;
 const MAX_CLICKS = 30;
@@ -184,6 +186,25 @@ export function pushClick(label: string): void {
   writeSession(s);
 }
 
+/** Remember which homepage version the visitor saw, so a later enquiry can be credited to it. */
+export function setHomeExposure(segment: string, arm: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(HOME_EXPOSURE_KEY, `${segment}|${arm}`);
+  } catch {
+    /* no-op */
+  }
+}
+
+function readHomeExposure(): { segment: string; arm: string } | null {
+  try {
+    const [segment, arm] = (sessionStorage.getItem(HOME_EXPOSURE_KEY) ?? '').split('|');
+    return segment && arm ? { segment, arm } : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Flat field bag for spreading into form submissions. Mirrors
  * getAttributionFields(). Empty values omitted.
@@ -200,6 +221,12 @@ export function getBehaviorFields(): Record<string, string> {
   };
 
   if (visitor.ga4_client_id) out.ga4_client_id = visitor.ga4_client_id;
+
+  const exposure = readHomeExposure();
+  if (exposure) {
+    out.home_segment = exposure.segment;
+    out.home_arm = exposure.arm;
+  }
 
   if (CLARITY_PROJECT_ID) {
     out.clarity_recording_url =
