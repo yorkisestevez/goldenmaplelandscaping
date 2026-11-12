@@ -3,6 +3,7 @@ import { trackMeasure } from '../../utils/analytics';
 import { setHomeExposure } from '../../utils/behavior';
 import { armsFor, pickArm, prerenderedArm, type HomeArm } from './composition';
 import type { HomeSegment } from './intent';
+import { currentHomeSegment } from './intentStore';
 
 /**
  * Which version of the homepage a visitor gets, and the record of it. A
@@ -35,19 +36,19 @@ function assignArm(segment: HomeSegment): HomeArm {
   return drawn;
 }
 
-/** Fixed for as long as the homepage stays open, like the segment it belongs to. */
-let pageArm: { segment: HomeSegment; arm: HomeArm } | null = null;
+/**
+ * The arm for this view of the homepage. It is drawn once, for the segment the
+ * view settled on, and then never changes while the page is open: what is on
+ * screen, what is counted and what a later enquiry carries are the same arm.
+ */
+let pageArm: HomeArm | null = null;
 
-function armSnapshot(segment: HomeSegment): HomeArm {
-  if (pageArm?.segment !== segment) pageArm = { segment, arm: assignArm(segment) };
-  return pageArm.arm;
-}
-
+const currentArm = (): HomeArm => (pageArm ??= assignArm(currentHomeSegment()));
 const subscribe = () => () => {};
 
 /** The prerendered arm while prerendering and hydrating, then the visitor's own. */
-export function useHomeArm(segment: HomeSegment): HomeArm {
-  return useSyncExternalStore(subscribe, () => armSnapshot(segment), prerenderedArm);
+export function useHomeArm(): HomeArm {
+  return useSyncExternalStore(subscribe, currentArm, prerenderedArm);
 }
 
 export function releaseHomeArm(): void {
@@ -55,19 +56,18 @@ export function releaseHomeArm(): void {
 }
 
 /** Event names carry the segment and arm, so counts can be read per arm without any GA4 custom dimension. */
-const eventName = (kind: 'view' | 'act', segment: HomeSegment, arm: HomeArm) => `home_${kind}_${segment}_${arm.id}`;
+const eventName = (kind: 'view' | 'act') => `home_${kind}_${currentHomeSegment()}_${currentArm().id}`;
 
 /**
  * Record that this visitor saw this version: once as an analytics event, and
- * in the session so every form they submit later carries it.
+ * on the device so every form they submit later carries it.
  */
-export function recordHomeView(segment: HomeSegment): void {
-  const arm = armSnapshot(segment);
-  setHomeExposure(segment, arm.id);
-  trackMeasure(eventName('view', segment, arm));
+export function recordHomeView(): void {
+  setHomeExposure(currentHomeSegment(), currentArm().id);
+  trackMeasure(eventName('view'));
 }
 
 /** Record the first step toward an enquiry taken from the homepage in this view. */
-export function recordHomeAction(segment: HomeSegment): void {
-  trackMeasure(eventName('act', segment, armSnapshot(segment)));
+export function recordHomeAction(): void {
+  trackMeasure(eventName('act'));
 }

@@ -18,7 +18,11 @@
 
 const VISITOR_KEY = 'gm_visitor';
 const SESSION_KEY = 'gm_session_behavior';
-/** The homepage version this visitor last saw, as `segment|arm`. Session-scoped, like the trail it belongs to. */
+/**
+ * The homepage version this visitor last saw, as `segment|arm|seenAtMs`. Kept on the device rather than in the
+ * session, because an enquiry often comes days after the visit that prompted it; ignored once it is this old.
+ */
+const HOME_EXPOSURE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const HOME_EXPOSURE_KEY = 'gm_home_exposure';
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 min idle = new session
 const MAX_PAGES = 30;
@@ -190,7 +194,7 @@ export function pushClick(label: string): void {
 export function setHomeExposure(segment: string, arm: string): void {
   if (typeof window === 'undefined') return;
   try {
-    sessionStorage.setItem(HOME_EXPOSURE_KEY, `${segment}|${arm}`);
+    localStorage.setItem(HOME_EXPOSURE_KEY, `${segment}|${arm}|${Date.now()}`);
   } catch {
     /* no-op */
   }
@@ -198,8 +202,9 @@ export function setHomeExposure(segment: string, arm: string): void {
 
 function readHomeExposure(): { segment: string; arm: string } | null {
   try {
-    const [segment, arm] = (sessionStorage.getItem(HOME_EXPOSURE_KEY) ?? '').split('|');
-    return segment && arm ? { segment, arm } : null;
+    const [segment, arm, seenAt] = (localStorage.getItem(HOME_EXPOSURE_KEY) ?? '').split('|');
+    const fresh = Date.now() - Number(seenAt) < HOME_EXPOSURE_TTL_MS;
+    return segment && arm && fresh ? { segment, arm } : null;
   } catch {
     return null;
   }

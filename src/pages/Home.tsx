@@ -9,10 +9,21 @@ import { recordHomeAction, recordHomeView, releaseHomeArm, useHomeArm } from '..
 import { BLOCKS } from '../components/home/registry';
 import { HomeIntentProvider } from '../components/home/HomeIntentContext';
 import IntentDebug from '../components/home/IntentDebug';
-import { currentHomeSegment, preferredCity, releaseHomeSegment, useHomeSegment } from '../components/home/intentStore';
+import { preferredCity, releaseHomeSegment, useHomeSegment } from '../components/home/intentStore';
 
-/** Links that count as a first step toward an enquiry when clicked from the homepage. */
-const ACTION_HREF = /^(tel:|\/(contact|cost-estimator|deck-designer|book)(\/|\?|$))/;
+/** Pages that count as a first step toward an enquiry when opened from the homepage. */
+const ACTION_PATH = /^\/(contact|cost-estimator|deck-designer|book)(\/|$)/;
+
+/** A phone link, or a link to one of those pages on this site, however the href is written (relative or a full URL). */
+function isActionHref(href: string): boolean {
+  if (href.startsWith('tel:')) return true;
+  try {
+    const url = new URL(href, window.location.href);
+    return url.origin === window.location.origin && ACTION_PATH.test(url.pathname);
+  } catch {
+    return false;
+  }
+}
 
 /* This block stays in this file on purpose. Its copy quotes two dollar figures
    that the owner approved in the price ledger (scripts/check-price-ledger.ts)
@@ -108,14 +119,14 @@ export default function Home() {
   useEffect(() => {
     setCity(preferredCity());
     // The store's own value, not this render's: the first render after hydration still holds the prerendered default.
-    recordHomeView(currentHomeSegment());
+    recordHomeView();
     return () => {
       releaseHomeArm();
       releaseHomeSegment();
     };
   }, []);
   const intent = useMemo(() => ({ segment, city }), [segment, city]);
-  const { blocks } = useHomeArm(segment);
+  const { blocks } = useHomeArm();
 
   // One "act" per view: the first click on a link or button that leads toward an enquiry.
   const acted = useRef(false);
@@ -123,9 +134,9 @@ export default function Home() {
     if (acted.current) return;
     const target = (event.target as HTMLElement).closest('a[href], [data-home-action]');
     if (!target) return;
-    if (!target.hasAttribute('data-home-action') && !ACTION_HREF.test(target.getAttribute('href') ?? '')) return;
+    if (!target.hasAttribute('data-home-action') && !isActionHref(target.getAttribute('href') ?? '')) return;
     acted.current = true;
-    recordHomeAction(currentHomeSegment());
+    recordHomeAction();
   };
 
   return (
