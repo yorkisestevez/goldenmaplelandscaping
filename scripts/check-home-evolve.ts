@@ -102,12 +102,14 @@ ok(arms(promoted)[0].weight === 100 && arms(promoted)[0].blocks.join() === chall
 ok(promoted.state.segments.default.test === null, 'the test is closed after a decision');
 const afterPromotion = step(promoted.compositions, promoted.state, { [`default/${b}`]: stat(80, 20) }, 3);
 ok(arms(afterPromotion).length === 2 && arms(afterPromotion)[1].blocks.join() !== BLOCKS.join(), 'the next challenger is never the order that was just replaced');
-ok(new Set(arms(afterPromotion).map((arm) => arm.id)).size === 2 && arms(afterPromotion)[1].id !== 'a', 'and it gets an id that was never used');
+ok(arms(afterPromotion)[0].id === b && ![b, 'a'].includes(arms(afterPromotion)[1].id), 'and it gets an id that was never used');
 
 const fewActs = step(started.compositions, started.state, { 'default/a': stat(100, 0), [`default/${b}`]: stat(100, 4) }, 1);
 ok(!fewActs.changed && /actions of its own/.test(fewActs.actions[0].detail), 'a handful of clicks against none is not enough to promote');
 
 // Retiring.
+const thinLead = step(started.compositions, started.state, { 'default/a': stat(100, 5), [`default/${b}`]: stat(100, 0) }, 1);
+ok(!thinLead.changed && thinLead.actions[0].action === 'hold', 'an order is not dropped for good on the strength of a handful of clicks');
 const loser = step(started.compositions, started.state, { 'default/a': stat(150, 50), [`default/${b}`]: stat(150, 10) }, 1);
 ok(loser.changed && arms(loser).length === 1 && arms(loser)[0].id === 'a', 'a clear loser is retired and the original stays');
 const afterLoser = step(loser.compositions, loser.state, { 'default/a': stat(80, 12) }, 2);
@@ -132,6 +134,12 @@ ok(orphan.actions.length === 1 && orphan.actions[0].action === 'promote' && arms
 ok(orphan.state.segments.default.tested.length === 2, 'and both of its orders are remembered');
 const lostState = step(single(BLOCKS, 'v2'), emptyState(), { 'default/v2': stat(80, 10) }, 0);
 ok(new Set(arms(lostState).map((arm) => arm.id)).size === 2, 'a lost state file cannot lead to two arms with the same id');
+
+// A file the job cannot reason about.
+ok(/one or two arms/.test(errorOf(() => step({ default: { arms: [] } }, emptyState(), {}, 0)) ?? ''), 'a segment with no arms is refused');
+const three = [0, 1, 2].map((i) => ({ id: `x${i}`, weight: 33, blocks: [...BLOCKS] }));
+ok(/one or two arms/.test(errorOf(() => step({ default: { arms: three } }, emptyState(), {}, 0)) ?? ''), 'a segment with three arms is refused');
+ok(/one or two arms/.test(errorOf(() => step({ default: { arms: [{ id: 'a', weight: 100, blocks: 'faq' }] } } as never, emptyState(), {}, 0)) ?? ''), 'an arm without a list of blocks is refused');
 
 // Limits.
 const many: Compositions = Object.fromEntries(['default', 'patios', 'decks', 'walls', 'driveways'].map((s) => [s, single().default]));

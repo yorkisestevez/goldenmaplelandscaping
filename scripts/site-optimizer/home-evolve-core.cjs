@@ -171,6 +171,13 @@ function decide(currentCompositions, currentState, weekStats, weekEnding, option
   const stats = validateStats(weekStats);
   const counts = (segment, armId) => stats[`${segment}/${armId}`] || zero();
   const compositions = clone(currentCompositions);
+  // The lint gate checks the file in full; this is only enough to refuse a shape the job cannot reason about.
+  for (const [segment, composition] of Object.entries(compositions)) {
+    const arms = composition?.arms;
+    const sound = Array.isArray(arms) && (arms.length === 1 || arms.length === 2)
+      && arms.every((arm) => typeof arm?.id === 'string' && Array.isArray(arm.blocks));
+    if (!sound) throw new Error(`compositions "${segment}": expected one or two arms, each with an id and a list of blocks`);
+  }
   const usedIds = new Set(Object.values(compositions).flatMap(({ arms }) => arms.map((arm) => arm.id)));
   const actions = [];
   let budget = options.maxChangesPerRun;
@@ -212,8 +219,10 @@ function decide(currentCompositions, currentState, weekStats, weekEnding, option
     if (tooFewActs) reason += `; not promoted: needs ${options.minActsToPromote} actions of its own`;
     if (noEnquiries) reason += '; not promoted: the original has real enquiries and the challenger has none';
 
+    // The same floor applies both ways: the original must have earned its lead with real actions before an order is dropped for good.
+    const behind = enoughViews && chance <= options.retireAt && a.acts >= options.minActsToPromote;
     if (ahead && !tooFewActs && !noEnquiries) verdict = 'promote';
-    else if (enoughViews && chance <= options.retireAt) verdict = 'retire';
+    else if (behind) verdict = 'retire';
     else if (ageDays >= options.maxTestDays) {
       verdict = 'retire';
       reason += `; no result in ${options.maxTestDays} days`;

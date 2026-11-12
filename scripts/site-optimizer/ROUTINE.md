@@ -31,6 +31,11 @@ exactly as wide as this file says and no wider.
   - `src/data/homeCompositions.json` and `scripts/site-optimizer/home-evolve-state.json`:
     never edit either by hand. They change only through `home-evolve.cjs` (Step 3b),
     and `dryRunsRemaining` in the state file is Yorkis's to set.
+  - The evolution job's own code and gates: `scripts/site-optimizer/home-evolve.cjs`,
+    `scripts/site-optimizer/home-evolve-core.cjs`, `scripts/check-home-evolve.ts`,
+    `scripts/check-home-compositions.ts`, `scripts/check-home-intent.ts`, and Step 3b
+    of this file. You run them; you never edit them, loosen a rule in them, or remove
+    them from `npm run lint`. If one of them blocks you, that is a finding to report.
   - Anything outside this repo; any outbound message to a customer; any spend.
 - **Kill switch:** if `scripts/site-optimizer/HALT` exists, send the Telegram line
   "GM optimizer: HALTED by kill switch — no action taken", write the state heartbeat,
@@ -187,6 +192,8 @@ The homepage shows each visitor segment (`default`, `patios`, `decks`, `walls`,
 `home-evolve.cjs`, which alone decides whether to start a test, promote a winner or
 retire a loser. You collect and report; you do not decide and you do not edit the file.
 
+0. **Order.** Run this step in a clean tree, before you make any other change this run,
+   and ship it as its own PR. Do not mix it into another change's branch.
 1. **Skip conditions.** `HALT` exists → skip (the script also refuses to write then).
    Step 2's GA4 or Netlify-forms collection failed this run → skip and say so in the
    digest. Never run this step on guessed or partial counts.
@@ -221,7 +228,8 @@ retire a loser. You collect and report; you do not decide and you do not edit th
      `auto/opt-home-evolve-<date>`; commit `src/data/homeCompositions.json` AND
      `scripts/site-optimizer/home-evolve-state.json` together; PR body = the digest
      lines) and Step 6.
-   - Non-zero exit: report the message; nothing was written.
+   - Non-zero exit: usually nothing was written, but do not assume it. Put both files
+     back (item 7's `git checkout --` command), report the message, and stop this step.
    In the dry-run and `changed: false` cases the state file still changed. Commit it
    with the Step 7 state commit (see there), or the next run's Step 1 finds a dirty tree.
 6. **Live marker for Step 6.** The compositions are bundled into the homepage's
@@ -250,7 +258,11 @@ challenger none. It is retired at a 5% chance, or when there is no result in 42 
 An order that has been shown once is never shown again. The exact thresholds live in
 `home-evolve-core.cjs` (`DEFAULTS`); that file, not this paragraph, is the authority.
 Local traffic is small, so expect most weeks to say "idle" or "hold". That is the
-correct outcome, not a fault.
+correct outcome, not a fault. Two limits to know when reading a digest: with counts
+looked at every week, roughly one promotion in ten will be luck rather than a real
+difference, which is why the only thing at stake is a reversible block order; and a
+dry run does not add to a running test's counts, so Yorkis should only set
+`dryRunsRemaining` above zero when no test is running.
 
 ## Step 4 — implement + verify (ALL mandatory before any push)
 
@@ -337,6 +349,7 @@ losing the lock.
 ## Change log discipline
 
 Seeded backlog items, thresholds, and even this ROUTINE may be improved by the
-optimizer itself — EXCEPT the Authority section and the exclusion list, which only
-Yorkis edits. If you change this file, that change ships through the same Step 5 PR
+optimizer itself — EXCEPT the Authority section, the exclusion list, and everything
+the exclusion list names (which includes Step 3b and the evolution job's thresholds),
+which only Yorkis edits. If you change this file, that change ships through the same Step 5 PR
 flow with the reason in the body.
