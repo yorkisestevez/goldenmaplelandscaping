@@ -187,45 +187,70 @@ The homepage shows each visitor segment (`default`, `patios`, `decks`, `walls`,
 `home-evolve.cjs`, which alone decides whether to start a test, promote a winner or
 retire a loser. You collect and report; you do not decide and you do not edit the file.
 
-1. **Skip conditions.** `HALT` exists → skip. The script also refuses to write then.
+1. **Skip conditions.** `HALT` exists → skip (the script also refuses to write then).
+   Step 2's GA4 or Netlify-forms collection failed this run → skip and say so in the
+   digest. Never run this step on guessed or partial counts.
 2. **Week.** `weekEnding` = the last day of the GA4 weekly window from Step 2
-   (`YYYY-MM-DD`). The script refuses a week it has already counted, so a re-run is safe.
+   (`YYYY-MM-DD`). The script refuses a date in the future and any date less than 7
+   days after the last week it counted, so a re-run in the same week is refused, not
+   double-counted.
 3. **Counts per arm**, for those seven days:
    - `views` and `acts`: GA4 event counts for the names printed by
      `node scripts/site-optimizer/home-evolve.cjs --events`
-     (`home_view_<segment>_<arm>`, `home_act_<segment>_<arm>`). Pass that list as
-     `funnelEvents` to the Step 2 collector and read the counts from `funnel.current`.
+     (`home_view_<segment>_<arm>`, `home_act_<segment>_<arm>`). APPEND that list to
+     the `funnelEvents` you already pass to the Step 2 collector and read each count
+     from `r.data.funnel.current[<event name>]`. An event the collector returns no
+     row for is a real zero: write `0`.
    - `leads`: verified ("ham") Netlify submissions in the window whose data has
      `home_segment` and `home_arm`, counted per `<segment>/<arm>`. Use the default
      `listFormSubmissions` list for every form; never the `state=spam` bucket, and never
      GA4 `generate_lead` (contaminated, see Step 3).
-   - If either source failed this run, do not guess: skip Step 3b and say so in the digest.
-4. **Write the stats file** (outside the repo, e.g. your scratch dir):
+4. **Write the stats file** outside the repo (your scratch dir):
    `{ "default/a": { "views": 210, "acts": 31, "leads": 2 }, "decks/a": { ... } }`.
-   Leave out arms with no data; they count as zero.
+   Every arm you list must have all three numbers, as whole numbers, not strings; the
+   script rejects anything else. Include every arm that `--events` named.
 5. **Run it:**
    `node scripts/site-optimizer/home-evolve.cjs --stats <file> --week-ending <date> --write`
    - `mode: "dry-run"`: nothing on the site changed. Put the `digest` lines in the
-     Telegram report under "Homepage evolution (dry run, N left)". Commit the state
-     file with the Step 7 state commit.
-   - `mode: "applied"`, `changed: false`: same, without "dry run".
+     Telegram report under "Homepage evolution (dry run, N left)".
+   - `mode: "applied"`, `changed: false`: same heading without "dry run".
    - `mode: "applied"`, `changed: true`: this is ONE of your two changes for the run.
      Take it through Step 4 (lint runs `check-home-compositions` and
-     `check-home-evolve`; also run `npx playwright test e2e/home.spec.ts` after the
-     build), Step 5 (branch `auto/opt-home-evolve-<date>`, PR body = the digest
-     lines), and Step 6 (marker: the new arm id appears in the live homepage's
-     route chunk, or for a promote/retire the retired id no longer does).
-   - Non-zero exit: report the message, change nothing.
-6. **Never** pass counts you did not measure, re-run with a different date to force a
-   result, edit the thresholds in `home-evolve-core.cjs`, or raise `dryRunsRemaining`.
-   If the job's behaviour looks wrong, create `HALT` and report.
+     `check-home-evolve`; after the build also run
+     `npx playwright test e2e/home.spec.ts`), Step 5 (branch
+     `auto/opt-home-evolve-<date>`; commit `src/data/homeCompositions.json` AND
+     `scripts/site-optimizer/home-evolve-state.json` together; PR body = the digest
+     lines) and Step 6.
+   - Non-zero exit: report the message; nothing was written.
+   In the dry-run and `changed: false` cases the state file still changed. Commit it
+   with the Step 7 state commit (see there), or the next run's Step 1 finds a dirty tree.
+6. **Live marker for Step 6.** The compositions are bundled into the homepage's
+   JavaScript. Fetch `https://goldenmaplelandscaping.ca/`, collect the `/assets/*.js`
+   URLs it references (including modulepreload links), fetch them, and match this
+   pattern against their text, where `<id>` is the arm id from the digest:
+   `"?id"?:"<id>","?weight"?:<weight>`
+   - start: the new id with weight `50` is present.
+   - promote: the promoted id with weight `100` is present.
+   - retire: the retired id is absent under that pattern at any weight.
+   A bare search for the id alone (`v2`) matches unrelated code; do not use it.
+7. **If Step 4 fails after a `--write`**, put both files back with
+   `git checkout -- src/data/homeCompositions.json scripts/site-optimizer/home-evolve-state.json`
+   (this restores them; it is not a hand edit), report the failure, and stop. The week
+   has then not been counted and can be run again next time.
+8. **Never** pass counts you did not measure, re-run with a different date to force a
+   result, edit the thresholds in `home-evolve-core.cjs`, change `dryRunsRemaining`,
+   delete or rewrite the state file, or call the script's internals with other file
+   paths. If the job's behaviour looks wrong, create `HALT` and report.
 
 What the script can do is deliberately narrow: swap two neighbouring blocks (never the
 first or last), split a segment 50/50, and keep or drop the challenger. A challenger is
-promoted at a 90% chance of a better action rate with at least 100 views per arm,
-and not while the original is getting real enquiries and the challenger none; a test
-with no result in 42 days ends with the original kept. Local traffic is small, so
-expect most weeks to say "idle" or "hold". That is the correct outcome, not a fault.
+promoted at a 95% chance of a better action rate, with at least 100 views per arm and
+10 actions of its own, and not while the original is getting real enquiries and the
+challenger none. It is retired at a 5% chance, or when there is no result in 42 days.
+An order that has been shown once is never shown again. The exact thresholds live in
+`home-evolve-core.cjs` (`DEFAULTS`); that file, not this paragraph, is the authority.
+Local traffic is small, so expect most weeks to say "idle" or "hold". That is the
+correct outcome, not a fault.
 
 ## Step 4 — implement + verify (ALL mandatory before any push)
 
@@ -291,7 +316,9 @@ must never survive the night because the optimizer went quiet.
   "changes": [{"pr": "<url>", "what": "...", "marker": "...", "liveVerified": true}],
   "watch": ["metric to check next run"] }
 ```
-   Commit + push state.json on main directly (`[gm-optimizer] state: <date> <outcome>`)
+   Commit + push state.json on main directly (`[gm-optimizer] state: <date> <outcome>`),
+   together with `scripts/site-optimizer/home-evolve-state.json` when Step 3b changed it
+   without changing the compositions (a dry run, or a week of "hold" or "idle")
    — it's bookkeeping; the deploy workflow ignores publisher state-only commits, and
    a state commit that triggers a build is harmless.
 2. Telegram digest — **send even when green**; silence must never be indistinguishable
