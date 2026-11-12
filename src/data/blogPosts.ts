@@ -15,9 +15,12 @@ export interface BlogPostMeta {
 }
 
 export const BLOG_POSTS: BlogPostMeta[] = [
+  { slug: 'patio-heater-vs-firepit-vs-fireplace', title: 'Patio Heater, Fire Pit or Outdoor Fireplace: What Works in a Barrie Backyard', excerpt: 'Patio heater, fire pit or outdoor fireplace for a Barrie backyard? How much heat each gives, what the gas and permit side involves, and where each one fits.', category: 'Design', readTime: '8 min', image: '/images/projects/patio-pergola.jpg' },
   { slug: 'retaining-wall-permit-barrie', title: 'Do You Need a Permit for a Retaining Wall in Barrie?', excerpt: 'Do you need a permit for a retaining wall in Barrie? The 1.0-metre rule, engineer drawings, LSRCA checks and timelines — explained for Simcoe County homeowners.', category: 'Regulations', readTime: '9 min', image: '/images/projects/garden-wall.JPEG' },
   { slug: 'porcelain-vs-concrete-pavers-barrie', title: 'Porcelain Pavers vs Concrete Pavers: Which Patio Suits a Barrie Backyard?', excerpt: 'Porcelain vs concrete pavers for a Barrie patio: absorption under 0.5% vs porous concrete, 20 mm porcelain, 60 mm concrete, base, cost and winter durability.', category: 'Materials', readTime: '10 min', image: '/images/projects/patio-pergola.jpg' },
   // BEGIN PORCELAIN PUBLICATION
+  { slug: "a-porcelain-installation-brief-your-trade-partner-can-actually-price", title: "A porcelain installation brief your trade partner can actually price", excerpt: "Preparing a porcelain installation enquiry? Give your installation partner the product, drawing revision, site information and scope boundaries needed to respond.", category: "Trade installation", readTime: "3 min", image: "/logo.svg" },
+  { slug: "before-you-buy-porcelain-for-your-patio-settle-these-five-details", title: "Before you buy porcelain for your patio, settle these five details", excerpt: "Planning a porcelain patio in Barrie or Simcoe County? Settle the use, layout, site access, product information and installation scope before ordering.", category: "Planning", readTime: "3 min", image: "/logo.svg" },
   // END PORCELAIN PUBLICATION
   { slug: 'outdoor-kitchen-gas-electrical-ontario', title: 'Outdoor Kitchen Gas & Electrical in Ontario: TSSA, ESA and Who Does What', excerpt: 'Outdoor kitchen gas and electrical in Ontario: TSSA gas rules, ESA electrical permits, who does each job, and the right sequencing for a Barrie build.', category: 'Regulations', readTime: '10 min', image: '/images/projects/patio-pergola.jpg' },
   {
