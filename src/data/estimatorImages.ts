@@ -19,6 +19,25 @@ export const PROJECT_TYPE_IMAGES: Record<string, { src: string; alt: string }> =
   full: { src: '/images/estimator/full-concept-v1.webp', alt: 'Complete backyard with patio, deck, pergola and planting — illustrative concept' },
 };
 
+/**
+ * The cards draw each picture 107–417 CSS px wide, so they are served from 4:3 re-encodes of the masters above
+ * at these widths (scripts/build-estimator-card-variants.ts), never from the 86–306 KB masters themselves.
+ */
+export const PROJECT_CARD_WIDTHS = [320, 480, 640, 960] as const;
+
+/** `/images/estimator/patio-concept-v2.webp` at 480 → `/images/estimator/patio-concept-v2-480.webp`. */
+export function projectCardVariant(master: string, width: number): string {
+  return master.replace(/\.webp$/, `-${width}.webp`);
+}
+
+/** src and srcset for a project card; the largest variant is the fallback src. */
+export function projectCardSources(master: string): { src: string; srcSet: string } {
+  return {
+    src: projectCardVariant(master, PROJECT_CARD_WIDTHS[PROJECT_CARD_WIDTHS.length - 1]),
+    srcSet: PROJECT_CARD_WIDTHS.map((width) => `${projectCardVariant(master, width)} ${width}w`).join(', '),
+  };
+}
+
 /** Deck brand card photographs (step 5 + workbench brand picker). */
 export const DECK_BRAND_IMAGES: Record<string, { src: string; alt: string }> = {
   'timbertech-prime': {
