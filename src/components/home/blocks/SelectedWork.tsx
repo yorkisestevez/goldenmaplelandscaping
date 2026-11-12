@@ -2,9 +2,28 @@ import { CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Reveal from '../../Reveal';
 import ResponsiveImage from '../../ResponsiveImage';
-import { FEATURED_PROJECTS, projectCover } from '../../../data/projects';
+import { FEATURED_PROJECTS, projectCover, projectsInCategory, type ProjectCategory, type ProjectRecord } from '../../../data/projects';
+import { useHomeIntent } from '../HomeIntentContext';
+import type { HomeSegment, HomeService } from '../intent';
 
-const SelectedWork = () => (
+const SEGMENT_CATEGORY: Record<HomeService, ProjectCategory> = {
+  patios: 'Patios & interlocking',
+  decks: 'Decks',
+  walls: 'Walls & steps',
+  driveways: 'Driveways',
+};
+
+/** The featured projects, with the visitor's kind of project moved to the front. */
+function projectsFor(segment: HomeSegment): ProjectRecord[] {
+  if (segment === 'default') return FEATURED_PROJECTS;
+  const matching = projectsInCategory(SEGMENT_CATEGORY[segment]);
+  const rest = FEATURED_PROJECTS.filter((project) => !matching.includes(project));
+  return [...matching, ...rest].slice(0, FEATURED_PROJECTS.length);
+}
+
+const SelectedWork = () => {
+  const { segment } = useHomeIntent();
+  return (
   <section id="selected-work" className="section-padding bg-brand-cream-light scroll-mt-24">
     <div className="container-custom">
       <Reveal className="text-center max-w-3xl mx-auto mb-12 md:mb-24">
@@ -16,7 +35,7 @@ const SelectedWork = () => (
         </h2>
       </Reveal>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 lg:gap-12 mb-14 md:mb-20">
-        {FEATURED_PROJECTS.map((project, idx) => (
+        {projectsFor(segment).map((project, idx) => (
           <Reveal key={project.slug} delay={idx * 0.1}>
             <Link to={`/portfolio/${project.slug}`} className="group flex flex-col">
               <div className="rounded-2xl overflow-hidden border border-brand-dim/40 bg-brand-surface mb-6 md:mb-10">
@@ -50,6 +69,7 @@ const SelectedWork = () => (
       </Reveal>
     </div>
   </section>
-);
+  );
+};
 
 export default SelectedWork;

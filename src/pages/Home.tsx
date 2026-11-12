@@ -1,11 +1,14 @@
-import type { ComponentType } from 'react';
+import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import { Shield, CheckCircle, Compass, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
 import HeroDepth from '../components/HeroDepth';
 import Reveal from '../components/Reveal';
 import { HOME_FAQS } from '../data/homeFaqs';
-import { compositionFor, DEFAULT_SEGMENT, type BlockId } from '../components/home/composition';
+import { compositionFor, type BlockId } from '../components/home/composition';
 import { BLOCKS } from '../components/home/registry';
+import { HomeIntentProvider } from '../components/home/HomeIntentContext';
+import IntentDebug from '../components/home/IntentDebug';
+import { preferredCity, releaseHomeSegment, useHomeSegment } from '../components/home/intentStore';
 
 /* This block stays in this file on purpose. Its copy quotes two dollar figures
    that the owner approved in the price ledger (scripts/check-price-ledger.ts)
@@ -95,17 +98,25 @@ export default function Home() {
       acceptedAnswer: { '@type': 'Answer', text: faq.a },
     })),
   };
-  const { blocks } = compositionFor(DEFAULT_SEGMENT);
+  const segment = useHomeSegment();
+  // Read after mount: storage does not exist while prerendering, and the first client render must match it.
+  const [city, setCity] = useState<string | null>(null);
+  useEffect(() => {
+    setCity(preferredCity());
+    return releaseHomeSegment;
+  }, []);
+  const intent = useMemo(() => ({ segment, city }), [segment, city]);
+  const { blocks } = compositionFor(segment);
 
   return (
-    <>
+    <HomeIntentProvider value={intent}>
       <SEO
         title="Barrie Landscaping | Patios, Walls & Decks"
         description="Patios, retaining walls and composite decks in Barrie and Simcoe County. Landscape maintenance for homes and commercial properties starts in 2027."
         canonical="https://goldenmaplelandscaping.ca/"
         schema={faqSchema}
       />
-      <HeroDepth />
+      <HeroDepth segment={segment} />
       {blocks.map((id) => {
         const Block = HOME_BLOCKS[id];
         return (
@@ -114,6 +125,7 @@ export default function Home() {
           </div>
         );
       })}
-    </>
+      <IntentDebug segment={segment} />
+    </HomeIntentProvider>
   );
 }

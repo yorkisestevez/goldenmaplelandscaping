@@ -76,7 +76,8 @@ function writeVisitor(v: VisitorIdentity): void {
   }
 }
 
-function readSession(): SessionBehavior | null {
+/** This session's page and click trail; null before the first page view or when storage is blocked. */
+export function readSession(): SessionBehavior | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = sessionStorage.getItem(SESSION_KEY);

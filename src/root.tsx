@@ -17,6 +17,7 @@ import './index.css';
 import SiteChrome from './components/Layout';
 import { initAnalytics, trackPageView } from './utils/analytics';
 import { onInteractOrIdle } from './utils/defer';
+import { refreshIntent } from './components/home/intentStore';
 import { initAttributionCapture } from './utils/utmCapture';
 import { initBehaviorCapture } from './utils/behavior';
 import { siteGraph } from './utils/schema';
@@ -110,6 +111,8 @@ export default function App() {
     } catch {
       /* A tracker must not take the page down. */
     }
+    // After the page view is on the session trail, so the homepage knows the visitor's interest next time it opens.
+    refreshIntent();
   }, [location.pathname, location.search]);
 
   // The deck designer stays chrome-less. The cost estimator uses the site
