@@ -6,7 +6,7 @@ import {
 } from '../data/estimatorDefaults';
 import { getLocation, type EstimatorLocationKey } from '../data/locations';
 import { QUICK_PROJECTS, QUICK_SIZES, type QuickProject, type QuickSize, type QuickRangeInput, type SizeOption } from '../data/sophieQuoteOptions';
-import { deckDesignerHref } from '../features/deckcraft/estimatorHandoff';
+import { estimatorDeckHref } from '../features/deckcraft/estimatorHandoff';
 
 export { QUICK_PROJECTS, QUICK_SIZES, parseQuickRangeInput, type QuickProject, type QuickSize, type QuickRangeInput } from '../data/sophieQuoteOptions';
 
@@ -64,8 +64,8 @@ function estimatorInput(project: Exclude<QuickProject, 'deck'>, amount: number, 
 
 export function quickRange({ project, size, city }: QuickRangeInput): QuickRange {
   const option = sizeOption(project, size);
-  // Decks are priced only by the deck designer, the site's one deck price.
-  if (project === 'deck') return { kind: 'designer', href: deckDesignerHref(option.amount) };
+  // Decks are priced only by the deck estimator (the deck designer's engine), the site's one deck price.
+  if (project === 'deck') return { kind: 'designer', href: estimatorDeckHref(option.amount) };
 
   const meta = QUICK_PROJECTS.find((p) => p.id === project)!;
   const estimate = computeEstimate(estimatorInput(project, option.amount, city));

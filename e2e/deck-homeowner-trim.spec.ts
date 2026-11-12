@@ -58,9 +58,3 @@ for(const phone of [false,true])test.describe(phone?'phone issues link':'desktop
   await link.click();await expect(page.getByRole('dialog',{name:'Construction readiness',exact:true})).toBeVisible();
  });
 });
-
-test('the cost estimator studio keeps its own price, not a second one',async({page,context})=>{
- await page.setViewportSize({width:1440,height:900});await context.addInitScript('window.__name=(t,v)=>t');
- await page.goto('/cost-estimator/?studio=deck');await expect(page.locator('section.dd-simple-tools')).toBeVisible({timeout:30_000});
- await expect(page.locator('.dd-estimator-price')).toBeVisible();await expect(page.locator('.deck-designer[data-embedded] .dd-workspace-price')).toBeHidden();
-});

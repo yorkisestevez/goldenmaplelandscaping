@@ -257,7 +257,7 @@ export default function ChatWidget() {
         lastRangeRef.current = null;
         say({
           role: 'assistant',
-          content: 'Decks get their price from our deck designer. It opens at your size, and you can draw your own shape.',
+          content: 'Decks get their price from our deck estimator. It opens at your size, and you can set the height, decking, railing and stairs.',
           designerHref: result.href,
         });
         trackEngagement('chat_range_shown', `deck_${choice.size}`);
@@ -282,7 +282,7 @@ export default function ChatWidget() {
   const pickSize = (project: QuickProject, size: QuickSize) => {
     const option = QUICK_SIZES[project].find((s) => s.id === size)!;
     say({ role: 'user', content: `${option.label} (${option.hint})` });
-    // The deck designer prices by area alone, so a deck skips the town.
+    // The deck estimator prices by area alone, so a deck skips the town.
     if (project === 'deck') { void finishQuote({ project, size, city: 'barrie' }); return; }
     say({ role: 'assistant', content: 'And which town is the property in?' });
     setFlow({ step: 'city', project, size });
@@ -611,7 +611,7 @@ export default function ChatWidget() {
                           onClick={() => goTo(m.designerHref!, 'range_deck_designer')}
                           className="mt-2 w-full rounded-full bg-brand-black text-brand-gold-light font-sans text-[13px] py-2 flex items-center justify-center gap-2"
                         >
-                          Open the deck designer <ArrowRight size={14} strokeWidth={1.75} />
+                          Open the deck estimator <ArrowRight size={14} strokeWidth={1.75} />
                         </button>
                       )}
                     </div>

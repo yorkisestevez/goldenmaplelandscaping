@@ -23,7 +23,7 @@ export interface BreakdownProps {
    *  invoice-style: exact category figures, subtotal, HST, grand total — with
    *  the widened range demoted to secondary context. */
   precise?: PreciseResult | null;
-  /** A full backyard's deck, as the 3D deck designer priced it. Its cents are
+  /** A full backyard's deck, as the deck estimator priced it. Its cents are
    *  already inside `precise` (subtotal, HST and total); this is its own line. */
   deck?: { cents: number; label: string; drawn: boolean; quoteItems: number } | null;
   brandName?: string;
@@ -200,13 +200,13 @@ export default function EstimateBreakdown(props: BreakdownProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-baseline gap-4">
-                  <span className="font-sans text-[14px] text-brand-bone">{props.deck.drawn ? 'Composite Deck · your 3D design' : 'Composite Deck · starter deck'}</span>
+                  <span className="font-sans text-[14px] text-brand-bone">{props.deck.drawn ? 'Composite Deck · as you set it' : 'Composite Deck · starter deck'}</span>
                   <span className="font-display text-lg md:text-xl text-brand-gold-dark tabular-nums whitespace-nowrap tracking-tight">
                     {money(props.deck.cents)}
                   </span>
                 </div>
                 <p className="font-sans text-[12px] font-light text-brand-muted mt-1.5 leading-relaxed">
-                  {props.deck.label}. Priced by our 3D deck designer
+                  {props.deck.label}. Priced by our deck estimator
                   {props.deck.quoteItems > 0 ? `, the priced portion: ${props.deck.quoteItems} item${props.deck.quoteItems === 1 ? ' is' : 's are'} still to quote` : ''}.
                 </p>
               </div>

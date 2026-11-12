@@ -13,6 +13,23 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # The 3D deck designer is the owner's private tool ("local only", owner decision 2026-11-11): src/routes.ts leaves
+  # /deck-designer and all of its code out of the live build. Local builds and the DeckCraft e2e build keep it.
+  GM_DECKCRAFT_ROUTE = "off"
+
+# The designer's old address, and any shared deck link on it (#d=…, which the browser keeps across a redirect),
+# opens the deck estimator in the cost estimator instead. Forced, so a build that still holds the page cannot serve it.
+[[redirects]]
+  from = "/deck-designer"
+  to = "/cost-estimator/?type=deck"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/deck-designer/*"
+  to = "/cost-estimator/?type=deck"
+  status = 301
+  force = true
 
 # Legacy /blog index consolidated into /resources (the working blog index).
 # Both slash forms 301 straight to /resources/. A target without the slash

@@ -46,7 +46,7 @@ export interface EstimatePayload {
   preciseSubtotalCents?: number | null;
   preciseHstCents?: number | null;
   preciseGrandTotalCents?: number | null;
-  /** A full backyard's deck as the 3D deck designer priced it (already inside
+  /** A deck as the deck estimator priced it (already inside
    *  the totals above). A drawn deck carries the link that reopens it. */
   deck?: EstimatorDeck | null;
 }
@@ -151,12 +151,13 @@ export default function EstimateLeadCapture({
       precise_subtotal: estimate.preciseSubtotalCents != null ? (estimate.preciseSubtotalCents / 100).toFixed(2) : '',
       precise_hst: estimate.preciseHstCents != null ? (estimate.preciseHstCents / 100).toFixed(2) : '',
       precise_total: estimate.preciseGrandTotalCents != null ? (estimate.preciseGrandTotalCents / 100).toFixed(2) : '',
-      // The deck, priced by the 3D deck designer (its figure is inside the totals above).
+      // The deck, priced by the deck estimator (its figure is inside the totals above).
       deck_subtotal: estimate.deck ? (estimate.deck.subtotalCents / 100).toFixed(2) : '',
       deck_summary: estimate.deck
-        ? `${estimate.deck.source === 'design' ? '3D design' : 'Starter deck'}: ${estimate.deck.label}${estimate.deck.quoteRequired.length ? `. Supplier quote: ${estimate.deck.quoteRequired.join('; ')}` : ''}`
+        ? `${estimate.deck.source === 'design' ? 'Deck as set' : 'Starter deck'}: ${estimate.deck.label}${estimate.deck.quoteRequired.length ? `. Supplier quote: ${estimate.deck.quoteRequired.join('; ')}` : ''}`
         : '',
-      deck_design_link: estimate.deck?.design ? `${window.location.origin}/deck-designer${designHash(estimate.deck.design)}` : '',
+      // Opens the deck in the deck estimator; the same #d= link opens it in the private 3D designer on a local build.
+      deck_design_link: estimate.deck?.design ? `${window.location.origin}/cost-estimator?type=deck${designHash(estimate.deck.design)}` : '',
     };
 
     if (import.meta.env.DEV) {

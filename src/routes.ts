@@ -54,7 +54,10 @@ export default [
   // Lead / cost
   route('buyers-guide', 'pages/BuyersGuide.tsx'),
   route('cost-estimator', 'pages/CostEstimator.tsx'),
-  route('deck-designer', 'pages/DeckDesigner.tsx'),
+  // The 3D deck designer is the owner's private tool (owner decision 2026-11-11: "local only"). netlify.toml builds the
+  // live site with GM_DECKCRAFT_ROUTE=off, so production has no /deck-designer page and ships none of its code;
+  // `npm run dev`, local builds and the DeckCraft e2e build keep it. Visitors price decks in the cost estimator.
+  ...(process.env.GM_DECKCRAFT_ROUTE !== 'off' ? [route('deck-designer', 'pages/DeckDesigner.tsx')] : []),
   route('cost-guide', 'pages/CostGuide.tsx'),
   route('cost-guide/thank-you', 'pages/CostGuideThankYou.tsx'),
   route('book', 'pages/Book.tsx'),

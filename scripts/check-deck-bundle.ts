@@ -114,6 +114,15 @@ const workerGraph=(entry:string)=>{const seen=new Set<string>();const visit=(fil
 const manifestFile=files.find(f=>/^manifest-.*\.js$/.test(f));
 assert(manifestFile,'The React Router manifest is missing from the build.');
 const manifest=JSON.parse(readFileSync(new URL(manifestFile,assets),'utf8').replace(/^window\.__reactRouterManifest=/,'').replace(/;\s*$/,'')) as {entry:{module:string;imports:string[]};routes:Record<string,{module:string;imports?:string[];css?:string[]}>};
+// The live site is built without the designer (GM_DECKCRAFT_ROUTE=off in netlify.toml, src/routes.ts; owner decision
+// 2026-11-11: the 3D designer is the owner's private tool). That build has no designer budget to check, only that none of
+// the designer shipped.
+if(process.env.GM_DECKCRAFT_ROUTE==='off'){
+  const leaked=[...Object.values(manifest.routes).map(r=>r.module).filter(m=>/\/DeckDesigner-[^/]+\.js$/.test(m)),...files.filter(f=>/^(DeckDesigner|Deck3DViewer)-/.test(f))];
+  assert.deepEqual(leaked,[],'The deck designer is left out of this build (GM_DECKCRAFT_ROUTE=off), yet some of it shipped');
+  console.log('DECK BUNDLE OK — the deck designer is not in this build (GM_DECKCRAFT_ROUTE=off).');
+  process.exit(0);
+}
 const route=Object.values(manifest.routes).find(r=>/\/DeckDesigner-[^/]+\.js$/.test(r.module));
 assert(route,'The deck designer route is in the manifest.');
 const shared=new Set([manifest.entry.module,...manifest.entry.imports,manifest.routes.root.module,...(manifest.routes.root.imports??[])]);

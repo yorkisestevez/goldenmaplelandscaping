@@ -28,7 +28,7 @@ export default function Design3D() {
                 A 3D view shows the layout, the steps, and where you sit. It is a picture of the plan, not a permit drawing.
               </p>
               <p className="font-sans text-base text-brand-muted leading-relaxed mb-16 font-light">
-                Decks can be drawn in the 3D deck designer on this site, which prices that deck from the price book. Patio and wall layouts are drawn for the property after the site visit. The crew builds the written scope, not the picture by itself.
+                Decks can be priced in the deck estimator on this site, from the same price book. Deck, patio and wall layouts are drawn for the property after the site visit. The crew builds the written scope, not the picture by itself.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Tell Us Your Budget</Link>
