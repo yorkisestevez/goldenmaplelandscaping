@@ -18,7 +18,7 @@ test('the owner headline is the only h1',async({page})=>{
 
 test('blocks render in the default composition order',async({page})=>{
  const ids=await page.locator('[data-home-block]').evaluateAll(els=>els.map(el=>(el as HTMLElement).dataset.homeBlock));
- expect(ids).toEqual(compositions.default.blocks);
+ expect(ids).toEqual(compositions.default.arms[0].blocks);
 });
 
 test('the estimate panel opens the estimator with type, size and town',async({page})=>{
@@ -118,6 +118,67 @@ test('a parameter that is not a segment leaves the default hero whole, whatever 
   await expect(page.locator('h1')).toHaveText(HEADLINE.default);
   await expect(page.locator('[data-hero="eyebrow"]')).toHaveText(/Residential landscape construction/);
  }
+});
+
+/**
+ * Measurement. The version a visitor saw is kept for the session and travels with any enquiry they send, so a lead can
+ * be credited to the homepage version behind it. Tracking is off on a local host, so the events themselves are not sent.
+ */
+const exposure=(page:import('@playwright/test').Page)=>page.evaluate(()=>(localStorage.getItem('gm_home_exposure')??'').split('|').slice(0,2).join('|'));
+
+test('each view records the version seen, and a visitor keeps their version',async({page})=>{
+ await page.goto('/?gm_intent=decks');
+ await expect.poll(()=>exposure(page)).toBe('decks|a');
+ expect(JSON.parse(await page.evaluate(()=>localStorage.getItem('gm_home_arm')??'{}'))).toMatchObject({decks:'a'});
+ // A second view records again: clear the record, open the default page, and it must come back as the default version.
+ await page.evaluate(()=>localStorage.removeItem('gm_home_exposure'));
+ await page.goto('/?gm_intent=default');
+ await expect.poll(()=>exposure(page)).toBe('default|a');
+ // A stored version that no longer exists is replaced by a real one.
+ await page.evaluate(()=>localStorage.setItem('gm_home_arm',JSON.stringify({walls:'retired'})));
+ await page.goto('/?gm_intent=walls');
+ await expect.poll(()=>exposure(page)).toBe('walls|a');
+ expect(JSON.parse(await page.evaluate(()=>localStorage.getItem('gm_home_arm')??'{}'))).toMatchObject({walls:'a'});
+});
+
+/** Fill in and send the contact form with the request intercepted, so nothing leaves the page. Returns what was posted. */
+async function sendContactEnquiry(page:import('@playwright/test').Page){
+ let body='';
+ await page.route('**/*',async route=>{
+  const request=route.request();
+  if(request.method()!=='POST')return route.fallback();
+  if(!body)body=request.postData()??'';
+  await route.fulfill({status:200,body:'ok'});
+ });
+ await page.locator('.home-hero').getByRole('link',{name:/Get my estimate/}).click();
+ await expect(page).toHaveURL(/\/contact\/?$/);
+ const form=page.locator('form').filter({has:page.locator('input[name="form-name"][value="contact"]')}).first();
+ await form.locator('[name="name"]').fill('Test Visitor');
+ await form.locator('[name="phone"]').fill('705-555-0100');
+ await form.locator('[name="email"]').fill('test@example.com');
+ await form.locator('[name="town"]').fill('Barrie');
+ for(const name of ['service','timing'])await form.locator(`select[name="${name}"]`).selectOption({index:1});
+ await form.locator('[name="details"]').fill('Automated test of the enquiry form. Not a real request.');
+ await form.locator('button[type="submit"]').click();
+ await expect.poll(()=>body).toContain('form-name=contact');
+ return body;
+}
+
+test('an enquiry sent after the homepage carries the version the visitor saw',async({page})=>{
+ await page.goto('/?gm_intent=walls');
+ await expect(page.locator('h1')).toHaveText(HEADLINE.walls);
+ const body=await sendContactEnquiry(page);
+ expect(body).toContain('home_segment=walls');
+ expect(body).toContain('home_arm=a');
+});
+
+test('a homepage visit from more than a month ago is not credited with the enquiry',async({page})=>{
+ await page.goto('/?gm_intent=walls');
+ await expect.poll(()=>exposure(page)).toBe('walls|a');
+ await page.evaluate(age=>localStorage.setItem('gm_home_exposure','walls|a|'+(Date.now()-age)),31*DAY_MS);
+ const body=await sendContactEnquiry(page);
+ expect(body).not.toContain('home_segment');
+ expect(body).not.toContain('home_arm');
 });
 
 test('the debug view explains the choice',async({page})=>{

@@ -98,6 +98,7 @@ export default function InstantEstimate() {
           </label>
           <button
             type="button"
+            data-home-action
             onClick={open}
             className="inline-flex items-center justify-center gap-3 rounded-full bg-brand-gold px-7 py-4 font-sans text-sm font-semibold text-brand-black transition-colors hover:bg-brand-gold-light"
           >

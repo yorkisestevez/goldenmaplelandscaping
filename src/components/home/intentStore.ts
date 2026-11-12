@@ -128,6 +128,9 @@ function resolveSegment(): HomeSegment {
 
 const subscribe = () => () => {};
 const getSnapshot = (): HomeSegment => (pageSegment ??= resolveSegment());
+
+/** The segment for this view, outside React's render: the same value useHomeSegment settles on. */
+export const currentHomeSegment = getSnapshot;
 const getServerSnapshot = (): HomeSegment => 'default';
 
 /** "default" while prerendering and hydrating, then the visitor's segment. */
