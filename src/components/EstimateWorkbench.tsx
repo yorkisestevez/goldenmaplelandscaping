@@ -166,7 +166,7 @@ export default function EstimateWorkbench({
                   className={cn(
                     'px-4 py-3.5 rounded-2xl border text-left transition-all duration-200',
                     isCurrent
-                      ? 'bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]'
+                      ? 'bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(217,150,106,0.4)]'
                       : 'bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
                   )}
                 >

@@ -110,7 +110,7 @@ export default function EstimateBreakdown(props: BreakdownProps) {
   return (
     <div className="space-y-6">
       {/* Headline total — Apple-style hero card */}
-      <div className="relative bg-gradient-to-b from-brand-gold/[0.12] via-brand-gold/[0.04] to-transparent border border-brand-gold/30 rounded-3xl p-10 md:p-14 text-center overflow-hidden shadow-[0_30px_80px_-30px_rgba(212,175,99,0.25)]">
+      <div className="relative bg-gradient-to-b from-brand-gold/[0.12] via-brand-gold/[0.04] to-transparent border border-brand-gold/30 rounded-3xl p-10 md:p-14 text-center overflow-hidden shadow-[0_30px_80px_-30px_rgba(217,150,106,0.25)]">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-gold/40 to-transparent" />
         <div className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-5">
           {p ? 'Your Estimate' : 'Your Estimated Investment'}

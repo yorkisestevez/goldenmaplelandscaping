@@ -186,7 +186,7 @@ export default function EstimateLeadCapture({
 
   if (status === 'success') {
     return (
-      <div className="bg-gradient-to-b from-brand-gold/10 to-brand-cream-light backdrop-blur-xl border border-brand-gold/30 rounded-3xl p-9 text-center shadow-[0_20px_60px_-30px_rgba(212,175,99,0.3)]">
+      <div className="bg-gradient-to-b from-brand-gold/10 to-brand-cream-light backdrop-blur-xl border border-brand-gold/30 rounded-3xl p-9 text-center shadow-[0_20px_60px_-30px_rgba(217,150,106,0.3)]">
         <div className="mx-auto w-14 h-14 rounded-full bg-brand-gold/15 border border-brand-gold/40 flex items-center justify-center mb-5">
           <CheckCircle size={24} className="text-brand-gold-dark" strokeWidth={1.5} />
         </div>
@@ -305,7 +305,7 @@ export default function EstimateLeadCapture({
         <button
           type="submit"
           disabled={status === 'submitting'}
-          className="btn-primary !rounded-full w-full py-4 mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_8px_24px_-8px_rgba(212,175,99,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(212,175,99,0.55)] transition-shadow"
+          className="btn-primary !rounded-full w-full py-4 mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_8px_24px_-8px_rgba(217,150,106,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(217,150,106,0.55)] transition-shadow"
         >
           <Mail size={16} strokeWidth={1.5} />
           {status === 'submitting' ? 'Saving…' : 'Save My Build'}

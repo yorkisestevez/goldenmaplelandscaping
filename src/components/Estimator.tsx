@@ -732,7 +732,7 @@ export default function Estimator({ onStudioChange }: {
                 className={cn(
                   'p-3.5 rounded-2xl border text-left transition-all duration-200',
                   isSelected
-                    ? 'bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]'
+                    ? 'bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(217,150,106,0.4)]'
                     : 'bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
                 )}
               >
@@ -873,7 +873,7 @@ export default function Estimator({ onStudioChange }: {
                       onClick={() => setDetail(el, q.id, o.id)}
                       className={cn(
                         "p-3.5 rounded-2xl border text-left transition-all duration-200",
-                        isSelected ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                        isSelected ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(217,150,106,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                       )}
                     >
                       {diagram ? (
@@ -970,11 +970,11 @@ export default function Estimator({ onStudioChange }: {
                   onClick={() => setPaverBrandId(p.id)}
                   className={cn(
                     "relative p-4 rounded-2xl border text-left transition-all duration-200",
-                    paverBrandId === p.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                    paverBrandId === p.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(217,150,106,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                   )}
                 >
                   {p.recommended && (
-                    <div className="absolute -top-2.5 left-4 bg-brand-gold text-brand-black font-sans text-[9px] uppercase tracking-widest px-2.5 py-0.5 rounded-full font-medium shadow-[0_4px_12px_rgba(212,175,99,0.4)]">
+                    <div className="absolute -top-2.5 left-4 bg-brand-gold text-brand-black font-sans text-[9px] uppercase tracking-widest px-2.5 py-0.5 rounded-full font-medium shadow-[0_4px_12px_rgba(217,150,106,0.4)]">
                       Recommended
                     </div>
                   )}
@@ -1126,7 +1126,7 @@ export default function Estimator({ onStudioChange }: {
               >
                 <span className={cn(
                     'w-1.5 h-1.5 rounded-full transition-colors duration-300',
-                    isCurrent ? 'bg-brand-gold shadow-[0_0_12px_rgba(212,175,99,0.6)]'
+                    isCurrent ? 'bg-brand-gold shadow-[0_0_12px_rgba(217,150,106,0.6)]'
                       : visited ? 'bg-brand-gold/60 group-hover:bg-brand-gold'
                       : 'bg-brand-dim',
                   )} />
@@ -1346,7 +1346,7 @@ export default function Estimator({ onStudioChange }: {
                     onClick={() => toggleCondition(cond.id)}
                     className={cn(
                       "flex items-start gap-4 p-5 rounded-2xl border transition-all duration-200 cursor-pointer",
-                      conditions[cond.id] ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                      conditions[cond.id] ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(217,150,106,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                     )}
                   >
                     <div className={cn(
@@ -1393,7 +1393,7 @@ export default function Estimator({ onStudioChange }: {
                     onClick={() => setLocation(loc.key)}
                     className={cn(
                       "px-5 py-4 rounded-2xl border text-left transition-all duration-200",
-                      location === loc.key ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                      location === loc.key ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(217,150,106,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                     )}
                   >
                     <div className="font-sans text-[13px] text-brand-bone">{loc.name}</div>
@@ -1429,7 +1429,7 @@ export default function Estimator({ onStudioChange }: {
                     onClick={() => setTier(t.id)}
                     className={cn(
                       "relative p-4 rounded-2xl border text-left transition-all duration-200",
-                      tier === t.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                      tier === t.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(217,150,106,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                     )}
                   >
                     {t.badge && (
@@ -1476,7 +1476,7 @@ export default function Estimator({ onStudioChange }: {
                     onClick={() => toggleAddOn(a.id)}
                     className={cn(
                       "flex items-start gap-4 p-5 rounded-2xl border transition-all duration-200 cursor-pointer",
-                      addOns.includes(a.id) ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                      addOns.includes(a.id) ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(217,150,106,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                     )}
                   >
                     <div className={cn(
@@ -1701,7 +1701,7 @@ export default function Estimator({ onStudioChange }: {
             <button
               onClick={nextStep}
               className={cn(
-                "btn-primary !rounded-full px-10 w-full sm:w-auto text-center justify-center shadow-[0_8px_24px_-8px_rgba(212,175,99,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(212,175,99,0.55)] transition-shadow",
+                "btn-primary !rounded-full px-10 w-full sm:w-auto text-center justify-center shadow-[0_8px_24px_-8px_rgba(217,150,106,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(217,150,106,0.55)] transition-shadow",
                 !canAdvance() ? "opacity-40 cursor-not-allowed" : ""
               )}
               disabled={!canAdvance()}
@@ -1835,7 +1835,7 @@ function ReceiptRail({ precise, deckLabel, displayLow, displayHigh, confidence, 
         </div>
         {canSkip && (
           // btn-primary, not btn-secondary — the secondary button is bright
-          // gold text for dark surfaces and reads ~1.9:1 on this light card.
+          // copper text for dark surfaces and reads ~2.3:1 on this light card.
           <button type="button" onClick={onSkip} className="btn-primary !rounded-full w-full justify-center text-center mt-5 !py-3">
             See full breakdown →
           </button>

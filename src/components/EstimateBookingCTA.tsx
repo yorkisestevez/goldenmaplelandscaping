@@ -60,9 +60,9 @@ export default function EstimateBookingCTA({ bookHref = '/book/?from=estimator' 
         {/* Track 1 — project phone call */}
         <CTACard
           href={freeHref}
-          className="group relative bg-gradient-to-b from-brand-gold/[0.10] to-brand-gold/[0.02] border border-brand-gold/40 rounded-3xl p-8 hover:border-brand-gold/70 hover:from-brand-gold/[0.14] transition-all flex flex-col backdrop-blur-xl shadow-[0_20px_60px_-30px_rgba(212,175,99,0.35)]"
+          className="group relative bg-gradient-to-b from-brand-gold/[0.10] to-brand-gold/[0.02] border border-brand-gold/40 rounded-3xl p-8 hover:border-brand-gold/70 hover:from-brand-gold/[0.14] transition-all flex flex-col backdrop-blur-xl shadow-[0_20px_60px_-30px_rgba(217,150,106,0.35)]"
         >
-          <div className="absolute -top-3 left-7 bg-brand-gold text-brand-black font-sans text-[9px] uppercase tracking-widest px-3 py-1 rounded-full font-medium shadow-[0_4px_12px_rgba(212,175,99,0.5)]">
+          <div className="absolute -top-3 left-7 bg-brand-gold text-brand-black font-sans text-[9px] uppercase tracking-widest px-3 py-1 rounded-full font-medium shadow-[0_4px_12px_rgba(217,150,106,0.5)]">
             Project call
           </div>
           <div className="flex items-center gap-3 mb-5">

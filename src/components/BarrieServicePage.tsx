@@ -13,7 +13,7 @@ import { ServicePageFreshness, ServiceReviewer, pageUpdateNode } from './PageFre
 /**
  * Template for the data-driven Barrie money pages (src/data/barrieServices.ts).
  * Layout and tokens mirror the hand-built service pages (light theme: nearblack =
- * parchment page, surface = white card, burgundy = the one dark CTA band). The
+ * limestone page, surface = paper card, burgundy = the one dark CTA band). The
  * keyword H1 is the small gold line; the display tagline is a <p>, same as the
  * retrofitted service pages.
  */
