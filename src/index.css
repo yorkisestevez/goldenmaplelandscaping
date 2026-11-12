@@ -228,7 +228,8 @@ html, body {
 .home-hero h1 { font-size: 3.375rem; line-height: 0.98; letter-spacing: -0.045em; }
 /* The framed picture. .home-hero-frame is the box you see at rest; the window and
    stack inside it are what HeroDepth.tsx opens out to full bleed on desktop. */
-.home-hero-frame { position: relative; width: 100%; height: 390px; }
+/* Arched top: the frame clips the picture, so the arch needs no extra markup. */
+.home-hero-frame { position: relative; width: 100%; height: 390px; overflow: hidden; border-radius: 50% 50% 20px 20px / 40% 40% 20px 20px; }
 .home-hero-window { position: absolute; inset: 0; overflow: hidden; }
 .home-hero-stack { position: absolute; inset: 0; }
 .home-hero-stack picture { display: contents; }

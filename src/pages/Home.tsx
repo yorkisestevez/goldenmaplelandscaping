@@ -1,212 +1,15 @@
-import { lazy, Suspense } from 'react';
-import { ArrowRight, Shield, Award, CheckCircle, Compass, Clock } from 'lucide-react';
+import type { ComponentType } from 'react';
+import { Shield, CheckCircle, Compass, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
 import HeroDepth from '../components/HeroDepth';
-import GoogleReviewsLink from '../components/GoogleReviewsLink';
-import { Link } from 'react-router-dom';
 import Reveal from '../components/Reveal';
-import { BUSINESS, LANDSCAPE_MAINTENANCE, publicClaimCopy } from '../data/business';
 import { HOME_FAQS } from '../data/homeFaqs';
-import { OWNER_FACTS, ownerFact } from '../data/ownerFacts';
-import ResponsiveImage from '../components/ResponsiveImage';
+import { compositionFor, DEFAULT_SEGMENT, type BlockId } from '../components/home/composition';
+import { BLOCKS } from '../components/home/registry';
 
-const InstagramFeed = lazy(() => import('../components/InstagramFeed'));
-const Manifesto = lazy(() => import('../components/Manifesto'));
-const Process = lazy(() => import('../components/Process'));
-const BuyersGuide = lazy(() => import('../components/BuyersGuide'));
-import { FEATURED_PROJECTS, getProject, projectCoverFull, projectCover } from '../data/projects';
-
-const ServicesGrid = () => {
-  const services = [
-    { title: 'Patios & interlocking', image: projectCover(getProject('barrie-diamond-inlay-patio')!), desc: 'Beautiful underfoot. Planned for dining, gathering and everyday life outside.', link: '/services/interlocking-barrie' },
-    { title: 'Composite decking', image: projectCover(getProject('deck-and-garden-walkway')!), desc: 'An extension of your home, with room to unwind and materials chosen for your routine.', link: '/services/composite-decking-barrie' },
-    { title: 'Walls & garden spaces', image: projectCover(getProject('sloped-backyard-patio-steps')!), desc: 'Bring definition to your landscape with considered levels, planting and stonework.', link: '/services/retaining-walls-barrie' },
-  ];
-  return (
-    <section className="home-services bg-brand-nearblack">
-      <div className="container-custom">
-        <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 mb-10 border-t border-brand-dim pt-10">
-          <div><p className="text-[10px] uppercase tracking-[0.22em] text-brand-gold-dark font-medium mb-4">Considered from the ground up</p><h2 className="home-services-heading font-display">Good living starts outside.</h2></div>
-          <Link to="/services" className="home-project-link self-start md:self-auto">Our services <ArrowRight size={15} aria-hidden="true" /></Link>
-        </div>
-        <div className="no-scrollbar -mx-8 flex snap-x snap-mandatory gap-5 overflow-x-auto px-8 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-7 md:overflow-visible md:px-0 md:pb-0">
-          {services.map((service) => (
-            <Link to={service.link} key={service.title} className="group block w-[78vw] shrink-0 snap-start md:w-auto md:shrink">
-              <div className="overflow-hidden mb-6"><ResponsiveImage image={service.image} sizes="(min-width: 768px) 33vw, 100vw" aspect="fill" whenVisible className="home-service-photo transition-transform duration-500 motion-safe:group-hover:scale-[1.03]" /></div>
-              <div className="flex items-center justify-between gap-4 mb-3"><h3 className="font-display text-3xl">{service.title}</h3><ArrowRight size={18} className="text-brand-gold-dark shrink-0" aria-hidden="true" /></div>
-              <p className="text-sm leading-relaxed text-brand-muted max-w-sm">{service.desc}</p>
-            </Link>
-          ))}
-        </div>
-        <Link
-          to={LANDSCAPE_MAINTENANCE.path}
-          className="group mt-10 flex flex-wrap items-center justify-between gap-6 rounded-[2px] border border-brand-dim bg-brand-surface px-6 py-7 transition-colors hover:border-brand-gold-dark md:px-9"
-        >
-          <div>
-            <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.22em] text-brand-gold-dark">New for 2027</p>
-            <h3 className="mb-2 font-display text-3xl text-brand-ink">Landscape maintenance</h3>
-            <p className="text-sm leading-relaxed text-brand-muted">Regular mowing and lawn care for homes and commercial properties.</p>
-          </div>
-          <span className="home-project-link">Explore maintenance <ArrowRight size={15} aria-hidden="true" /></span>
-        </Link>
-        <div className="flex flex-wrap gap-x-8 gap-y-4 mt-12 pt-6 border-t border-brand-dim text-xs text-brand-muted">
-          <span className="text-brand-gold-dark uppercase tracking-widest text-[10px] font-medium">Complete the space</span>
-          <Link to="/services/landscape-design-barrie" className="hover:text-brand-ink">Landscape design</Link>
-          <Link to="/services/outdoor-kitchens-barrie" className="hover:text-brand-ink">Outdoor kitchens</Link>
-          <Link to="/contact" className="hover:text-brand-ink">Fire features</Link>
-          <Link to="/contact" className="hover:text-brand-ink">Landscape lighting</Link>
-          <Link to="/services/seasonal-cleanup-barrie" className="hover:text-brand-ink">Spring &amp; fall clean-ups</Link>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const WhyGoldenMaple = () => {
-  const years = ownerFact(OWNER_FACTS.yearsInBusiness);
-  const standards = [
-    { icon: Compass, title: 'Project-specific site preparation', body: 'Drainage, soil conditions, access, and final excavation/base depth are reviewed for the written scope of each project.' },
-    { icon: Shield, title: 'Coverage on file', body: publicClaimCopy(BUSINESS.credentials.liabilityInsurance, ''), },
-    { icon: Award, title: 'Written workmanship terms', body: publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, ''), },
-  ].filter((item) => item.body);
-  return (
-    <section className="section-padding bg-brand-cream text-brand-ink overflow-hidden relative">
-      <div className="container-custom relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-          <div>
-            <Reveal>
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-green-dark mb-10 block font-medium">
-                The Golden Maple Standard
-              </span>
-              <h2 className="font-display text-4xl md:text-7xl font-light leading-tight mb-12 text-brand-ink">
-                Why your neighbour's <br />
-                <span className="text-brand-green-dark italic">patio is already sinking.</span>
-              </h2>
-            </Reveal>
-            <div className="space-y-12">
-              {standards.map((s, i) => (
-                <Reveal key={s.title} delay={0.1 + i * 0.1} className="flex gap-8">
-                  <div className="w-14 h-14 bg-brand-cream-light flex items-center justify-center rounded-[2px] shrink-0 border border-brand-ink/10 shadow-sm">
-                    <s.icon className="text-brand-green-dark" size={24} strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <h3 className="font-display text-2xl font-light text-brand-ink mb-3">{s.title}</h3>
-                    <p className="font-sans text-sm text-brand-ink-soft leading-relaxed font-light">{s.body}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-          <div className="relative">
-            <div className="aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-ink/10">
-              <ResponsiveImage image={projectCoverFull(getProject('cobblestone-driveway')!)} sizes="(min-width: 1024px) 45vw, 100vw" aspect="fill" whenVisible className="w-full h-full object-cover" />
-            </div>
-            {years && (
-              <div className="absolute -bottom-10 -left-10 bg-brand-green-dark p-8 hidden md:block rounded-[2px] shadow-xl max-w-[220px]">
-                <span className="font-display text-3xl font-light text-brand-porcelain block mb-2">{years}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const SelectedWork = () => (
-  <section id="selected-work" className="section-padding bg-brand-cream-light scroll-mt-24">
-    <div className="container-custom">
-      <Reveal className="text-center max-w-3xl mx-auto mb-12 md:mb-24">
-        <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
-          Selected work
-        </span>
-        <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite">
-          Recent work, up close.
-        </h2>
-      </Reveal>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 lg:gap-12 mb-14 md:mb-20">
-        {FEATURED_PROJECTS.map((project, idx) => (
-          <Reveal key={project.slug} delay={idx * 0.1}>
-            <Link to={`/portfolio/${project.slug}`} className="group flex flex-col">
-              <div className="rounded-[2px] overflow-hidden border border-brand-dim/40 bg-brand-surface mb-6 md:mb-10">
-                <ResponsiveImage
-                  image={projectCover(project)}
-                  sizes="(min-width: 1024px) 50vw, 100vw"
-                  aspect="4/3"
-                  whenVisible
-                  className="transition-transform duration-1000 motion-safe:group-hover:scale-[1.04]"
-                />
-              </div>
-              <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-4 block">
-                {project.category}
-              </span>
-              <h3 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite leading-tight mb-6 group-hover:text-brand-gold-dark transition-colors">
-                {project.title}
-              </h3>
-              <p className="font-sans text-brand-muted leading-relaxed font-light mb-6">
-                {project.summary}
-              </p>
-              <div className="flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-bonewhite/80">
-                <CheckCircle size={14} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" aria-hidden="true" />
-                Completed project · {project.town}, ON
-              </div>
-            </Link>
-          </Reveal>
-        ))}
-      </div>
-      <Reveal className="text-center">
-        <Link to="/portfolio" className="btn-ghost">View all projects</Link>
-      </Reveal>
-    </div>
-  </section>
-);
-
-const GoogleReviews = () => (
-  <section className="section-padding bg-brand-cream">
-    <div className="container-custom text-center max-w-2xl mx-auto">
-      <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-green-dark mb-6 block font-medium">
-        Reviews
-      </span>
-      <h2 className="font-display text-4xl md:text-6xl font-light text-brand-ink mb-8">
-        Read what homeowners wrote on Google.
-      </h2>
-      <p className="font-sans text-base text-brand-ink-soft font-light leading-relaxed mb-8">
-        We don&apos;t reprint reviews on this site. The current comments, photos, and rating live on our Google listing.
-      </p>
-      <GoogleReviewsLink className="btn-primary inline-flex" />
-    </div>
-  </section>
-);
-
-const FinalCTA = () => {
-  return (
-    <section className="section-padding bg-brand-burgundy relative overflow-hidden">
-      <div className="absolute inset-0 opacity-40">
-          <ResponsiveImage image={projectCoverFull(getProject('barrie-diamond-inlay-patio')!)} sizes="100vw" aspect="fill" whenVisible className="w-full h-full object-cover" />
-      </div>
-      <Reveal className="container-custom relative z-10 text-center">
-        <h2 className="font-display text-4xl md:text-8xl font-light text-brand-porcelain mb-12 leading-tight">
-          This time next year, <br />
-          <span className="text-brand-gold italic">you could be living in it.</span>
-        </h2>
-        <p className="font-sans text-lg text-brand-porcelain/80 max-w-2xl mx-auto mb-10 font-light leading-relaxed">
-          Tell us what you're picturing and your planning budget. We can discuss scope, availability and whether the proposed investment fits your project.
-        </p>
-        <div className="flex flex-col items-center gap-12 mb-16">
-          <div className="h-px w-20 bg-brand-gold/30" />
-          <span className="font-sans text-base md:text-lg text-brand-gold font-normal tracking-[0.1em] uppercase">
-            Start with a project conversation · Current scope and timing confirmed directly
-          </span>
-          <div className="h-px w-20 bg-brand-gold/30" />
-        </div>
-        <Link to="/contact" className="btn-primary px-20 py-5">
-          Get My Estimate
-        </Link>
-      </Reveal>
-    </section>
-  );
-};
-
+/* This block stays in this file on purpose. Its copy quotes two dollar figures
+   that the owner approved in the price ledger (scripts/check-price-ledger.ts)
+   against src/pages/Home.tsx; moving the text would need a fresh owner approval. */
 const ContractorPainPoints = () => {
   const points = [
     {
@@ -253,9 +56,9 @@ const ContractorPainPoints = () => {
 
         <div className="no-scrollbar -mx-8 flex snap-x snap-mandatory gap-5 overflow-x-auto px-8 pb-2 md:mx-0 md:grid md:grid-cols-2 md:gap-12 md:overflow-visible md:px-0 md:pb-0">
           {points.map((point, idx) => (
-            <div key={idx} className="w-[86vw] shrink-0 snap-start bg-brand-surface p-7 md:w-auto md:shrink md:p-12 rounded-[2px] border border-brand-dim/10">
+            <div key={idx} className="w-[86vw] shrink-0 snap-start bg-brand-surface p-7 md:w-auto md:shrink md:p-12 rounded-2xl border border-brand-dim/10">
               <div className="flex items-start gap-5 md:gap-8">
-                <div className="w-14 h-14 bg-brand-midsurface flex items-center justify-center rounded-[2px] shrink-0 shadow-sm border border-brand-dim/10">
+                <div className="w-14 h-14 bg-brand-midsurface flex items-center justify-center rounded-2xl shrink-0 shadow-sm border border-brand-dim/10">
                   <point.icon className="text-brand-gold-dark" size={24} strokeWidth={1.5} />
                 </div>
                 <div>
@@ -280,6 +83,8 @@ const ContractorPainPoints = () => {
   );
 };
 
+const HOME_BLOCKS: Record<BlockId, ComponentType> = { ...BLOCKS, 'pain-points': ContractorPainPoints };
+
 export default function Home() {
   const faqSchema = {
     '@context': 'https://schema.org',
@@ -290,6 +95,7 @@ export default function Home() {
       acceptedAnswer: { '@type': 'Answer', text: faq.a },
     })),
   };
+  const { blocks } = compositionFor(DEFAULT_SEGMENT);
 
   return (
     <>
@@ -300,36 +106,14 @@ export default function Home() {
         schema={faqSchema}
       />
       <HeroDepth />
-      <SelectedWork />
-      <ServicesGrid />
-      <Suspense fallback={null}><InstagramFeed /></Suspense>
-      <Suspense fallback={null}><Manifesto /></Suspense>
-      <ContractorPainPoints />
-      <WhyGoldenMaple />
-      <Suspense fallback={null}><Process /></Suspense>
-      <GoogleReviews />
-      <section className="section-padding bg-brand-nearblack border-t border-brand-dim/5">
-      <div className="container-custom">
-        <div className="max-w-3xl mx-auto mb-10 md:mb-20 text-center">
-          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">Common Questions</span>
-          <h2 className="font-display text-4xl md:text-6xl font-light text-brand-bonewhite">Before you ask for a quote.</h2>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 max-w-5xl mx-auto">
-          {HOME_FAQS.map((faq) => (
-            <div key={faq.q} className="bg-brand-surface p-7 md:p-10 border border-brand-dim/10 rounded-[2px]">
-              <h3 className="font-display text-2xl font-light text-brand-gold-dark mb-4 md:mb-6 leading-tight">{faq.q}</h3>
-              <p className="font-sans text-base text-brand-muted leading-relaxed font-light">{faq.a}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    <Suspense fallback={null}>
-      <BuyersGuide />
-    </Suspense>
-    <FinalCTA />
+      {blocks.map((id) => {
+        const Block = HOME_BLOCKS[id];
+        return (
+          <div key={id} data-home-block={id}>
+            <Block />
+          </div>
+        );
+      })}
     </>
   );
 }
