@@ -3,8 +3,8 @@
  * Run:  NODE_PATH=C:/Users/yorki/node_modules node scripts/site-optimizer/estimator-e2e.cjs
  * (Playwright is a global install at C:\Users\yorki\node_modules, not a repo dep.)
  *
- * Covers: chrome-less shell, receipt rail, precise invoice math (subtotal+HST=total
- * to the cent), disposal quantity detail, vault recording, NO repeat-pricing gate
+ * Covers: the site header on the estimator, receipt rail, invoice math, disposal
+ * quantity detail, vault recording, NO repeat-pricing gate
  * (the estimator is fully unlocked since 2026-09-28: no email to price again, on
  * return visits or old vaults), the My-estimates drawer, ?type= prefill, the mobile
  * sticky bar, and the light deck estimator inside the estimator: a deck opens the
@@ -14,6 +14,13 @@
  * cards are DIVs, not buttons — use text locators; input values do NOT appear in
  * innerText — read inputValue() off input[inputmode="numeric"]; the Claude-Preview
  * panel freezes AnimatePresence — headless Playwright only.
+ *
+ * Two things the owner confirmed on 2026-11-12, which this suite now expects:
+ *   - Prices are SHOWN rounded to the nearest $100. The exact cents are still what
+ *     the engine computes and what the vault stores, so the invoice is checked
+ *     against the vault's exact subtotal, rounded the way the page rounds it.
+ *   - The estimator keeps the site header (logo, menu, phone), also while the deck
+ *     estimator is open inside it.
  */
 const { chromium } = require('playwright');
 
@@ -23,11 +30,23 @@ const ok = (name, cond, extra = '') => {
   if (cond) { passed++; console.log(`  PASS  ${name}`); }
   else { failed++; console.log(`  FAIL  ${name} ${extra}`); }
 };
-const cents = s => Math.round(parseFloat(s.replace(/,/g, '')) * 100);
+const HST_RATE = 0.13;
+const dollars = s => parseInt(s.replace(/,/g, ''), 10);
+/** What the page shows for an exact amount in cents: the nearest $100. */
+const shown = cents => Math.round(cents / 10000) * 100;
+/** [subtotal, HST, total] as shown on the invoice, in dollars. */
 const invoice = body => {
-  const m = body.match(/Subtotal\s*\$([\d,]+\.\d{2})[\s\S]*?HST \(13%\)\s*\$([\d,]+\.\d{2})[\s\S]*?Estimated total\s*\$([\d,]+\.\d{2})/);
-  return m ? m.slice(1).map(cents) : null;
+  const m = body.match(/Subtotal\s*\$([\d,]+)[\s\S]*?HST \(13%\)\s*\$([\d,]+)[\s\S]*?Estimated total\s*\$([\d,]+)/);
+  return m ? m.slice(1).map(dollars) : null;
 };
+/** The three rows a visitor should see for an exact pre-tax subtotal. */
+const invoiceFor = subtotalCents => {
+  const hst = Math.round(subtotalCents * HST_RATE);
+  return [shown(subtotalCents), shown(hst), shown(subtotalCents + hst)];
+};
+/** Rounded rows cannot add up exactly; they must still agree to within the rounding. */
+const agrees = inv => !!inv && Math.abs(inv[0] * HST_RATE - inv[1]) <= 60 && Math.abs(inv[0] + inv[1] - inv[2]) <= 150;
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 (async () => {
   const browser = await chromium.launch();
@@ -38,7 +57,7 @@ const invoice = body => {
 
   // ---- 1. Full funnel: patio with details ----
   await page.goto(`${BASE}/cost-estimator/`, { waitUntil: 'networkidle' });
-  ok('chrome-less: no global navbar', !(await page.locator('nav >> text=Portfolio').count()));
+  ok('site header is on the estimator', await page.locator('nav >> text=Portfolio').count() > 0);
   ok('estimator top bar present', await page.locator('header >> text=Cost Estimator').count() > 0);
 
   await page.locator('text=Patio / Interlock').first().click();
@@ -47,7 +66,7 @@ const invoice = body => {
 
   ok('receipt rail visible from step 2', await page.locator('aside[aria-label="Live estimate"]').isVisible());
   const railText = await page.locator('aside[aria-label="Live estimate"]').innerText();
-  ok('rail shows cents figure', /\$[\d,]+\.\d{2}/.test(railText), railText.slice(0, 80));
+  ok('rail shows a price rounded to $100', /\$[\d,]*\d,?\d00\b/.test(railText) && !/\$[\d,]+\.\d{2}/.test(railText), railText.slice(0, 80));
 
   await page.locator('text=Old concrete').first().click();
   await page.locator('text=Hot tub going on it').first().click();
@@ -58,7 +77,7 @@ const invoice = body => {
   await page.waitForTimeout(1600);
 
   const body = await page.locator('body').innerText();
-  ok('precise headline with cents', /\$[\d,]+\.\d{2}/.test(body));
+  ok('headline price shown', /\$\d{1,3},\d{3}\b/.test(body));
   ok('HST line present', body.includes('HST (13%)'));
   ok('Estimated total row', body.includes('Estimated total'));
   ok('Subtotal row', body.includes('Subtotal'));
@@ -67,13 +86,15 @@ const invoice = body => {
   ok('site-visit honesty line', body.includes('same math we bring to your site visit'));
 
   const nums = invoice(body);
-  if (nums) ok('invoice adds up to the cent', nums[0] + nums[1] === nums[2], `${nums[0]} + ${nums[1]} != ${nums[2]}`);
-  else ok('invoice rows parseable', false);
+  ok('invoice rows parseable', !!nums, body.match(/Subtotal[\s\S]{0,120}/)?.[0]?.replace(/\n/g, ' | '));
+  ok('invoice rows agree within rounding', agrees(nums), JSON.stringify(nums));
 
   // ---- 2. Vault recorded, with no unlock state ----
   const vault1 = await page.evaluate(() => JSON.parse(localStorage.getItem('gm_estimator') || 'null'));
   ok('vault recorded 1 estimate', vault1 && vault1.estimates.length === 1, JSON.stringify(vault1)?.slice(0, 120));
   ok('vault holds no email or unlock', vault1 && !('email' in vault1) && !('unlockedAt' in vault1));
+  const exact1 = vault1?.estimates[0]?.subtotalCents;
+  ok('invoice is the saved estimate, rounded to $100', Number.isInteger(exact1) && same(nums, invoiceFor(exact1)), `shown ${JSON.stringify(nums)} vs ${JSON.stringify(Number.isInteger(exact1) ? invoiceFor(exact1) : null)} from ${exact1} cents`);
 
   // ---- 3. No repeat gate: price another project straight away ----
   await page.getByRole('button', { name: /Price Another Project/ }).click();
@@ -136,7 +157,7 @@ const invoice = body => {
   await p5.locator('[data-deck-estimator="ready"]').waitFor({ timeout: 30000 });
   ok('deck opens the deck estimator on the estimator page', new URL(p5.url()).pathname.startsWith('/cost-estimator') && new URL(p5.url()).searchParams.get('studio') === 'deck', p5.url());
   ok('deck form rendered', await p5.locator('h1 >> text=Price your deck').count() > 0);
-  ok('estimator frame steps aside', !(await p5.locator('text=Plan your landscaping investment').count()));
+  ok('estimator intro steps aside, site header stays', !(await p5.locator('text=Plan your landscaping investment').count()) && await p5.locator('nav >> text=Portfolio').count() > 0);
   const deckTotal = await p5.locator('[aria-label="Your deck price"] dl dd').last().innerText();
   ok('price card shows the live deck total', /^\$[\d,]+\.\d{2}$/.test(deckTotal), deckTotal);
   const designer5 = scripts5.filter(s => /\/assets\/(DeckDesigner|three)[-.]/.test(s));
@@ -170,7 +191,7 @@ const invoice = body => {
   await p7.getByRole('button', { name: 'Composite Deck' }).click();
   await p7.locator('[data-estimator-deck="starter"]').waitFor({ timeout: 30000 });
   const card = await p7.locator('[data-estimator-deck="starter"]').innerText();
-  ok('deck card shows the starter deck price', /Starter deck/i.test(card) && /\$[\d,]+\.\d{2}/.test(card) && card.includes('included in this estimate'), card.replace(/\n/g, ' | ').slice(0, 200));
+  ok('deck card shows the starter deck price', /Starter deck/i.test(card) && /\$\d{1,3},\d{3}\b/.test(card) && card.includes('included in this estimate'), card.replace(/\n/g, ' | ').slice(0, 200));
   const railDeck = await p7.locator('aside[aria-label="Live estimate"]').innerText();
   ok('receipt rail has the deck line', railDeck.includes('Deck (starter)'), railDeck.replace(/\n/g, ' | ').slice(0, 300));
   for (let i = 0; i < 4; i++) { await p7.getByRole('button', { name: /^Continue/ }).first().click(); await p7.waitForTimeout(450); }
@@ -179,9 +200,10 @@ const invoice = body => {
   const b7 = await p7.locator('body').innerText();
   ok('breakdown lists the deck', b7.includes('Composite Deck · starter deck'));
   const inv7 = invoice(b7);
-  ok('invoice with the deck adds up to the cent', inv7 && inv7[0] + inv7[1] === inv7[2], JSON.stringify(inv7));
+  ok('invoice with the deck agrees within rounding', agrees(inv7), JSON.stringify(inv7));
   const vault7 = await p7.evaluate(() => JSON.parse(localStorage.getItem('gm_estimator') || 'null'));
-  ok('vault records the total with the deck', vault7 && inv7 && vault7.estimates[0]?.subtotalCents === inv7[0], `${vault7?.estimates[0]?.subtotalCents} vs ${inv7?.[0]}`);
+  const exact7 = vault7?.estimates[0]?.subtotalCents;
+  ok('vault records the total with the deck', Number.isInteger(exact7) && same(inv7, invoiceFor(exact7)), `shown ${JSON.stringify(inv7)} vs ${JSON.stringify(Number.isInteger(exact7) ? invoiceFor(exact7) : null)} from ${exact7} cents`);
   await p7.getByRole('button', { name: /Set your deck/ }).first().click();
   await p7.locator('[data-deck-estimator="ready"]').waitFor({ timeout: 30000 });
   ok('full backyard opens the deck estimator in full mode', new URL(p7.url()).searchParams.get('studio') === 'full', p7.url());
@@ -191,7 +213,7 @@ const invoice = body => {
   const b7b = await p7.locator('body').innerText();
   ok('the deck the visitor set replaces the starter in the estimate', b7b.includes('Composite Deck · as you set it') && b7b.includes('Cable') && !b7b.includes('Composite Deck · starter deck'));
   const inv7b = invoice(b7b);
-  ok('invoice with the drawn deck adds up to the cent', inv7b && inv7b[0] + inv7b[1] === inv7b[2], JSON.stringify(inv7b));
+  ok('invoice with the drawn deck agrees within rounding', agrees(inv7b), JSON.stringify(inv7b));
 
   await browser.close();
   console.log(`\n${passed} passed, ${failed} failed`);

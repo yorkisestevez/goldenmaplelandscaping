@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import { trackEngagement } from '../../../utils/analytics';
 import { ESTIMATOR_LOCATIONS } from '../../../data/locations';
 import { estimatorDeckHref } from '../../../features/deckcraft/estimatorHandoff';
+import type { VaultEstimate } from '../../../utils/estimatorVault';
+import { useHomeIntent } from '../HomeIntentContext';
+import type { HomeService } from '../intent';
+import { lastEstimate } from '../intentStore';
 
 /** Ids match the estimator's `?type=` values. */
 const PROJECT_TYPES = [
@@ -24,6 +28,9 @@ const SIZES = [
 type ProjectTypeId = (typeof PROJECT_TYPES)[number]['id'];
 type SizeId = (typeof SIZES)[number]['id'];
 
+/** The estimator has no driveway type of its own, so a driveway visitor keeps the default choice. */
+const SEGMENT_PROJECT_TYPE: Partial<Record<HomeService, ProjectTypeId>> = { patios: 'patio', decks: 'deck', walls: 'wall' };
+
 /* The labels are screen-reader only, but the contrast audit still measures them, so they carry the light text colour. */
 const LABEL_CLASS = 'sr-only text-brand-porcelain';
 
@@ -39,6 +46,18 @@ export default function InstantEstimate() {
   const [projectType, setProjectType] = useState<ProjectTypeId>('patio');
   const [size, setSize] = useState<SizeId>('medium');
   const [city, setCity] = useState<string>(ESTIMATOR_LOCATIONS[0].key);
+  const intent = useHomeIntent();
+  const [saved, setSaved] = useState<VaultEstimate | null>(null);
+
+  // Start from what is known about the visitor. These run once the interest is known and never override a choice made by hand.
+  const [touched, setTouched] = useState(false);
+  useEffect(() => {
+    if (touched) return;
+    const type = intent.segment === 'default' ? undefined : SEGMENT_PROJECT_TYPE[intent.segment];
+    if (type) setProjectType(type);
+    if (intent.city) setCity(intent.city);
+  }, [intent.segment, intent.city, touched]);
+  useEffect(() => setSaved(lastEstimate()), []);
 
   const open = () => {
     const sqft = SIZES.find((s) => s.id === size)?.sqft ?? SIZES[1].sqft;
@@ -58,7 +77,7 @@ export default function InstantEstimate() {
           <h2 className="!mb-0 font-display text-3xl font-normal text-brand-porcelain">What will yours cost?</h2>
           <label className="relative block">
             <span className={LABEL_CLASS}>Project type</span>
-            <select value={projectType} onChange={(e) => setProjectType(e.target.value as ProjectTypeId)} className={SELECT_CLASS}>
+            <select value={projectType} onChange={(e) => { setTouched(true); setProjectType(e.target.value as ProjectTypeId); }} className={SELECT_CLASS}>
               {PROJECT_TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
             </select>
             <ChevronDown size={16} aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted" />
@@ -72,19 +91,29 @@ export default function InstantEstimate() {
           </label>
           <label className="relative block">
             <span className={LABEL_CLASS}>Town</span>
-            <select value={city} onChange={(e) => setCity(e.target.value)} className={SELECT_CLASS}>
+            <select value={city} onChange={(e) => { setTouched(true); setCity(e.target.value); }} className={SELECT_CLASS}>
               {ESTIMATOR_LOCATIONS.map((loc) => <option key={loc.key} value={loc.key}>{loc.name}</option>)}
             </select>
             <ChevronDown size={16} aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted" />
           </label>
           <button
             type="button"
+            data-home-action
             onClick={open}
             className="inline-flex items-center justify-center gap-3 rounded-full bg-brand-gold px-7 py-4 font-sans text-sm font-semibold text-brand-black transition-colors hover:bg-brand-gold-light"
           >
             See my range <ArrowRight size={16} aria-hidden="true" />
           </button>
         </div>
+        {saved && (
+          <p data-home-resume className="mt-4 text-center font-sans text-sm text-brand-muted">
+            You have an estimate saved on this device.{' '}
+            {/* A plain anchor, as in the estimator's own saved list: the permalink is a full URL. */}
+            <a href={saved.permalink} onClick={() => trackEngagement('cta_click', 'home_resume_estimate')} className="font-medium text-brand-ink underline underline-offset-4">
+              Pick up where you left off
+            </a>
+          </p>
+        )}
       </div>
     </section>
   );

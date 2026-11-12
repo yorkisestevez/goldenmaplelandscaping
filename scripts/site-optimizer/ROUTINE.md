@@ -25,6 +25,17 @@ exactly as wide as this file says and no wider.
     (Netlify silently drops undeclared fields — see that file's header).
   - Blog content (`src/pages/blog/**` new posts) — the blog autopilot owns it. You MAY
     fix a broken link/image in an existing post as a P0.
+  - Homepage hero copy and photos: `src/data/homeHeroVariants.ts` is owner copy
+    (default headline chosen by Yorkis, four service variants approved by him
+    2026-11-11). Never add, reword or re-order a headline, subhead or hero photo.
+  - `src/data/homeCompositions.json` and `scripts/site-optimizer/home-evolve-state.json`:
+    never edit either by hand. They change only through `home-evolve.cjs` (Step 3b),
+    and `dryRunsRemaining` in the state file is Yorkis's to set.
+  - The evolution job's own code and gates: `scripts/site-optimizer/home-evolve.cjs`,
+    `scripts/site-optimizer/home-evolve-core.cjs`, `scripts/check-home-evolve.ts`,
+    `scripts/check-home-compositions.ts`, `scripts/check-home-intent.ts`, and Step 3b
+    of this file. You run them; you never edit them, loosen a rule in them, or remove
+    them from `npm run lint`. If one of them blocks you, that is a finding to report.
   - Anything outside this repo; any outbound message to a customer; any spend.
 - **Kill switch:** if `scripts/site-optimizer/HALT` exists, send the Telegram line
   "GM optimizer: HALTED by kill switch — no action taken", write the state heartbeat,
@@ -32,11 +43,15 @@ exactly as wide as this file says and no wider.
 
 ## Constants
 
-- Repo: `C:\Users\yorki\Desktop\Goldenmaplelandscaping.ca\golden-maple-landscaping`
+- Repo: `C:\Users\yorki\Desktop\Goldenmaplelandscaping.ca\gm-optimizer`. This is a git
+  worktree kept on `main` for this routine alone (since 2026-11-12). Do all your work
+  here. Never run in `...\golden-maple-landscaping`: that folder is Yorkis's interactive
+  checkout, usually on a feature branch with work in progress.
 - Production: https://goldenmaplelandscaping.ca (Netlify auto-builds on push to main;
   its build command runs the pricing gates — a bad push fails the build, not the site)
 - Hermes lib: `C:\Users\yorki\Hermes Agent\skills\_lib\`
-- GA4 property `519541477`; dev server port 3011 (`.claude/launch.json`, name `golden-maple`)
+- GA4 property `519541477`; dev server port 3011, started from the repo folder with
+  `npm run dev -- --port 3011` (Step 4 item 4)
 - Git identity for your commits: `gm-site-optimizer[bot]` / `noreply@goldenmaplelandscaping.ca`
 - Telegram: `require('C:/Users/yorki/Hermes Agent/skills/_lib/telegram').sendAs('default',{text})`
   — chunk ≤3500 chars; on a parse_mode error retry without parse_mode. If Telegram
@@ -173,6 +188,86 @@ week with a green site is a successful no-op run.
   6. Findings-driven whole-site improvements within the exclusions.
 - **P3 — polish**: micro-copy, a11y, performance. Only on a week with nothing above.
 
+## Step 3b — homepage evolution (optimize mode only; added 2026-11-11, owner-approved plan)
+
+The homepage shows each visitor segment (`default`, `patios`, `decks`, `walls`,
+`driveways`) one or two versions ("arms") of its block order, listed in
+`src/data/homeCompositions.json`. Once a week you feed last week's counts to
+`home-evolve.cjs`, which alone decides whether to start a test, promote a winner or
+retire a loser. You collect and report; you do not decide and you do not edit the file.
+
+0. **Order.** Run this step in a clean tree, before you make any other change this run,
+   and ship it as its own PR. Do not mix it into another change's branch.
+1. **Skip conditions.** `HALT` exists → skip (the script also refuses to write then).
+   Step 2's GA4 or Netlify-forms collection failed this run → skip and say so in the
+   digest. Never run this step on guessed or partial counts.
+2. **Week.** `weekEnding` = the last day of the GA4 weekly window from Step 2
+   (`YYYY-MM-DD`). The script refuses a date in the future and any date less than 7
+   days after the last week it counted, so a re-run in the same week is refused, not
+   double-counted.
+3. **Counts per arm**, for those seven days:
+   - `views` and `acts`: GA4 event counts for the names printed by
+     `node scripts/site-optimizer/home-evolve.cjs --events`
+     (`home_view_<segment>_<arm>`, `home_act_<segment>_<arm>`). APPEND that list to
+     the `funnelEvents` you already pass to the Step 2 collector and read each count
+     from `r.data.funnel.current[<event name>]`. An event the collector returns no
+     row for is a real zero: write `0`.
+   - `leads`: verified ("ham") Netlify submissions in the window whose data has
+     `home_segment` and `home_arm`, counted per `<segment>/<arm>`. Use the default
+     `listFormSubmissions` list for every form; never the `state=spam` bucket, and never
+     GA4 `generate_lead` (contaminated, see Step 3).
+4. **Write the stats file** outside the repo (your scratch dir):
+   `{ "default/a": { "views": 210, "acts": 31, "leads": 2 }, "decks/a": { ... } }`.
+   Every arm you list must have all three numbers, as whole numbers, not strings; the
+   script rejects anything else. Include every arm that `--events` named.
+5. **Run it:**
+   `node scripts/site-optimizer/home-evolve.cjs --stats <file> --week-ending <date> --write`
+   - `mode: "dry-run"`: nothing on the site changed. Put the `digest` lines in the
+     Telegram report under "Homepage evolution (dry run, N left)".
+   - `mode: "applied"`, `changed: false`: same heading without "dry run".
+   - `mode: "applied"`, `changed: true`: this is ONE of your two changes for the run.
+     Take it through Step 4 (lint runs `check-home-compositions` and
+     `check-home-evolve`; after the build also run
+     `npx playwright test e2e/home.spec.ts`), Step 5 (branch
+     `auto/opt-home-evolve-<date>`; commit `src/data/homeCompositions.json` AND
+     `scripts/site-optimizer/home-evolve-state.json` together; PR body = the digest
+     lines) and Step 6.
+   - Non-zero exit: usually nothing was written, but do not assume it. Put both files
+     back (item 7's `git checkout --` command), report the message, and stop this step.
+   In the dry-run and `changed: false` cases the state file still changed. Commit it
+   with the Step 7 state commit (see there), or the next run's Step 1 finds a dirty tree.
+6. **Live marker for Step 6.** The compositions are bundled into the homepage's
+   JavaScript. Fetch `https://goldenmaplelandscaping.ca/`, collect the `/assets/*.js`
+   URLs it references (including modulepreload links), fetch them, and match this
+   pattern against their text, where `<id>` is the arm id from the digest:
+   `"?id"?:"<id>","?weight"?:<weight>`
+   - start: the new id with weight `50` is present.
+   - promote: the promoted id with weight `100` is present.
+   - retire: the retired id is absent under that pattern at any weight.
+   A bare search for the id alone (`v2`) matches unrelated code; do not use it.
+7. **If Step 4 fails after a `--write`**, put both files back with
+   `git checkout -- src/data/homeCompositions.json scripts/site-optimizer/home-evolve-state.json`
+   (this restores them; it is not a hand edit), report the failure, and stop. The week
+   has then not been counted and can be run again next time.
+8. **Never** pass counts you did not measure, re-run with a different date to force a
+   result, edit the thresholds in `home-evolve-core.cjs`, change `dryRunsRemaining`,
+   delete or rewrite the state file, or call the script's internals with other file
+   paths. If the job's behaviour looks wrong, create `HALT` and report.
+
+What the script can do is deliberately narrow: swap two neighbouring blocks (never the
+first or last), split a segment 50/50, and keep or drop the challenger. A challenger is
+promoted at a 95% chance of a better action rate, with at least 100 views per arm and
+10 actions of its own, and not while the original is getting real enquiries and the
+challenger none. It is retired at a 5% chance, or when there is no result in 42 days.
+An order that has been shown once is never shown again. The exact thresholds live in
+`home-evolve-core.cjs` (`DEFAULTS`); that file, not this paragraph, is the authority.
+Local traffic is small, so expect most weeks to say "idle" or "hold". That is the
+correct outcome, not a fault. Two limits to know when reading a digest: with counts
+looked at every week, roughly one promotion in ten will be luck rather than a real
+difference, which is why the only thing at stake is a reversible block order; and a
+dry run does not add to a running test's counts, so Yorkis should only set
+`dryRunsRemaining` above zero when no test is running.
+
 ## Step 4 — implement + verify (ALL mandatory before any push)
 
 1. Make the change. Match surrounding code style. Light-theme token rules apply
@@ -183,7 +278,9 @@ week with a green site is a successful no-op run.
    means YOUR CHANGE is aborted (revert the working tree), never a regen.
 3. `npm run build` — must pass (prerender is SSR-strict: no bare window/localStorage
    at module/render top level; use the mounted-gate pattern).
-4. `node scripts/site-optimizer/estimator-e2e.cjs` — 25-check funnel suite (dev server
+4. `node scripts/site-optimizer/estimator-e2e.cjs` — the estimator funnel suite; every
+   check must pass (43 checks as of 2026-11-12, when it was brought back in line with
+   the estimator: prices shown rounded to $100, site header kept) (dev server
    must be running). Start it with an EXPLICIT port — `npm run dev -- --port 3011` —
    because `npm run dev` alone does NOT honor `.claude/launch.json` and binds :3000,
    which on this host is also held by an unrelated TrovEdge server (2026-08-30).
@@ -191,10 +288,20 @@ week with a green site is a successful no-op run.
    confirm by `Get-NetTCPConnection -LocalPort 3011` + `Win32_Process.CommandLine`
    that the listener is YOUR react-router process — never infer liveness from a port
    probe alone, since a port can have multiple owners and a stale server answers 200.
-   After killing it, assert by CommandLine that no `*golden-maple-landscaping*react-router*`
+   After killing it, assert by CommandLine that no `*gm-optimizer*react-router*`
    node process survives; `TaskStop` on a backgrounded `npm run dev` does NOT kill the
    underlying node (leaked servers found on 2026-08-30 AND again on 2026-08-31).
 5. `node scripts/site-optimizer/contrast-audit-run.cjs` — zero criticals required.
+
+   Two rules for items 1-5 (both learned the hard way):
+   - Run lint, build and the dev server ONE AT A TIME. They all run `react-router typegen`
+     and race on `.react-router/types` when overlapped (2026-09-03).
+   - `npm run dev` and `npm run build` first run `scripts/porcelain-publisher/materialize.cjs`,
+     which rewrites four tracked files: `src/data/blogPosts.ts`, `src/routes.ts`,
+     `public/llms.txt` and `docs/business-facts-audit/build-claim-gate.json`. They are
+     build by-products, not your change. Never commit them, and before you finish (on
+     every path) put them back, or the next run's Step 1 finds a dirty tree and stops:
+     `git checkout -- src/data/blogPosts.ts src/routes.ts public/llms.txt docs/business-facts-audit/build-claim-gate.json`
 6. Customer-facing copy you wrote or changed → judge with the `gm-voice-judge` agent;
    `revise` = apply its hints once and re-judge; `block` = don't ship that copy.
 
@@ -237,7 +344,9 @@ must never survive the night because the optimizer went quiet.
   "changes": [{"pr": "<url>", "what": "...", "marker": "...", "liveVerified": true}],
   "watch": ["metric to check next run"] }
 ```
-   Commit + push state.json on main directly (`[gm-optimizer] state: <date> <outcome>`)
+   Commit + push state.json on main directly (`[gm-optimizer] state: <date> <outcome>`),
+   together with `scripts/site-optimizer/home-evolve-state.json` when Step 3b changed it
+   without changing the compositions (a dry run, or a week of "hold" or "idle")
    — it's bookkeeping; the deploy workflow ignores publisher state-only commits, and
    a state commit that triggers a build is harmless.
 2. Telegram digest — **send even when green**; silence must never be indistinguishable
@@ -256,6 +365,7 @@ losing the lock.
 ## Change log discipline
 
 Seeded backlog items, thresholds, and even this ROUTINE may be improved by the
-optimizer itself — EXCEPT the Authority section and the exclusion list, which only
-Yorkis edits. If you change this file, that change ships through the same Step 5 PR
+optimizer itself — EXCEPT the Authority section, the exclusion list, and everything
+the exclusion list names (which includes Step 3b and the evolution job's thresholds),
+which only Yorkis edits. If you change this file, that change ships through the same Step 5 PR
 flow with the reason in the body.

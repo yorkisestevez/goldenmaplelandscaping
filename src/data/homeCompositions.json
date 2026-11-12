@@ -1,18 +1,112 @@
 {
   "default": {
-    "blocks": [
-      "instant-estimate",
-      "selected-work",
-      "process",
-      "services",
-      "founder",
-      "pain-points",
-      "why",
-      "reviews",
-      "instagram",
-      "faq",
-      "buyers-guide",
-      "final-cta"
+    "arms": [
+      {
+        "id": "a",
+        "weight": 100,
+        "blocks": [
+          "instant-estimate",
+          "selected-work",
+          "process",
+          "services",
+          "founder",
+          "pain-points",
+          "why",
+          "reviews",
+          "instagram",
+          "faq",
+          "buyers-guide",
+          "final-cta"
+        ]
+      }
+    ]
+  },
+  "patios": {
+    "arms": [
+      {
+        "id": "a",
+        "weight": 100,
+        "blocks": [
+          "instant-estimate",
+          "selected-work",
+          "process",
+          "services",
+          "founder",
+          "pain-points",
+          "why",
+          "reviews",
+          "instagram",
+          "faq",
+          "buyers-guide",
+          "final-cta"
+        ]
+      }
+    ]
+  },
+  "decks": {
+    "arms": [
+      {
+        "id": "a",
+        "weight": 100,
+        "blocks": [
+          "instant-estimate",
+          "selected-work",
+          "process",
+          "services",
+          "founder",
+          "pain-points",
+          "why",
+          "reviews",
+          "instagram",
+          "faq",
+          "buyers-guide",
+          "final-cta"
+        ]
+      }
+    ]
+  },
+  "walls": {
+    "arms": [
+      {
+        "id": "a",
+        "weight": 100,
+        "blocks": [
+          "instant-estimate",
+          "selected-work",
+          "process",
+          "services",
+          "founder",
+          "pain-points",
+          "why",
+          "reviews",
+          "instagram",
+          "faq",
+          "buyers-guide",
+          "final-cta"
+        ]
+      }
+    ]
+  },
+  "driveways": {
+    "arms": [
+      {
+        "id": "a",
+        "weight": 100,
+        "blocks": [
+          "instant-estimate",
+          "selected-work",
+          "process",
+          "services",
+          "founder",
+          "pain-points",
+          "why",
+          "reviews",
+          "instagram",
+          "faq",
+          "buyers-guide",
+          "final-cta"
+        ]
+      }
     ]
   }
 }

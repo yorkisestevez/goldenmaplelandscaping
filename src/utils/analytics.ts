@@ -545,6 +545,19 @@ function trackCallNow(label: string): void {
   if (isDev) console.log('[analytics] trackCall', label, GOOGLE_ADS_CALL_LABEL);
 }
 
+/**
+ * A GA4-only count with no label: for site measurement that Meta has no use
+ * for and that must stay off the visitor's click trail (trackEngagement sends
+ * to Meta and records its label there).
+ */
+export function trackMeasure(action: string): void {
+  guardAnalytics(() => {
+    if (!isBrowser || !GA4_ID || !trackingOn()) return;
+    if (googleTagLoaded) sendEngagement(action);
+    else queuedEvents.push({ action });
+  });
+}
+
 /** Generic engagement event for non-lead actions (PDF download, video play, etc). */
 export function trackEngagement(action: string, label?: string): void {
   guardAnalytics(() => trackEngagementNow(action, label));
