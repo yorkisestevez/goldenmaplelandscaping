@@ -39,6 +39,16 @@ test('a deck link opens the deck estimator at that size, priced, without the 3D 
  expect(errors).toEqual([]);
 });
 
+test('a deck link it cannot read opens a starting deck and says so',async({page,context})=>{
+ await local(context);
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/cost-estimator?type=deck#d=not-a-deck-link');
+ await expect(form(page)).toHaveAttribute('data-deck-estimator','ready');
+ await expect(page.getByRole('status').filter({hasText:'We could not open that deck link'})).toBeVisible();
+ await expect(page.getByLabel('Width, along the house')).toHaveValue('16');
+ expect(errors).toEqual([]);
+});
+
 test('every answer reprices the deck, and no railing is offered only on a low deck',async({page,context})=>{
  await local(context);
  await page.goto('/cost-estimator?type=deck&sqft=300');
@@ -115,6 +125,13 @@ test('a full backyard prices its deck with the deck estimator and keeps the deck
  await expect(page.locator('[data-estimator-deck="design"]')).toContainText('Your deck');
  await expect(page.locator('[data-estimator-deck="design"]')).toContainText('Cable');
  await expect(live).toContainText('Deck (as you set it)');
+ // Opened again and left as it was, the backyard's deck comes back unchanged.
+ const set=await page.locator('[data-estimator-deck="design"] .tabular-nums').textContent();
+ await page.getByRole('button',{name:/Change your deck/}).click();
+ await expect(form(page)).toHaveAttribute('data-deck-estimator','ready');
+ await expect(group(page,/^Railing/).getByRole('radio',{name:'Cable'})).toBeChecked();
+ await page.getByRole('button',{name:'Use this deck in my estimate'}).click();
+ await expect(page.locator('[data-estimator-deck="design"] .tabular-nums')).toHaveText(set??'');
  // A backyard that is only a deck is the deck estimator's whole estimate, and it opens on the visitor's deck.
  for(const name of ['Patio / Interlock','Retaining Wall','Landscape Lighting'])await page.getByRole('button',{name,exact:true,pressed:true}).click();
  await page.getByRole('button',{name:'Continue →'}).first().click();

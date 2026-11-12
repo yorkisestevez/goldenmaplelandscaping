@@ -26,6 +26,10 @@ export default function DeckQuickEstimator({mode,initialDesign,onBack,onUse}:{
   const [design]=useState(()=>initialDesign??(typeof window==='undefined'?null:designFromHash(window.location.hash)));
   const [deck,setDeck]=useState<QuickDeck>(()=>quickDeckForArea(typeof window==='undefined'?null:readDeckArea(window.location.search)));
   const [opening,setOpening]=useState(!!design);
+  /** Said above the form when a linked deck could not be read, or holds more than the form can show. */
+  const [notice,setNotice]=useState('');
+  /** Whether the visitor changed anything here (an untouched backyard deck is handed back as it was). */
+  const [edited,setEdited]=useState(false);
   const [busy,setBusy]=useState(false),[handOffError,setHandOffError]=useState('');
   const live=useRef(true);
 
@@ -36,14 +40,20 @@ export default function DeckQuickEstimator({mode,initialDesign,onBack,onUse}:{
   },[]);
   useEffect(()=>{
     if(!engine||!design)return;
-    engine.quickDeckFromDesign(design).then(q=>{if(live.current)setDeck(q);}).catch(()=>{}).finally(()=>{if(live.current)setOpening(false);});
+    engine.openDesign(design)
+      .then(({deck:opened,exact})=>{if(!live.current)return;setDeck(opened);if(!exact)setNotice(APPROXIMATED);})
+      .catch(()=>{if(live.current)setNotice(UNREADABLE);})
+      .finally(()=>{if(live.current)setOpening(false);});
   },[engine,design]);
 
   const price=useMemo(()=>engine&&!opening?engine.priceQuickDeck(deck):null,[engine,opening,deck]);
-  const change=(patch:Partial<QuickDeck>)=>setDeck(prev=>normalizeQuickDeck({...prev,...patch}));
+  const change=(patch:Partial<QuickDeck>)=>{setEdited(true);setDeck(prev=>normalizeQuickDeck({...prev,...patch}));};
 
   async function handOff(){
     if(!engine)return;
+    // A backyard's own deck, opened and left as it was, stays exactly as the estimate had it (it may be a drawn design
+    // the form can only approximate).
+    if(mode==='full'&&initialDesign&&!edited){onBack();return;}
     setBusy(true);setHandOffError('');
     try{const linked=await engine.quickDeckWithLink(deck);if(live.current)onUse(linked);}
     catch{if(live.current)setHandOffError('Your deck could not be added just now. Please try again.');}
@@ -63,6 +73,7 @@ export default function DeckQuickEstimator({mode,initialDesign,onBack,onUse}:{
       <p className="font-sans font-light text-[16px] text-brand-muted max-w-2xl leading-relaxed mb-10">
         A few questions, and the price updates as you answer, from the same price book we quote from. No signup to see it.
       </p>
+      {notice&&<p role="status" className="max-w-2xl -mt-4 mb-10 rounded-2xl border border-brand-gold-dark/40 bg-brand-gold/10 px-4 py-3 font-sans text-[14px] text-brand-ink leading-relaxed">{notice}</p>}
       {/* Phones read questions, price, then the send form; wide screens keep the price beside both, in view. */}
       <div className="grid gap-x-8 gap-y-10 lg:grid-cols-[minmax(0,1fr)_380px] items-start">
         <form className="min-w-0 space-y-9 lg:col-start-1" onSubmit={e=>e.preventDefault()} aria-busy={opening}>
@@ -133,6 +144,8 @@ export default function DeckQuickEstimator({mode,initialDesign,onBack,onUse}:{
 }
 
 const SEND_ID='deck-estimate-send';
+const APPROXIMATED='Your saved deck has details this form does not cover (such as its shape, levels, height, railing or materials), so this is the closest deck it can price. The price shown is for the deck as set here.';
+const UNREADABLE='We could not open that deck link, so this is a starting deck. Set it to match yours.';
 const money=(cents:number,digits:0|2=2)=>(cents/100).toLocaleString('en-CA',{style:'currency',currency:'CAD',minimumFractionDigits:digits,maximumFractionDigits:digits});
 
 function PriceCard({price,failed,children}:{price:PriceEngine.QuickDeckPrice|null;failed:boolean;children:ReactNode}){
@@ -157,13 +170,15 @@ function PriceCard({price,failed,children}:{price:PriceEngine.QuickDeckPrice|nul
 
 /** A deck on its own goes out through the cost estimator's own lead form, with the link that reopens this deck. */
 function SendEstimate({engine,deck,price}:{engine:Engine;deck:QuickDeck;price:PriceEngine.QuickDeckPrice}){
-  const [linked,setLinked]=useState<{for:QuickDeck;deck:EstimatorDeck}|null>(null);
-  // The link is encoded as soon as the deck changes (a few milliseconds), so the form never goes out without it.
+  const [linked,setLinked]=useState<{for:QuickDeck;deck:EstimatorDeck}|null>(null),[linkFailed,setLinkFailed]=useState(false);
+  // The link is encoded as soon as the deck changes. The first one also loads the link's encoder, so the form waits for
+  // it (or for its failure, which still lets the estimate go out, without a link); later ones take milliseconds.
   useEffect(()=>{
     let current=true;
-    engine.quickDeckWithLink(deck).then(d=>{if(current)setLinked({for:deck,deck:d});}).catch(()=>{});
+    engine.quickDeckWithLink(deck).then(d=>{if(current)setLinked({for:deck,deck:d});}).catch(()=>{if(current)setLinkFailed(true);});
     return()=>{current=false;};
   },[engine,deck]);
+  if(!linked&&!linkFailed)return <div id={SEND_ID} className="min-w-0 scroll-mt-28 lg:col-start-1"><p role="status" className="font-sans text-[14px] text-brand-muted">Preparing your estimate…</p></div>;
   const ready=linked?.for===deck?linked.deck:null;
   const material=QUICK_MATERIALS.find(m=>m.id===deck.material)!;
   const dollars=Math.round(price.deck.subtotalCents/100);

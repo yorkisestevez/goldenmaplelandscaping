@@ -32,7 +32,7 @@ export default function HeroEstimator() {
   const onContinue = () => {
     if (!ready) return;
     trackEngagement('cta_click', `hero_estimator_${projectType}_${sizeBucket}_${city}`);
-    // Decks are priced only by the deck designer (the site's one deck price), which opens inside the estimator.
+    // Decks are priced only by the deck estimator (the site's one deck price), which opens inside the estimator.
     if (projectType === 'deck') { navigate(estimatorDeckHref(sqft)); return; }
     const params = new URLSearchParams({
       type: projectType!,

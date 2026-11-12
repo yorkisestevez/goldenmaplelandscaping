@@ -9,7 +9,7 @@ import {DESIGN_LINK_PARAM,designLinkFromHash} from '../src/features/deckcraft/de
 import {DECKING_CATALOGUE} from '../src/features/deckcraft/manufacturerRuntimeCatalogue';
 import {MATERIAL_TIERS,type DeckData} from '../src/features/deckcraft/types';
 import {QUICK_DECK_DEFAULT,QUICK_DECK_FT,QUICK_HEIGHTS,QUICK_MATERIALS,QUICK_RAILINGS,normalizeQuickDeck,quickDeckForArea,railingAllowed,type QuickDeck} from '../src/features/deck-estimator/quickDeck';
-import {priceQuickDeck,quickDeckFromData,quickDeckFromDesign,quickDeckWithLink} from '../src/features/deck-estimator/quickDeckPrice';
+import {openDesign,priceQuickDeck,quickDeckFromData,quickDeckWithLink} from '../src/features/deck-estimator/quickDeckPrice';
 import {withDeckPrecise,withDeckRange} from '../src/utils/deckInEstimate';
 import {computeEstimate,type EstimateInput} from '../src/utils/estimateEngine';
 import {decodeBuild,encodeBuild} from '../src/utils/buildPermalink';
@@ -84,9 +84,17 @@ const cents=(n:number)=>Math.round(n*100);
   ok(/process\.env\.GM_DECKCRAFT_ROUTE !== 'off'/.test(routes)&&/route\('deck-designer', 'pages\/DeckDesigner\.tsx'\)/.test(routes),'The /deck-designer route is built only when GM_DECKCRAFT_ROUTE is not "off"');
   ok(/\[build\.environment\][^[]*GM_DECKCRAFT_ROUTE = "off"/.test(netlify),'Netlify builds the live site without the designer');
   for(const from of ['/deck-designer','/deck-designer/*'])ok(new RegExp(`\\[\\[redirects\\]\\]\\s*from = "${from.replace(/[*/]/g,'\\$&')}"\\s*to = "/cost-estimator/\\?type=deck"\\s*status = 301\\s*force = true`).test(netlify),`${from} sends visitors to the deck estimator (forced 301)`);
-  const linksIn=(dir:string):string[]=>readdirSync(new URL(`../${dir}/`,import.meta.url),{withFileTypes:true}).flatMap(e=>e.isDirectory()?linksIn(`${dir}/${e.name}`):/\.(tsx?|json)$/.test(e.name)&&read(`${dir}/${e.name}`).includes('/deck-designer')?[`${dir}/${e.name}`]:[]);
+  const filesIn=(dir:string):string[]=>readdirSync(new URL(`../${dir}/`,import.meta.url),{withFileTypes:true}).flatMap(e=>e.isDirectory()?filesIn(`${dir}/${e.name}`):/\.(tsx?|json)$/.test(e.name)?[`${dir}/${e.name}`]:[]);
+  const site=['src/pages','src/components','src/data','src/utils'].flatMap(filesIn);
   const PRIVATE_OK=['src/pages/DeckDesigner.tsx','src/root.tsx','src/data/sophieTeasers.ts'];
-  ok(['src/pages','src/components','src/data','src/utils'].flatMap(linksIn).every(f=>PRIVATE_OK.includes(f)),`No public page, component or fact points at /deck-designer (${['src/pages','src/components','src/data','src/utils'].flatMap(linksIn).filter(f=>!PRIVATE_OK.includes(f)).join(', ')})`);
+  const links=site.filter(f=>read(f).includes('/deck-designer')&&!PRIVATE_OK.includes(f));
+  ok(links.length===0,`No public page, component or fact points at /deck-designer (${links.join(', ')})`);
+  // What visitors read (code comments aside) never sends them to the 3D designer. The privacy policy keeps naming it
+  // (check-deck-send.ts: designs sent through it are still held), and business.ts's CASL note is for the owner.
+  const SAYS_DESIGNER_OK=['src/pages/DeckDesigner.tsx','src/pages/Privacy.tsx','src/data/business.ts'];
+  const withoutComments=(f:string)=>read(f).replace(/\/\*[\s\S]*?\*\//g,'').replace(/(^|[^:])\/\/.*$/gm,'$1');
+  const says=site.filter(f=>!SAYS_DESIGNER_OK.includes(f)&&/deck designer/i.test(withoutComments(f)));
+  ok(says.length===0,`No visitor-facing text calls the deck estimator the deck designer (${says.join(', ')})`);
 }
 
 // 4. The deck in an estimate is the engine's price, to the cent, and the totals reconcile.
@@ -165,11 +173,17 @@ await (async()=>{
   for(const [change] of cases){
     const q=normalizeQuickDeck({...q0,...change}),linked=await quickDeckWithLink(q);
     ok(linked.source==='design'&&typeof linked.design==='string'&&linked.subtotalCents===priceQuickDeck(q).deck.subtotalCents,`A deck handed on carries its link and its price (${JSON.stringify(change)})`);
-    ok(isDeepStrictEqual(await quickDeckFromDesign(linked.design!),q),`Its link reopens the same choices (${JSON.stringify(change)})`);
+    const opened=await openDesign(linked.design!);
+    ok(isDeepStrictEqual(opened,{deck:q,exact:true}),`Its link reopens the same choices, exactly (${JSON.stringify(change)})`);
     ok((await deckFromDesign(linked.design!)).subtotalCents===linked.subtotalCents,'A saved estimate reprices it to the same cents');
   }
   const older=quickDeckFromData(deckReleaseData({...structuredClone(DEFAULT_DECK),width:20,length:15,height:30,deckType:'Floating',railingType:'Trex Select',stairFlights:3}));
   ok(isDeepStrictEqual(older,{width:20,length:15,height:36,deckType:'Freestanding',material:'tt_harvest',railing:'Aluminum',stairs:2,skirting:false,removeOld:false,border:true}),`An older design opens as its nearest light deck (${JSON.stringify(older)})`);
+  // The form says so when a link's design is more than it can show (another shape, height, railing or stair count).
+  const olderLink=await drawnDeck(deckReleaseData({...structuredClone(DEFAULT_DECK),width:20,length:15,height:30,railingType:'Trex Select'}),calculateDeckReleaseEstimate(deckReleaseData({...structuredClone(DEFAULT_DECK),width:20,length:15,height:30,railingType:'Trex Select'})));
+  const approximated=await openDesign(olderLink.design!);
+  ok(approximated.exact===false&&approximated.deck.height===36&&approximated.deck.railing==='Aluminum','An older design the form cannot show exactly opens as its nearest deck, flagged as approximate');
+  ok(await openDesign('not-a-deck-link').then(()=>false,()=>true),'A link that is not a deck is refused, never opened as some other deck');
 })();
 
 console.log(`DECK SITE PRICE OK — one deck price: the FAQ quotes the engine, the deck estimator prices with it to the cent, the 3D designer stays private, ${checks} checks.`);

@@ -156,7 +156,8 @@ export default function EstimateLeadCapture({
       deck_summary: estimate.deck
         ? `${estimate.deck.source === 'design' ? 'Deck as set' : 'Starter deck'}: ${estimate.deck.label}${estimate.deck.quoteRequired.length ? `. Supplier quote: ${estimate.deck.quoteRequired.join('; ')}` : ''}`
         : '',
-      // Opens the deck in the deck estimator; the same #d= link opens it in the private 3D designer on a local build.
+      // Opens the deck in the deck estimator. Its #d=… part, put after the private 3D designer's address on a local
+      // build, opens the exact deck there.
       deck_design_link: estimate.deck?.design ? `${window.location.origin}/cost-estimator?type=deck${designHash(estimate.deck.design)}` : '',
     };
 

@@ -61,7 +61,13 @@ export function quickDeckFromData(data:DeckData):QuickDeck{
   });
 }
 
-/** A deck link (`#d=…`, from this form, a saved estimate or the designer) as the form's choices. */
-export async function quickDeckFromDesign(payload:string):Promise<QuickDeck>{
-  return quickDeckFromData(await decodeDesignLink(payload));
+/**
+ * A deck link (`#d=…`, from this form, a saved estimate or the designer) as the form's choices. `exact` is false when the
+ * design holds more than the form can show (another shape, levels, height, railing, materials or backyard), which the
+ * form then tells the visitor: its price is for the nearest deck, not the linked one. Rejects a link that is not a deck.
+ */
+export async function openDesign(payload:string):Promise<{deck:QuickDeck;exact:boolean}>{
+  const data=await decodeDesignLink(payload),deck=quickDeckFromData(data);
+  const linked=estimatorDeckFor(data,calculateDeckReleaseEstimate(data,DECK_SETTINGS),'design');
+  return {deck,exact:priceQuickDeck(deck).deck.subtotalCents===linked.subtotalCents};
 }
