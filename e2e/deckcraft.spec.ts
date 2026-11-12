@@ -463,12 +463,16 @@ test('@phone fits a 375 px screen with each section open',async({page})=>{
 
 /**
  * Controls under 44 px tall inside `scope`, by name and height. A checkbox or radio is tapped through its label, so the
- * label is measured; controls that are not shown (the design file picker) are skipped.
+ * label is measured; controls that are not shown (the design file picker) are skipped. Measured once running animations
+ * end: a section's panel slides up as it opens, and mid-slide a 44 px control can measure 43.99 px.
  */
-const underTouchSize=(scope:Locator)=>scope.evaluate(root=>[...root.querySelectorAll('button,input,select,textarea')].flatMap(el=>{
-  const target=el.matches('[type=checkbox],[type=radio]')?el.closest('label')??el:el,box=target.getBoundingClientRect();
-  return box.width&&box.height<44?[`${el.tagName.toLowerCase()} "${(el.getAttribute('aria-label')??el.textContent??'').trim().slice(0,40)}": ${Math.round(box.height)} px`]:[];
-}));
+const underTouchSize=(scope:Locator)=>scope.evaluate(async root=>{
+  await Promise.all(document.getAnimations().filter(a=>Number.isFinite(Number(a.effect?.getComputedTiming().endTime))).map(a=>a.finished.catch(()=>{})));
+  return [...root.querySelectorAll('button,input,select,textarea')].flatMap(el=>{
+    const target=el.matches('[type=checkbox],[type=radio]')?el.closest('label')??el:el,box=target.getBoundingClientRect();
+    return box.width&&box.height<44?[`${el.tagName.toLowerCase()} "${(el.getAttribute('aria-label')??el.textContent??'').trim().slice(0,40)}": ${Math.round(box.height)} px`]:[];
+  });
+});
 
 test('@phone keeps every control at least 44 px tall at 375 px',async({page})=>{
   await page.setViewportSize({width:375,height:812});
