@@ -1,0 +1,18 @@
+{
+  "default": {
+    "blocks": [
+      "instant-estimate",
+      "selected-work",
+      "process",
+      "services",
+      "founder",
+      "pain-points",
+      "why",
+      "reviews",
+      "instagram",
+      "faq",
+      "buyers-guide",
+      "final-cta"
+    ]
+  }
+}
