@@ -59,6 +59,11 @@ never commit).
 If the dry-run ranking shows a post that is clearly not a job photo, STOP and report it
 with its id so Yorkis can add it to `excludeIds`. Do not commit a feed containing it.
 
+Social-growth daily engine posts (every caption ends with "Made with my AI avatar.") never
+reach the ranking: the script drops any caption containing an `excludeCaptionMarkers`
+string from `config.json` and lists those ids on the `skipped by caption marker` line.
+They need no `excludeIds` entry and are not a reason to STOP.
+
 ## Step 3 — gates
 
 ```bash
