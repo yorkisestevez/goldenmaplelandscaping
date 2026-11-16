@@ -124,10 +124,12 @@ export default [
   // BEGIN PORCELAIN PUBLICATION
   route('resources/before-you-buy-porcelain-for-your-patio-settle-these-five-details', 'pages/blog/porcelain-scheduled/before-you-buy-porcelain-for-your-patio-settle-these-five-details.tsx'),
   route('resources/a-porcelain-installation-brief-your-trade-partner-can-actually-price', 'pages/blog/porcelain-scheduled/a-porcelain-installation-brief-your-trade-partner-can-actually-price.tsx'),
+  route('resources/planning-a-porcelain-patio-for-next-spring-what-to-decide-this-winter', 'pages/blog/porcelain-scheduled/planning-a-porcelain-patio-for-next-spring-what-to-decide-this-winter.tsx'),
   // END PORCELAIN PUBLICATION
   route('resources/porcelain-vs-concrete-pavers-barrie', 'pages/blog/PorcelainVsConcretePaversBarrie.tsx'),
     route('resources/retaining-wall-permit-barrie', 'pages/blog/RetainingWallPermitBarrie.tsx'),
   route('resources/patio-heater-vs-firepit-vs-fireplace', 'pages/blog/PatioHeaterVsFirepitVsFireplace.tsx'),
+  route('resources/how-to-read-landscape-quote', 'pages/blog/HowToReadLandscapeQuote.tsx'),
   
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),
