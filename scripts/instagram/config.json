@@ -7,7 +7,13 @@
     "17898249525572352",
     "18075965420252493",
     "18214773883354471",
-    "18117759736756723"
+    "18117759736756723",
+    "18128870393306870",
+    "17925646590423973"
   ],
-  "excludeNote": "Owner decision 2026-09-13: job photos only. Excluded = Permacon promo + AI marketing graphics. Add new non-project post ids here."
+  "excludeNote": "Owner decision 2026-09-13: job photos only. Excluded = Permacon promo + AI marketing graphics; added 2026-11-15 (Yorkis): Thanksgiving greeting + fall leaf/debris removal booking post. Add new non-project post ids here.",
+  "excludeCaptionMarkers": [
+    "Made with my AI avatar."
+  ],
+  "excludeCaptionNote": "Any post whose caption contains one of these strings is skipped automatically. 'Made with my AI avatar.' ends every caption the social-growth daily engine posts (from 2026-11-16), so those posts need no excludeIds entry."
 }

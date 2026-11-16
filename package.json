@@ -25,7 +25,7 @@
     "deck:fetch-rates": "tsx scripts/deck-fetch-deckmart-rates.ts",
     "check:deck-pricing-review": "tsx scripts/check-deck-pricing-review.ts && tsx scripts/audit-deck-pricing.ts",
     "check:portfolio": "node scripts/build-portfolio-images.mjs --check",
-    "check:instagram": "tsx scripts/check-instagram-feed.ts",
+    "check:instagram": "tsx scripts/check-instagram-feed.ts && tsx scripts/test-instagram-ranking.ts",
     "check:image-refs": "tsx scripts/check-image-refs.ts && tsx scripts/build-estimator-card-variants.ts --check",
     "build:portfolio-images": "node scripts/build-portfolio-images.mjs",
     "instagram:refresh": "node scripts/instagram/fetch-top-posts.mjs --expect-username=goldenmaplelandscaping.ca",

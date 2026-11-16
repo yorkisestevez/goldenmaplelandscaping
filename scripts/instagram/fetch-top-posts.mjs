@@ -10,7 +10,8 @@
  * What it does
  *   1. Confirms the IG business account username (evidence for BUSINESS.urls.instagram).
  *   2. Pages /media for the last `windowDays`, keeps IMAGE + CAROUSEL_ALBUM (first IMAGE
- *      child), skips VIDEO, drops `excludeIds`, sorts by like_count desc, takes `topN`.
+ *      child), skips VIDEO, drops `excludeIds` and any caption containing one of
+ *      `excludeCaptionMarkers` (scripts/instagram/rank.mjs), sorts by like_count desc, takes `topN`.
  *   3. Downloads each winner ONCE into public/images/instagram/<id>-v1-{480,960}.webp
  *      (Graph `media_url`s are short-lived signed CDN URLs — never persisted).
  *   4. Writes src/data/instagramFeed.json atomically. Any failure after ranking leaves
@@ -37,6 +38,7 @@ import { createRequire } from 'node:module';
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { rankCandidates } from './rank.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CONFIG_PATH = join(ROOT, 'scripts/instagram/config.json');
@@ -56,7 +58,7 @@ const opt = (n) => args.find((a) => a.startsWith(`--${n}=`))?.split('=').slice(1
 const DRY = flag('dry-run');
 
 const config = JSON.parse(readFileSync(CONFIG_PATH, 'utf8'));
-const { igUserId, excludeIds = [] } = config;
+const { igUserId, excludeIds = [], excludeCaptionMarkers = [] } = config;
 const topN = Number(opt('top') ?? config.topN ?? 12);
 const windowDays = Number(opt('window-days') ?? config.windowDays ?? 365);
 
@@ -139,15 +141,6 @@ async function fetchWindow(token) {
   return items;
 }
 
-function pickImage(m) {
-  if (m.media_type === 'IMAGE') return m.media_url;
-  if (m.media_type === 'CAROUSEL_ALBUM') {
-    const child = (m.children?.data ?? []).find((c) => c.media_type === 'IMAGE');
-    return child?.media_url;
-  }
-  return undefined;
-}
-
 function cleanCaption(raw = '') {
   return raw
     .replace(/#[\p{L}\p{N}_]+/gu, '')
@@ -188,12 +181,7 @@ const expect = opt('expect-username');
 if (expect && acct.username !== expect) die(4, `username mismatch: expected ${expect}, Graph says ${acct.username}`);
 
 const raw = await fetchWindow(token);
-const excluded = new Set(excludeIds.map(String));
-const candidates = raw
-  .filter((m) => m.media_type === 'IMAGE' || m.media_type === 'CAROUSEL_ALBUM')
-  .map((m) => ({ ...m, imageUrl: pickImage(m) }))
-  .filter((m) => m.imageUrl && !excluded.has(String(m.id)))
-  .sort((a, b) => (b.like_count ?? 0) - (a.like_count ?? 0) || Date.parse(b.timestamp) - Date.parse(a.timestamp));
+const { candidates, captionExcluded } = rankCandidates(raw, { excludeIds, excludeCaptionMarkers });
 
 const previous = existsSync(FEED_PATH) ? JSON.parse(readFileSync(FEED_PATH, 'utf8')) : { posts: [] };
 const prevIds = new Set((previous.posts ?? []).map((p) => p.id));
@@ -212,6 +200,7 @@ const removed = [...prevIds].filter((id) => !selIds.has(id));
 const added = selection.filter((m) => !prevIds.has(String(m.id))).map((m) => String(m.id));
 
 console.log(`\nwindow: last ${windowDays} d · ${raw.length} media · ${candidates.length} photo candidates · top ${topN} (+${STICKY_EXTRA} sticky)`);
+console.log(`skipped by caption marker (excludeCaptionMarkers): ${captionExcluded.length ? captionExcluded.join(', ') : 'none'}`);
 console.log('rank | id                | likes | cmts | type     | date       | on-disk | caption');
 selection.forEach((m, i) => {
   const onDisk = WIDTHS.every((w) => existsSync(join(OUT_DIR, `${m.id}-${VERSION}-${w}.webp`)));
