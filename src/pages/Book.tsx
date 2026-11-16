@@ -27,14 +27,14 @@ export default function Book() {
         schema={schema}
       />
 
-      <section className="section-padding pt-48">
+      <section className="section-padding pt-28 md:pt-48">
         <div className="container-custom">
-          <div className="max-w-3xl mx-auto text-center mb-20">
-            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8 block">
+          <div className="max-w-3xl mx-auto text-center mb-8 md:mb-20">
+            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-4 md:mb-8 block">
               Project Conversation
             </span>
 
-            <h1 className="font-display text-5xl md:text-7xl font-light text-brand-bonewhite leading-[1.05] mb-12">
+            <h1 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite leading-[1.05] mb-6 md:mb-12">
               Pick a time <br />
               <span className="italic text-brand-gold-dark">that works for you.</span>
             </h1>
