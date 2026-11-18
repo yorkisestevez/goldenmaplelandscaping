@@ -43,6 +43,17 @@ __pycache__/
 test-results/
 playwright-report/
 
+# DeckCraft realism/plants/seasons QA artifacts (~320 MB of before/after renders,
+# A/B probe sheets and a flythrough mp4). Regenerable from the documented runs;
+# keep the markdown, PLAN/REVISION notes, metrics JSON and research JSON.
+docs/deckcraft/**/*.png
+docs/deckcraft/**/*.jpg
+docs/deckcraft/**/*.jpeg
+docs/deckcraft/**/*.mp4
+
+# Instagram publisher run log — appended on every run, local state not history
+scripts/instagram/state.jsonl
+
 # Local consolidation diagnostics and generated review/test artifacts
 /work/
 /work-inspect-hardscape.ts

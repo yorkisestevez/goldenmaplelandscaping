@@ -1,0 +1,242 @@
+[
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "cpu p95",
+  "main": 4.5,
+  "rp1": 3.9,
+  "ratio": 0.867
+ },
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "gpu p95",
+  "main": 5.98,
+  "rp1": 5.28,
+  "ratio": 0.882
+ },
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "cpu p50",
+  "main": 2.1,
+  "rp1": 2.15,
+  "ratio": 1.024
+ },
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "gpu p50",
+  "main": 3.21,
+  "rp1": 3.26,
+  "ratio": 1.014
+ },
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "frame p95",
+  "main": 40.95,
+  "rp1": 39.65,
+  "ratio": 0.968
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "cpu p95",
+  "main": 20.7,
+  "rp1": 23.05,
+  "ratio": 1.114
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "gpu p95",
+  "main": 21.74,
+  "rp1": 24.08,
+  "ratio": 1.107
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "cpu p50",
+  "main": 10.2,
+  "rp1": 10.95,
+  "ratio": 1.074
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "gpu p50",
+  "main": 11.7,
+  "rp1": 12.58,
+  "ratio": 1.075
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "frame p95",
+  "main": 103.15,
+  "rp1": 113.05,
+  "ratio": 1.096
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "cpu p95",
+  "main": 4.25,
+  "rp1": 2.95,
+  "ratio": 0.694
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "gpu p95",
+  "main": 4.67,
+  "rp1": 3.76,
+  "ratio": 0.806
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "cpu p50",
+  "main": 2.4,
+  "rp1": 1.7,
+  "ratio": 0.708
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "gpu p50",
+  "main": 2.78,
+  "rp1": 2.17,
+  "ratio": 0.78
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "frame p95",
+  "main": 48.8,
+  "rp1": 39.6,
+  "ratio": 0.811
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "cpu p95",
+  "main": 13.75,
+  "rp1": 14.45,
+  "ratio": 1.051
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "gpu p95",
+  "main": 14.54,
+  "rp1": 15.27,
+  "ratio": 1.05
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "cpu p50",
+  "main": 8.25,
+  "rp1": 7.95,
+  "ratio": 0.964
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "gpu p50",
+  "main": 8.76,
+  "rp1": 8.25,
+  "ratio": 0.942
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "frame p95",
+  "main": 73.7,
+  "rp1": 78.8,
+  "ratio": 1.069
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "cpu p95",
+  "main": 3.45,
+  "rp1": 3.4,
+  "ratio": 0.986
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "gpu p95",
+  "main": 2.99,
+  "rp1": 2.92,
+  "ratio": 0.975
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "cpu p50",
+  "main": 1.85,
+  "rp1": 1.7,
+  "ratio": 0.919
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "gpu p50",
+  "main": 1.57,
+  "rp1": 1.46,
+  "ratio": 0.924
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "frame p95",
+  "main": 40.15,
+  "rp1": 40.35,
+  "ratio": 1.005
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "cpu p95",
+  "main": 9.45,
+  "rp1": 10.35,
+  "ratio": 1.095
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "gpu p95",
+  "main": 8.53,
+  "rp1": 9.06,
+  "ratio": 1.063
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "cpu p50",
+  "main": 5.6,
+  "rp1": 5.75,
+  "ratio": 1.027
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "gpu p50",
+  "main": 4.83,
+  "rp1": 4.85,
+  "ratio": 1.004
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "frame p95",
+  "main": 46.3,
+  "rp1": 47.2,
+  "ratio": 1.019
+ }
+]
