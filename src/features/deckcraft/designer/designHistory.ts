@@ -35,4 +35,4 @@ export function redoChange<T>(h:DesignHistory<T>,current:T):{design:T;history:De
 }
 
 /** The history key for an edit: the fields it changed, so the same control's edits group together. */
-export const editKey=(patch:object)=>`edit:${Object.keys(patch).sort().join(',')}`;
+export const editKey=(patch:object)=>`${Object.hasOwn(patch,'boardLayout')||Object.hasOwn(patch,'boardColours')||Object.hasOwn(patch,'boundaryLocks')?'apply':'edit'}:${Object.keys(patch).sort().join(',')}`;

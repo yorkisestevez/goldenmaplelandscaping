@@ -1,4 +1,5 @@
 import type {DeckData} from './types';
+import {levelJunctions,onJunction} from './lib/levelJunctions';
 import type {DeckTakeoff,Member} from './deckTakeoff';
 import {getFootprint,SIDE_DOT,type EdgeContact,type EdgeName,type FootprintPlan,type PlanPoint} from './lib/deckGeometry';
 import {getHousePlacement} from './housePlacement';
@@ -64,7 +65,7 @@ function houseLineEdges(fp:FootprintPlan){
  * whole back edge (the original behaviour); a positioned one only covers its own width. */
 export function getHouseContact(data:DeckData,fp:FootprintPlan=getFootprint(data,1)):HouseContact{
   if(!deckAttachesToHouse(data))return NO_HOUSE_CONTACT;
-  const wrapped=!!activeWrap(data),house=data.housePlacement||wrapped?getHousePlacement(data):null,line=houseLineEdges(fp);
+  const wrapped=!!activeWrap(data),house=data.housePlacement||wrapped||data.deckOutlines?.main?getHousePlacement(data):null,line=houseLineEdges(fp);
   const contacts:ContactSegment[]=line
     .filter(({a,b})=>!house||(a.x>house.x0-TOL&&b.x<house.x1+TOL))
     .map(({a,b,index})=>({wall:'front',edgeIndex:index,a,b,lengthIn:b.x-a.x,inward:{x:0,y:1},kind:'ledger',blockId:'main'}));
@@ -77,7 +78,7 @@ export function getHouseContact(data:DeckData,fp:FootprintPlan=getFootprint(data
     const onFar=Math.abs(a.y+house.depthIn)<TOL&&Math.abs(b.y+house.depthIn)<TOL&&Math.min(a.x,b.x)>house.x0-TOL&&Math.max(a.x,b.x)<house.x1+TOL;
     if(onFar&&b.x<a.x-TOL)contacts.push({wall:'far',edgeIndex:index,a,b,lengthIn:a.x-b.x,inward:{x:0,y:-1},kind:'ledger',blockId:'main'});
   });
-  if(hasHouseBlocks(data))addBlockContacts(data,fp,contacts);
+  if(hasHouseBlocks(data)||data.deckOutlines?.main)addBlockContacts(data,fp,contacts);
   // The picture-frame border stays flush along the whole back line (ledger or exposed stretch),
   // so the finished outline never jogs at a house corner.
   return contactFrom(contacts,line.map(e=>e.index));
@@ -92,7 +93,7 @@ export function getHouseContact(data:DeckData,fp:FootprintPlan=getFootprint(data
  * Main-block contacts found above are only re-tagged with the block whose wall they lie on.
  */
 function addBlockContacts(data:DeckData,fp:FootprintPlan,contacts:ContactSegment[]){
-  const walls=getHouseWalls(data).filter(w=>w.blockId!=='main');
+  const walls=getHouseWalls(data).filter(w=>data.deckOutlines?.main||w.blockId!=='main');
   const wallOf=(a:PlanPoint,b:PlanPoint,inward:PlanPoint)=>walls.find(w=>{
     if(w.outward.x*inward.x+w.outward.y*inward.y<.99)return false;
     const t=(p:PlanPoint)=>((p.x-w.a.x)*(w.b.x-w.a.x)+(p.y-w.a.y)*(w.b.y-w.a.y))/w.lengthIn,off=(p:PlanPoint)=>Math.abs((p.x-w.a.x)*(w.b.y-w.a.y)-(p.y-w.a.y)*(w.b.x-w.a.x))/w.lengthIn;
@@ -110,6 +111,21 @@ function addBlockContacts(data:DeckData,fp:FootprintPlan,contacts:ContactSegment
     const flush=Math.abs(w.outward.y)<.5&&Math.max(a.y,b.y)>TOL;
     contacts.push({wall:w.id,edgeIndex:index,a,b,lengthIn:len,inward:w.outward,kind:flush?'flush':'ledger',blockId:w.blockId});
   });
+}
+
+/** Edges of a deck that is not ledgered to the house, but that still lie on the deck-facing wall.
+ * A guard is never automatic there, freestanding included. An unpositioned house covers the whole
+ * back line; a positioned one covers only its own width. Stretches past the house stay open. */
+export function abuttingHouseEdges(data:DeckData,fp:FootprintPlan):number[]{
+  if(data.houseVisible===false||deckAttachesToHouse(data))return [];
+  const house=data.housePlacement||data.deckOutlines?.main?getHousePlacement(data):null;
+  return houseLineEdges(fp).filter(e=>!house||(e.a.x>=house.x0-TOL&&e.b.x<=house.x1+TOL)).map(e=>e.index);
+}
+/** The whole back line of a freestanding deck, so the finished border stays on the wall instead of
+ * stepping into it at a house corner. Attached decks already do this through the house contact. */
+export function freestandingHouseLine(data:DeckData,fp:FootprintPlan):number[]{
+  if(data.houseVisible===false||deckAttachesToHouse(data))return [];
+  return houseLineEdges(fp).map(e=>e.index);
 }
 
 /** Stretches of the deck's back line that are NOT against the house (deck wider than the
@@ -141,5 +157,7 @@ export function availableStairSides(data:DeckData):EdgeName[]{
 /** The rim pieces the house does not cover (a manufacturer fascia and a fascia colour go on these), level by level.
  * On the main deck, onContact alone decides which pieces lie along a wall. */
 export function exposedRim(data:DeckData,model:Pick<DeckTakeoff,'levels'>,contact:HouseContact=getHouseContact(data,model.levels[0].footprint)):Member[]{
-  return model.levels.flatMap(l=>(l.rim??[]).filter(r=>!(l.index===0&&contact.onContact({x:r.a.x,y:r.a.z},{x:r.b.x,y:r.b.z}))));
+  // A lower level's rim where a higher level meets it is hidden under that level (lib/levelJunctions.ts).
+  const junctions=model.levels.length>1?levelJunctions(model.levels):[];
+  return model.levels.flatMap((l,i)=>(l.rim??[]).filter(r=>!(l.index===0&&contact.onContact({x:r.a.x,y:r.a.z},{x:r.b.x,y:r.b.z}))&&!junctions.some(j=>j.lower===i&&onJunction(j,{x:r.a.x,y:r.a.z},{x:r.b.x,y:r.b.z}))));
 }

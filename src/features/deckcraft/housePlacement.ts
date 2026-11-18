@@ -13,7 +13,7 @@ export const MIN_HOUSE_OVERLAP_IN=24;
 /** A positioned house narrower than the deck splits the deck's back (house-line) edge at the
  * house corners, so every outline edge is either wholly against the house or wholly exposed. */
 export function splitAtHouseCorners(data:DeckData,outline:{x:number;y:number}[]){
-  if(!data.housePlacement||activeWrap(data))return outline;
+  if((!data.housePlacement&&!data.deckOutlines?.main)||activeWrap(data))return outline;
   const {x0,x1}=getHousePlacement(data),out:{x:number;y:number}[]=[];
   outline.forEach((a,i)=>{
     out.push(a);const b=outline[(i+1)%outline.length];
@@ -31,6 +31,7 @@ export function getHousePlacement(data:DeckData):HouseFootprint{
   if(!p)return {x0:W/2-HW/2,x1:W/2+HW/2,widthIn:HW,depthIn,placed:false};
   // offsetIn always shifts the house to the right (+) or left (−) of its anchor.
   const wanted=p.anchor==='left'?p.offsetIn:p.anchor==='right'?W+p.offsetIn-HW:W/2-HW/2+p.offsetIn;
+  if(data.deckOutlines?.main)return {x0:wanted,x1:wanted+HW,widthIn:HW,depthIn,placed:true};
   const overlap=Math.min(MIN_HOUSE_OVERLAP_IN,W,HW),x0=Math.min(W-overlap,Math.max(overlap-HW,wanted));
   return {x0,x1:x0+HW,widthIn:HW,depthIn,placed:true};
 }

@@ -36,6 +36,9 @@ sources/meta/*.jpg
 docs/portfolio/meta-sheet-*.jpg
 docs/portfolio/shortlist-*.jpg
 
+# Python bytecode from the postbuild gates
+__pycache__/
+*.pyc
 # Playwright (DeckCraft e2e) output
 test-results/
 playwright-report/
@@ -50,3 +53,10 @@ docs/deckcraft/**/*.mp4
 
 # Instagram publisher run log — appended on every run, local state not history
 scripts/instagram/state.jsonl
+
+# Local consolidation diagnostics and generated review/test artifacts
+/work/
+/work-inspect-hardscape.ts
+.photo-cache/
+/src/pages/blog/porcelain-scheduled/
+/artifacts/

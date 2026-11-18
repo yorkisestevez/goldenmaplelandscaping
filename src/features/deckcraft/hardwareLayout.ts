@@ -2,6 +2,7 @@ import type {DeckData} from './types';
 import type {DeckTakeoff,V3} from './deckTakeoff';
 import {boardOutline} from './lib/polygonCuts';
 import {getHouseContact} from './houseContact';
+import {ledgerBlocked} from './structure/structuralReview';
 import {distanceToSegment} from './lib/wrapGeometry';
 import {isChamferEdgeId} from './lib/cornerChamfers';
 export type Fastener={x:number;y:number;z:number;axis:'up'|'front'};
@@ -62,8 +63,9 @@ export function getHardwareLayout(data:DeckData,model:DeckTakeoff){
   const ledgerBolts:Fastener[]=[];
   // One staggered bolt per foot along every ledger contact, 1.6 in into the deck from the wall. A flush
   // wall (bump-out side) bolts straight through the outside joist, centred 0.75 in off the wall.
+  // Structural review refuses a ledger on brick veneer or stone, so those contacts are not bolted.
   let bolt=0;
-  for(const c of getHouseContact(data,model.levels[0].footprint).contacts){
+  for(const c of ledgerBlocked(data)?[]:getHouseContact(data,model.levels[0].footprint).contacts){
     const count=Math.ceil(c.lengthIn/12-1e-9),ux=(c.b.x-c.a.x)/c.lengthIn,uy=(c.b.y-c.a.y)/c.lengthIn;
     for(let i=0;i<count;i++,bolt++){const t=(i+.5)*c.lengthIn/count;const off=c.kind==='flush'?.75:1.6;ledgerBolts.push({x:c.a.x+ux*t+c.inward.x*off,y:data.height-(bolt%2?8:4),z:c.a.y+uy*t+c.inward.y*off,axis:'front'});}
   }
@@ -74,8 +76,7 @@ export function getHardwareLayout(data:DeckData,model:DeckTakeoff){
     const groups:V3[][]=[];for(const p of hits){const last=groups[groups.length-1];if(last&&Math.abs(last[0][k]-p[k])<6)last.push(p);else groups.push([p]);}
     return groups.map(g=>({...g[0],[k]:g.reduce((n,p)=>n+p[k],0)/g.length}));
   })));
-  const baseHeight=data.foundation==='Deck Blocks'?6.5:4.5;
-  const postCaps=model.levels.flatMap(l=>l.supports.filter(p=>p.y>baseHeight).map(p=>({...p})));
+  const postCaps=model.foundationSupports.filter(f=>f.postHeightIn!==null&&f.postHeightIn>0).map(f=>({x:f.x,y:f.bearingElevationIn,z:f.z}));
   const blockingAngles=unique(model.levels.flatMap(l=>l.blocking.flatMap(b=>[b.a,b.b])));
   const stringerConnectors=model.stringers.map(s=>({...s.a}));
   const railBolts=model.railing.posts.flatMap(p=>[-1,1].flatMap(x=>[-1,1].map(z=>({x:p.x+x*1.85,y:p.y+.4,z:p.z+z*1.85}))));

@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { Hammer, Shield, CheckCircle, ArrowRight, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
@@ -9,19 +8,15 @@ export default function Construction() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Landscape Construction Barrie | Project-Specific Planning | Golden Maple"
+        title="How We Build: Excavation, Base & Compaction"
         description="Learn how site conditions, materials, and project scope inform landscape construction planning in Simcoe County."
+        canonical="https://goldenmaplelandscaping.ca/process/construction/"
       />
 
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-40">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <div>
               <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold-dark mb-10 block">
                 Phase Five: Implementation
               </span>
@@ -34,16 +29,13 @@ export default function Construction() {
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Tell Us Your Budget</Link>
+                <Link to="/luxury-landscape-barrie" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
+                  Landscape construction in Barrie <ArrowRight size={16} strokeWidth={1.5} />
+                </Link>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
-            >
+            <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
               <img
                 src="/images/projects/Golden Maple deck and walkway.jpg"
                 alt="Landscape Construction Barrie Ontario"
@@ -54,7 +46,7 @@ export default function Construction() {
                 <p className="font-sans text-[10px] uppercase tracking-widest text-brand-gold mb-2">Construction Planning</p>
                 <p className="font-display text-xl text-brand-porcelain italic font-light">Project-Specific Scope</p>
               </div>
-            </motion.div>
+            </div>
           </div>
 
           <div className="mb-40">
@@ -80,7 +72,7 @@ export default function Construction() {
             <div className="max-w-4xl mx-auto">
               <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite mb-12">Built to Outlast.</h2>
               <p className="font-sans text-xl text-brand-muted leading-relaxed font-light mb-12 text-balance lg:px-12">
-                Construction details are confirmed against the site, materials, and written project scope. {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, "Ask for the current written workmanship terms for your project.")}
+                The crew builds the written scope: excavation and base for that soil, drainage away from the house, the materials you approved, and a walkthrough when the surface is finished. {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, '')}
               </p>
               <Link to="/process/completion" className="flex items-center gap-4 text-brand-gold-dark font-sans text-xs uppercase tracking-widest justify-center hover:gap-8 transition-all font-medium py-2">
                 <span>Phase Six: Handover Details</span>

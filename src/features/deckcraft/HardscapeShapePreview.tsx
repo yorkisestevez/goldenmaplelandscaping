@@ -1,0 +1,6 @@
+import {hardscapeProfile} from './hardscapeShapes';
+import {rectangularUnit,type HardscapeUnit} from './hardscapeCatalogue';
+export default function HardscapeShapePreview({productId,unit}:{productId:string;unit:HardscapeUnit}){
+ const p=hardscapeProfile(productId,unit),paths=p?.polygons??[[[0,0],[1,0],[1,1],[0,1]]],width=140,depth=140*unit.widthMm/unit.lengthMm;
+ return <div className="dd-stock-shape" role="group" aria-label="Original stock shape"><svg viewBox={`-8 -8 ${width+16} ${depth+16}`} role="img" aria-label={p?'Supplier drawing stock outline':rectangularUnit(unit)?'Rectangular stock outline':'Stock envelope only · original outline pending'}><path d={paths.map(points=>'M'+points.map(([x,y])=>`${x*width},${y*depth}`).join(' L')+' Z').join(' ')} fill="#b3ab99" stroke="#476651" strokeWidth="1.2" fillRule="nonzero"/></svg><div><strong>{p?'Supplier stock shape':rectangularUnit(unit)?'Original rectangular stock':'Original outline pending'}</strong><p>{unit.lengthMm} × {unit.widthMm} × {unit.heightMm} mm</p><small>{p?'Plan drawing at nominal size. Not a fabrication template.':rectangularUnit(unit)?'Nominal stock size; separate installation joints.':'Only the bounding size is verified. The preview is illustrative.'}</small>{p&&<a href={p.sourceUrl} target="_blank" rel="noreferrer">Supplier drawing · page {p.page} ↗</a>}</div></div>;
+}

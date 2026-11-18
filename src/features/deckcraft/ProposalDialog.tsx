@@ -11,10 +11,14 @@ import './proposal.css';
  */
 export default function ProposalDialog({onClose,onDownloadPdf,pdfBusy=false,...props}:ProposalProps&{onClose:()=>void;onDownloadPdf?:()=>void;pdfBusy?:boolean}){
   useEffect(()=>{
+    // A modal sheet (the workspace inspector, opened with showModal) leaves the rest of the page inert, which would
+    // make this preview unreachable. Step it aside while the proposal is open and bring it back on close.
+    const covered=[...document.querySelectorAll<HTMLDialogElement>('dialog[open]')].filter(d=>{try{return d.matches(':modal');}catch{return false;}});
+    for(const d of covered)d.close();
     document.body.classList.add('dd-proposal-open');
     const key=(e:KeyboardEvent)=>{if(e.key==='Escape')onClose();};
     window.addEventListener('keydown',key);
-    return ()=>{document.body.classList.remove('dd-proposal-open');window.removeEventListener('keydown',key);};
+    return ()=>{document.body.classList.remove('dd-proposal-open');window.removeEventListener('keydown',key);for(const d of covered)if(d.isConnected&&!d.open)d.showModal();};
   },[onClose]);
   return createPortal(<div className="dd-proposal-root" role="dialog" aria-modal="true" aria-label="Deck proposal preview">
     <div className="dd-proposal-toolbar dd-no-print">

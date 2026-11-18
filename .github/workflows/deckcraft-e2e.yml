@@ -2,7 +2,15 @@
 #
 # Runs on pull requests that touch the deck designer, and on demand. It is NOT part of the deploy path:
 # netlify-deploy.yml (push to main) is unchanged, so a slow or flaky browser run can never block or
-# trigger a production deploy. Adds a few minutes of Actions time per matching PR.
+# trigger a production deploy.
+#
+# The suite runs one test at a time (WebGL on SwiftShader is CPU-bound) and takes about 70 minutes on
+# one runner, so it is split into six shards on separate runners. scripts/e2e-shard.mjs splits it by the
+# CI times in e2e/shard-times.json, about 11.5 minutes of tests each. Playwright's own --shard splits by
+# count in file order, which kept the proposal, PDF and night-lighting tests of deckcraft.spec.ts together:
+# 26 of that shard's 28 minutes on 2026-11-03. New tests count as the median until the times are recorded
+# again (`node scripts/e2e-shard.mjs --record <shard logs>`). The step allows 28 minutes and the job 32.
+# The final `e2e` job reports the combined result as one check.
 name: DeckCraft E2E
 
 on:
@@ -10,10 +18,18 @@ on:
     paths:
       - 'src/features/deckcraft/**'
       - 'src/pages/DeckDesigner.*'
+      # The designer hydrates inside the document shell. A consent dialog or
+      # a head-script change can break keyboard shortcuts and the smoke tests.
+      - 'src/root.tsx'
+      # Trailing-slash rewriting runs on every module, including the designer.
+      # A bad rewrite has already hydrated the wrong tree.
+      - 'src/utils/trailingSlash.ts'
+      - 'buildTools/trailingSlashLinks.ts'
       - 'src/components/BookingScheduler.tsx'
       - 'public/__forms.html'
       - 'e2e/**'
       - 'playwright.config.ts'
+      - 'scripts/e2e-shard.mjs'
       - 'package-lock.json'
       - '.github/workflows/deckcraft-e2e.yml'
   workflow_dispatch:
@@ -26,9 +42,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  e2e:
+  shard:
+    name: e2e shard ${{ matrix.shard }}/6
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 32
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -37,16 +58,33 @@ jobs:
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
       - run: npx playwright install --with-deps chromium
+      # The site loads Inter from Google Fonts, which the tests block. Without Inter installed, Linux falls
+      # back to the much wider DejaVu Sans, so 320 px layouts measure wider than any customer sees them.
+      - name: Install the Inter font
+        run: sudo apt-get install -y --no-install-recommends fonts-inter
       - name: Build the site
         run: npm run build
+      # A step timeout fails (rather than cancels) an overrunning shard, so its report is still uploaded.
       - name: Run DeckCraft smoke tests
-        run: npx playwright test
+        timeout-minutes: 28
+        run: node scripts/e2e-shard.mjs ${{ matrix.shard }} 6
       - name: Keep the report when a test fails
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: deckcraft-e2e-report
+          name: deckcraft-e2e-report-${{ matrix.shard }}
           path: |
             playwright-report/
             test-results/
           retention-days: 7
+
+  e2e:
+    needs: shard
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: All shards passed
+        run: |
+          echo "Shards: ${{ needs.shard.result }}"
+          test "${{ needs.shard.result }}" = success

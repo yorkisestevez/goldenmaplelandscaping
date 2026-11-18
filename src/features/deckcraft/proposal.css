@@ -17,52 +17,55 @@
 .dd-proposal img{display:block}
 
 /* An inner sheet: the running head (mark, spaced gold name, the document's title), content, the contact footer. */
-.dd-proposal-page{box-sizing:border-box;width:8.5in;height:11in;margin:0 auto 20px;padding:36pt 54pt 24pt;display:flex;flex-direction:column;overflow:hidden;background:var(--gm-bone)}
+.dd-proposal-page{box-sizing:border-box;width:8.5in;height:11in;margin:0 auto 20px;padding:36pt 54pt 24pt;display:flex;flex-direction:column;overflow:hidden;background:var(--gm-row-a)}
 .dd-proposal-runhead{position:relative;display:flex;justify-content:space-between;align-items:center;gap:16pt;padding-bottom:6pt;border-bottom:.8pt solid var(--gm-forest)}
 .dd-proposal-runhead::after{content:'';position:absolute;left:0;right:0;bottom:-2.6pt;border-top:.5pt solid var(--gm-gold)}
 .dd-proposal-brand{flex:none;display:flex;align-items:center;gap:7pt;font-size:8.5pt;font-weight:700;letter-spacing:.19em;text-transform:uppercase;color:var(--gm-gold-ink)}.dd-proposal-brand img{width:auto;height:16pt}
 .dd-proposal-headtitle{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:6.8pt;letter-spacing:.09em;text-transform:uppercase;color:var(--gm-muted)}
 .dd-proposal-content{flex:1;min-height:0;display:flex;flex-direction:column;padding-top:26pt}
 .dd-proposal-eyebrow{font-size:8pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gm-gold-ink)}
-.dd-proposal-page h2,.dd-proposal-appendix>h2{margin:3pt 0 12pt;padding-bottom:5pt;border-bottom:1.2pt solid var(--gm-gold);font-size:26pt;line-height:1.05}.dd-proposal h2 small{font-size:13pt;font-weight:500;color:var(--gm-muted)}
+.dd-proposal-page h2,.dd-proposal-appendix>h2{margin:5pt 0 12pt;padding-bottom:9pt;border:0;font-size:32pt;line-height:1.05}.dd-proposal h2 small{font-size:13pt;font-weight:500;color:var(--gm-muted)}
+.dd-proposal-content>h2::after,.dd-proposal-appendix>h2::after{content:'';display:block;width:48pt;margin-top:9pt;border-top:1.2pt solid var(--gm-gold-dk)}
 .dd-proposal-lede{max-width:5.8in;margin:-4pt 0 14pt!important;font-family:var(--gm-serif);font-size:12.5pt;font-weight:500;line-height:1.3}
 .dd-proposal-note,.dd-proposal-fine{font-size:7.5pt;line-height:1.45;color:var(--gm-muted)}.dd-proposal-note{margin-top:10pt!important}
 .dd-proposal-foot{position:relative;margin-top:12pt;padding-top:7pt;border-top:.6pt solid var(--gm-gold);text-align:center;font-size:7.6pt;line-height:1.55;color:var(--gm-forest)}
 .dd-proposal-foot-sub{font-size:6.8pt;letter-spacing:.12em;text-transform:uppercase;color:var(--gm-gold-ink)}
 .dd-proposal-pageno{position:absolute;right:0;bottom:1pt;font-size:7.6pt;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 
-/* The cover: forest inside the gold double frame, the mark, the spaced wordmark, the 3D hero framed in gold, the
-   document and the project, who it is for, and the business's published contact line. */
-.dd-proposal-cover{position:relative;padding:0;background:var(--gm-forest);color:var(--gm-light)}
-.dd-proposal-cover::before,.dd-proposal-cover::after{content:'';position:absolute;inset:38pt;border:1.3pt solid var(--gm-gold);pointer-events:none}.dd-proposal-cover::after{inset:44pt;border-width:.5pt}
-.dd-proposal-cover-inner{position:absolute;inset:44pt;display:flex;flex-direction:column;align-items:center;padding:16pt 20pt 16pt;text-align:center}
-.dd-proposal-cover-head{display:flex;flex-direction:column;align-items:center}
+/* Editorial cover: compact forest masthead, project introduction, generous design image, project facts and contact. */
+.dd-proposal-cover{position:relative;padding:0;background:var(--gm-row-a);color:var(--gm-forest)}
+.dd-proposal-cover-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:stretch;padding:0 54pt 54pt;text-align:left}
+.dd-proposal-cover-head{order:1;box-sizing:border-box;flex:none;display:grid;grid-template-columns:64pt 1fr;grid-template-rows:68pt 20pt;align-items:center;height:138pt;width:calc(100% + 108pt);margin-left:-54pt;padding:32pt 54pt 18pt;background:var(--gm-forest)}
 .dd-proposal-emblem{position:relative;flex:none;display:grid;place-items:center;width:66pt;height:66pt;color:var(--gm-gold)}.dd-proposal-emblem svg{position:absolute;inset:0;width:100%;height:100%}.dd-proposal-emblem img{width:50pt;height:auto}
-.dd-proposal-cover-eyebrow{margin:12pt -.29em 0 0!important;font-size:9pt;font-weight:700;letter-spacing:.29em;text-transform:uppercase;text-wrap:balance;color:var(--gm-gold)}
+.dd-proposal-cover-eyebrow{grid-column:1/-1;grid-row:2;margin:0!important;font-size:8pt;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gm-gold)}
 .dd-proposal-wordmark{margin:8pt -.15em 0 0!important;font-family:var(--gm-serif);font-size:44pt;font-weight:700;line-height:1;letter-spacing:.15em;text-transform:uppercase;color:var(--gm-gold)}
 .dd-proposal-wordmark span{display:block;margin:8pt -1.1em 0 0;font-family:var(--dc-body);font-size:11pt;font-weight:300;letter-spacing:1.1em;color:var(--gm-light)}
+.dd-proposal-cover-head .dd-proposal-emblem{grid-row:1;width:50pt;height:50pt}.dd-proposal-cover-head .dd-proposal-emblem img{width:38pt}
+.dd-proposal-cover-head .dd-proposal-wordmark{grid-column:2;grid-row:1;margin:0!important;font-size:29pt;font-weight:600;letter-spacing:.08em;text-align:right}
+.dd-proposal-cover-head .dd-proposal-wordmark span{margin:6pt 0 0;font-size:9pt;letter-spacing:.49em}
+.dd-proposal-cover-head .dd-proposal-ornament{display:none}
 .dd-proposal-ornament{display:flex;align-items:center;gap:9pt;margin:12pt 0 14pt;color:var(--gm-gold)}.dd-proposal-ornament::before,.dd-proposal-ornament::after{content:'';width:70pt;border-top:.9pt solid currentColor}
 .dd-proposal-ornament i{width:5pt;height:5pt;background:currentColor;transform:rotate(45deg)}
-.dd-proposal-hero{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;margin:0}
-.dd-proposal-hero-frame{box-sizing:border-box;flex:1;min-height:0;padding:3pt;border:.8pt solid var(--gm-gold)}.dd-proposal-hero-frame>img{width:100%;height:100%;object-fit:cover}
+.dd-proposal-hero{order:3;flex:1;min-height:0;display:flex;flex-direction:column;width:100%;margin:22pt 0 0}
+.dd-proposal-hero-frame{box-sizing:border-box;flex:1;min-height:0}.dd-proposal-hero-frame>img{width:100%;height:100%;object-fit:cover}
 .dd-proposal-hero-plan{box-sizing:border-box;height:100%;padding:8pt;background:var(--dc-sheet)}
-.dd-proposal-hero figcaption{margin-top:6pt;font-size:7pt;letter-spacing:.04em;color:var(--gm-warm-3)}
-.dd-proposal-cover-body{display:flex;flex-direction:column;align-items:center;width:100%;margin-top:15pt}
-.dd-proposal-doctype{margin-right:-.38em!important;font-size:11.5pt;font-weight:700;letter-spacing:.38em;text-transform:uppercase}
-.dd-proposal-cover h2{margin:9pt 0 0;padding:0;border:0;font-size:26pt;line-height:1.08;letter-spacing:.01em;color:var(--gm-gold)}
-.dd-proposal-summary,.dd-proposal-address{margin-top:7pt!important;font-size:7.5pt;line-height:1.6;letter-spacing:.15em;text-transform:uppercase;text-wrap:balance;color:var(--gm-warm)}.dd-proposal-address{margin-top:2pt!important;color:var(--gm-warm-2)}
-.dd-proposal-meta{display:flex;justify-content:center;gap:44pt;margin:16pt 0 0}
-.dd-proposal-meta dt{font-size:7pt;font-weight:700;letter-spacing:.26em;text-transform:uppercase;color:var(--gm-gold)}
-.dd-proposal-meta dd{margin:3pt 0 0;font-family:var(--gm-serif);font-size:14.5pt;font-weight:600;color:var(--gm-light)}
-.dd-proposal-cover-foot{width:100%;margin-top:16pt}.dd-proposal-cover-foot::before{content:'';display:block;width:312pt;margin:0 auto 10pt;border-top:.6pt solid var(--gm-gold)}
-.dd-proposal-cover-foot p:first-child{font-size:8pt;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--gm-gold)}.dd-proposal-cover-foot p+p{margin-top:4pt!important;font-size:7.5pt;color:var(--gm-warm-4)}
+.dd-proposal-hero figcaption{margin-top:7pt;font-size:7pt;letter-spacing:.02em;color:var(--gm-muted)}
+.dd-proposal-cover-body{order:2;display:flex;flex:none;flex-direction:column;align-items:flex-start;width:100%;margin-top:26pt}
+.dd-proposal-doctype{font-size:8.5pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gm-gold-ink)}
+.dd-proposal-cover h2{margin:10pt 0 0;padding:0;border:0;font-size:36pt;font-weight:500;line-height:1.08;letter-spacing:0;color:var(--gm-forest)}
+.dd-proposal-summary,.dd-proposal-address{margin-top:8pt!important;font-size:8.5pt;line-height:1.45;letter-spacing:.05em;text-transform:uppercase;color:var(--gm-muted)}.dd-proposal-address{margin-top:8pt!important}
+.dd-proposal-meta{order:4;flex:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16pt;margin:24pt 0 0;min-height:48pt}
+.dd-proposal-meta dt{font-size:7pt;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--gm-gold-ink)}
+.dd-proposal-meta dd{margin:5pt 0 0;font-family:var(--gm-serif);font-size:14pt;font-weight:500;line-height:1.2;color:var(--gm-forest);overflow-wrap:anywhere}
+.dd-proposal-cover-foot{order:5;flex:none;width:100%;margin-top:22pt;padding-top:12pt;border-top:.6pt solid var(--gm-line)}
+.dd-proposal-cover-foot p:first-child{font-size:8pt;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gm-forest)}.dd-proposal-cover-foot p+p{margin-top:6pt!important;font-size:7.5pt;line-height:1.45;color:var(--gm-muted)}
 
-/* Views: framed in gold, captioned on a forest band as the estimate's photo rows are. */
+/* Views: a photo-led editorial spread with restrained captions on paper. */
 .dd-proposal-views{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:14pt 12pt;align-content:start}
-.dd-proposal-views figure{margin:0;min-width:0;padding:2pt;border:.8pt solid var(--gm-gold);background:var(--gm-forest)}.dd-proposal-views img{width:100%;height:2.2in;object-fit:cover}
+.dd-proposal-views figure{margin:0;min-width:0;background:var(--gm-row-a)}.dd-proposal-views img{width:100%;height:2.2in;object-fit:cover}
 .dd-proposal-views-3 figure:first-child,.dd-proposal-views-2 figure,.dd-proposal-views-1 figure{grid-column:1/-1}
 .dd-proposal-views-3 figure:first-child img{height:3.7in}.dd-proposal-views-2 img{height:3.05in}.dd-proposal-views-1 img{height:5.2in}
-.dd-proposal-views figcaption{padding:4pt 8pt 3pt;font-size:7pt;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gm-gold)}
+.dd-proposal-views figcaption{padding:6pt 0 4pt;border-bottom:.6pt solid var(--gm-line);font-size:7pt;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gm-gold-ink)}
 
 /* Lighting & features. */
 .dd-proposal-features{columns:2;column-gap:30pt}
@@ -86,12 +89,13 @@
 .dd-proposal-siteplan{flex:1;min-height:0;margin:0;padding:10pt;border:1pt solid var(--gm-gold);background:var(--dc-sheet)}
 
 /* Investment: the estimate's table, forest header row, cream and linen rows, gold rules; the total on gold tint. */
-.dd-proposal-ledger,.dd-proposal-totals{width:100%;border-collapse:collapse;border:1.2pt solid var(--gm-gold)}
+.dd-proposal-ledger,.dd-proposal-totals{width:100%;border-collapse:collapse;border:0}
 .dd-proposal-ledger thead th{padding:5pt 10pt;border-bottom:1pt solid var(--gm-gold);background:var(--gm-forest);font-size:7pt;font-weight:700;letter-spacing:.12em;text-align:left;text-transform:uppercase;color:var(--gm-light)}
 .dd-proposal-ledger thead th+th{text-align:right}
-.dd-proposal-ledger tbody tr:nth-child(odd){background:var(--gm-row-a)}.dd-proposal-ledger tbody tr:nth-child(even){background:var(--gm-row-b)}
-.dd-proposal-ledger tbody th,.dd-proposal-ledger td{padding:3.3pt 10pt;border-bottom:.4pt solid var(--gm-gold);font-weight:400;text-align:left;vertical-align:top}
+.dd-proposal-ledger tbody tr:nth-child(odd){background:var(--gm-row-a)}.dd-proposal-ledger tbody tr:nth-child(even){background:var(--gm-panel)}
+.dd-proposal-ledger tbody th,.dd-proposal-ledger td{padding:3.3pt 10pt;border-bottom:.4pt solid var(--gm-line);font-weight:400;text-align:left;vertical-align:top}
 .dd-proposal-ledger td,.dd-proposal-totals td{padding-left:14pt;white-space:nowrap;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:var(--gm-forest)}
+.dd-proposal-included-costs{display:block;margin-top:4pt;color:var(--gm-muted);font-size:7.2pt;line-height:1.4;font-weight:400}.dd-proposal-included-costs span{display:block}
 .dd-proposal-tag{display:inline-block;padding:0 5pt;border:.6pt solid var(--gm-gold-ink);font-size:6.6pt;font-weight:700;line-height:1.6;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;color:var(--gm-gold-ink)}
 .dd-proposal-tag[data-kind=builder]{border-color:var(--gm-quiet);color:var(--gm-quiet)}
 .dd-proposal-sums{margin-top:14pt;break-inside:avoid}
@@ -132,13 +136,17 @@
   .dd-proposal-root{padding:0 8px 32px}
   .dd-proposal-toolbar{padding:8px 10px;gap:6px 8px}.dd-proposal-toolbar>div{flex-basis:100%}.dd-proposal-toolbar span{display:none}.dd-proposal-toolbar .dd-primary,.dd-proposal-toolbar .dd-secondary{padding:0 12px;font-size:12px}
   .dd-proposal-page,.dd-proposal-appendix{width:100%;height:auto;padding:18px 16px}
-  .dd-proposal-cover{padding:0}.dd-proposal-cover::before{inset:8px}.dd-proposal-cover::after{inset:12px}
-  .dd-proposal-cover-inner{position:static;padding:32px 24px 28px}
+  .dd-proposal-cover{padding:0}
+  .dd-proposal-cover-inner{position:static;padding:0 20px 28px}
+  .dd-proposal-cover-head{width:calc(100% + 40px);height:118px;margin-left:-20px;padding:20px;grid-template-columns:52px 1fr;grid-template-rows:56px 22px}
+  .dd-proposal-cover-head .dd-proposal-wordmark{font-size:16.5pt;letter-spacing:0}.dd-proposal-cover-head .dd-proposal-wordmark span{font-size:7pt;letter-spacing:.25em}
+  .dd-proposal-cover-head .dd-proposal-emblem{width:36pt;height:36pt}.dd-proposal-cover-head .dd-proposal-emblem img{width:28pt}
+  .dd-proposal-cover-eyebrow{font-size:7pt;letter-spacing:.07em}
   .dd-proposal-wordmark{font-size:26pt;letter-spacing:.1em;margin-right:-.1em!important}.dd-proposal-wordmark span{letter-spacing:.5em;margin-right:-.5em}
   .dd-proposal-ornament::before,.dd-proposal-ornament::after{width:48pt}
   .dd-proposal-hero,.dd-proposal-hero-frame{flex:none}.dd-proposal-hero-frame>img,.dd-proposal-hero-plan{height:auto;aspect-ratio:4/3}
-  .dd-proposal-cover h2{font-size:22pt}.dd-proposal-summary,.dd-proposal-address{letter-spacing:.1em}
-  .dd-proposal-meta{flex-wrap:wrap;gap:12px 28px}
+  .dd-proposal-cover h2{font-size:28pt}.dd-proposal-summary,.dd-proposal-address{letter-spacing:.03em}
+  .dd-proposal-meta{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 16px}
   .dd-proposal-page h2{font-size:21pt}
   .dd-proposal-views{grid-template-columns:1fr}.dd-proposal-views figure{grid-column:auto!important}.dd-proposal-views img{height:auto!important;aspect-ratio:16/10}
   .dd-proposal-features,.dd-proposal-review,.dd-proposal-materials,.dd-proposal-quotes ul{columns:1}

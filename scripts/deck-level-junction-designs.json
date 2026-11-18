@@ -1,0 +1,709 @@
+{
+ "Kempenfelt": {
+  "deckType": "Attached",
+  "municipality": "Barrie",
+  "siteType": "Standard",
+  "soilCondition": "Clay",
+  "buildSeason": "Spring-Summer",
+  "intendedLoad": "Standard",
+  "foundation": "Helical Piles",
+  "foundationDepthIn": 48,
+  "shape": "Rectangle",
+  "levels": 2,
+  "width": 24,
+  "length": 14,
+  "height": 30,
+  "cornerChamfers": {
+   "frontLeftFt": 0,
+   "frontRightFt": 0
+  },
+  "width2": 18,
+  "length2": 10,
+  "height2": 18,
+  "level2Position": "Front",
+  "level2Offset": 50,
+  "level2FullStep": true,
+  "deckingMaterial": "tt_legacy",
+  "deckingColor": "Tigerwood",
+  "pattern": "Picture Frame",
+  "pictureFrameRows": 1,
+  "pictureFrameOverhangIn": 1,
+  "borderFinish": "Matching",
+  "boardWidth": 5.5,
+  "framingSize": "2x10",
+  "joistSpacing": 12,
+  "fasteningSystem": "Hidden",
+  "hasInlay": false,
+  "inlayLf": 0,
+  "inlays": [],
+  "deckFinishes": {
+   "border": "tt_legacy:Espresso",
+   "fascia": "tt_legacy:Espresso",
+   "risers": "tt_legacy:Espresso",
+   "railingColor": "Black"
+  },
+  "railingType": "Aluminum",
+  "catalogueAccessories": [],
+  "stairFlights": 1,
+  "stairType": "Straight",
+  "stairPosition": "Front",
+  "stairOffset": 50,
+  "stairWidth": 96,
+  "stairTurn": "Right",
+  "landingDepthIn": 48,
+  "skirting": {
+   "style": "Horizontal boards",
+   "colour": "tt_legacy:Espresso",
+   "clearanceIn": 2,
+   "accessPanels": 0
+  },
+  "pergolaSqft": 0,
+  "benchLf": 0,
+  "hasDrainage": false,
+  "hasDemo": false,
+  "privacyScreens": [],
+  "autoLighting": {
+   "posts": true,
+   "stairs": true,
+   "stairStyle": "evo_hyde"
+  },
+  "lightingSystem": {
+   "wireDistance": 80,
+   "selectedItems": [
+    {
+     "productId": "smart_hub150",
+     "qty": 1
+    },
+    {
+     "productId": "fusion",
+     "qty": 8,
+     "zone": "deck"
+    }
+   ]
+  },
+  "lightingPreviewOn": true,
+  "sceneLighting": "Evening",
+  "houseVisible": true,
+  "houseConfig": {
+   "widthFt": 46,
+   "depthFt": 32,
+   "storeys": 2,
+   "storeyHeightIn": 132,
+   "roofShape": "Gable",
+   "ridge": "x",
+   "roofPitch": 9,
+   "roofFinish": "Metal",
+   "roofColor": "#2a2c2e",
+   "cladding": "Board & batten",
+   "claddingColor": "#f1ede3",
+   "trimColor": "#f7f6f1",
+   "fasciaColor": "#1f2021",
+   "gutterColor": "#1f2021",
+   "doorColor": "#9b7147",
+   "windowColor": "#1f2021",
+   "garageDoorColor": "#9b7147",
+   "footprint": {
+    "rects": [
+     {
+      "id": "garage1",
+      "kind": "garage",
+      "wall": "Left",
+      "offsetFt": 6,
+      "widthFt": 24,
+      "depthFt": 24,
+      "storeys": 1,
+      "roofShape": "Gable"
+     }
+    ]
+   },
+   "openings": [
+    {
+     "id": "patio-door",
+     "type": "Door",
+     "facade": "Front",
+     "offsetPct": 50,
+     "bottomIn": 30,
+     "widthIn": 144,
+     "heightIn": 96,
+     "style": "Sliding"
+    },
+    {
+     "id": "win-left",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 27,
+     "bottomIn": 54,
+     "widthIn": 72,
+     "heightIn": 66,
+     "style": "Picture"
+    },
+    {
+     "id": "win-right",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 73,
+     "bottomIn": 54,
+     "widthIn": 72,
+     "heightIn": 66,
+     "style": "Picture"
+    },
+    {
+     "id": "up-1",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 20,
+     "bottomIn": 162,
+     "widthIn": 48,
+     "heightIn": 60,
+     "style": "Casement"
+    },
+    {
+     "id": "up-2",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 40,
+     "bottomIn": 162,
+     "widthIn": 48,
+     "heightIn": 60,
+     "style": "Casement"
+    },
+    {
+     "id": "up-3",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 60,
+     "bottomIn": 162,
+     "widthIn": 48,
+     "heightIn": 60,
+     "style": "Casement"
+    },
+    {
+     "id": "up-4",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 80,
+     "bottomIn": 162,
+     "widthIn": 48,
+     "heightIn": 60,
+     "style": "Casement"
+    },
+    {
+     "id": "garage-door",
+     "type": "Garage",
+     "facade": "Back",
+     "wallId": "garage1-back",
+     "offsetPct": 50,
+     "bottomIn": 0,
+     "widthIn": 108,
+     "heightIn": 90,
+     "style": "Carriage"
+    }
+   ]
+  },
+  "terrainConfig": {
+   "widthFt": 250,
+   "depthFt": 250,
+   "elevationIn": 0,
+   "slopePct": 0
+  },
+  "yardFeatures": []
+ },
+ "Cascade": {
+  "deckType": "Attached",
+  "municipality": "Barrie",
+  "siteType": "Standard",
+  "soilCondition": "Clay",
+  "buildSeason": "Spring-Summer",
+  "intendedLoad": "Standard",
+  "foundation": "Helical Piles",
+  "foundationDepthIn": 48,
+  "shape": "Rectangle",
+  "levels": 3,
+  "width": 30,
+  "length": 14,
+  "height": 30,
+  "cornerChamfers": {
+   "frontLeftFt": 4,
+   "frontRightFt": 4
+  },
+  "width2": 20,
+  "length2": 12,
+  "height2": 18,
+  "level2Position": "Front",
+  "level2Offset": 50,
+  "level2FullStep": true,
+  "level3": {
+   "widthFt": 16,
+   "lengthFt": 10,
+   "heightIn": 8,
+   "parent": 2,
+   "position": "Front",
+   "offsetPct": 50,
+   "fullStep": true
+  },
+  "deckingMaterial": "tt_vintage",
+  "deckingColor": "Weathered Teak",
+  "pattern": "Picture Frame",
+  "pictureFrameRows": 2,
+  "pictureFrameOverhangIn": 1,
+  "borderFinish": "Matching",
+  "boardWidth": 5.5,
+  "framingSize": "2x10",
+  "joistSpacing": 12,
+  "fasteningSystem": "Hidden",
+  "hasInlay": false,
+  "inlayLf": 0,
+  "inlays": [
+   {
+    "id": "dining-rug",
+    "kind": "rug",
+    "dxFt": -1,
+    "dyFt": 1,
+    "widthFt": 10,
+    "depthFt": 5,
+    "frameRows": 1,
+    "pattern": "Herringbone",
+    "frame": "tt_vintage:Dark Hickory",
+    "fill": "tt_vintage:English Walnut"
+   },
+   {
+    "id": "lounge-compass",
+    "kind": "medallion",
+    "level": 2,
+    "diameterFt": 6,
+    "style": "compass",
+    "frame": "tt_vintage:Dark Hickory",
+    "fill": "tt_vintage:Mahogany"
+   },
+   {
+    "id": "terrace-band",
+    "kind": "band",
+    "level": 3,
+    "direction": "across",
+    "boards": 2,
+    "fill": "tt_vintage:Dark Hickory"
+   }
+  ],
+  "deckFinishes": {
+   "border": "tt_vintage:Dark Hickory",
+   "fascia": "tt_vintage:Dark Hickory",
+   "risers": "tt_vintage:Dark Hickory",
+   "railingColor": "Black"
+  },
+  "railingType": "Glass Panels",
+  "catalogueRailingId": "tt_impression_glass",
+  "catalogueAccessories": [
+   "tt_fascia",
+   "tt_concealoc"
+  ],
+  "stairFlights": 1,
+  "stairType": "Straight",
+  "stairPosition": "Front",
+  "stairOffset": 50,
+  "stairWidth": 96,
+  "stairTurn": "Right",
+  "landingDepthIn": 48,
+  "skirting": {
+   "style": "Horizontal boards",
+   "colour": "tt_vintage:Dark Hickory",
+   "clearanceIn": 2,
+   "accessPanels": 1
+  },
+  "pergolaSqft": 160,
+  "benchLf": 8,
+  "hasDrainage": false,
+  "hasDemo": false,
+  "privacyScreens": [
+   {
+    "id": "screen-left",
+    "side": "Left",
+    "lengthFt": 6.75,
+    "heightFt": 6,
+    "offsetPct": 0,
+    "lights": true,
+    "product": "hideaway",
+    "design": "Horizon",
+    "finish": "Black",
+    "panels": 2
+   }
+  ],
+  "autoLighting": {
+   "posts": true,
+   "stairs": true,
+   "stairStyle": "evo_hyde"
+  },
+  "lightingSystem": {
+   "wireDistance": 120,
+   "selectedItems": [
+    {
+     "productId": "smart_hub150",
+     "qty": 1
+    },
+    {
+     "productId": "fusion",
+     "qty": 12,
+     "zone": "deck"
+    },
+    {
+     "productId": "sway_pendant",
+     "qty": 3,
+     "zone": "house"
+    },
+    {
+     "productId": "liv",
+     "qty": 6,
+     "zone": "landscape"
+    },
+    {
+     "productId": "scope",
+     "qty": 3,
+     "zone": "landscape"
+    }
+   ]
+  },
+  "lightingPreviewOn": true,
+  "sceneLighting": "Evening",
+  "houseVisible": true,
+  "houseConfig": {
+   "widthFt": 46,
+   "depthFt": 32,
+   "storeys": 2,
+   "storeyHeightIn": 132,
+   "roofShape": "Gable",
+   "ridge": "x",
+   "roofPitch": 9,
+   "roofFinish": "Metal",
+   "roofColor": "#2a2c2e",
+   "cladding": "Board & batten",
+   "claddingColor": "#f1ede3",
+   "trimColor": "#f7f6f1",
+   "fasciaColor": "#1f2021",
+   "gutterColor": "#1f2021",
+   "doorColor": "#9b7147",
+   "windowColor": "#1f2021",
+   "garageDoorColor": "#9b7147",
+   "footprint": {
+    "rects": [
+     {
+      "id": "garage1",
+      "kind": "garage",
+      "wall": "Left",
+      "offsetFt": 6,
+      "widthFt": 24,
+      "depthFt": 24,
+      "storeys": 1,
+      "roofShape": "Gable"
+     }
+    ]
+   },
+   "openings": [
+    {
+     "id": "patio-door",
+     "type": "Door",
+     "facade": "Front",
+     "offsetPct": 50,
+     "bottomIn": 30,
+     "widthIn": 144,
+     "heightIn": 96,
+     "style": "Sliding"
+    },
+    {
+     "id": "win-left",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 27,
+     "bottomIn": 54,
+     "widthIn": 72,
+     "heightIn": 66,
+     "style": "Picture"
+    },
+    {
+     "id": "win-right",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 73,
+     "bottomIn": 54,
+     "widthIn": 72,
+     "heightIn": 66,
+     "style": "Picture"
+    },
+    {
+     "id": "up-1",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 20,
+     "bottomIn": 162,
+     "widthIn": 48,
+     "heightIn": 60,
+     "style": "Casement"
+    },
+    {
+     "id": "up-2",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 40,
+     "bottomIn": 162,
+     "widthIn": 48,
+     "heightIn": 60,
+     "style": "Casement"
+    },
+    {
+     "id": "up-3",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 60,
+     "bottomIn": 162,
+     "widthIn": 48,
+     "heightIn": 60,
+     "style": "Casement"
+    },
+    {
+     "id": "up-4",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 80,
+     "bottomIn": 162,
+     "widthIn": 48,
+     "heightIn": 60,
+     "style": "Casement"
+    },
+    {
+     "id": "garage-door",
+     "type": "Garage",
+     "facade": "Back",
+     "wallId": "garage1-back",
+     "offsetPct": 50,
+     "bottomIn": 0,
+     "widthIn": 108,
+     "heightIn": 90,
+     "style": "Carriage"
+    }
+   ]
+  },
+  "terrainConfig": {
+   "widthFt": 250,
+   "depthFt": 250,
+   "elevationIn": 0,
+   "slopePct": 0
+  },
+  "yardFeatures": [
+   {
+    "id": "terrace",
+    "kind": "patio",
+    "name": "Lower terrace",
+    "enabled": true,
+    "xFt": 15,
+    "zFt": 49,
+    "widthFt": 22,
+    "depthFt": 16,
+    "heightIn": 0,
+    "rotationDeg": 0,
+    "productId": "permacon-brooklyn",
+    "color": "#b8b1a4"
+   },
+   {
+    "id": "seat-wall",
+    "kind": "retaining-wall",
+    "name": "Seat wall",
+    "enabled": true,
+    "xFt": 15,
+    "zFt": 58.5,
+    "widthFt": 22,
+    "depthFt": 1.5,
+    "heightIn": 20,
+    "rotationDeg": 0,
+    "productId": "segmental-concrete",
+    "color": "#8f877b"
+   },
+   {
+    "id": "waterfall",
+    "kind": "water-feature",
+    "name": "Pondless waterfall",
+    "enabled": true,
+    "xFt": 42,
+    "zFt": 34,
+    "widthFt": 8,
+    "depthFt": 6,
+    "heightIn": 36,
+    "rotationDeg": 0,
+    "productId": "pondless-waterfall",
+    "color": "#657478"
+   }
+  ],
+  "yardAllowances": {
+   "finish": "premium",
+   "firePit": "gas",
+   "kitchen": "full",
+   "turfSqft": 0,
+   "lighting": true
+  }
+ },
+ "Painswick": {
+  "deckType": "Attached",
+  "municipality": "Barrie",
+  "siteType": "Standard",
+  "soilCondition": "Clay",
+  "buildSeason": "Spring-Summer",
+  "intendedLoad": "Standard",
+  "foundation": "Helical Piles",
+  "foundationDepthIn": 48,
+  "shape": "Rectangle",
+  "levels": 2,
+  "width": 30,
+  "length": 14,
+  "height": 30,
+  "cornerChamfers": {
+   "frontLeftFt": 0,
+   "frontRightFt": 0
+  },
+  "width2": 20,
+  "length2": 10,
+  "height2": 14,
+  "level2Position": "Front",
+  "level2Offset": 50,
+  "level2FullStep": true,
+  "deckingMaterial": "deck_voyage",
+  "deckingColor": "Khaya",
+  "pattern": "Picture Frame",
+  "pictureFrameRows": 1,
+  "pictureFrameOverhangIn": 1,
+  "borderFinish": "Matching",
+  "boardWidth": 5.5,
+  "framingSize": "2x10",
+  "joistSpacing": 12,
+  "fasteningSystem": "Hidden",
+  "hasInlay": false,
+  "inlayLf": 0,
+  "inlays": [],
+  "deckFinishes": {
+   "border": "deck_voyage:Tundra",
+   "fascia": "deck_voyage:Tundra",
+   "risers": "deck_voyage:Tundra",
+   "railingColor": "Black"
+  },
+  "railingType": "Glass Panels",
+  "catalogueAccessories": [],
+  "stairFlights": 1,
+  "stairType": "Straight",
+  "stairPosition": "Front",
+  "stairOffset": 50,
+  "stairWidth": 96,
+  "stairTurn": "Right",
+  "landingDepthIn": 48,
+  "skirting": {
+   "style": "Horizontal boards",
+   "colour": "deck_voyage:Tundra",
+   "clearanceIn": 2,
+   "accessPanels": 0
+  },
+  "pergolaSqft": 0,
+  "benchLf": 0,
+  "hasDrainage": false,
+  "hasDemo": false,
+  "privacyScreens": [],
+  "autoLighting": {
+   "posts": true,
+   "stairs": true,
+   "stairStyle": "evo_hyde"
+  },
+  "lightingSystem": {
+   "wireDistance": 90,
+   "selectedItems": [
+    {
+     "productId": "smart_hub150",
+     "qty": 1
+    },
+    {
+     "productId": "fusion",
+     "qty": 10,
+     "zone": "deck"
+    }
+   ]
+  },
+  "lightingPreviewOn": true,
+  "sceneLighting": "Evening",
+  "houseVisible": true,
+  "terrainConfig": {
+   "widthFt": 250,
+   "depthFt": 250,
+   "elevationIn": 0,
+   "slopePct": 0
+  },
+  "yardFeatures": [],
+  "houseConfig": {
+   "widthFt": 44,
+   "depthFt": 30,
+   "storeys": 2,
+   "storeyHeightIn": 126,
+   "roofShape": "Flat",
+   "floorHeightIn": 31,
+   "cladding": "Horizontal metal",
+   "claddingColor": "#3d4043",
+   "roofFinish": "Metal",
+   "roofColor": "#2a2c2e",
+   "trimColor": "#3b3d3e",
+   "openings": [
+    {
+     "id": "slider",
+     "type": "Door",
+     "facade": "Front",
+     "offsetPct": 50,
+     "bottomIn": 31,
+     "widthIn": 144,
+     "heightIn": 96,
+     "style": "Sliding"
+    },
+    {
+     "id": "pic-l",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 17,
+     "bottomIn": 43,
+     "widthIn": 84,
+     "heightIn": 72,
+     "style": "Picture"
+    },
+    {
+     "id": "pic-r",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 83,
+     "bottomIn": 43,
+     "widthIn": 84,
+     "heightIn": 72,
+     "style": "Picture"
+    },
+    {
+     "id": "up-l",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 25,
+     "bottomIn": 168,
+     "widthIn": 96,
+     "heightIn": 60,
+     "style": "Picture"
+    },
+    {
+     "id": "up-r",
+     "type": "Window",
+     "facade": "Front",
+     "offsetPct": 75,
+     "bottomIn": 168,
+     "widthIn": 96,
+     "heightIn": 60,
+     "style": "Picture"
+    }
+   ],
+   "wainscot": {
+    "cladding": "Ledgestone",
+    "color": "#cdb38a",
+    "heightIn": 30
+   },
+   "fasciaColor": "#1f2021",
+   "gutterColor": "#1f2021",
+   "doorColor": "#9b7147",
+   "windowColor": "#1f2021",
+   "garageDoorColor": "#3b3d3e"
+  }
+ }
+}

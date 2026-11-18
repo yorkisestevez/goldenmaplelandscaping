@@ -1,16 +1,9 @@
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { ArrowRight, FileText } from 'lucide-react';
 
 export default function CostGuideInlineCTA() {
   return (
-    <motion.aside
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.7 }}
-      className="my-20 bg-brand-surface border-l-2 border-brand-gold rounded-[2px] p-10 md:p-12 not-prose"
-    >
+    <aside className="my-20 bg-brand-surface border-l-2 border-brand-gold rounded-[2px] p-10 md:p-12 not-prose">
       <div className="flex flex-col md:flex-row items-start md:items-center gap-8 md:gap-12">
         <div className="shrink-0 bg-brand-gold/5 border border-brand-gold/20 w-16 h-16 flex items-center justify-center rounded-[2px]">
           <FileText size={28} className="text-brand-gold-dark" strokeWidth={1.5} />
@@ -34,6 +27,6 @@ export default function CostGuideInlineCTA() {
           <ArrowRight size={14} strokeWidth={1.5} className="transition-transform group-hover:translate-x-1" />
         </Link>
       </div>
-    </motion.aside>
+    </aside>
   );
 }

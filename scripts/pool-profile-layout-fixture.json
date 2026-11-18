@@ -1,0 +1,562 @@
+{
+  "houseVisible": true,
+  "houseWallHeightIn": 120,
+  "houseDoorOffset": 50,
+  "houseDoorWidthIn": 72,
+  "sceneLighting": "Daylight",
+  "level2Position": "Front",
+  "level2Offset": 50,
+  "stairTurn": "Right",
+  "landingDepthIn": 48,
+  "deckType": "Attached",
+  "municipality": "Barrie",
+  "siteType": "Standard",
+  "soilCondition": "Unknown",
+  "buildSeason": "Spring-Summer",
+  "intendedLoad": "Standard",
+  "foundation": "Concrete Piers",
+  "width": 16,
+  "length": 12,
+  "height": 36,
+  "cutoutWidth": 8,
+  "cutoutLength": 6,
+  "width2": 12,
+  "length2": 10,
+  "height2": 12,
+  "cutoutWidth2": 6,
+  "cutoutLength2": 5,
+  "shape": "Rectangle",
+  "levels": 1,
+  "pattern": "Straight",
+  "deckingMaterial": "tt_prime_plus",
+  "deckingColor": "Coconut Husk",
+  "framingSize": "2x10",
+  "boardWidth": 5.5,
+  "joistSpacing": 16,
+  "fasteningSystem": "Face",
+  "pictureFrameRows": 0,
+  "hasInlay": false,
+  "inlayLf": 0,
+  "railingType": "Aluminum",
+  "railingLf": 0,
+  "stairFlights": 1,
+  "stairWidth": 48,
+  "stairType": "Straight",
+  "stairPosition": "Front",
+  "stairOffset": 50,
+  "lightingSystem": {
+    "wireDistance": 20,
+    "selectedItems": []
+  },
+  "benchLf": 0,
+  "privacySqft": 0,
+  "hasDrainage": false,
+  "hasDemo": false,
+  "pergolaSqft": 0,
+  "siteModel": {
+    "version": 1,
+    "points": [
+      {
+        "id": "survey-0",
+        "xIn": -200,
+        "zIn": -200,
+        "elevationIn": 0
+      },
+      {
+        "id": "survey-1",
+        "xIn": 1000,
+        "zIn": -200,
+        "elevationIn": 0
+      },
+      {
+        "id": "survey-2",
+        "xIn": 1000,
+        "zIn": 1200,
+        "elevationIn": 0
+      },
+      {
+        "id": "survey-3",
+        "xIn": -200,
+        "zIn": 1200,
+        "elevationIn": 0
+      }
+    ],
+    "grading": [
+      {
+        "id": "terrace-grade-0",
+        "name": "Terrace 1 retained ground",
+        "boundary": [
+          {
+            "x": -120,
+            "y": 343.6668083297917
+          },
+          {
+            "x": 69.71525711857203,
+            "y": 343.6668083297917
+          },
+          {
+            "x": 99.54264046331457,
+            "y": 352.06265228770394
+          },
+          {
+            "x": 129.61208650508377,
+            "y": 359.54539294210105
+          },
+          {
+            "x": 159.89564943647406,
+            "y": 366.1080760169081
+          },
+          {
+            "x": 190.3651844550818,
+            "y": 371.7446023150526
+          },
+          {
+            "x": 220.99237392059572,
+            "y": 376.44973338690875
+          },
+          {
+            "x": 251.74875367251937,
+            "y": 380.21909639878453
+          },
+          {
+            "x": 282.605739484065,
+            "y": 383.04918819692625
+          },
+          {
+            "x": 313.5346536276346,
+            "y": 384.9373785632641
+          },
+          {
+            "x": 344.50675152719873,
+            "y": 385.88191265987217
+          },
+          {
+            "x": 375.49324847280127,
+            "y": 385.88191265987217
+          },
+          {
+            "x": 406.46534637236533,
+            "y": 384.9373785632641
+          },
+          {
+            "x": 437.394260515935,
+            "y": 383.04918819692625
+          },
+          {
+            "x": 468.25124632748066,
+            "y": 380.21909639878453
+          },
+          {
+            "x": 499.0076260794042,
+            "y": 376.44973338690875
+          },
+          {
+            "x": 529.6348155449182,
+            "y": 371.7446023150526
+          },
+          {
+            "x": 560.1043505635259,
+            "y": 366.1080760169081
+          },
+          {
+            "x": 590.3879134949162,
+            "y": 359.54539294210105
+          },
+          {
+            "x": 620.4573595366853,
+            "y": 352.06265228770394
+          },
+          {
+            "x": 650.284742881428,
+            "y": 343.6668083297917
+          },
+          {
+            "x": 900,
+            "y": 343.6668083297917
+          },
+          {
+            "x": 900,
+            "y": 1100
+          },
+          {
+            "x": -120,
+            "y": 1100
+          }
+        ],
+        "originXIn": 0,
+        "originZIn": 0,
+        "elevationIn": 33.63779527559055,
+        "slopeXPct": 0,
+        "slopeZPct": 0
+      },
+      {
+        "id": "terrace-grade-1",
+        "name": "Terrace 2 retained ground",
+        "boundary": [
+          {
+            "x": -120,
+            "y": 619.8415841584158
+          },
+          {
+            "x": 118.41584158415844,
+            "y": 619.8415841584158
+          },
+          {
+            "x": 152.5628772796163,
+            "y": 626.2353513840326
+          },
+          {
+            "x": 186.87811770962958,
+            "y": 631.654260900958
+          },
+          {
+            "x": 221.33373764295698,
+            "y": 636.0939186729416
+          },
+          {
+            "x": 255.90179801869735,
+            "y": 639.5507247105157
+          },
+          {
+            "x": 290.55426860126255,
+            "y": 642.0218759901213
+          },
+          {
+            "x": 325.2630507092806,
+            "y": 643.5053687269991
+          },
+          {
+            "x": 360,
+            "y": 644
+          },
+          {
+            "x": 394.7369492907194,
+            "y": 643.5053687269991
+          },
+          {
+            "x": 429.44573139873745,
+            "y": 642.0218759901213
+          },
+          {
+            "x": 464.0982019813026,
+            "y": 639.5507247105157
+          },
+          {
+            "x": 498.666262357043,
+            "y": 636.0939186729416
+          },
+          {
+            "x": 533.1218822903704,
+            "y": 631.654260900958
+          },
+          {
+            "x": 567.4371227203837,
+            "y": 626.2353513840326
+          },
+          {
+            "x": 601.5841584158416,
+            "y": 619.8415841584158
+          },
+          {
+            "x": 900,
+            "y": 619.8415841584158
+          },
+          {
+            "x": 900,
+            "y": 1100
+          },
+          {
+            "x": -120,
+            "y": 1100
+          }
+        ],
+        "originXIn": 0,
+        "originZIn": 0,
+        "elevationIn": 61.2755905511811,
+        "slopeXPct": 0,
+        "slopeZPct": 0
+      }
+    ],
+    "boundary": [
+      {
+        "x": -200,
+        "y": -200
+      },
+      {
+        "x": 1000,
+        "y": -200
+      },
+      {
+        "x": 1000,
+        "y": 1200
+      },
+      {
+        "x": -200,
+        "y": 1200
+      }
+    ]
+  },
+  "yardFeatures": [
+    {
+      "id": "lower-patio",
+      "kind": "patio",
+      "name": "Lower dining patio",
+      "enabled": true,
+      "color": "#aaa69b",
+      "productId": "permacon-melville",
+      "xFt": 30,
+      "zFt": 20,
+      "widthFt": 38,
+      "depthFt": 12,
+      "heightIn": 0,
+      "rotationDeg": 0,
+      "finishedElevationIn": 3,
+      "patioSlope": {
+        "xPct": 0.5,
+        "zPct": -2
+      }
+    },
+    {
+      "id": "upper-patio",
+      "kind": "patio",
+      "name": "Upper terrace patio",
+      "enabled": true,
+      "color": "#aaa69b",
+      "productId": "permacon-melville",
+      "xFt": 30,
+      "zFt": 43,
+      "widthFt": 30,
+      "depthFt": 12,
+      "heightIn": 0,
+      "rotationDeg": 0,
+      "finishedElevationIn": 36.63779527559055,
+      "patioSlope": {
+        "xPct": 0,
+        "zPct": -2
+      }
+    },
+    {
+      "id": "lower-terrace-wall",
+      "kind": "retaining-wall",
+      "name": "Lower curved terrace",
+      "enabled": true,
+      "color": "#c1b0a1",
+      "productId": "techo-raffinato-wall",
+      "xFt": 30,
+      "zFt": 28,
+      "widthFt": 48.677686908031944,
+      "depthFt": 0.8169291338582677,
+      "heightIn": 36,
+      "rotationDeg": 0,
+      "wallConstruction": {
+        "foundationMode": "stepped",
+        "setbackPerCourseIn": 0.2726426213986725,
+        "geogridEveryCourses": 2,
+        "drainOutletCount": 2,
+        "drainOutletLengthFt": 24
+      },
+      "hardscape": {
+        "finishId": "smooth",
+        "colorId": "caff-crema",
+        "unitId": "double-sided-397-249-90",
+        "patternId": "running-bond",
+        "angleDeg": 0,
+        "jointMm": 0,
+        "capUnitId": "cap:techo-raffinato-cap:smooth:chestnut-brown:raffinato-711-356-60"
+      },
+      "wallPath": [
+        {
+          "x": -288,
+          "y": 0
+        },
+        {
+          "x": 288,
+          "y": 0
+        }
+      ],
+      "curves": [
+        {
+          "edge": 0,
+          "bulgeIn": 42
+        }
+      ],
+      "finishedElevationIn": 36,
+      "wallTopSteps": [
+        {
+          "stationIn": 292.06612144819167,
+          "elevationIn": 39.54330708661417
+        }
+      ]
+    },
+    {
+      "id": "upper-terrace-wall",
+      "kind": "retaining-wall",
+      "name": "Upper curved terrace",
+      "enabled": true,
+      "color": "#c1b0a1",
+      "productId": "techo-raffinato-wall",
+      "xFt": 30,
+      "zFt": 51,
+      "widthFt": 40.266135606429465,
+      "depthFt": 0.8169291338582677,
+      "heightIn": 30,
+      "rotationDeg": 0,
+      "wallConstruction": {
+        "foundationMode": "stepped",
+        "setbackPerCourseIn": 0.2726426213986725,
+        "geogridEveryCourses": 2,
+        "drainOutletCount": 2,
+        "drainOutletLengthFt": 24
+      },
+      "hardscape": {
+        "finishId": "smooth",
+        "colorId": "caff-crema",
+        "unitId": "double-sided-397-249-90",
+        "patternId": "running-bond",
+        "angleDeg": 0,
+        "jointMm": 0,
+        "capUnitId": "cap:techo-raffinato-cap:smooth:chestnut-brown:raffinato-711-356-60"
+      },
+      "wallPath": [
+        {
+          "x": -240,
+          "y": 0
+        },
+        {
+          "x": 240,
+          "y": 0
+        }
+      ],
+      "curves": [
+        {
+          "edge": 0,
+          "bulgeIn": 24
+        }
+      ],
+      "finishedElevationIn": 63.63779527559055,
+      "wallTopSteps": [
+        {
+          "stationIn": 241.5968136385768,
+          "elevationIn": 67.18110236220473
+        }
+      ]
+    },
+    {
+      "id": "pool-patio",
+      "kind": "patio",
+      "name": "Pool courtyard paving",
+      "enabled": true,
+      "color": "#a9a99f",
+      "productId": "permacon-melville",
+      "xFt": 30,
+      "zFt": 75,
+      "widthFt": 44,
+      "depthFt": 32,
+      "heightIn": 0,
+      "rotationDeg": 0,
+      "finishedElevationIn": 64.2755905511811
+    }
+  ],
+  "pools": [
+    {
+      "id": "terrace-pool",
+      "name": "Upper courtyard pool",
+      "enabled": true,
+      "type": "concrete",
+      "xIn": 360,
+      "zIn": 900,
+      "rotationDeg": 90,
+      "outline": [
+        {
+          "x": -72,
+          "y": -192
+        },
+        {
+          "x": 72,
+          "y": -192
+        },
+        {
+          "x": 96,
+          "y": -168
+        },
+        {
+          "x": 96,
+          "y": 168
+        },
+        {
+          "x": 72,
+          "y": 192
+        },
+        {
+          "x": -72,
+          "y": 192
+        },
+        {
+          "x": -96,
+          "y": 168
+        },
+        {
+          "x": -96,
+          "y": -168
+        }
+      ],
+      "curves": [
+        {
+          "edge": 1,
+          "bulgeIn": -7.029437251522858
+        },
+        {
+          "edge": 3,
+          "bulgeIn": -7.029437251522858
+        },
+        {
+          "edge": 5,
+          "bulgeIn": -7.029437251522858
+        },
+        {
+          "edge": 7,
+          "bulgeIn": -7.029437251522858
+        }
+      ],
+      "copingTopElevationIn": 64.2755905511811,
+      "waterOffsetIn": 6,
+      "depthProfile": [
+        {
+          "stationIn": 0,
+          "depthIn": 48
+        },
+        {
+          "stationIn": 144,
+          "depthIn": 48
+        },
+        {
+          "stationIn": 384,
+          "depthIn": 72
+        }
+      ],
+      "assembly": {
+        "status": "planning",
+        "wallThicknessIn": 8,
+        "floorThicknessIn": 6,
+        "baseDepthIn": 6,
+        "workingClearanceIn": 24,
+        "backfillMaterial": "supplier-specified",
+        "collarWidthIn": 12,
+        "collarDepthIn": 6,
+        "sourceNote": "Editable generic planning envelopes only; confirm every installation dimension, base/backfill material and collar with the selected supplier and site engineering."
+      },
+      "coping": {
+        "status": "planning",
+        "widthIn": 12,
+        "thicknessIn": 2,
+        "overhangIn": 1,
+        "jointIn": 0.125,
+        "transitionJointIn": 0.375,
+        "stockLengthIn": 24,
+        "verifiedForPool": false,
+        "color": "#b6ad99"
+      },
+      "scopeMode": "complete"
+    }
+  ]
+}

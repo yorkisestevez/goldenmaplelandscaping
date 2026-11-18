@@ -88,6 +88,14 @@ export function levelAddresses(level:DeckLevel,opts:{pattern:BoardPattern;boardW
   });
   return level.boards.map((b,i)=>{
     const role=roles[i],f=frames[i],place={at:f.u,from:f.umin,to:f.umax};
+    const layout=b as BoardRun&{layoutId?:string;layoutKind?:'region'|'breaker'|'piece'};
+    if(layout.layoutId&&layout.layoutKind){
+      // Keep the complete identity: a saved colour can never alias another region or inserted piece.
+      const id=[...layout.layoutId].map(c=>c.charCodeAt(0).toString(16).padStart(4,'0')).join('');
+      const a=String(Math.round((((b.angleDeg%180)+180)%180)*1e4)/1e4),line=String(Math.round(f.vmin*1e4)/1e4);
+      const addressRole:BoardRole=role==='border'?'border':role==='breaker'?'breaker':'field';
+      return {lv,role:addressRole,course:layout.layoutKind==='piece'?`lp:${id}`:`l${layout.layoutKind==='region'?'r':'b'}:${id}:${a}:${line}`,rowPaint:layout.layoutKind!=='piece',...place};
+    }
     if(role==='breaker'){
       const x=b.cx,k=breakers.length?breakers.reduce((best,bx,j)=>Math.abs(bx-x)<Math.abs(breakers[best]-x)?j:best,0):-1;
       return {lv,role,course:k>=0?`k${k}`:`k:${quarter(x)}`,rowPaint:true,...place};

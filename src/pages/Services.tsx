@@ -1,6 +1,5 @@
-import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { BUSINESS, publicClaimCopy } from '../data/business';
+import { BUSINESS, LANDSCAPE_MAINTENANCE, publicClaimCopy } from '../data/business';
 import { Grid, Hexagon, AlignJustify, ListTree, Layout, ChefHat, Flame, Sun, Leaf, Lightbulb, Map, ArrowRight, Layers } from 'lucide-react';
 import SEO from '../components/SEO';
 import PublicationTrustBar from '../components/PublicationTrustBar';
@@ -15,17 +14,10 @@ const SERVICE_CARDS: Array<{ id: string; title: string; desc: string; icon: type
   {
     id: 'interlocking',
     title: 'Interlocking Stone & Patios',
-    desc: 'The patio where your family gathers, where summer memories happen. We build it on a foundation twice as deep as the industry standard.',
+    desc: 'The patio where your family gathers, where summer memories happen. Built on a base planned for your soil, drainage and Barrie winters.',
     icon: Grid,
     category: 'Patios & interlocking',
     link: '/services/interlocking-barrie'
-  },
-  {
-    id: 'porcelain',
-    title: 'Porcelain Patio Planning',
-    desc: 'Compare porcelain patio options, project fit, and written scope for your Barrie-area property. Ask about current product availability and project-specific pricing.',
-    icon: Grid,
-    link: '/services/porcelain-patios-barrie'
   },
   {
     id: 'walls',
@@ -52,11 +44,48 @@ const SERVICE_CARDS: Array<{ id: string; title: string; desc: string; icon: type
     link: '/services/composite-decking-barrie'
   },
   {
+    id: 'driveways',
+    title: 'Interlock Driveways',
+    desc: 'A driveway built for vehicle loads, clay soil and plow season, with locked-in edges that stay put.',
+    icon: Grid,
+    category: 'Driveways',
+    link: '/services/interlocking-driveways-barrie'
+  },
+  {
+    id: 'porcelain',
+    title: 'Porcelain Patios',
+    desc: 'The clean look of large-format tile, laid on a base designed to stay flat through freeze-thaw.',
+    icon: Layout,
+    link: '/services/porcelain-patios-barrie'
+  },
+  {
+    id: 'entrances',
+    title: 'Front Entrances',
+    desc: 'Steps, landings and walkways rebuilt as one piece, with water moved away from the foundation.',
+    icon: ListTree,
+    category: 'Walkways & entrances',
+    link: '/services/front-entrance-landscaping-barrie'
+  },
+  {
     id: 'kitchens',
     title: 'Outdoor Kitchens',
     desc: 'Stop running in and out of the house. Cook, serve, and entertain in one seamless outdoor space.',
     icon: ChefHat,
-    link: '/contact'
+    link: '/services/outdoor-kitchens-barrie'
+  },
+  {
+    id: 'maintenance',
+    title: 'Landscape Maintenance',
+    desc: LANDSCAPE_MAINTENANCE.summary,
+    icon: Leaf,
+    link: LANDSCAPE_MAINTENANCE.path,
+  },
+  {
+    id: 'cleanups',
+    title: 'Seasonal Clean-Ups',
+    desc: 'Spring and fall clean-ups: debris hauled away, beds and shrubs tidied, patios swept and joints re-sanded, with a builder\'s eye on the hardscape.',
+    icon: Leaf,
+    link: '/services/seasonal-cleanup-barrie'
   },
   {
     id: 'firepits',
@@ -79,7 +108,7 @@ export default function Services() {
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
         title="Landscaping Services in Barrie"
-        description="Interlocking stone, composite decking, retaining walls & landscape design. Premium outdoor construction for Barrie & Simcoe County homeowners. View our services."
+        description="Patios, decks, retaining walls and landscape design in Barrie. Explore 2027 landscape maintenance for homes and commercial properties."
         canonical="https://goldenmaplelandscaping.ca/services"
       />
       <PublicationTrustBar />
@@ -95,7 +124,7 @@ export default function Services() {
               <span className="italic text-brand-gold-dark">in Barrie ON.</span>
             </h1>
             <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
-              From interlocking stone driveways to complex multi-level retaining walls, we provide the engineering and craftsmanship your property deserves.
+              We build patios, decks, driveways and retaining walls. Starting in 2027, we also look after lawns and outdoor spaces at homes and commercial properties.
             </p>
           </Reveal>
 
@@ -104,14 +133,7 @@ export default function Services() {
               const cover = service.category ? coverForCategory(service.category) : undefined;
               const hasProjects = service.category ? projectsInCategory(service.category).length > 0 : false;
               return (
-              <motion.div
-                key={service.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: idx * 0.1 }}
-                className="bg-brand-surface rounded-[2px] border border-brand-dim/10 hover:border-brand-gold/30 transition-all duration-500 flex flex-col group shadow-2xl overflow-hidden"
-              >
+              <div key={service.id} className="bg-brand-surface rounded-[2px] border border-brand-dim/10 hover:border-brand-gold/30 transition-all duration-500 flex flex-col group shadow-2xl overflow-hidden">
                 {cover && (
                   <Link to={service.link} className="block overflow-hidden border-b border-brand-dim/10" aria-label={`${service.title}: see a completed project`}>
                     <ResponsiveImage image={cover} sizes={CARD_SIZES} aspect="3/2" className="transition-transform duration-700 motion-safe:group-hover:scale-[1.03]" />
@@ -143,7 +165,7 @@ export default function Services() {
                   )}
                 </div>
                 </div>
-              </motion.div>
+              </div>
               );
             })}
           </div>
@@ -172,12 +194,12 @@ export default function Services() {
               <p className="font-sans text-sm text-brand-porcelain/80 leading-relaxed font-light">Drainage, soil, access, intended use, and local requirements inform project-specific site preparation and framing scope.</p>
             </div>
             <div className="space-y-6">
-              <h3 className="font-display text-3xl font-light text-brand-gold">Project documentation</h3>
-              <p className="font-sans text-sm text-brand-porcelain/80 leading-relaxed font-light">{publicClaimCopy(BUSINESS.credentials.wsib, 'Current coverage documentation is available.')} {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage documentation is available.')}</p>
+              <h3 className="font-display text-3xl font-light text-brand-gold">Written scope</h3>
+              <p className="font-sans text-sm text-brand-porcelain/80 leading-relaxed font-light">The written scope lists the area, the materials, the drainage plan, and what the price includes. {[publicClaimCopy(BUSINESS.credentials.wsib, ''), publicClaimCopy(BUSINESS.credentials.liabilityInsurance, '')].filter(Boolean).join(' ')}</p>
             </div>
             <div className="space-y-6">
-              <h3 className="font-display text-3xl font-light text-brand-gold">Written project terms</h3>
-              <p className="font-sans text-base text-brand-porcelain/80 leading-relaxed font-light">Ask us for the current written workmanship terms and project-specific scope.</p>
+              <h3 className="font-display text-3xl font-light text-brand-gold">Changes in writing</h3>
+              <p className="font-sans text-base text-brand-porcelain/80 leading-relaxed font-light">If the work changes, the change is written down and approved before the price moves.</p>
             </div>
           </div>
           <Link to="/contact" className="btn-primary px-16 py-5">Let's Talk About Your Project</Link>

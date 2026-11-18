@@ -1,14 +1,14 @@
-import type {DeckData,DoorStyle,GarageDoorStyle,HouseConfig,HouseOpening,WindowStyle} from './types';
+import type {DeckData,DoorStyle,HouseConfig,HouseOpening} from './types';
 import {clampHouseOpening,getHouseConfig} from './houseSettings';
 import {getHouseBlocks,getHouseWalls,openingHidden,openingWallId,SIDE_FACADE,type HouseWallPlan} from './houseFootprint';
+import {GARAGE_DOOR_STYLES,WINDOW_STYLES} from './houseOpeningStyles';
 
 /**
  * Adding, restyling and removing house doors and windows. All of it is appearance: openings never
  * change the deck, its quantities or its price.
  */
 export const MAX_HOUSE_OPENINGS=24;
-export const WINDOW_STYLES:readonly WindowStyle[]=['Double-hung','Casement','Picture','Slider','Awning'];
-export const GARAGE_DOOR_STYLES:readonly GarageDoorStyle[]=['Panel','Carriage','Flush','Glass'];
+export {GARAGE_DOOR_STYLES,WINDOW_STYLES};
 
 /** A ready-made opening: its look and a sensible size. `sillIn` is the bottom above that wall's floor. */
 export interface OpeningPreset{key:string;type:HouseOpening['type'];style?:HouseOpening['style'];label:string;widthIn:number;heightIn:number;sillIn:number}

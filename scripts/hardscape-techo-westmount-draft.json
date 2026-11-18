@@ -1,0 +1,495 @@
+{
+ "schemaVersion": 1,
+ "verifiedOn": "2026-09-27",
+ "status": "draft - not in the reviewed manifest until independently verified",
+ "recipes": [
+  {
+   "productId": "techo-westmount-paver",
+   "finishId": "hd",
+   "patternId": "herringbone-pattern-04-100-westmount",
+   "patternName": "Herringbone pattern 04 - 100% Westmount",
+   "draftVariant": "direct",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=21",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 21,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 240,
+    "depthMm": 360,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure (page 21): double herringbone (two-stone groups), rebuilt from full published 60 x 240 x 80 mm Westmount stock. The atlas draws the stone at about 4.2:1 rather than the published 4:1, so the figure is a nominal diagram; no stone is resized. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified.",
+    "repeatBasisMm": [
+     [
+      240,
+      -240
+     ],
+     [
+      120,
+      120
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 0,
+      "yMm": 0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 0,
+      "yMm": 60,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 0,
+      "yMm": 120,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 60,
+      "yMm": 120,
+      "rotationDeg": 90
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_WESTMOUNT 04",
+    "variant": "direct",
+    "method": "stones per repeat, their arrangement and chirality read from the drawn faces and shaded module; lattice from full published stock",
+    "correctsEarlierImport": "three-stone groups",
+    "drawnStoneProportion": "about 4.2:1 (published 4:1)"
+   },
+   "checks": {
+    "physicalStocks": 4,
+    "repeatAreaMm2": 57600,
+    "stockAreaMm2": 57600
+   }
+  },
+  {
+   "productId": "techo-westmount-paver",
+   "finishId": "hd",
+   "patternId": "herringbone-pattern-04-100-westmount",
+   "patternName": "Herringbone pattern 04 - 100% Westmount",
+   "draftVariant": "mirror",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=21",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 21,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 240,
+    "depthMm": 360,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure (page 21): double herringbone (two-stone groups), rebuilt from full published 60 x 240 x 80 mm Westmount stock. The atlas draws the stone at about 4.2:1 rather than the published 4:1, so the figure is a nominal diagram; no stone is resized. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified.",
+    "repeatBasisMm": [
+     [
+      -240,
+      -240
+     ],
+     [
+      -120,
+      120
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 0,
+      "yMm": 0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 0,
+      "yMm": 60,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 180,
+      "yMm": 120,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 120,
+      "yMm": 120,
+      "rotationDeg": 90
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_WESTMOUNT 04",
+    "variant": "mirror",
+    "method": "stones per repeat, their arrangement and chirality read from the drawn faces and shaded module; lattice from full published stock",
+    "correctsEarlierImport": "three-stone groups",
+    "drawnStoneProportion": "about 4.2:1 (published 4:1)"
+   },
+   "checks": {
+    "physicalStocks": 4,
+    "repeatAreaMm2": 57600,
+    "stockAreaMm2": 57600
+   }
+  },
+  {
+   "productId": "techo-westmount-paver",
+   "finishId": "hd",
+   "patternId": "herringbone-pattern-05-100-westmount",
+   "patternName": "Herringbone pattern 05 - 100% Westmount",
+   "draftVariant": "direct",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=21",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 21,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 240,
+    "depthMm": 300,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure (page 21): single herringbone, rebuilt from full published 60 x 240 x 80 mm Westmount stock. The atlas draws the stone at about 4.2:1 rather than the published 4:1, so the figure is a nominal diagram; no stone is resized. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified.",
+    "repeatBasisMm": [
+     [
+      240,
+      -240
+     ],
+     [
+      60,
+      60
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 0,
+      "yMm": 0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 0,
+      "yMm": 60,
+      "rotationDeg": 90
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_WESTMOUNT 05",
+    "variant": "direct",
+    "method": "stones per repeat, their arrangement and chirality read from the drawn faces and shaded module; lattice from full published stock",
+    "correctsEarlierImport": "two-stone groups",
+    "drawnStoneProportion": "about 4.2:1 (published 4:1)"
+   },
+   "checks": {
+    "physicalStocks": 2,
+    "repeatAreaMm2": 28800,
+    "stockAreaMm2": 28800
+   }
+  },
+  {
+   "productId": "techo-westmount-paver",
+   "finishId": "hd",
+   "patternId": "herringbone-pattern-05-100-westmount",
+   "patternName": "Herringbone pattern 05 - 100% Westmount",
+   "draftVariant": "mirror",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=21",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 21,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 240,
+    "depthMm": 300,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure (page 21): single herringbone, rebuilt from full published 60 x 240 x 80 mm Westmount stock. The atlas draws the stone at about 4.2:1 rather than the published 4:1, so the figure is a nominal diagram; no stone is resized. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified.",
+    "repeatBasisMm": [
+     [
+      -240,
+      -240
+     ],
+     [
+      -60,
+      60
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 0,
+      "yMm": 0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 180,
+      "yMm": 60,
+      "rotationDeg": 90
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_WESTMOUNT 05",
+    "variant": "mirror",
+    "method": "stones per repeat, their arrangement and chirality read from the drawn faces and shaded module; lattice from full published stock",
+    "correctsEarlierImport": "two-stone groups",
+    "drawnStoneProportion": "about 4.2:1 (published 4:1)"
+   },
+   "checks": {
+    "physicalStocks": 2,
+    "repeatAreaMm2": 28800,
+    "stockAreaMm2": 28800
+   }
+  },
+  {
+   "productId": "techo-westmount-paver",
+   "finishId": "hd",
+   "patternId": "herringbone-pattern-06-100-westmount",
+   "patternName": "Herringbone pattern 06 - 100% Westmount",
+   "draftVariant": "lattice-a",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=21",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 21,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 480,
+    "depthMm": 300,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure (page 21): herringbone with one upright stone between two lying stones, rebuilt from full published 60 x 240 x 80 mm Westmount stock. The atlas draws the stone at about 4.2:1 rather than the published 4:1, so the figure is a nominal diagram; no stone is resized. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified.",
+    "repeatBasisMm": [
+     [
+      60,
+      -60
+     ],
+     [
+      480,
+      240
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 0,
+      "yMm": 0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 240,
+      "yMm": 0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 240,
+      "yMm": 240,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_WESTMOUNT 06",
+    "variant": "lattice-a",
+    "method": "stones per repeat, their arrangement and chirality read from the drawn faces and shaded module; lattice from full published stock",
+    "correctsEarlierImport": "a single herringbone",
+    "drawnStoneProportion": "about 4.2:1 (published 4:1)"
+   },
+   "checks": {
+    "physicalStocks": 3,
+    "repeatAreaMm2": 43200,
+    "stockAreaMm2": 43200
+   }
+  },
+  {
+   "productId": "techo-westmount-paver",
+   "finishId": "hd",
+   "patternId": "herringbone-pattern-06-100-westmount",
+   "patternName": "Herringbone pattern 06 - 100% Westmount",
+   "draftVariant": "lattice-a-mirror",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=21",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 21,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 480,
+    "depthMm": 300,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure (page 21): herringbone with one upright stone between two lying stones, rebuilt from full published 60 x 240 x 80 mm Westmount stock. The atlas draws the stone at about 4.2:1 rather than the published 4:1, so the figure is a nominal diagram; no stone is resized. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified.",
+    "repeatBasisMm": [
+     [
+      -60,
+      -60
+     ],
+     [
+      -480,
+      240
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 240,
+      "yMm": 0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 180,
+      "yMm": 0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 0,
+      "yMm": 240,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_WESTMOUNT 06",
+    "variant": "lattice-a-mirror",
+    "method": "stones per repeat, their arrangement and chirality read from the drawn faces and shaded module; lattice from full published stock",
+    "correctsEarlierImport": "a single herringbone",
+    "drawnStoneProportion": "about 4.2:1 (published 4:1)"
+   },
+   "checks": {
+    "physicalStocks": 3,
+    "repeatAreaMm2": 43200,
+    "stockAreaMm2": 43200
+   }
+  },
+  {
+   "productId": "techo-westmount-paver",
+   "finishId": "hd",
+   "patternId": "herringbone-pattern-06-100-westmount",
+   "patternName": "Herringbone pattern 06 - 100% Westmount",
+   "draftVariant": "lattice-b",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=21",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 21,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 480,
+    "depthMm": 300,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure (page 21): herringbone with one upright stone between two lying stones, rebuilt from full published 60 x 240 x 80 mm Westmount stock. The atlas draws the stone at about 4.2:1 rather than the published 4:1, so the figure is a nominal diagram; no stone is resized. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified.",
+    "repeatBasisMm": [
+     [
+      60,
+      -60
+     ],
+     [
+      240,
+      480
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 0,
+      "yMm": 0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 240,
+      "yMm": 0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 240,
+      "yMm": 240,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_WESTMOUNT 06",
+    "variant": "lattice-b",
+    "method": "stones per repeat, their arrangement and chirality read from the drawn faces and shaded module; lattice from full published stock",
+    "correctsEarlierImport": "a single herringbone",
+    "drawnStoneProportion": "about 4.2:1 (published 4:1)"
+   },
+   "checks": {
+    "physicalStocks": 3,
+    "repeatAreaMm2": 43200,
+    "stockAreaMm2": 43200
+   }
+  },
+  {
+   "productId": "techo-westmount-paver",
+   "finishId": "hd",
+   "patternId": "herringbone-pattern-06-100-westmount",
+   "patternName": "Herringbone pattern 06 - 100% Westmount",
+   "draftVariant": "lattice-b-mirror",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=21",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 21,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 480,
+    "depthMm": 300,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure (page 21): herringbone with one upright stone between two lying stones, rebuilt from full published 60 x 240 x 80 mm Westmount stock. The atlas draws the stone at about 4.2:1 rather than the published 4:1, so the figure is a nominal diagram; no stone is resized. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified.",
+    "repeatBasisMm": [
+     [
+      -60,
+      -60
+     ],
+     [
+      -240,
+      480
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 240,
+      "yMm": 0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 180,
+      "yMm": 0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 0,
+      "yMm": 240,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_WESTMOUNT 06",
+    "variant": "lattice-b-mirror",
+    "method": "stones per repeat, their arrangement and chirality read from the drawn faces and shaded module; lattice from full published stock",
+    "correctsEarlierImport": "a single herringbone",
+    "drawnStoneProportion": "about 4.2:1 (published 4:1)"
+   },
+   "checks": {
+    "physicalStocks": 3,
+    "repeatAreaMm2": 43200,
+    "stockAreaMm2": 43200
+   }
+  }
+ ]
+}

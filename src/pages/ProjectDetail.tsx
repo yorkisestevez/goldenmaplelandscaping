@@ -1,10 +1,12 @@
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Instagram, MapPin } from 'lucide-react';
 import SEO from '../components/SEO';
+import { breadcrumb, businessRef, graph } from '../utils/schema';
 import Reveal from '../components/Reveal';
 import ResponsiveImage from '../components/ResponsiveImage';
 import PhotoGrid from '../components/PhotoGrid';
 import ProjectCard from '../components/ProjectCard';
+import CaseStudySpecs from '../components/CaseStudySpecs';
 import { BUSINESS, canPublish } from '../data/business';
 import { FULL_SIZES, PROJECTS, getProject, projectCoverFull, projectPhotos, projectsInCategory } from '../data/projects';
 
@@ -29,13 +31,13 @@ export default function ProjectDetail() {
   if (!portfolioVerified) {
     return (
       <div className="bg-brand-nearblack min-h-screen">
-        <SEO title="Project photos | Golden Maple" description="Ask us for examples that match your property and the work you are planning." canonical={canonical} />
+        <SEO title="Project photos | Golden Maple" description="Completed Golden Maple projects. Describe your property on the project form if you do not see a match." canonical={canonical} />
         <section className="section-padding pt-40 md:pt-48">
           <div className="container-custom max-w-4xl">
             <Link to="/portfolio" className="inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-ink transition-colors mb-12"><ArrowLeft size={14} strokeWidth={2} aria-hidden="true" /> All projects</Link>
             <h1 className="font-display text-4xl md:text-7xl font-light text-brand-ink leading-[1.1] mb-10">Project photos are being prepared.</h1>
             <div className="bg-brand-surface border-l-2 border-brand-gold p-10 rounded-[2px]">
-              <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">Ask us for examples that match your property and the work you are planning.</p>
+              <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">These are completed projects. Describe your property on the project form if you do not see a match.</p>
               <Link to="/contact" className="btn-primary inline-block mt-10">Start a project conversation</Link>
             </div>
           </div>
@@ -52,16 +54,21 @@ export default function ProjectDetail() {
   const related = projectsInCategory(project.category).filter((p) => p.slug !== project.slug).slice(0, 3);
   const absolute = (src: string) => `${BUSINESS.canonicalUrl}${src}`;
 
-  const gallerySchema = {
-    '@context': 'https://schema.org',
+  const gallerySchema = graph({
     '@type': 'ImageGallery',
     name: `${project.title} — ${project.town}, ON`,
     description: project.summary,
     url: `${canonical}/`,
     primaryImageOfPage: { '@type': 'ImageObject', contentUrl: absolute(cover.src), width: cover.width, height: cover.height, name: cover.alt },
     associatedMedia: photos.map((img) => ({ '@type': 'ImageObject', contentUrl: absolute(img.src), width: img.width, height: img.height, name: img.alt })),
-    provider: { '@id': `${BUSINESS.canonicalUrl}/#business` },
-  };
+    provider: businessRef,
+    // The town is owner-attested (projects.ts); a local signal for the work itself.
+    locationCreated: { '@type': 'Place', name: `${project.town}, ON` },
+  }, breadcrumb([
+    { name: 'Home', path: '/' },
+    { name: 'Portfolio', path: '/portfolio/' },
+    { name: project.title, path: `/portfolio/${project.slug}/` },
+  ]));
 
   return (
     <div className="bg-brand-nearblack min-h-screen">
@@ -94,6 +101,8 @@ export default function ProjectDetail() {
           <div className="mb-6 overflow-hidden rounded-[2px] border border-brand-dim/40 bg-brand-surface">
             <ResponsiveImage image={cover} sizes={FULL_SIZES} aspect="3/2" priority />
           </div>
+
+          <CaseStudySpecs caseStudy={project.caseStudy} />
 
           {photos.length > 1 && (
             <div className="mt-14 mb-6">

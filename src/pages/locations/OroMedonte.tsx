@@ -1,9 +1,8 @@
-import { Helmet } from 'react-helmet-async';
-import { motion } from 'motion/react';
 import { MapPin, CheckCircle, ArrowRight, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { publicContact } from '../../data/business';
+import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import { trackEngagement, trackCall } from '../../utils/analytics';
 
 const COMMUNITIES = [
@@ -42,7 +41,7 @@ const PRICING = [
   { project: "Estate patio (400-800 sq ft)", range: "$25,000 – $55,000" },
   { project: "Full outdoor living space", range: "$60,000 – $160,000+" },
   { project: "Composite deck with view (300-500 sq ft)", range: "$20,000 – $45,000" },
-  { project: "Retaining wall system (50-100+ linear ft)", range: "$15,000 – $40,000" },
+  { project: "Retaining wall (50-100 linear ft, 2-4 ft high, before HST)", range: "$20,500 – $51,500" },
   { project: "Extended driveway (600-1200 sq ft)", range: "$35,000 – $65,000" },
 ];
 
@@ -63,50 +62,31 @@ const FAQS = [
     q: "How do you handle large properties with limited access?",
     a: "We bring equipment suited to the site. For properties with narrow access or long hauls from the road, we plan logistics during the design phase and price accordingly — no surprises at build time.",
   },
-  {
-    q: "What warranty do you offer?",
-    a: "Ask us for the current written workmanship terms for your specific project. Manufacturer coverage depends on the selected product and must be confirmed with its current documentation.",
-  },
 ];
 
-const localBusinessSchema = {
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": "Golden Maple Landscaping",
-  "description": "Premium landscaping and hardscape contractor serving Oro-Medonte, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design for estate properties.",
-  "url": "https://goldenmaplelandscaping.ca/locations/oro-medonte",
-  "telephone": publicContact.phoneTel,
-  "email": publicContact.email,
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Barrie",
-    "addressRegion": "ON",
-    "addressCountry": "CA",
-  },
-  "geo": {
-    "@type": "GeoCoordinates",
-    "latitude": 44.3894,
-    "longitude": -79.6903,
-  },
-  "areaServed": {
-    "@type": "AdministrativeArea",
-    "name": "Oro-Medonte",
-    "url": "https://en.wikipedia.org/wiki/Oro-Medonte",
-  },
-};
+const PAGE_PATH = '/locations/oro-medonte/';
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": FAQS.map((faq) => ({
-    "@type": "Question",
-    "name": faq.q,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": faq.a,
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({
+    path: PAGE_PATH,
+    name: 'Landscaping & hardscape construction in Oro-Medonte',
+    serviceType: 'Landscaping and hardscape construction',
+    description: "Premium landscaping and hardscape contractor serving Oro-Medonte, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design for estate properties.",
+    areaServed: {
+      "@type": "AdministrativeArea",
+      "name": "Oro-Medonte",
+      "sameAs": "https://en.wikipedia.org/wiki/Oro-Medonte",
     },
-  })),
-};
+  }),
+  breadcrumb([
+    { name: 'Home', path: '/' },
+    { name: 'Service Areas', path: '/service-areas/' },
+    { name: 'Oro-Medonte', path: PAGE_PATH },
+  ]),
+  faqPage(PAGE_PATH, FAQS),
+);
+
 
 export default function OroMedonteLanding() {
   return (
@@ -115,20 +95,13 @@ export default function OroMedonteLanding() {
         title="Landscaping Contractor Oro-Medonte"
         description="Luxury outdoor living spaces for Oro-Medonte properties. Interlocking patios, composite decks & retaining walls. Built by Barrie's top-rated landscape team. Free quotes."
         canonical="https://goldenmaplelandscaping.ca/locations/oro-medonte"
-        schema={localBusinessSchema}
+        schema={pageSchema}
       />
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
-      </Helmet>
 
       <div className="container-custom">
         <div className="max-w-5xl mx-auto">
           {/* Hero */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
+          <div>
             <span className="flex items-center gap-2 font-sans text-xs tracking-widest uppercase text-brand-gold-dark mb-6">
               <MapPin size={16} /> Serving Oro-Medonte & Shanty Bay
             </span>
@@ -158,16 +131,10 @@ export default function OroMedonteLanding() {
                 <Phone size={18} /> Call {publicContact.phoneDisplay}
               </a>
             </div>
-          </motion.div>
+          </div>
 
           {/* Why Choose Us */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="mb-24"
-          >
+          <div className="mb-24">
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-10">
               Why Oro-Medonte Homeowners Choose <span className="text-brand-gold-dark italic">Golden Maple</span>
             </h2>
@@ -195,7 +162,7 @@ export default function OroMedonteLanding() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Services */}
           <div className="mb-24">
@@ -204,14 +171,7 @@ export default function OroMedonteLanding() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {SERVICES.map((service, idx) => (
-                <motion.div
-                  key={service.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: idx * 0.1 }}
-                  className="bg-brand-surface p-8 border border-brand-dim/20 rounded-sm group hover:border-brand-gold/30 transition-all"
-                >
+                <div key={service.title} className="bg-brand-surface p-8 border border-brand-dim/20 rounded-sm group hover:border-brand-gold/30 transition-all">
                   <h3 className="font-display text-2xl mb-4 text-brand-bonewhite">{service.title}</h3>
                   <p className="font-sans text-sm text-brand-muted font-light leading-relaxed mb-6">{service.desc}</p>
                   <Link
@@ -221,19 +181,13 @@ export default function OroMedonteLanding() {
                     <span>View Service</span>
                     <ArrowRight size={14} />
                   </Link>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
 
           {/* Communities */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="mb-24"
-          >
+          <div className="mb-24">
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-10">
               Oro-Medonte Communities <span className="text-brand-gold-dark italic">We Serve</span>
             </h2>
@@ -245,16 +199,10 @@ export default function OroMedonteLanding() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Pricing */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="mb-24"
-          >
+          <div className="mb-24">
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-10">
               What Does Landscaping Cost <span className="text-brand-gold-dark italic">in Oro-Medonte?</span>
             </h2>
@@ -282,16 +230,10 @@ export default function OroMedonteLanding() {
             <p className="font-sans text-sm text-brand-muted font-light mt-6">
               Larger lots, elevation work, and remote access can increase costs. We provide detailed written quotes after a site visit. Use our <Link to="/cost-estimator?city=oro-medonte" className="text-brand-gold-dark hover:underline">Cost Estimator</Link> for a quick ballpark.
             </p>
-          </motion.div>
+          </div>
 
           {/* FAQ */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="mb-24"
-          >
+          <div className="mb-24">
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-12">
               Frequently Asked <span className="text-brand-gold-dark italic">Questions</span>
             </h2>
@@ -303,7 +245,7 @@ export default function OroMedonteLanding() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* CTA */}
           <div className="text-center bg-brand-surface p-12 md:p-16 border border-brand-dim/20 rounded-sm">

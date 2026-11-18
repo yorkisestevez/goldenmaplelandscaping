@@ -69,7 +69,8 @@ export function outlineProblems(input:unknown):string[]{
 
 /** The front as built for a design, or null when the deck is not a custom outline. A custom deck with no
  * usable front (none stored, or one that fails the rules) is its width × depth rectangle. */
-export function activeCustomFront(data:Pick<DeckData,'shape'|'customFront'|'width'|'length'>):OutlinePoint[]|null{
+export function activeCustomFront(data:Pick<DeckData,'shape'|'customFront'|'width'|'length'|'deckOutlines'>):OutlinePoint[]|null{
+  if(data.deckOutlines?.main)return null;
   if(data.shape!=='Custom')return null;
   if(data.customFront&&!outlineProblems(data.customFront).length)return normalizeFront(data.customFront);
   return rectangleFront(Number(data.width)||16,Number(data.length)||12);

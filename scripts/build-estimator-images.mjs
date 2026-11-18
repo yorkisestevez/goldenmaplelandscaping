@@ -17,10 +17,16 @@
  * in place serves the stale one for a YEAR. Any reprocess must bump to -v2
  * (and update src/data/estimatorImages.ts to match).
  *
- * Image policy (decided 2026-08-13): real Golden Maple job photos +
- * manufacturer dealer assets ONLY. No AI imagery on the estimator — it's the
- * site's highest-trust page and the ops watchdog tracks "0 AI on customer
- * pages" as a standing metric.
+ * Image policy: the 2026-08-13 rule (real Golden Maple job photos and
+ * manufacturer dealer assets only, no AI imagery on the estimator) was reversed
+ * by the owner on 2026-09-10 (commit 033ee5e2). The project-type cards now show
+ * generated concept pictures (`*-concept-v*.webp`, see the header of
+ * src/data/estimatorImages.ts), and their card-sized variants come from
+ * scripts/build-estimator-card-variants.ts, not from this script.
+ *
+ * What the site still uses from here: the two deck brand thumbs
+ * (DECK_BRAND_IMAGES) and the OG share card, which is still at -v1. The
+ * project-type <slug>-card-v2.webp files written below are no longer referenced.
  */
 
 import sharp from 'sharp';

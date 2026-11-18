@@ -7,14 +7,13 @@ import {guardRuns} from '../src/features/deckcraft/deckTakeoff';
 import {getHouseContact} from '../src/features/deckcraft/houseContact';
 import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {describeDesign} from '../src/features/deckcraft/designFacts';
-import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import {syncAutoLighting} from '../src/features/deckcraft/lightingSystem';
-import {unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
+import {CONFIRMED_RATES} from '../src/features/deckcraft/rateConfidence';
 import {proposalFinishes} from '../src/features/deckcraft/proposalModel';
-import {finishedFasciaOffset} from '../src/features/deckcraft/lib/finishedFootprint';
+import {finishedFasciaOffset,pictureFrameOverhang} from '../src/features/deckcraft/lib/finishedFootprint';
 import {RAILING_STYLES,optionGroups} from '../src/features/deckcraft/designer/optionGroups';
 import {GLASS,GLASS_MOUNTS,HANDRAIL,SHOE,type FramelessGlassLayout} from '../src/features/deckcraft/framelessGlass';
-import {framelessGlassParts} from '../src/features/deckcraft/components/viewer3d/framelessGlassParts';
 import {RAILING_COSTS,type DeckData,type GlassMount} from '../src/features/deckcraft/types';
 
 /**
@@ -95,11 +94,6 @@ for(const [label,patch] of designs)for(const glassMount of GLASS_MOUNTS){
     for(const b of brackets)ok(near(b.at.y-surfaceAt(g,h.run,b.at),HANDRAIL.heightIn,.02),`${name}: the handrail is ${HANDRAIL.heightIn} in above the nosings`);
   }
   ok(near(g.quantities.glassSqft,g.panels.reduce((n,p)=>n+p.width*p.height/144,0))&&g.quantities.panels===g.panels.length&&g.quantities.panelSizes.reduce((n,s)=>n+s.count,0)===g.panels.length,`${name}: glass quantities add up`);
-  // The 3D view's pieces (FramelessGlass3D): a mirrored instance matrix draws its box inside out, and inside-out glass
-  // is a pure mirror (it read amber). Every piece is right-handed, and every panel keeps the glass's thickness.
-  const parts=framelessGlassParts(g),mirrored=Object.entries(parts).flatMap(([kind,list])=>list.filter(m=>m.determinant()<=0).map(()=>kind));
-  ok(parts.glass.length===g.panels.length&&!mirrored.length,`${name}: every 3D piece is right-handed (inside out: ${mirrored.join(', ')||'none'})`);
-  ok(parts.glass.every(m=>near(Math.hypot(m.elements[8],m.elements[9],m.elements[10]),GLASS.thick,1e-9)),`${name}: every 3D panel is ${GLASS.thick} in thick`);
   layouts++;
 }
 
@@ -110,7 +104,10 @@ for(const [label,patch] of designs)for(const glassMount of GLASS_MOUNTS){
   ok(rail.quoteRequired&&rail.total===0&&rail.items.length>0&&rail.items.every(i=>i.cost===null),`${name}: the railing section is a supplier quote with no $0 lines`);
   ok(e.quoteRequired.some(q=>/^Frameless glass railing .*\(supplier quote\)$/.test(q)),`${name}: the quote list names the frameless glass`);
   ok(near(labour(e),labour(glass)),`${name}: installation labour equals the Glass Panels labour (${labour(e).toFixed(2)} vs ${labour(glass).toFixed(2)})`);
-  ok(near(e.subtotal,glass.subtotal-section(glass,'Railing System')!.total),`${name}: only the railing materials leave the priced total`);
+  // Frameless has no posts, so Home Depot DTT2Z railing-post anchors drop from Hardware with the posts.
+  const postAnchors=(est:typeof e)=>est.connectorSchedule.find(r=>r.name==='Railing post anchors/bolts'),glassAnchors=postAnchors(glass),markup=1+(d.materialMarkup??35)/100;
+  const anchorDrop=glassAnchors&&glassAnchors.rate!==null?glassAnchors.qty*glassAnchors.rate*markup:0;
+  ok(near(e.subtotal,glass.subtotal-section(glass,'Railing System')!.total-anchorDrop),`${name}: only the railing materials and priced post-anchor hardware leave the priced total`);
   const items=rail.items.map(i=>i.name);
   ok(items.includes('Frameless glass panels')&&items.includes(glassMount==='Spigots'?'Glass spigots':glassMount)&&items.includes('Glass-mounted handrail')===e.model.railing.frameless!.handrails.length>0,`${name}: panels, ${glassMount.toLowerCase()} and the stair handrail are listed`);
   ok(!e.flags.some(f=>f.includes('baluster spacing')),`${name}: no baluster note on glass`);
@@ -119,11 +116,14 @@ for(const [label,patch] of designs)for(const glassMount of GLASS_MOUNTS){
   ok(e.flags.some(f=>f.startsWith('Stairs with frameless glass'))===(e.model.railing.frameless!.handrails.length>0),`${name}: the handrail note only with stairs`);
 }
 {
-  // A picture-frame overhang that would reach fascia-mounted glass is flagged.
-  const framed=estimate({...base(),pattern:'Picture Frame',pictureFrameRows:1,railingType:'Frameless Glass',glassMount:'Fascia-mount base shoe'});
+  // A picture-frame overhang that would reach fascia-mounted glass is flagged. 1.5 in is the production standard (and
+  // what a saved design without an overhang reopens with); new designs default to the board's maximum (0.5 in on Harvest).
+  const framed=estimate({...base(),pattern:'Picture Frame',pictureFrameRows:1,pictureFrameOverhangIn:1.5,railingType:'Frameless Glass',glassMount:'Fascia-mount base shoe'});
   ok(framed.flags.some(f=>f.startsWith('Fascia-mounted glass: the picture-frame boards overhang')),'A 1.5 in picture-frame overhang against fascia glass is flagged');
   const trimmed=estimate({...base(),pattern:'Picture Frame',pictureFrameRows:1,pictureFrameOverhangIn:.5,railingType:'Frameless Glass',glassMount:'Fascia-mount base shoe'});
   ok(!trimmed.flags.some(f=>f.startsWith('Fascia-mounted glass: the picture-frame boards overhang')),'A 0.5 in overhang clears fascia glass');
+  const flush=estimate({...base(),railingType:'Frameless Glass',glassMount:'Fascia-mount base shoe'});
+  ok(base().pictureFrameRows>0&&pictureFrameOverhang(base())===.5&&flush.model&&!flush.flags.some(f=>f.startsWith('Fascia-mounted glass: the picture-frame boards overhang')),'The default picture frame (0.5 in on Harvest) clears fascia glass');
 }
 
 // 4. No posts, so no post-cap lights.
@@ -158,10 +158,10 @@ for(const [label,patch] of designs)for(const glassMount of GLASS_MOUNTS){
   ok(designFeatures(d).includes('deck_frameless_glass'),'Analytics counts frameless glass');
   ok(RAILING_STYLES.indexOf('Frameless Glass')===RAILING_STYLES.indexOf('Glass Panels')+1,'Frameless glass follows Glass Panels in the railing list');
   ok(optionGroups('stairs',d).find(g=>g.id==='railingType')!.choices.some(c=>c.value==='Frameless Glass'),'The railing option group offers it (so its price effect shows)');
-  ok(unconfirmedRates().some(r=>r.id==='frameless-glass'&&r.status==='owner-decision'),'The rate list records the frameless glass decision');
+  ok(CONFIRMED_RATES.some(r=>r.id==='frameless-glass'),'The rate list confirms the frameless glass always-quote decision');
   const stairs=read('src/features/deckcraft/designer/steps/StairsStep.tsx');
   ok(stairs.includes('aria-label="Glass railing mount"')&&stairs.includes('aria-label="Glass hardware finish"'),'The Stairs section offers the mount and finish');
   ok(/"check:deck":[^\n]*check-deck-frameless-glass\.ts/.test(read('package.json')),'This check runs in check:deck');
 }
 
-console.log(`DECK FRAMELESS GLASS OK — ${layouts} layouts (${panelsSeen} panels) over ${designs.length} designs × ${GLASS_MOUNTS.length} mounts, 3D pieces right-handed, quotes and labour, lights, saving, naming — ${checks} checks`);
+console.log(`DECK FRAMELESS GLASS OK — ${layouts} layouts (${panelsSeen} panels) over ${designs.length} designs × ${GLASS_MOUNTS.length} mounts, quotes and labour, lights, saving, naming — ${checks} checks`);

@@ -20,7 +20,7 @@ export default function PoolDeckMaterials() {
         "name": "How much does a pool deck cost in Barrie 2026?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "A standard 800 sqft pool surround in Barrie typically ranges $35,000–$70,000 installed in 2026. Concrete pavers (Techo-Bloc, Unilock, Permacon) land at $40–48/sqft installed; porcelain (Porcea) at $58–65/sqft; full natural stone (Oakville Blue Ice) at $65–80/sqft. Add 15–20% for grading, integrated drainage, and coping stones around the pool edge."
+          "text": "A standard 800 sqft pool surround in Barrie typically ranges $35,000–$70,000 installed in 2026. Concrete pavers land around $40–$45/sqft installed before HST (mid to premium lines); porcelain (Porcea) at $58–65/sqft; full natural stone (Oakville Blue Ice) at $65–80/sqft. Add 15–20% for grading, integrated drainage, and coping stones around the pool edge."
         }
       },
       {
@@ -111,28 +111,28 @@ export default function PoolDeckMaterials() {
             </tr>
             <tr className="border-t border-brand-dim/60">
               <td className="p-4">Techo-Bloc Blu HD² Smooth</td>
-              <td className="p-4">$44–48</td>
+              <td className="p-4">Confirmed on product selection</td>
               <td className="p-4">R10–R11</td>
               <td className="p-4">Same as concrete</td>
               <td className="p-4">Premium concrete look. Best textures.</td>
             </tr>
             <tr className="border-t border-brand-dim/60">
               <td className="p-4">Unilock Umbriano</td>
-              <td className="p-4">$46–50</td>
+              <td className="p-4">Confirmed on product selection</td>
               <td className="p-4">R11</td>
               <td className="p-4">Same as concrete</td>
               <td className="p-4">Granite-like signature finish.</td>
             </tr>
             <tr className="border-t border-brand-dim/60">
               <td className="p-4">Techo-Bloc Blu 60 Slate</td>
-              <td className="p-4">$38–42</td>
+              <td className="p-4">Confirmed on product selection</td>
               <td className="p-4">R10</td>
               <td className="p-4">Same as concrete</td>
               <td className="p-4">Best value mid-tier. Clean modern look.</td>
             </tr>
             <tr className="border-t border-brand-dim/60">
               <td className="p-4">Permacon Melville 60</td>
-              <td className="p-4">$32–38</td>
+              <td className="p-4">around $40 (before HST)</td>
               <td className="p-4">R10</td>
               <td className="p-4">Same as concrete</td>
               <td className="p-4">Budget concrete option. Good textures.</td>

@@ -3,7 +3,7 @@ import type {Box} from '../../deckTakeoff';
 import {clampHouseOpening} from '../../houseSettings';
 import {getHouseBlocks,getHouseWalls,openingHidden,openingWallId,SIDE_FACADE,type HouseBlockPlan,type HouseWallPlan} from '../../houseFootprint';
 import {houseLayout,roofRiseOver} from './houseLayout';
-import {houseWallParts} from './houseWallParts';
+import {HOUSE_FOUNDATION_COLOR,HOUSE_FOUNDATION_REVEAL_IN,houseWallParts} from './houseWallParts';
 import {houseTrimColors,openingColors,type OpeningColors} from '../../houseFinishes';
 import {houseFinishFor} from '../../houseWallFinishes';
 import {splitAtBand,wainscotBand,wainscotCap} from './houseWainscot';
@@ -105,7 +105,9 @@ export function buildHouseGeometry(data:DeckData,width:number):{parts:HouseMesh[
  // Each wall in its own finish (the house's unless it or its block has one); a wainscot splits it at the band's top,
  // with the band and its trim cap as their own parts. A wall without one builds exactly as it always has.
  const facade=(f:HouseWallSpec)=>{
-  const fin=houseFinishFor(config,f.wall.id),band=fin.wainscot?wainscotBand(fin.wainscot.heightIn,f.height):0,parts=houseWallParts(f.span,f.height,f.openings,f.hidden),{lower,upper}=band?splitAtBand(parts,band):{lower:[],upper:parts};
+  // The bottom of every wall is its foundation reveal; the wall (and any wainscot over it) stands on that.
+  const footing=splitAtBand(houseWallParts(f.span,f.height,f.openings,f.hidden),HOUSE_FOUNDATION_REVEAL_IN),fin=houseFinishFor(config,f.wall.id),wb=fin.wainscot?wainscotBand(fin.wainscot.heightIn,f.height):0,band=wb>HOUSE_FOUNDATION_REVEAL_IN?wb:0,parts=footing.upper,{lower,upper}=band?splitAtBand(parts,band):{lower:[],upper:parts};
+  footing.lower.forEach((b,i)=>box(`${f.name}_foundation_${i}`,HOUSE_FOUNDATION_COLOR,b,f.origin,f.yaw));
   upper.forEach((b,i)=>box(`${f.name}_wall_${i}`,fin.color,b,f.origin,f.yaw));
   if(band){lower.forEach((b,i)=>box(`${f.name}_wainscot_${i}`,fin.wainscot!.color,b,f.origin,f.yaw));wainscotCap(f.span,band,f.openings,f.hidden).forEach((b,i)=>box(`${f.name}_wainscot_cap_${i}`,config.trimColor,b,f.origin,f.yaw));}
   for(const o of f.openings){const x=-f.span/2+f.span*o.offsetPct/100,y=o.bottomIn+o.heightIn/2;for(const [part,color,b] of openingFaces(o,x,y,openingColors(config,o)))box(`${f.name}_${o.type}_${o.id}_${part}`,color,b,f.origin,f.yaw);for(const s of [-1,1]){box(`${o.id}_jamb_${s}`,config.trimColor,{x:x+s*(o.widthIn/2+1.5),y,z:1.8,w:3,h:o.heightIn+6,d:2.2},f.origin,f.yaw);box(`${o.id}_trim_${s}`,config.trimColor,{x,y:y+s*(o.heightIn/2+1.5),z:1.8,w:o.widthIn,h:3,d:2.2},f.origin,f.yaw);}}};
@@ -114,14 +116,12 @@ export function buildHouseGeometry(data:DeckData,width:number):{parts:HouseMesh[
  parts.push(houseRoofMesh(layout));
  // Gable ends face the deck and the street (ridge front to back, the original look) or the sides.
  const mainGable=blockGableMesh(blocks[0],config.claddingColor,'gable_walls',config.roofPitch);if(mainGable)parts.push(mainGable);
- box('foundation','#93968d',{x:cx,y:4,z:-depth/2,w:maxX-minX+1,h:8,d:depth+1});
  box('soffit',trim.soffit,{x:cx,y:wallHeight-.75,z:-depth/2,w:maxX-minX+20,h:1.5,d:depth+20});
  for(const block of blocks.slice(1)){
   const {x0,x1,y0,y1}=block.rect,bx=(x0+x1)/2,bz=(y0+y1)/2;
   for(const f of specs.filter(s=>s.block===block))facade(f);
   parts.push(blockRoofMesh(block,config));
   const gable=blockGableMesh(block,config.claddingColor,`${block.id}_gable_walls`,config.roofPitch);if(gable)parts.push(gable);
-  box(`${block.id}_foundation`,'#93968d',{x:bx,y:4,z:bz,w:x1-x0+1,h:8,d:y1-y0+1});
   box(`${block.id}_soffit`,trim.soffit,{x:bx,y:block.wallHeightIn-.75,z:bz,w:x1-x0+20,h:1.5,d:y1-y0+20});
  }
  return {parts};

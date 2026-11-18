@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { Grid, Layout, AlignJustify, ListTree, ChefHat, Map, ArrowRight, MapPin, Ruler } from 'lucide-react';
 import { trackEngagement } from '../utils/analytics';
 import { ESTIMATOR_LOCATIONS } from '../data/locations';
-import { deckDesignerHref } from '../features/deckcraft/estimatorHandoff';
+import { estimatorDeckHref } from '../features/deckcraft/estimatorHandoff';
 
 const PROJECT_OPTIONS = [
   { id: 'patio',   label: 'Patio',         icon: Grid },
@@ -33,8 +32,8 @@ export default function HeroEstimator() {
   const onContinue = () => {
     if (!ready) return;
     trackEngagement('cta_click', `hero_estimator_${projectType}_${sizeBucket}_${city}`);
-    // Decks are priced only in the deck designer, the site's one deck price.
-    if (projectType === 'deck') { navigate(deckDesignerHref(sqft)); return; }
+    // Decks are priced only by the deck estimator (the site's one deck price), which opens inside the estimator.
+    if (projectType === 'deck') { navigate(estimatorDeckHref(sqft)); return; }
     const params = new URLSearchParams({
       type: projectType!,
       sqft: String(sqft),
@@ -44,12 +43,7 @@ export default function HeroEstimator() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-brand-cream-light border border-brand-dim rounded-3xl p-7 md:p-9 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.7)]"
-    >
+    <div className="bg-brand-cream-light border border-brand-dim rounded-3xl p-7 md:p-9 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.7)]">
       <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3">
         Free Cost Estimator · 60 Seconds
       </div>
@@ -76,7 +70,7 @@ export default function HeroEstimator() {
                 onClick={() => setProjectType(opt.id)}
                 className={`p-3 rounded-2xl border transition-all duration-150 flex flex-col items-center gap-1.5 ${
                   selected
-                    ? 'bg-gradient-to-b from-brand-gold/35 to-brand-gold/10 border-brand-gold text-brand-bonewhite shadow-[0_0_0_1px_rgba(212,175,99,0.45)]'
+                    ? 'bg-gradient-to-b from-brand-gold/35 to-brand-gold/10 border-brand-gold text-brand-bonewhite shadow-[0_0_0_1px_rgba(217,150,106,0.45)]'
                     : 'bg-brand-cream-light border-brand-dim text-brand-bonewhite/80 hover:border-brand-gold/60 hover:bg-brand-midsurface hover:text-brand-bonewhite'
                 }`}
               >
@@ -106,7 +100,7 @@ export default function HeroEstimator() {
                 onClick={() => setSizeBucket(s.id)}
                 className={`p-3 rounded-2xl border transition-all duration-150 ${
                   selected
-                    ? 'bg-gradient-to-b from-brand-gold/35 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.45)]'
+                    ? 'bg-gradient-to-b from-brand-gold/35 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(217,150,106,0.45)]'
                     : 'bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface'
                 }`}
               >
@@ -142,7 +136,7 @@ export default function HeroEstimator() {
           </select>
           <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
             <svg width="10" height="6" viewBox="0 0 12 8" fill="none">
-              <path d="M1 1.5L6 6.5L11 1.5" stroke="#D4AF63" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M1 1.5L6 6.5L11 1.5" stroke="#D9966A" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </div>
         </div>
@@ -152,7 +146,7 @@ export default function HeroEstimator() {
         type="button"
         onClick={onContinue}
         disabled={!ready}
-        className="btn-primary !rounded-full w-full py-4 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 group shadow-[0_8px_24px_-8px_rgba(212,175,99,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(212,175,99,0.55)] transition-shadow"
+        className="btn-primary !rounded-full w-full py-4 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 group shadow-[0_8px_24px_-8px_rgba(217,150,106,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(217,150,106,0.55)] transition-shadow"
       >
         {ready ? 'See My Estimate Range' : 'Pick a project & size to continue'}
         {ready && <ArrowRight size={16} strokeWidth={1.5} className="transition-transform group-hover:translate-x-1" />}
@@ -161,6 +155,6 @@ export default function HeroEstimator() {
       <p className="font-sans text-[11px] text-brand-bonewhite/75 mt-4 text-center font-normal">
         Itemized breakdown · Material brand picker · Real numbers in 60 seconds
       </p>
-    </motion.div>
+    </div>
   );
 }

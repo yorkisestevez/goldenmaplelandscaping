@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
+import {profileSegmentLength,elevationProfileSpecs} from '../src/features/deckcraft/elevationProfiles';
+import RefitGeometry,{refitFlightGeometry} from '../src/features/deckcraft/designer/StairRefitGeometry';
+let checks=0;const ok=(value:unknown,label:string)=>{assert.ok(value,label);checks++;},near=(a:number,b:number,label:string)=>ok(Math.abs(a-b)<1e-7,`${label}: ${a}/${b}`);
+for(const turn of ['Left','Right'] as const){
+ const before=buildDeckTakeoff({...DEFAULT_DECK,height:96,stairType:'Winder',stairWidth:36,stairTurn:turn,stairFlights:1}),after=buildDeckTakeoff({...DEFAULT_DECK,height:108,stairType:'Winder',stairWidth:48,stairTurn:turn,stairFlights:1}),winders=after.flights.filter(f=>f.winderCenter);
+ ok(winders.length>0,`${turn}: actual winder metadata generated`);
+ for(const f of winders){
+  const geometry=refitFlightGeometry(f),expected=f.winderRadiusIn!*Math.PI/2;ok(geometry.winder,`${turn}: winder identified from physical metadata`);near(geometry.length,expected,`${turn}: true quarter-circle centre walkline`);ok(Math.abs(geometry.length-(f.risers-1)*f.run)>20,`${turn}: curved distance is not straight-flight going multiplied by risers`);near(geometry.points[0][0],0,'Winder starts at chainage zero');near(geometry.points[0][1],6,'First tread starts at upper winder elevation');near(geometry.points[1][0],expected/3,'First tread occupies first third');near(geometry.points[2][0],expected/3,'First drop shares tread boundary');near(geometry.points[2][1]-geometry.points[1][1],f.rise,'First drop equals actual riser');near(geometry.points[3][0],expected*2/3,'Second tread ends at second third');near(geometry.points[4][1]-geometry.points[3][1],f.rise,'Second drop equals actual riser');near(geometry.points.at(-1)![0],expected,'Last tread reaches actual turn exit');near(geometry.points.at(-1)![1]-6,f.start.y-f.end.y,'End elevation matches modeled flight');
+  const spec=elevationProfileSpecs({...DEFAULT_DECK,height:108,stairType:'Winder',stairWidth:48,stairTurn:turn,stairFlights:1},after).find(s=>s.id===`stair-${f.id}`)!;near(profileSegmentLength(spec.segments[0]),expected,'Refit section agrees with shared drawing profile');
+  const markup=renderToStaticMarkup(createElement(RefitGeometry,{before,after})),figure=markup.match(new RegExp(`<figure><figcaption>${f.id}:[\\s\\S]*?</figure>`))?.[0]??'';ok(figure.includes(`winder walkline ${expected.toFixed(2)} in`),'SSR caption states true curved distance');ok(figure.includes('3 treads'),'SSR caption correctly counts winder tread surfaces');ok(!figure.includes('· going'),'SSR does not label centre-walkline intervals with the separate inner walkline going');ok(figure.includes('along curved walkline'),'Accessible preview label identifies unrolled curve');
+  const paths=[...figure.matchAll(/<polyline points="([^"]+)"/g)].map(m=>m[1].split(' ').map(p=>p.split(',').map(Number)));ok(paths.length===2,'Current and proposed winder sections both rendered');const previous=before.flights.find(p=>p.id===f.id)!;near(paths[0].at(-1)![0],previous.winderRadiusIn!*Math.PI/2,'Dashed section uses current curve distance');near(paths[1].at(-1)![0],expected,'Red section uses proposed curve distance');
+ }
+ for(const f of after.flights.filter(f=>!f.winderCenter&&f.kind==='grade')){const g=refitFlightGeometry(f);ok(!g.winder,'Straight segment of Winder stair stays straight');near(g.length,(f.risers-1)*f.run,'Straight going-total relation preserved');near(g.points.at(-1)![1]-6,f.start.y-f.end.y,'Straight section ends at actual elevation');}
+}
+const straight=buildDeckTakeoff({...DEFAULT_DECK,height:48,stairType:'Straight',stairFlights:1}),markup=renderToStaticMarkup(createElement(RefitGeometry,{before:straight,after:straight})),f=straight.flights.find(f=>f.kind==='grade')!;ok(markup.includes(`run ${((f.risers-1)*f.run).toFixed(2)} in · going ${f.run.toFixed(2)} in`),'Straight preview wording preserves actual going and total');
+console.log(`${checks} winder refit walkline geometry and SSR checks passed.`);

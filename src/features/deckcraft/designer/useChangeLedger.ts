@@ -1,6 +1,6 @@
-import {useMemo,useReducer} from 'react';
+import {useMemo,useReducer,useRef} from 'react';
 import {dollars} from '../designFacts';
-import {DECKING_CATALOGUE,RAILING_CATALOGUE} from '../manufacturerCatalog';
+import {DECKING_CATALOGUE,RAILING_CATALOGUE} from '../manufacturerRuntimeCatalogue';
 import {GROUP_MS} from './designHistory';
 import type {Ledger,LedgerQuote,QuoteKind} from './priceLedgerModel';
 import {FIELD_NAMES,fieldName} from './sections';
@@ -104,8 +104,9 @@ export function describeEdit(patch:Record<string,unknown>,data:Record<string,unk
 /** The change list for the page: the records, and what the page tells it (edits, undo, redo, a new design, prices). */
 export function useChangeLedger(){
   const [state,dispatch]=useReducer(changeLedger,EMPTY_CHANGES);
+  const application=useRef(0);
   const api=useMemo(()=>({
-    edit:(patch:object,data:object)=>{const edit=describeEdit(patch as Record<string,unknown>,data as Record<string,unknown>);if(edit)dispatch({type:'edit',...edit,now:Date.now()});},
+    edit:(patch:object,data:object,atomic=false)=>{const edit=describeEdit(patch as Record<string,unknown>,data as Record<string,unknown>);if(edit){const discrete=atomic||['boardLayout','boardColours','boundaryLocks'].some(key=>Object.hasOwn(patch,key));dispatch({type:'edit',...edit,key:discrete?`apply:${++application.current}:${edit.key}`:edit.key,now:Date.now()});}},
     undo:()=>dispatch({type:'undo',now:Date.now()}),
     redo:()=>dispatch({type:'redo',now:Date.now()}),
     loaded:()=>dispatch({type:'loaded',now:Date.now()}),

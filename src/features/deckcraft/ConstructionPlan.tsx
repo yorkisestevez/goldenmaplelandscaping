@@ -1,6 +1,10 @@
+import {lazy,Suspense} from 'react';
+const LandscapePlanLayer=lazy(()=>import('./designer/LandscapePlanLayer')),FencePlanLayer=lazy(()=>import('./designer/FencePlanLayer'));
+import {pergolaLayout} from './pergolaLayout';
 import type {DeckTakeoff} from './deckTakeoff';
 import type {DeckData} from './types';
 import {sceneBounds} from './components/viewer3d/sceneBounds';
+import {elevationLabel,usesPhysicalElevations} from './elevationDatum';
 import type {YardModel} from './yardModel';
 import {getHouseContact} from './houseContact';
 import {getHousePlacement} from './housePlacement';
@@ -9,6 +13,7 @@ import {isChamferEdgeId} from './lib/cornerChamfers';
 import {getHouseBlocks,hasHouseBlocks,houseOutline} from './houseFootprint';
 import {polygonCut} from './lib/polygonCuts';
 import {boardFinishPlan} from './boardFinishes';
+import {hasBoardLayout} from './boardLayoutPricing';
 
 /** Plan tones for accent-colour groups; the legend names the real product colours. */
 const ACCENT_TONES=['#6f4e37','#3f5c5a','#8c5a3c','#4f4a6b','#5d6b3a','#7a3f3f'];
@@ -45,8 +50,12 @@ export interface PlanFrame{
 export function planFrame(model:DeckTakeoff,{data,yard,variant='contractor',legendRows=0,wholeHouse=false}:{data?:DeckData;yard?:YardModel;variant?:PlanVariant;legendRows?:number;
   /** Site plan only (its House tool, R5): draw the house's whole deck-facing wall, so both wall ends show. */
   wholeHouse?:boolean}={}):PlanFrame{
-  const b=sceneBounds(model);
+  const b=sceneBounds(model),pergola=data?pergolaLayout(data,model,[],false):null;
+  for(const p of pergola?.footprint??[]){b.minX=Math.min(b.minX,p.x);b.maxX=Math.max(b.maxX,p.x);b.minZ=Math.min(b.minZ,p.y);b.maxZ=Math.max(b.maxZ,p.y);}
   for(const p of yard?.features.filter(f=>!f.excluded).flatMap(f=>f.footprints.flat())??[]){b.minX=Math.min(b.minX,p.x);b.maxX=Math.max(b.maxX,p.x);b.minZ=Math.min(b.minZ,p.y);b.maxZ=Math.max(b.maxZ,p.y);}
+  if(variant==='site')for(const o of data?.landscapeObjects?.filter(o=>o.enabled)??[]){const reach=Math.hypot(o.widthIn,o.depthIn)/2;b.minX=Math.min(b.minX,o.xIn-reach);b.maxX=Math.max(b.maxX,o.xIn+reach);b.minZ=Math.min(b.minZ,o.zIn-reach);b.maxZ=Math.max(b.maxZ,o.zIn+reach);}
+  // A gate leaf swings up to 5 ft (half a double gate) off the fence line.
+  if(variant==='site')for(const p of data?.fences?.flatMap(f=>f.points)??[]){b.minX=Math.min(b.minX,p.xIn-60);b.maxX=Math.max(b.maxX,p.xIn+60);b.minZ=Math.min(b.minZ,p.zIn-60);b.maxZ=Math.max(b.maxZ,p.zIn+60);}
   const site=variant==='site',house=data&&data.houseVisible!==false?getHousePlacement(data):null,wrap=data?activeWrap(data):null;
   const reach=site?Math.max(SITE_REACH,...(wholeHouse&&house?[b.minX-house.x0,house.x1-b.maxX]:[])):48;
   // A wrap-around runs back along the house side walls, so draw the house deep enough to show them.
@@ -63,12 +72,12 @@ export function planFrame(model:DeckTakeoff,{data,yard,variant='contractor',lege
 }
 
 /** Contractor plan from the shared model. With `data` it also shows the house, ledgers and edge lengths. */
-export default function ConstructionPlan({model,yard,data,variant='contractor',wholeHouse}:{model:DeckTakeoff;yard?:YardModel;data?:DeckData;variant?:PlanVariant;wholeHouse?:boolean}){
- const site=variant==='site';
+export default function ConstructionPlan({model,yard,data,variant='contractor',wholeHouse,viewportFrame,onSelectStairs}:{model:DeckTakeoff;yard?:YardModel;data?:DeckData;variant?:PlanVariant;wholeHouse?:boolean;viewportFrame?:PlanFrame;onSelectStairs?:()=>void}){
+ const site=variant==='site',pergola=data?pergolaLayout(data,model,[],false):null;
  const main=model.levels[0],outline=main.footprint.outline;
  const contact=data?getHouseContact(data,main.footprint):null;
  // Accent-colour boards (boardFinishes.ts): each colour group gets a plan tone, named in the legend.
- const finish=data?.boardColours?.length||data?.inlays?.length?boardFinishPlan(data,model):null,tones=new Map(finish?.groups.map((g,k)=>[g.ref,ACCENT_TONES[k%ACCENT_TONES.length]]));
+ const finish=data?.boardColours?.length||data?.inlays?.length||data&&hasBoardLayout(data)?boardFinishPlan(data!,model):null,tones=new Map(finish?.groups.map((g,k)=>[g.ref,ACCENT_TONES[k%ACCENT_TONES.length]]));
  const accentFill=(level:number,index:number)=>{const ref=finish?.colours[level]?.[index];return ref?tones.get(ref):undefined;};
  const legendRows=finish?.groups.length?1:0;
  const frame=planFrame(model,{data,yard,variant,legendRows,...(site&&wholeHouse?{wholeHouse}:{})}),{b,house,band,top,left,right,reach}=frame;
@@ -95,12 +104,13 @@ export default function ConstructionPlan({model,yard,data,variant='contractor',w
   for(const [x,cut] of [[left,house.x0<left-.5],[right,house.x1>right+.5]] as const)if(cut){const m=-band/2;breaks.push(`M${x} ${-band-6}V${m-6}l-7 3l14 6l-7 3V0`);}
  }
  const dims=frame.dims,ox=main.offset.x,oz=main.offset.z;
- return <svg viewBox={frame.viewBox} role="img" aria-label={site?'Site plan: the deck against the house':'Deck construction plan from the shared model'} className={site?'dd-site-plan':undefined} style={{width:'100%',height:'100%',background:site?'#fbfbf8':'#faf8f1'}}>
+ return <svg viewBox={site&&viewportFrame?viewportFrame.viewBox:frame.viewBox} role="img" aria-label={site?'Site plan: the deck against the house':'Deck construction plan from the shared model'} className={site?'dd-site-plan':undefined} style={{width:'100%',height:'100%',background:site?'#fbfbf8':'#faf8f1'}}>
    <title>{site?`Site plan · ${data?.width} × ${data?.length} ft deck`:`Deck plan · ${model.quantities.joists} joists · ${model.quantities.footings} footings`}</title>
    <defs><marker id="dd-arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L6 3L0 6z" fill="#5f5a50"/></marker><pattern id="dd-house-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#b9b1a2" strokeWidth="1"/></pattern><pattern id="dd-grid" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M12 0V12H0" fill="none" stroke="#dde3da" strokeWidth=".6"/></pattern><pattern id="dd-grid-5" width="60" height="60" patternUnits="userSpaceOnUse"><rect width="60" height="60" fill="url(#dd-grid)"/><path d="M60 0V60H0" fill="none" stroke="#c6cfc3" strokeWidth="1"/></pattern></defs>
    {/* The contractor plan's grid shows on screen only (the page's CSS shows it; the PDF's picture has no CSS): a 1 ft
        grid, 5 ft lines bolder, over the yard. The site plan's is always drawn. */}
    {site?<rect className="dd-plan-grid" x={frame.x} y={0} width={frame.w} height={frame.y+frame.h} fill="url(#dd-grid-5)"/>:<rect className="dd-plan-grid" display="none" x={left-40} y={0} width={right-left+80} height={b.maxZ+18} fill="url(#dd-grid-5)"/>}
+   {site&&data?.landscapeObjects?.length&&<Suspense fallback={null}><LandscapePlanLayer data={data}/></Suspense>}{site&&!!data?.fences?.length&&<Suspense fallback={null}><FencePlanLayer data={data}/></Suspense>}
    {house&&!site&&<g aria-label="House">
      {blockPolys?blockPolys.map((poly,i)=><polygon key={i} points={poly.map(p=>`${p.x},${p.y}`).join(' ')} fill="url(#dd-house-hatch)" stroke="#6d675c" strokeWidth=".8"/>)
        :<rect x={house.x0} y={-band} width={house.x1-house.x0} height={band} fill="url(#dd-house-hatch)" stroke="#6d675c" strokeWidth=".8"/>}
@@ -116,12 +126,13 @@ export default function ConstructionPlan({model,yard,data,variant='contractor',w
      {breaks.map((path,i)=><g key={i} className="dd-break"><path d={path} fill="none" stroke="#fbfbf8" strokeWidth="4"/><path d={path} fill="none" stroke="#14261c" strokeWidth="1"/></g>)}
      <text x={(hx0+hx1)/2} y={-band/2+3} textAnchor="middle" fontSize="9" fontWeight="600" fill="#14261c" paintOrder="stroke" stroke="#fbfbf8" strokeWidth="3">{`HOUSE · ${feet(house.widthIn)} wide`}</text>
    </g>}
-   {yard?.boxes.filter(p=>['paver','wall-block','wall-cap','water'].includes(p.role)).map(p=><polygon key={p.id} points={p.polygon?.map(v=>`${v.x},${v.y}`).join(' ')} fill={p.color} stroke="#66695d" strokeWidth=".2"/>)}
-   {yard?.features.filter(f=>!f.excluded).map(f=><text key={f.config.id} x={f.config.xFt*12} y={f.config.zFt*12} textAnchor="middle" fontSize="7" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2" fill="#333">{f.config.name}</text>)}
+   {yard?.boxes.filter(p=>!p.renderDuplicate&&['paver','wall-block','wall-cap','water'].includes(p.role)).map(p=>p.renderContours?<path key={p.id} d={p.renderContours.map(poly=>'M'+poly.map(v=>`${v.x},${v.y}`).join(' L')+' Z').join(' ')} fill={p.color} fillRule="nonzero" stroke="#66695d" strokeWidth=".2"/>:<polygon key={p.id} points={p.polygon?.map(v=>`${v.x},${v.y}`).join(' ')} fill={p.color} stroke="#66695d" strokeWidth=".2"/>)}
+   {yard?.boxes.some(p=>p.role==='stone-step')&&<g aria-label="Stone and paver steps">{yard?.boxes.filter(p=>p.role==='stone-step'&&(p.stonePart==='tread'||p.stonePart==='landing')).sort((a,b)=>a.y+a.h/2-b.y-b.h/2).map(p=><polygon key={p.id} data-step-surface={p.featureId} points={p.polygon?.map(v=>v.x+','+v.y).join(' ')} fill={p.color} stroke="#66695d" strokeWidth=".3"/>)}</g>}
+   {yard?.features.filter(f=>!f.excluded).map(f=><text key={f.config.id} x={f.config.xFt*12} y={f.config.zFt*12} textAnchor="middle" fontSize="7" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2" fill="#333">{f.config.name}{(data&&usesPhysicalElevations(data))?` · finish ${elevationLabel(f.topIn)}`:''}</text>)}
    {model.levels.map((l,i)=><g key={i}>
      <polygon points={l.footprint.outline.map(p=>`${p.x+l.offset.x},${p.y+l.offset.z}`).join(' ')} fill={l.kind==='winder'?'none':'#e5d7bb'} stroke="#7c6b51" strokeWidth="1"/>
-     {l.boards.map((board,j)=>{const cut=board as typeof board&{width?:number;polygon?:{x:number;y:number}[];role?:string},width=cut.width??5.5;
-       return cut.polygon?<polygon key={j} points={cut.polygon.map(p=>`${p.x+l.offset.x},${p.y+l.offset.z}`).join(' ')} fill={cut.role==='inlay'?'#71644e':accentFill(i,j)??'none'} stroke="#ac9572" strokeWidth=".3"/>:<rect key={j} x={board.cx+l.offset.x-board.length/2} y={board.cy+l.offset.z-width/2} width={board.length} height={width} transform={`rotate(${board.angleDeg} ${board.cx+l.offset.x} ${board.cy+l.offset.z})`} fill={cut.role==='inlay'?'#71644e':accentFill(i,j)??'none'} stroke="#ac9572" strokeWidth=".3"/>;
+     {l.boards.map((board,j)=>{const cut=board as typeof board&{width?:number;polygon?:{x:number;y:number}[];role?:string;layoutColour?:string},width=cut.width??5.5;
+       return cut.polygon?<polygon key={j} points={cut.polygon.map(p=>`${p.x+l.offset.x},${p.y+l.offset.z}`).join(' ')} fill={cut.role==='inlay'&&!cut.layoutColour?'#71644e':accentFill(i,j)??'none'} stroke="#ac9572" strokeWidth=".3"/>:<rect key={j} x={board.cx+l.offset.x-board.length/2} y={board.cy+l.offset.z-width/2} width={board.length} height={width} transform={`rotate(${board.angleDeg} ${board.cx+l.offset.x} ${board.cy+l.offset.z})`} fill={cut.role==='inlay'&&!cut.layoutColour?'#71644e':accentFill(i,j)??'none'} stroke="#ac9572" strokeWidth=".3"/>;
      })}
      {!site&&l.joists.map((j,k)=><line key={k} x1={j.a.x} y1={j.a.z} x2={j.b.x} y2={j.b.z} stroke="#787b72" strokeDasharray="3 2" strokeWidth=".6"/>)}
      {/* Decorative inlays: their outline, name and (on the contractor plan) the framing under them (inlayFraming.ts). */}
@@ -129,15 +140,16 @@ export default function ConstructionPlan({model,yard,data,variant='contractor',w
      {(l.inlays??[]).filter(p=>p.status==='ok').map((p,k)=>{const c=p.outline.reduce((s,v)=>({x:s.x+v.x/p.outline.length,y:s.y+v.y/p.outline.length}),{x:0,y:0});return <g key={`in${k}`} aria-label={`Inlay ${k+1}`}>{p.pieces.map((piece,j)=><polygon key={j} points={piece.map(v=>`${v.x+l.offset.x},${v.y+l.offset.z}`).join(' ')} fill="none" stroke="#6b4521" strokeWidth="1"/>)}<text x={c.x+l.offset.x} y={c.y+l.offset.z+2.5} textAnchor="middle" fontSize="7" fontWeight="600" fill="#3d2a1c" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2.5">{`Inlay ${k+1}`}</text></g>;})}
      {!site&&l.beams.map((j,k)=><line key={k} x1={j.a.x} y1={j.a.z} x2={j.b.x} y2={j.b.z} stroke="#826947" strokeWidth="1"/>)}
      {!site&&l.supports.map((p,k)=><circle key={k} cx={p.x} cy={p.z} r={4} fill="#545b54"/>)}
-     <text x={l.offset.x+10} y={l.offset.z+15} fontSize="7" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2" fill="#444">{`${l.kind==='landing'?'Landing':l.kind==='winder'?'Winder':'Deck '+((l.index??i)+1)} · ${l.top.toFixed(1)} in above grade`}</text>
    </g>)}
-   {!site&&hips.map((h,i)=>{const mx=(h.a.x+h.b.x)/2,my=(h.a.y+h.b.y)/2;return <g key={`hip${i}`} aria-label={`Hip at ${h.angleDeg.toFixed(0)} degrees`}><line x1={h.a.x} y1={h.a.y} x2={h.b.x} y2={h.b.y} stroke="#5b3d1c" strokeWidth="2.4" strokeDasharray="6 3"/><text x={mx+(h.side==='right'?6:-6)} y={my} textAnchor={h.side==='right'?'start':'end'} fontSize="6.5" fontWeight="600" fill="#5b3d1c" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2.5">{Math.abs(h.angleDeg-45)<.5?'Hip · 45° mitre':`Hip · ${h.angleDeg.toFixed(0)}° to back wall`}</text></g>;})}
+   {!site&&hips.map((h,i)=>{const mx=(h.a.x+h.b.x)/2,my=(h.a.y+h.b.y)/2;return <g key={`hip${i}`} aria-label={`Hip at ${h.angleDeg.toFixed(0)} degrees`}><line x1={h.a.x} y1={h.a.y} x2={h.b.x} y2={h.b.y} stroke="#5b3d1c" strokeWidth="2.4" strokeDasharray="6 3"/><text x={mx+(h.side==='right'?6:-6)} y={my} textAnchor={h.side==='right'?'start':'end'} fontSize="6.5" fontWeight="600" fill="#5b3d1c" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2.5">{Math.abs(h.angleDeg-90)<.5?'Boards turn at the wrap':Math.abs(h.angleDeg-45)<.5?'Hip · 45° mitre':`Hip · ${h.angleDeg.toFixed(0)}° to back wall`}</text></g>;})}
    {!site&&zones.map(z=>{const cx=z.outline.reduce((n,p)=>n+p.x,0)/z.outline.length,cy=z.outline.reduce((n,p)=>n+p.y,0)/z.outline.length;return <g key={z.id} aria-label={`${z.label}: joist direction`}><line x1={cx-z.joistDir.x*14} y1={cy-z.joistDir.y*14} x2={cx+z.joistDir.x*14} y2={cy+z.joistDir.y*14} stroke="#5f5a50" strokeWidth="1.2" markerEnd="url(#dd-arrow)"/><text x={cx+Math.abs(z.joistDir.y)*8} y={cy+Math.abs(z.joistDir.x)*10+2} fontSize="6" fill="#4a453d" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2">{`${z.label} · joists`}</text></g>;})}
    {!site&&contact?.contacts.map((c,i)=><line key={i} x1={c.a.x+c.inward.x*1.5} y1={c.a.y+c.inward.y*1.5} x2={c.b.x+c.inward.x*1.5} y2={c.b.y+c.inward.y*1.5} stroke="#9a6a32" strokeWidth="3" strokeDasharray={c.kind==='flush'?'4 2':undefined} aria-label={`${c.kind==='flush'?'Bolted flush wall':'Ledger'} ${ft(c.lengthIn)}`}/>)}
-   {model.treads.map((t,i)=>{const polygon=(t as typeof t&{polygon?:{x:number;y:number}[]}).polygon;return polygon?<polygon key={i} points={polygon.map(p=>`${p.x},${p.y}`).join(' ')} fill="#ddccb1" stroke="#897354" strokeWidth=".7"/>:<rect key={i} x={t.x-t.w/2} y={t.z-t.d/2} width={t.w} height={t.d} transform={`rotate(${-(t.angle||0)*180/Math.PI} ${t.x} ${t.z})`} fill="#ddccb1" stroke="#897354" strokeWidth=".7"/>;})}
+   {model.treads.map((t,i)=>{const polygon=(t as typeof t&{polygon?:{x:number;y:number}[]}).polygon,selectable=site&&onSelectStairs&&/^grade-(0|path)(?:-|$)/.test(t.flightId??'');const select=selectable?{onClick:(e:import('react').MouseEvent)=>{e.stopPropagation();onSelectStairs();},style:{cursor:'pointer'},'data-select-stairs':true}:{};return polygon?<polygon key={i} {...select} points={polygon.map(p=>`${p.x},${p.y}`).join(' ')} fill="#ddccb1" stroke="#897354" strokeWidth=".7"/>:<rect key={i} {...select} x={t.x-t.w/2} y={t.z-t.d/2} width={t.w} height={t.d} transform={`rotate(${-(t.angle||0)*180/Math.PI} ${t.x} ${t.z})`} fill="#ddccb1" stroke="#897354" strokeWidth=".7"/>;})}
    {model.railing.rails.filter((r,i)=>i%2===1&&r.a.y===r.b.y).map((r,i)=><line key={i} x1={r.a.x} y1={r.a.z} x2={r.b.x} y2={r.b.z} stroke="#272e2c" strokeWidth="1.4"/>)}
    {model.railing.posts.map((p,i)=><rect key={i} x={p.x-2} y={p.z-2} width={4} height={4} fill="#272e2c"/>)}
    {model.railing.frameless&&<g aria-label={`Frameless glass railing · ${model.railing.frameless.mount}`}>{model.railing.frameless.shoes.map((r,i)=><line key={`s${i}`} x1={r.a.x} y1={r.a.z} x2={r.b.x} y2={r.b.z} stroke="#272e2c" strokeWidth="2.5"/>)}{model.railing.frameless.panels.map((r,i)=><line key={`p${i}`} x1={r.a.x} y1={r.a.z} x2={r.b.x} y2={r.b.z} stroke="#6f8fa0" strokeWidth="1.2"/>)}{model.railing.frameless.spigots.map((p,i)=><circle key={`d${i}`} cx={p.at.x} cy={p.at.z} r={1.4} fill="#272e2c"/>)}</g>}
+   {/* Elevation labels follow tread and railing fills so adjoining flights cannot hide them. */}
+   <g aria-label="Deck and stair elevations" pointerEvents="none">{model.levels.map((l,i)=><text key={i} x={l.offset.x+10} y={l.offset.z+15} fontSize="7" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2" fill="#444">{`${l.kind==='landing'?'Landing':l.kind==='winder'?'Winder':'Deck '+((l.index??i)+1)} · ${l.top.toFixed(1)} in ${(data&&usesPhysicalElevations(data))?'relative to datum':'above grade'}`}</text>)}</g>
    {/* House blocks on the deck side are drawn over the deck, so any overlap with it shows. */}
    {(blocks??[]).filter(k=>k.rect.y1>0).map(k=><rect key={k.id} aria-label="House block over the deck" x={k.rect.x0} y={0} width={k.rect.x1-k.rect.x0} height={k.rect.y1} fill="#efe9dc" fillOpacity=".8" stroke="#3d3a34" strokeWidth="1.2"/>)}
    {blockLabels.filter(l=>(blocks?.find(k=>k.id===l.id)?.rect.y1??0)>0).map(l=><text key={l.id} x={l.x} y={l.y} textAnchor="middle" fontSize="7" fontWeight="600" fill="#3d3a34" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2.5">{l.text}</text>)}
@@ -170,5 +182,6 @@ export default function ConstructionPlan({model,yard,data,variant='contractor',w
    {!site&&<text x={b.minX} y={b.maxZ+56} fontSize="7" fill="#514b41">{`Dashed: joists · Solid: beams${contact?.contacts.length?' · Bronze: ledger on the house':''}${contact?.flushLf?' · Bronze dashed: bolted flush wall':''}${hips.length?' · Heavy dashed: doubled hip':''}${model.levels.some(l=>l.inlays?.some(p=>p.status==='ok'))?' · Amber: inlay blocking':''}`}</text>}
    {finish&&finish.groups.length>0&&<text x={b.minX} y={site?b.maxZ+62:b.maxZ+80} fontSize="7" fill="#514b41" aria-label="Accent boards">Accent boards:{finish.groups.map(g=><tspan key={g.ref}> <tspan fill={tones.get(g.ref)}>■</tspan> {g.color.name} ({g.material.name}, {g.boards.length})</tspan>)}</text>}
    <text x={b.minX} y={site?b.maxZ+74:b.maxZ+68} fontSize="6" fill={site?'#3e4d43':'#716a5e'}>Design illustration · final connections and sizing require site review</text>
+ {pergola&&<g aria-label="Aluminum pergola footprint"><polygon points={pergola.footprint.map(p=>`${p.x},${p.y}`).join(' ')} fill="#46665b" fillOpacity={.16} stroke="#36554b" strokeWidth={2} strokeDasharray="6 3"/><text x={data!.pergola!.xFt*12} y={data!.pergola!.zFt*12} fontSize={9} textAnchor="middle" fill="#36554b">ALUMINUM PERGOLA · {pergola.conceptual?'CONCEPT':'LISTED ENVELOPE'}</text></g>}
  </svg>;
 }

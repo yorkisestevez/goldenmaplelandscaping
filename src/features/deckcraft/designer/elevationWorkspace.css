@@ -1,0 +1,11 @@
+.dd-elevation-workspace{padding:1rem;border:1px solid var(--dd-line,#d7dcd6);border-radius:12px;margin:0 0 1rem;min-width:0;overflow-wrap:anywhere}
+.dd-elevation-workspace .dd-summary-actions{display:flex;flex-wrap:wrap;gap:.5rem;margin:.75rem 0}
+.dd-elevation-workspace [aria-pressed=true]{outline:2px solid #52694b;outline-offset:1px}
+.dd-elevation-workspace svg{max-width:100%;height:auto}
+.dd-elevation-workspace input,.dd-elevation-workspace select,.dd-elevation-workspace textarea{max-width:100%;min-width:0;box-sizing:border-box}
+.dd-elevation-workspace .dd-fields>*{min-width:0}
+.dd-elevation-workspace .dd-profile-table{overflow-x:auto}
+@media(max-width:640px){.dd-elevation-workspace{padding:.75rem}.dd-elevation-workspace .dd-fields{grid-template-columns:1fr}.dd-elevation-workspace .dd-summary-actions>button{flex:1 1 140px}.dd-elevation-workspace .dd-yard-elevation-row{flex-wrap:wrap}}
+
+.dd-elevation-table{overflow-x:auto;margin:1rem 0}.dd-elevation-table table{width:100%;border-collapse:collapse;font-size:.875rem}.dd-elevation-table th,.dd-elevation-table td{padding:.5rem;text-align:left;border-bottom:1px solid #d7dcd6}.dd-elevation-table caption{text-align:left;font-weight:600;margin-bottom:.5rem}
+.dd-elevation-workspace .dd-area-review{padding:.75rem;border-left:3px solid #286339;background:#f3f8ef}.dd-elevation-workspace .dd-area-review table{width:100%;font-size:.875rem;text-align:left}.dd-elevation-workspace .dd-area-review th,.dd-elevation-workspace .dd-area-review td{padding:.3rem}.dd-elevation-workspace .dd-area-review table:not(:has(tbody tr)){display:none}.dd-elevation-workspace .dd-area-review button{margin:.4rem .5rem .2rem 0;padding:.5rem .75rem;border:1px solid #b2bcaf;border-radius:.4rem;background:#fff;color:#263a2b}

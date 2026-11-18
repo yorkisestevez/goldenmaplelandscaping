@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from 'react';
-import { motion } from 'motion/react';
 import { Check, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { cn } from '../utils/cn';
 import PriceDelta from './ui/PriceDelta';
@@ -118,12 +117,7 @@ export default function EstimateWorkbench({
   const conditionCount = Object.values(conditions).filter(Boolean).length;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 120, damping: 20, delay: 0.1 }}
-      className="bg-brand-cream-light border border-brand-gold/25 rounded-3xl p-7 md:p-9"
-    >
+    <div className="bg-brand-cream-light border border-brand-gold/25 rounded-3xl p-7 md:p-9">
       <div className="flex items-start gap-3 mb-8">
         <div className="w-9 h-9 rounded-xl bg-brand-gold/10 border border-brand-gold/25 flex items-center justify-center text-brand-gold-dark shrink-0">
           <SlidersHorizontal size={16} strokeWidth={1.75} />
@@ -172,7 +166,7 @@ export default function EstimateWorkbench({
                   className={cn(
                     'px-4 py-3.5 rounded-2xl border text-left transition-all duration-200',
                     isCurrent
-                      ? 'bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]'
+                      ? 'bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(217,150,106,0.4)]'
                       : 'bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
                   )}
                 >
@@ -282,6 +276,6 @@ export default function EstimateWorkbench({
           </div>
         </Section>
       </div>
-    </motion.div>
+    </div>
   );
 }

@@ -1,32 +1,41 @@
-import {Suspense,lazy,useCallback,useEffect,useMemo,useRef,useState} from 'react';
-import {Link} from 'react-router-dom';
+import {Suspense,lazy,use,useCallback,useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
+import {Link,useSearchParams} from 'react-router-dom';
 import SEO from '../components/SEO';
 import {deckReleaseData,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../features/deckcraft/deckRelease';
-import {DEFAULT_DECK} from '../features/deckcraft/defaults';
-import type {DeckData,HouseOpening,PrivacyScreen} from '../features/deckcraft/types';
+import {NEW_DECK} from '../features/deckcraft/defaults';
+import {DEFAULT_FEATURE_LABOUR} from '../features/deckcraft/featureLabour';
+import type {DeckData,DeckInlay,HouseOpening,PrivacyScreen} from '../features/deckcraft/types';
 import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,pricedPrivacyArea,privacySides,screenOn,screenProduct} from '../features/deckcraft/privacyScreens';
 import {MAX_DESIGN_BYTES} from '../features/deckcraft/designPersistence';
-import {designFeatures,setDeckAnalyticsSink,stepLabel,trackDeck} from '../features/deckcraft/deckAnalytics';
-import {ATTACH_PROPOSAL_PDF,DECK_DESIGN_FORM,PROPOSAL_PDF_NAME} from '../features/deckcraft/sendDesign';
+import {setDeckAnalyticsSink,stepLabel,trackDeck} from '../features/deckcraft/deckAnalytics';
+import {ATTACH_PROPOSAL_PDF,DECK_DESIGN_FORM,PROPOSAL_PDF_NAME} from '../features/deckcraft/sendDesignConstants';
 import type {ProposalShot} from '../features/deckcraft/proposalModel';
 import {getHouseConfig,clampHouseOpening} from '../features/deckcraft/houseSettings';
 import {getHouseContact} from '../features/deckcraft/houseContact';
-import {dollars} from '../features/deckcraft/designFacts';
+import {dollars,type DeckEstimate} from '../features/deckcraft/designFacts';
 import {activeWrap,edgeNameOf} from '../features/deckcraft/lib/wrapGeometry';
 import {angledStairAllowed,angledStairFits,isChamferEdgeId} from '../features/deckcraft/lib/cornerChamfers';
 import {CAMERA_MODES,type PlanTool,type PreviewMode} from '../features/deckcraft/designer/constants';
-import PhoneDeckBar from '../features/deckcraft/designer/PhoneDeckBar';
-import PriceLedger,{ChangeAnnouncer} from '../features/deckcraft/designer/PriceLedger';
+import ChangeAnnouncer from '../features/deckcraft/designer/ChangeAnnouncer';
 import {priceLedger} from '../features/deckcraft/designer/priceLedgerModel';
 import {priceState,useChangeLedger} from '../features/deckcraft/designer/useChangeLedger';
-import {downloadFile} from '../features/deckcraft/designer/fields';
+import {downloadFile} from '../features/deckcraft/designer/downloadFile';
 import {useDeckDesign} from '../features/deckcraft/designer/useDeckDesign';
+import {prepareDesignUpdate} from '../features/deckcraft/designer/designUpdate';
 import {useDeckEstimate} from '../features/deckcraft/designer/useDeckEstimate';
 import type {DeltaProps} from '../features/deckcraft/designer/useOptionDeltas';
-import DesignTools from '../features/deckcraft/designer/DesignTools';
-import PreviewPanel,{loadExteriorStudio,loadViewer} from '../features/deckcraft/designer/PreviewPanel';
-import SectionList from '../features/deckcraft/designer/SectionList';
+import WorkspaceTools from '../features/deckcraft/designer/WorkspaceTools';
+import WorkspacePrice from '../features/deckcraft/designer/WorkspacePrice';
+import {designerModeOn,useDesignerMode} from '../features/deckcraft/designer/designerMode';
+import {assertLeadsAllowed,useInternalMode} from '../features/deckcraft/internalMode';
+import type {ProPage} from '../features/deckcraft/designer/pro/proTypes';
+const noteWarmLead=(...args:Parameters<typeof import('../features/deckcraft/warmLead').noteWarmLead>)=>void import('../features/deckcraft/warmLead').then(m=>m.noteWarmLead(...args));
+import {desktopViewer,loadArchitectShortcuts,loadExteriorStudio,loadPlanBoundaryEditor,loadPlanEditingWorkspace,loadPlanToolPicker,loadViewer} from '../features/deckcraft/designer/previewLoaders';
+import {preloadable,whenSettled} from '../features/deckcraft/designer/hydrationLazy';
+const PreviewPanel=preloadable(()=>import('../features/deckcraft/designer/PreviewPanel'));
+import {ESTIMATOR_TABS,HOME_TABS,NEXT_TABS,homeTabLabel,phoneLayout,tabOfSection,tabOfTool,type HomeTabId} from '../features/deckcraft/designer/homeTabs';
 import {SECTIONS,SECTION_BY_ID,loadBackyardStep,loadBoardColourPanel,loadDeckFinishesPanel,loadDimensionsStep,loadEstimateStep,loadHouseSection,loadInlayEditor,loadMaterialsStep,loadSiteExtrasStep,loadSkirtingEditor,loadStairsStep,sectionsOfPatch,type SectionId} from '../features/deckcraft/designer/sections';
+import type {AgentRequest} from '../features/deckcraft/designer/deckAgentController';
 import type {BoardPaintChoice} from '../features/deckcraft/boardFinishes';
 import type {paintBoard as PaintBoard} from '../features/deckcraft/boardPaint';
 import {trackEngagement,trackLead} from '../utils/analytics';
@@ -34,13 +43,19 @@ import {getAttributionFields} from '../utils/utmCapture';
 import {getBehaviorFields} from '../utils/behavior';
 import {genEventId} from '../utils/eventId';
 import './DeckDesigner.css';
+import '../features/deckcraft/designer/workspace.css';
+// The tools ribbon is in the prerendered page, so its styles come with the page's own (render-blocking) stylesheet: with
+// its lazy chunk they landed after the first paint and the ribbon grew from 72 to 129 px, pushing the plan down.
+import '../features/deckcraft/designer/planToolPicker.css';
+// The new look is the prerendered page, so its layout comes with the page's stylesheet too (after the sheets it restyles).
+import '../features/deckcraft/designer/next/nextShell.css';
 
 /**
  * The drawing-set type, on this page only: Archivo (headings, section names, the title block) and IBM Plex Mono
  * (figures), from Google Fonts with display=swap, so text shows at once in the fallback faces DeckDesigner.css
  * sizes to match. Body text stays in the site's Inter; Cormorant stays in the wordmark.
  */
-const DECK_FONTS='https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@87.5,500..600&family=IBM+Plex+Mono:wght@500&display=swap';
+const DECK_FONTS='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
 export const links=()=>[
   {rel:'preconnect',href:'https://fonts.googleapis.com'},
   {rel:'preconnect',href:'https://fonts.gstatic.com',crossOrigin:'anonymous' as const},
@@ -49,12 +64,38 @@ export const links=()=>[
 
 // Loaded on demand (and fetched once the page settles), so they are not part of the page's first load: every
 // section's body (through the registry in sections.ts) and the send and proposal dialogs.
+const QuoteReviewPanel=lazy(()=>import('../features/deckcraft/designer/QuoteReviewPanel'));
+const DeckAgentBridge=lazy(()=>import('../features/deckcraft/designer/DeckAgentBridge'));
+const SketchDesigner=lazy(()=>import('../features/deckcraft/sketch/SketchDesigner'));
+const ContractorPresets=lazy(()=>import('../features/deckcraft/designer/ContractorPresetDialog'));
+const EasyEditTools=lazy(()=>import('../features/deckcraft/designer/EasyEditTools'));
+const IssueReviewDialog=lazy(()=>import('../features/deckcraft/designer/IssueReviewDialog'));
+const PermitSetDialog=lazy(()=>import('../features/deckcraft/drawings/PermitSetDialog'));
+const JobRevisionDialog=lazy(()=>import('../features/deckcraft/designer/JobRevisionDialog'));
+const ProMenuBar=lazy(()=>import('../features/deckcraft/designer/pro/ProMenuBar'));
+// The new look's controls (next/NextShell.tsx): the homeowner page's own, so the estimator's studio never loads them.
+const nextShell=()=>import('../features/deckcraft/designer/next/NextShell');
+const NextTopBar=preloadable(()=>nextShell().then(m=>({default:m.NextTopBar}))),NextRail=preloadable(()=>nextShell().then(m=>({default:m.NextRail}))),NextPricePill=preloadable(()=>nextShell().then(m=>({default:m.NextPricePill}))),NextViewButton=lazy(()=>nextShell().then(m=>({default:m.NextViewButton})));
+const ProjectFileTools=lazy(()=>import('../features/deckcraft/ProjectFileTools')),LayerMenu=lazy(()=>import('../features/deckcraft/designer/LayerList')),LedgerDrawer=lazy(()=>import('../features/deckcraft/designer/PriceLedger').then(m=>({default:m.LedgerDrawer}))),loadQuickPicks=()=>import('../features/deckcraft/designer/next/QuickPicks'),QuickPicks=lazy(loadQuickPicks);
+const loadHomePanel=()=>import('../features/deckcraft/designer/HomePanel');
+const HomePanel=lazy(loadHomePanel);
 const loadSendDialog=()=>import('../features/deckcraft/SendDesignDialog');
 const loadProposalDialog=()=>import('../features/deckcraft/ProposalDialog');
-const HouseSection=lazy(loadHouseSection),DimensionsStep=lazy(loadDimensionsStep),MaterialsStep=lazy(loadMaterialsStep),StairsStep=lazy(loadStairsStep),SiteExtrasStep=lazy(loadSiteExtrasStep),EstimateStep=lazy(loadEstimateStep);
+const HouseSection=lazy(loadHouseSection),DimensionsStep=preloadable(loadDimensionsStep),MaterialsStep=lazy(loadMaterialsStep),StairsStep=lazy(loadStairsStep),SiteExtrasStep=lazy(loadSiteExtrasStep),EstimateStep=lazy(loadEstimateStep);
 const BackyardStep=lazy(loadBackyardStep),SendDesignDialog=lazy(loadSendDialog),ProposalDialog=lazy(loadProposalDialog);
+/**
+ * The prerendered page holds the drawing (its Project controls, tools ribbon and plan) and the Deck section's body, drawn by
+ * chunks that load after the page. The designer waits for them before it hydrates, so React keeps that HTML instead of
+ * throwing it away on the first update and redrawing it when they land: at most 4 s, then as before. The prerender (no
+ * document) never waits; the cost estimator's studio waits behind its own loading screen. The drawing's own pieces start
+ * with it, not after it. In development a cold start can pass 4 s, and editing this file makes a new gate (one wait).
+ * The homeowner page's prerender is the new look, so its controls (top bar, rail and price pill) are among those pieces;
+ * elsewhere (the estimator's studio, Designer Mode) it is the old screens' stylesheet (classicChrome.css).
+ */
+const homeownerPage=()=>location.pathname.startsWith('/deck-designer')&&!designerModeOn();
+const loadClassicChrome=()=>import('../features/deckcraft/designer/classicChrome.css');
+const piecesReady=typeof document==='undefined'?undefined:whenSettled([PreviewPanel.preload().then(panel=>panel.partsReady),DimensionsStep.preload(),loadArchitectShortcuts(),loadPlanToolPicker(),loadPlanEditingWorkspace(),...(homeownerPage()?[NextTopBar.preload(),NextRail.preload(),NextPricePill.preload()]:[loadClassicChrome()])],4000);
 // Phones (the layout's single column) show one section at a time; wider screens keep several open.
-const onePhoneSection=()=>typeof window!=='undefined'&&!!window.matchMedia?.('(max-width: 760px)').matches;
 const reducedMotion=()=>typeof window!=='undefined'&&!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 // DeckCraft's funnel events go through the site's analytics (GA4, Meta and the behaviour trail sent with leads).
@@ -67,26 +108,75 @@ setDeckAnalyticsSink((event,label)=>trackEngagement(event,label));
  * effect lives here, in the order the page has always run them.
  */
 export default function DeckDesigner(){
+  return <DeckCraftWorkspace/>;
+}
+
+/** The cost estimator's hold on the designer when it opens it inside itself: a bar above the workspace, drawn from the
+ *  live design and estimate. The estimator's page keeps its own title and address, so the designer adds none. */
+export interface DeckCraftEmbed{
+  renderBar:(live:{data:DeckData;estimate:DeckEstimate})=>ReactNode;
+}
+
+/** The whole designer: the /deck-designer page, and the cost estimator's deck step (`embed`). */
+export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
+  if(piecesReady)use(piecesReady); // Hydration, and the estimator's studio, wait for the prerendered pieces (piecesReady).
+  const internalMode=useInternalMode();
   // The open sections. Every section starts closed, in the prerendered page and on the client alike; none is saved.
-  const [open,setOpen]=useState<ReadonlySet<SectionId>>(()=>new Set());
-  const closeSections=useCallback(()=>setOpen(new Set()),[]);
+  const [open,setOpen]=useState<ReadonlySet<SectionId>>(()=>new Set(['deck']));
+  const [workspaceView,setWorkspaceView]=useState<'canvas'|'inspector'>('canvas');
+  // Homeowners: the open tab and whether its panel shows (homeTabs.ts). The page opens on Draw with the panel closed.
+  const [homeTab,setHomeTab]=useState<HomeTabId>('draw'),[panelOpen,setPanelOpen]=useState(false);
+  // Once opened, the panel stays mounted while hidden, so it reopens where the visitor left it.
+  const [panelUsed,setPanelUsed]=useState(false);
+  // A section opened from elsewhere, for the panel to bring into view and focus once it shows (it may still be loading).
+  const [focusSection,setFocusSection]=useState<SectionId|null>(null);
+  useEffect(()=>{if(panelOpen)setPanelUsed(true);},[panelOpen]);
+  const [sketchOpen,setSketchOpen]=useState(false);
+  const [pendingInlay,setPendingInlay]=useState<DeckInlay|null>(null);
+  const [presetsOpen,setPresetsOpen]=useState(false);
+  const [jobsOpen,setJobsOpen]=useState(false),[askOpen,setAskOpen]=useState(false),[askExpert,setAskExpert]=useState<import('../features/deckcraft/designer/expertAgents').ExpertId>('general'),[issuesOpen,setIssuesOpen]=useState(false),[permitOpen,setPermitOpen]=useState(false);
+  const [quoteReviewOpen,setQuoteReviewOpen]=useState(false),[assistantTargets,setAssistantTargets]=useState<AgentRequest|null>(null);
+  const [jobLabel,setJobLabel]=useState(''),[issueCount,setIssueCount]=useState(0);
+  const [selection,setSelection]=useState<import('../features/deckcraft/designer/selectionState').SelectionState>({partIds:[],boards:[]});
+  const [geometryPreview,setGeometryPreview]=useState<DeckData|null>(null);
+  // The landscape drawing and its Backyard controls edit the same feature. This choice is UI state only.
+  const [yardFeatureId,setRawYardFeatureId]=useState('');
+  const [yardTarget,setYardTarget]=useState<{id:string;target:'area'|'edge'|'point';index:number}>({id:'',target:'area',index:0});
+  const setYardFeatureId=(id:string)=>{setRawYardFeatureId(id);setYardTarget({id,target:'area',index:0});};
+  const clearJobContext=()=>{setJobLabel('');void import('../features/deckcraft/designer/jobRevisionLibrary').then(m=>m.clearActiveJobLabel()).catch(()=>{});};
   // Your changes (the price schedule): every edit, undo, redo and whole new design is noted as it happens.
   const changes=useChangeLedger();
-  const {data,setData,update:applyUpdate,replace:replaceDesign,undo:undoDesign,redo:redoDesign,canUndo,canRedo,earlierYard,restoreEarlierYard:restoreYard,dismissEarlierYard,mounted,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign}=useDeckDesign({onReplaced:()=>{closeSections();changes.loaded();}});
+  const {data,setData,update:applyUpdate,replace:replaceDesign,undo:undoDesign,redo:redoDesign,canUndo,canRedo,earlierYard,restoreEarlierYard:restoreYard,dismissEarlierYard,mounted,designReady,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,autosaveState,lastAutosaveAt,autosavePaused,unrestoredDesign,resumeAutosave,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign}=useDeckDesign({onReplaced:()=>{closeSections();changes.loaded();clearJobContext();}});
+  const importState=useRef({data,request:0});importState.current.data=data;
+  const selectedYardFeatureId=[...(data.yardFeatures??[]),...(data.pools??[])].some(f=>f.id===yardFeatureId)?yardFeatureId:data.yardFeatures?.[0]?.id??'';
+  useEffect(()=>{if(yardFeatureId!==selectedYardFeatureId)setYardFeatureId(selectedYardFeatureId);},[yardFeatureId,selectedYardFeatureId]);
+  useEffect(()=>{if(mounted)void import('../features/deckcraft/designer/jobRevisionLibrary').then(m=>{const active=m.readActiveJobLabel();if(active)setJobLabel(`${active.job} · ${active.revision}`);}).catch(()=>{});},[mounted]);
   const replace=(next:DeckData)=>{changes.loaded();replaceDesign(next);};
   const undo=()=>{if(canUndo)changes.undo();undoDesign();},redo=()=>{if(canRedo)changes.redo();redoDesign();};
   const restoreEarlierYard=()=>{if(earlierYard)changes.edit(earlierYard,data);restoreYard();};
   // Section reach: the first edit in each section counts once per visit, attributed through the fields it owns.
   const changedSections=useRef(new Set<SectionId>());
   const update=(patch:Partial<DeckData>)=>{
+    try{prepareDesignUpdate(data,patch);}catch(error){setDesignError(`${error instanceof Error?error.message:'This edit cannot be applied.'} Unlock the measured edge before changing its length or direction.`);return;}
     for(const id of sectionsOfPatch(patch,data))if(!changedSections.current.has(id)){changedSections.current.add(id);trackDeck('deckcraft_section',`deck_changed_${id}`);}
     changes.edit(patch,data);
     applyUpdate(patch);
+  };
+  // One confirmed component or preset application is one history entry, even when two happen quickly.
+  const atomicUpdate=(patch:Partial<DeckData>)=>{
+    try{
+      const next=prepareDesignUpdate(data,patch);
+      const diff=Object.fromEntries(Object.keys({...data,...next}).filter(k=>JSON.stringify(data[k as keyof DeckData])!==JSON.stringify(next[k as keyof DeckData])).map(k=>[k,next[k as keyof DeckData]]));
+      if(!Object.keys(diff).length)return;
+      changes.edit(diff,data,true);setSaved(false);setDesignError('');replaceDesign(next);
+    }catch(error){setDesignError(error instanceof Error?error.message:'The edit could not be applied.');throw error;}
   };
   // Ctrl/Cmd+Z undoes a design change and Ctrl/Cmd+Shift+Z (or Ctrl+Y) redoes it, except while typing in a
   // field, where the browser's own undo applies to the text.
   useEffect(()=>{
     const onKey=(e:KeyboardEvent)=>{
+      // A drawing draft handles its own Ctrl+Z first (useDraftKeys) and marks the key as taken.
+      if(e.defaultPrevented||sketchOpen||presetsOpen||jobsOpen||quoteReviewOpen||issuesOpen||permitOpen)return;
       if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
       const t=e.target as HTMLElement|null;if(t&&(t.isContentEditable||/^(input|textarea|select)$/i.test(t.tagName)))return;
       const key=e.key.toLowerCase();
@@ -98,12 +188,60 @@ export default function DeckDesigner(){
   const [lightingSearch,setLightingSearch]=useState('');
   const [selectedHouseOpeningId,setSelectedHouseOpeningId]=useState('');
   const [exteriorOpen,setExteriorOpen]=useState(false);
-  // The drawing opens on the site plan: the customer sizes the deck against the house first. 3D is a sheet of its own.
+  // The drawing is prerendered on the site plan, where a phone, Designer Mode and the estimator's studio stay.
   const [mode,setMode]=useState<PreviewMode>('plan');
   // Opening the exterior studio shows the 3D view (looks never show on the plan).
   // The site plan's tool (R5). A deck that becomes a custom outline is drawn with the Draw outline tool.
   const [planTool,setPlanTool]=useState<PlanTool>('size');
+  const pro=useDesignerMode();
+  // The new look is the homeowner page; Designer Mode is the CAD workspace (the menus join the title bar, the price the
+  // inspector). The estimator's studio keeps its own screens (its bar, the tabs and the price beside them).
+  const next=!pro&&!embed,nextRef=useRef(next),cad=pro&&!embed;
+  nextRef.current=next;
+  // A desktop opens in 3D (owner, 2026-11-02): once the page is running, WebGL works and the 3D viewer (fetched as the plan
+  // opens) has loaded, the plan hands over to the 3D view, unless the visitor has already started on the page (a press, a
+  // key or a wheel). Phones and browsers saving data stay on the plan, with no 3D download at load, and so do automated
+  // browsers (navigator.webdriver, as for the trackers: utils/trackingGate.ts), which would otherwise build the 3D scene
+  // on every load (deck-open-3d.spec.ts poses as a visitor). Settled once: an effect cleaned up before that (React's
+  // development double run) arms it again.
+  const opened3d=useRef(false);
+  useEffect(()=>{
+    if(!next||!mounted||!hasWebGL||opened3d.current||navigator.webdriver||phoneLayout()||!desktopViewer())return;
+    opened3d.current=true;let live=true,settled=false;const started=()=>{live=false;settled=true;},events=['pointerdown','keydown','wheel'];
+    for(const name of events)addEventListener(name,started,{capture:true,passive:true});
+    loadViewer().then(()=>{if(live){settled=true;setMode(m=>m==='plan'?'3d':m);}},()=>{settled=true;/* The plan stays. */});
+    return ()=>{live=false;if(!settled)opened3d.current=false;for(const name of events)removeEventListener(name,started,{capture:true});};
+  },[next,mounted,hasWebGL]);
+  // Designer Mode turned on during a visit: its screens' stylesheet was not among the pieces.
+  useEffect(()=>{if(!next)loadClassicChrome().catch(()=>{/* Loaded again on the next change. */});},[next]);
+  // A new design reopens the Deck section; the new look opens each group on its quick picks, so nothing starts open there.
+  // It reads the look through a ref (Designer Mode can change it), since the design loader (useDeckDesign) keeps the
+  // callback from the first render.
+  const closeSections=()=>{setOpen(new Set(nextRef.current?[]:['deck']));setWorkspaceView('canvas');setPanelOpen(false);};
+  // The quick picks are fetched as the new look turns on, unless the visitor has asked the browser to save data.
+  useEffect(()=>{
+    if(!next)return;
+    setOpen(new Set());
+    if(!(navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData)loadQuickPicks().catch(()=>{/* Loaded again when a group opens. */});
+  },[next]);
+  // The cost estimator's studio has its own price and hand-off, so its tabs leave out Price & send (homeTabs.ts).
+  const homeTabs=embed?ESTIMATOR_TABS:next?NEXT_TABS:HOME_TABS;
+  // The new look's price schedule (its quote has no price bar to open it from); it hands the focus back on closing.
+  const [scheduleOpen,setScheduleOpen]=useState(false),scheduleOpener=useRef<HTMLElement|null>(null);
+  const openSchedule=()=>{scheduleOpener.current=document.activeElement as HTMLElement|null;setScheduleOpen(true);};
+  const [searchParams]=useSearchParams();
+  // The customer view (?view=customer) starts once the page is running: the prerendered page has no query, and React keeps
+  // the prerender's attributes while it hydrates, so a flag read during hydration never reached the page.
+  const customer=mounted&&searchParams.get('view')==='customer';
+  const [crewBusy,setCrewBusy]=useState(false);
+  const assistantYardFeature=data.yardFeatures?.find(f=>f.id===selectedYardFeatureId);
+  const yardInFocus=planTool==='yard'||(pro?workspaceView==='inspector':panelOpen)&&open.has('backyard');
+  const assistantSelection={...selection,...(data.pools?.some(p=>p.id===selectedYardFeatureId)?{poolId:selectedYardFeatureId}:{}),...(yardInFocus&&assistantYardFeature&&assistantYardFeature.kind!=='water-feature'?{yard:yardTarget.id===selectedYardFeatureId?yardTarget:{id:selectedYardFeatureId,target:'area' as const,index:0}}:{})};
+  useEffect(()=>{if(planTool!=='inlays')setPendingInlay(null);},[planTool]);
+  useEffect(()=>{setPendingInlay(null);},[data]);
   useEffect(()=>{if(data.shape==='Custom')setPlanTool(t=>t==='size'?'outline':t);},[data.shape]);
+  // A tool chosen from elsewhere (a section's "on the plan" link, a located warning, the agent) brings its own tab forward.
+  useEffect(()=>{const owner=tabOfTool(planTool,homeTabs);if(owner)setHomeTab(tab=>homeTabs.find(t=>t.id===tab)?.tools.includes(planTool)?tab:owner.id);},[planTool]);
   const openExterior=useCallback((open:boolean)=>{setExteriorOpen(open);if(open)setMode(m=>CAMERA_MODES.includes(m)?m:'3d');},[]);
   const [wrapStatus,setWrapStatus]=useState('');
   const [proposal,setProposal]=useState<{shots:ProposalShot[];date:string}|null>(null);
@@ -111,6 +249,7 @@ export default function DeckDesigner(){
   const [snapshotLighting,setSnapshotLighting]=useState<'Daylight'|'Evening'|null>(null);
   const [preparing,setPreparing]=useState(false);
   const [sendOpen,setSendOpen]=useState(false);
+  const [agentOpen,setAgentOpen]=useState(false);
   const [pdfBusy,setPdfBusy]=useState(false);
   // Whether a 3D view has been shown yet: the 3D viewer loads only when one is (or for a snapshot), so a snapshot waits
   // longer for a viewer that has never loaded.
@@ -118,10 +257,10 @@ export default function DeckDesigner(){
   useEffect(()=>{if(mode!=='plan'&&mode!=='drawing')shown3d.current=true;},[mode]);
   // Phones: pinning the drawing while editing is the visitor's choice. It pins the sheet on screen (the plan, unless the
   // 3D sheet is showing), so it never loads the 3D view on its own.
-  const [docked,setDocked]=useState(false);
-  const toggleDock=()=>{const next=!docked;setDocked(next);if(next)trackDeck('deckcraft_view','deck_view_docked');};
-  const snapshot=useRef<((longEdgePx?:number)=>string|null)|null>(null);
-  const onSnapshotReady=useCallback((capture:((longEdgePx?:number)=>string|null)|null)=>{snapshot.current=capture;},[]);
+  const docked=false;
+  type SnapshotCapture=((longEdgePx?:number)=>string|null)&{ready?:()=>Promise<boolean>};
+  const snapshot=useRef<SnapshotCapture|null>(null);
+  const onSnapshotReady=useCallback((capture:SnapshotCapture|null)=>{snapshot.current=capture;},[]);
   const closeProposal=useCallback(()=>setProposal(null),[]);
   const closeSend=useCallback(()=>setSendOpen(false),[]);
   // Funnel: the page load counts the first step, as the wizard did; each preview mode and design feature is counted
@@ -129,30 +268,56 @@ export default function DeckDesigner(){
   useEffect(()=>{trackDeck('deckcraft_step',stepLabel(0));},[]);
   useEffect(()=>{trackDeck('deckcraft_view',`deck_view_${mode}`);},[mode]);
   // Fetch the section bodies and the on-demand panels once the page has settled, so opening one is instant; not when
-  // the visitor has asked the browser to save data. A desktop also fetches the 3D viewer then (without drawing it); a
-  // phone never downloads three.js until a 3D view is chosen.
+  // the visitor has asked the browser to save data. The 3D viewer is the plan's own prefetch (previewLoaders.prefetchViewer):
+  // a desktop fetches it as the plan opens, a phone never downloads three.js until a 3D view is chosen.
   useEffect(()=>{
     if((navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData)return;
-    const desktopOnly=window.matchMedia?.('(min-width: 761px) and (pointer: fine)').matches?[loadViewer]:[];
-    const timer=setTimeout(()=>{for(const load of [...new Set(SECTIONS.map(s=>s.load)),loadSendDialog,loadProposalDialog,loadBoardColourPanel,loadInlayEditor,loadExteriorStudio,loadSkirtingEditor,loadDeckFinishesPanel,...desktopOnly])load().catch(()=>{/* Loaded again when opened. */});},4000);
+    const timer=setTimeout(()=>{for(const load of [...new Set(SECTIONS.map(s=>s.load)),loadSendDialog,loadProposalDialog,loadHomePanel,loadBoardColourPanel,loadInlayEditor,loadExteriorStudio,loadSkirtingEditor,loadDeckFinishesPanel,loadPlanBoundaryEditor])load().catch(()=>{/* Loaded again when opened. */});},4000);
     return()=>clearTimeout(timer);
   },[]);
-  /** Opens a section (analytics: its old wizard step, and the section, once per visit). On a phone it closes the others. */
-  function openSection(id:SectionId,bringIntoView=false){
+  /** A section's reach (analytics: its old wizard step, and the section, once per visit). */
+  function trackSection(id:SectionId){
     const section=SECTION_BY_ID[id];
     trackDeck('deckcraft_step',stepLabel(section.legacyStep));
     trackDeck('deckcraft_section',`deck_section_${section.id}`);
-    const single=onePhoneSection();
-    setOpen(prev=>new Set([...(single?[]:prev),id]));
-    // A section closing above this one moves it up, off the screen; one opened from elsewhere is brought into view.
-    if(single||bringIntoView)requestAnimationFrame(()=>{
-      const row=document.getElementById(`dd-section-${id}`),top=row?.getBoundingClientRect().top??0;
-      if(row&&(bringIntoView||top<0||top>window.innerHeight))row.scrollIntoView({block:'start',behavior:bringIntoView&&!reducedMotion()?'smooth':'auto'});
-    });
   }
-  const toggleSection=(id:SectionId)=>{if(open.has(id))setOpen(prev=>{const next=new Set(prev);next.delete(id);return next;});else openSection(id);};
-  const featureKey=designFeatures(data).join(' ');
-  useEffect(()=>{for(const label of featureKey.split(' '))if(label)trackDeck('deckcraft_feature',label);},[featureKey]);
+  /** Opens a section, closing the others. A homeowner sees it in its tab's panel, with the view and the plan tool left as
+   *  they are; Designer Mode docks it in its properties. */
+  function openSection(id:SectionId,bringIntoView=false){
+    trackSection(id);
+    setOpen(new Set([id]));
+    if(pro)setWorkspaceView('inspector');else{showTab(tabOfSection(id,homeTabs).id);setPanelOpen(true);setFocusSection(bringIntoView?id:null);}
+    // One opened from elsewhere is brought into view; the homeowner's panel also gives it the focus (HomePanel.tsx).
+    if(bringIntoView&&pro)requestAnimationFrame(()=>document.getElementById(`dd-section-${id}`)?.scrollIntoView({block:'start',behavior:reducedMotion()?'auto':'smooth'}));
+  }
+  /** Shows a tab in the strip (counted once per visit), leaving the view and the plan tool alone. */
+  function showTab(id:HomeTabId){trackDeck('deckcraft_section',homeTabLabel(id));setHomeTab(id);}
+  /** A homeowner picks a tab. Draw gives the drawing the whole width, on the plan, with a drawing tool; the others open their
+   *  view and their panel at its first section. Picking the open tab again, its panel showing, changes nothing (Draw aside,
+   *  which always gives the drawing back); with the panel put away, it brings the panel back as it was left. */
+  function selectHomeTab(id:HomeTabId){
+    const tab=homeTabs.find(t=>t.id===id)??homeTabs[0];
+    setFocusSection(null);
+    if(id==='draw'){showTab(id);setMode('plan');setPlanTool(t=>tab.tools.includes(t)?t:data.shape==='Custom'?'outline':'size');setPanelOpen(false);return;}
+    if(id===homeTab&&panelOpen)return;
+    if(tab.view==='3d')setMode(m=>CAMERA_MODES.includes(m)?m:'3d');
+    // A rail group also hands the plan its tools, so the plan is ready if the visitor turns to it.
+    if(next&&tab.tools.length)setPlanTool(t=>tab.tools.includes(t)?t:tab.tools[0]);
+    setPanelOpen(true);
+    const first=id==='send'?undefined:tab.sections[0];
+    // Price & send opens no section, yet it is the estimate step of the closed funnel (docs/deckcraft/funnel-report.md).
+    // The new look keeps its sections folded under the quick picks, yet the visit still counts as the first section's.
+    const visit=()=>{showTab(id);if(first)trackSection(first);else trackDeck('deckcraft_step',stepLabel(SECTION_BY_ID.proposal.legacyStep));};
+    // What was left open in another tab (a new design reopens the Deck section) gives way to this tab's first section. In
+    // the new look a plan tool may have brought this group forward unseen, so reopening it still counts the visit.
+    if(id===homeTab&&[...open].every(s=>tab.sections.includes(s))){if(next)visit();return;}
+    visit();
+    setOpen(new Set(first&&!next?[first]:[]));
+  }
+  /** Hide panel: the focus goes back to the open tab. */
+  const hidePanel=()=>{setPanelOpen(false);setFocusSection(null);requestAnimationFrame(()=>(document.getElementById(`dd-home-tab-${homeTab}`)??document.querySelector<HTMLElement>('.dd-next-total'))?.focus());};
+  // Feature labels load after the page; each counts once per visit (deckAnalytics.ts), so a repeat send is dropped.
+  useEffect(()=>{let live=true;void import('../features/deckcraft/deckFeatures').then(({designFeatures})=>{if(live)for(const label of designFeatures(data))trackDeck('deckcraft_feature',label);});return()=>{live=false;};},[data]);
   const {estimate,estimateKey,lightingCheck,autoCounts,hasFixtures,reviewFlags,described}=useDeckEstimate(data,setData);
   // Where options are not priced without asking (phones, Save-Data), "Show price effect" holds for the visit; never saved.
   const [deltasShown,setDeltasShown]=useState(false);
@@ -226,6 +391,9 @@ export default function DeckDesigner(){
   }
   async function takeViews():Promise<ProposalShot[]>{
     if(!hasWebGL)return [];
+    const previousWorkspace=workspaceView;
+    // A mobile inspector hides the drawing. Render the real canvas while capturing proposal views.
+    setWorkspaceView('canvas');
     const wait=(ms:number)=>new Promise(r=>setTimeout(r,ms));
     // A frame of the 3D view (requestAnimationFrame), or half a second if the tab is hidden and frames have stopped.
     const frame=()=>new Promise<void>(r=>{let done=false;const go=()=>{if(!done){done=true;r();}};requestAnimationFrame(()=>go());setTimeout(go,500);});
@@ -250,21 +418,31 @@ export default function DeckDesigner(){
           for(let t=0;t<(loading?100:50)&&!snapshot.current;t++)await wait(100);
           await settle(loading?1500:700);
         }else await settle(450);
+        // Wait for this renderer's actual board maps, including atlas generation and application.
+        // A fixed camera delay alone can capture the generic fallback before the selected finish arrives.
+        const capture=snapshot.current;
+        if(!capture||(capture.ready&&!(await capture.ready())))throw new Error('The selected board finish is not ready for proposal images. Let the 3D view finish loading and try again.');
+        await settle(0);
         // Print resolution: the cover full-bleed on Letter, the other views at up to the sheet's width.
-        const src=snapshot.current?.(view===views[0]?2400:1800);if(src)shots.set(view.label,src);
+        const src=capture(view===views[0]?2400:1800);if(src)shots.set(view.label,src);
       }
     }finally{
       setMode(previous);setSnapshotLighting(null);
+      setWorkspaceView(previousWorkspace);
     }
     return views.flatMap(v=>{const src=shots.get(v.label);return src?[{label:v.label,src}]:[];});
   }
   const proposalDate=()=>new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
-  async function openProposal(){
+  async function openProposal(throwOnError=false){
     setPreparing(true);
     let shots:ProposalShot[]=[];
-    try{shots=await captureViews();}finally{setPreparing(false);}
+    try{shots=await captureViews();}
+    catch(error){setDesignError(error instanceof Error?error.message:'Proposal images could not be prepared. Please try again.');if(throwOnError)throw error;return;}
+    finally{setPreparing(false);}
+    setDesignError('');
     setProposal({shots,date:proposalDate()});
     trackDeck('deckcraft_output','deck_proposal');
+    noteWarmLead('proposal',{pricedSubtotal:estimate.subtotal,hasName:!!data.customerName.trim(),hasAddress:!!data.projectAddress.trim()});
   }
   // The PDF engine and its builder load only when a PDF is asked for. The proposal dialog hands over the pictures it
   // already has, so they are not taken again.
@@ -275,39 +453,87 @@ export default function DeckDesigner(){
     const exterior=exteriorSummary(data);
     return buildProposalPdf(jsPDF,{data,estimate,facts:exterior?[...proposalFacts,exterior]:proposalFacts,reviewItems:reviewFlags,date:proposalDate(),shots,sitePlan,plan,logo,swatches});
   }
-  async function downloadPdf(ready?:ProposalShot[]){
+  async function downloadPdf(ready?:ProposalShot[],throwOnError=false){
     setPdfBusy(true);setDesignError('');
-    try{downloadFile(await makeProposalPdf(ready),'application/pdf',PROPOSAL_PDF_NAME);trackDeck('deckcraft_output','deck_pdf');}
-    catch{setDesignError('The PDF could not be made on this device. Use “Print proposal” and choose “Save as PDF” instead.');}
+    try{
+      downloadFile(await makeProposalPdf(ready),'application/pdf',PROPOSAL_PDF_NAME);
+      trackDeck('deckcraft_output','deck_pdf');
+      noteWarmLead('pdf',{pricedSubtotal:estimate.subtotal,hasName:!!data.customerName.trim(),hasAddress:!!data.projectAddress.trim()});
+    }
+    catch(error){setDesignError('The PDF could not be made on this device. Use “Print proposal” and choose “Save as PDF” instead.');if(throwOnError)throw error;}
     finally{setPdfBusy(false);}
   }
-  // The export geometry loads only when a file is asked for.
-  async function exportModel(kind:'dxf'|'obj'){
+  async function downloadCrewPack(throwOnError=false){
+    setCrewBusy(true);setDesignError('');
     try{
-      const {exportDeckReleaseDXF,exportDeckReleaseOBJ}=await import('../features/deckcraft/deckReleaseExports');
-      const body=kind==='dxf'?exportDeckReleaseDXF(data,estimate.model):exportDeckReleaseOBJ(data,estimate.model);
-      downloadFile(body,kind==='dxf'?'application/dxf':'text/plain',`golden-maple-deck.${kind}`);setDesignError('');trackDeck('deckcraft_output',`deck_${kind}`);
-    }catch{setDesignError(`The ${kind.toUpperCase()} export could not be generated for this design. Adjust a dimension or contact us and we’ll prepare it.`);}
+      const {buildCrewPackZip}=await import('../features/deckcraft/crewPack');
+      downloadFile(await buildCrewPackZip(data,estimate,{date:proposalDate(),materialName:material.name,railingName,reviewItems:reviewFlags}),'application/zip','golden-maple-deck-crew-pack.zip');
+      trackDeck('deckcraft_output','deck_crew_pack');
+    }catch(error){setDesignError('The crew pack could not be built for this design. Try the cut-list and materials CSV exports instead.');if(throwOnError)throw error;}
+    finally{setCrewBusy(false);}
+  }
+  const warmShare=()=>noteWarmLead('share',{pricedSubtotal:estimate.subtotal,hasName:!!data.customerName.trim(),hasAddress:!!data.projectAddress.trim()});
+  // The export geometry loads only when a file is asked for.
+  async function exportModel(kind:'dxf'|'obj'|'dae'|'glb'|'materials'|'cuts'|'connectors',throwOnError=false){
+    try{
+      let body:BlobPart,type:string,name:string;
+      if(kind==='dxf'||kind==='obj'){
+        const {exportDeckReleaseDXF,exportDeckReleaseOBJ}=await import('../features/deckcraft/deckReleaseExports');
+        body=kind==='dxf'?exportDeckReleaseDXF(data,estimate.model):exportDeckReleaseOBJ(data,estimate.model);
+        type=kind==='dxf'?'application/dxf':'text/plain';name=`golden-maple-deck.${kind}`;
+      }else{
+        const {exportDeckCollada,exportDeckGlb,exportDeckCsv}=await import('../features/deckcraft/cadExports');
+        if(kind==='dae'){body=exportDeckCollada(deckReleaseData(data),estimate.model);type='model/vnd.collada+xml';name='golden-maple-deck.dae';}
+        else if(kind==='glb'){body=exportDeckGlb(deckReleaseData(data),estimate.model);type='model/gltf-binary';name='golden-maple-deck.glb';}
+        else{body=exportDeckCsv(estimate,kind);type='text/csv';name=`golden-maple-deck-${kind}.csv`;}
+      }
+      downloadFile(body,type,name);setDesignError('');trackDeck('deckcraft_output',`deck_${kind}`);
+    }catch(error){setDesignError(`The ${kind.toUpperCase()} export could not be generated for this design. Adjust a dimension or contact us and we’ll prepare it.`);if(throwOnError)throw error;}
+  }
+  async function exportPermit(kind:'pdf'|'dxf2d',throwOnError=false){
+    try{
+      const [{buildPermitSet},{PRICE_BOOK}]=await Promise.all([import('../features/deckcraft/drawings/permitSheets'),import('../features/deckcraft/priceBook')]);
+      const set=buildPermitSet({data,model:estimate.model,reviewItems:reviewFlags,materialName:material.name,railingName,date:proposalDate(),priceBook:PRICE_BOOK.version});
+      if(kind==='pdf'){
+        const [{jsPDF},{buildPermitPdf}]=await Promise.all([import('jspdf'),import('../features/deckcraft/drawings/renderPdf')]);
+        downloadFile(buildPermitPdf(jsPDF,set),'application/pdf','golden-maple-deck-permit-drawings.pdf');
+      }else{
+        const {buildPermitDxf}=await import('../features/deckcraft/drawings/renderDxf');
+        downloadFile(buildPermitDxf(set),'application/dxf','golden-maple-deck-permit-plans.dxf');
+      }
+      setDesignError('');trackDeck('deckcraft_output',kind==='pdf'?'permit_pdf':'permit_dxf');
+    }catch(error){setDesignError('The permit drawing export could not be generated for this design. Review its dimensions and try again.');if(throwOnError)throw error;}
   }
   // The design tools clear the file picker once this settles.
   async function importFile(file?:File){
-    if(!file)return;setDesignError('');
-    try{if(file.size>MAX_DESIGN_BYTES)throw new Error('Choose a design file smaller than 100 KB.');const restored=parseDesign(await file.text());replace(restored);setSaved(false);setDesignStatus(`Design imported${restored.yardFeatures?.length?', with its backyard':''}. Your estimate uses the current Golden Maple price book.`);trackDeck('deckcraft_output','deck_json_import');}
-    catch(error){setDesignError(error instanceof Error?error.message:'The design could not be imported.');}
+    if(!file)return;setDesignError('');const baseline=data,request=++importState.current.request;
+    try{
+      if(file.size>MAX_DESIGN_BYTES)throw new Error('Choose a design file smaller than 1 MB.');
+      const text=await file.text(),{prepareDesignFileImport}=await import('../features/deckcraft/designFileImport'),restored=await prepareDesignFileImport(text);
+      if(request!==importState.current.request||baseline!==importState.current.data){if(request===importState.current.request)setDesignStatus('Your newer changes are kept. Import the file again when ready.');return;}
+      if(!(await replaceDesign(restored)))return;
+      changes.loaded();clearJobContext();setSaved(false);await resumeAutosave();setDesignStatus(`Design imported${restored.yardFeatures?.length?', with its backyard':''}. Your estimate uses the current Golden Maple price book.`);trackDeck('deckcraft_output','deck_json_import');
+    }
+    catch(error){if(request===importState.current.request)setDesignError(error instanceof Error?error.message:'The design could not be imported.');}
   }
   // A sent design posts to the deck-design Netlify form (relayed to the CRM) with the site's attribution,
   // then counts as a lead conversion worth the priced subtotal, as the cost estimator does.
   async function postDesign(fields:Record<string,string>){
+    assertLeadsAllowed();
     const eventId=genEventId(),payload={...getAttributionFields(),...getBehaviorFields(),...fields,event_id:eventId};
     if(import.meta.env.DEV){
       // eslint-disable-next-line no-console
       console.log('[dev] deck-design payload (would POST to Netlify):',payload);
     }else{
       // With the PDF attachment switched on, try a multipart post first; any failure sends without the file.
+      // The attached copy never re-renders the proposal's 3D views behind the send dialog (slow on a phone, and it
+      // would move the customer's view): it takes the 3D view already on screen, if any. The lead's reopen link
+      // rebuilds the full proposal with every view.
       let sent=false;
       if(ATTACH_PROPOSAL_PDF)try{
         const form=new FormData();for(const [key,value] of Object.entries(payload))form.append(key,value);
-        form.append('proposal_pdf',new Blob([await makeProposalPdf()],{type:'application/pdf'}),PROPOSAL_PDF_NAME);
+        const onScreen=snapshot.current?.(1800),shots:ProposalShot[]=onScreen?[{label:'3D view',src:onScreen}]:[];
+        form.append('proposal_pdf',new Blob([await makeProposalPdf(shots)],{type:'application/pdf'}),PROPOSAL_PDF_NAME);
         sent=(await fetch('/',{method:'POST',body:form})).ok;
       }catch{/* Fall through to the plain submission. */}
       if(!sent){
@@ -317,35 +543,99 @@ export default function DeckDesigner(){
     }
     trackLead(DECK_DESIGN_FORM,'high-intent',Number(fields.value)||undefined,eventId,{email:fields.email,phone:fields.phone},{payload});
   }
-  function saveJSON(){try{downloadFile(serializeDesign(data),'application/json','golden-maple-deck-design.json');trackDeck('deckcraft_output','deck_json_save');setDesignStatus('Design JSON saved. Import this file to continue on another device.');setDesignError('');}catch{setDesignError('Saving the design file failed on this device. Use “Download summary” for a plain-text copy instead.');}}
+  function saveJSON(throwOnError=false){try{downloadFile(serializeDesign(data),'application/json','golden-maple-deck-design.json');trackDeck('deckcraft_output','deck_json_save');setDesignStatus('Design JSON saved. Import this file to continue on another device.');setDesignError('');}catch(error){setDesignError('Saving the design file failed on this device. Use “Download summary” for a plain-text copy instead.');if(throwOnError)throw error;}}
   // Each open section's body, with the page state it needs (the list wraps it in Suspense while its chunk loads).
   const renderSection=(id:SectionId)=>{switch(id){
     case 'house':return <HouseSection data={data} update={update} selectedOpeningId={effectiveHouseOpeningId} onSelectOpening={setSelectedHouseOpeningId} openExterior={()=>openExterior(true)}/>;
     case 'deck':return <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={levelEdges} onDrawOnPlan={drawOnPlan}/>;
-    case 'boards':return <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags} model={estimate.model} paint={boardPaint} setPaint={setBoardPaint} paintMessage={paintMessage} deltas={deltas}/>;
-    case 'stairs':return <StairsStep data={data} update={update} stairEdges={stairEdges} deltas={deltas}/>;
-    case 'lighting':case 'extras':case 'site':return <SiteExtrasStep part={id} data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch} deltas={deltas}/>;
-    case 'backyard':return <BackyardStep data={data} update={update} estimate={estimate} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard}/>;
-    case 'proposal':return <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} ledger={schedule} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={saveJSON} onDownloadSummary={download} onExport={kind=>void exportModel(kind)}/>;
+    case 'boards':return <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags} model={estimate.model} paint={boardPaint} setPaint={setBoardPaint} paintMessage={paintMessage} deltas={deltas} onEditBoardLayout={()=>{setPlanTool('boards');setMode('plan');showCanvas('boards');}} onPlaceInlay={inlay=>{setPendingInlay(inlay);setPlanTool('inlays');setMode('plan');showCanvas('inlays');}}/>;
+    case 'stairs':return <StairsStep data={data} update={update} onApplyElevation={atomicUpdate} stairEdges={stairEdges} deltas={deltas} onEditEdges={()=>{setPlanTool('edges');setMode('plan');showCanvas('edges');}}/>;
+    case 'lighting':case 'extras':case 'site':return <SiteExtrasStep part={id} onEditEdges={()=>{setPlanTool('edges');setMode('plan');showCanvas('edges');}} data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch} deltas={deltas}/>;
+    case 'backyard':return <BackyardStep onGeometry={setGeometryPreview} data={data} update={update} onApplyElevation={atomicUpdate} estimate={estimate} selectedFeatureId={selectedYardFeatureId} onSelectFeature={setYardFeatureId} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard} onDesign={()=>{setPlanTool('yard');setMode('plan');showCanvas('yard');}}/>;
+    case 'proposal':return <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} ledger={schedule} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} crewBusy={crewBusy} customer={customer} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={()=>saveJSON()} onDownloadSummary={download} onExport={kind=>void exportModel(kind)} onOpenPermit={()=>setPermitOpen(true)} onCrewPack={()=>void downloadCrewPack()} onOpenJobs={()=>setJobsOpen(true)} onWarmShare={warmShare}/>;
   }};
   // "Draw it on the plan" (the Deck section's outline editor): the Draw outline tool, with the plan brought into view.
-  const drawOnPlan=()=>{setPlanTool('outline');setMode('plan');requestAnimationFrame(()=>document.getElementById('deck-live-preview')?.scrollIntoView({block:'start',behavior:reducedMotion()?'auto':'smooth'}));};
-  const startOver=()=>{replace(deckReleaseData(structuredClone(DEFAULT_DECK)));closeSections();setSaved(false);setDesignStatus('A new default design is ready.');setDesignError('');};
-  return <div className="deck-designer">
-    <SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>
-    <header className="dd-header"><Link to="/cost-estimator" className="dd-back">← All project types</Link><Link to="/" className="dd-wordmark">Golden Maple<span>DECK STUDIO</span></Link><button type="button" className="dd-send-top" onClick={()=>setSendOpen(true)}>Send my design</button></header>
-    <div className="dd-title"><h1>Draw your deck on your house.</h1><p>Drag the deck to size on the plan of your house, pick every finish, and see an itemized price as you go.</p></div>
-    <DesignTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={saveJSON} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}/>
+  // On phones the tab panel is a drawer over the drawing, so going back to the drawing puts it away.
+  // A control in the drawer then hands the focus back to the open tab, or to the tab of the tool the click picked (`tool`),
+  // which the page brings forward on a later render.
+  const showCanvas=(tool?:PlanTool)=>{
+    const drawer=!pro&&phoneLayout(),fromDrawer=drawer&&!!document.getElementById('dd-home-panel')?.contains(document.activeElement),focusTab=(tool&&tabOfTool(tool,homeTabs)?.id)||homeTab;
+    setWorkspaceView('canvas');if(drawer)setPanelOpen(false);
+    requestAnimationFrame(()=>{document.getElementById('deck-live-preview')?.scrollIntoView({block:'start',behavior:reducedMotion()?'auto':'smooth'});if(fromDrawer)document.getElementById(`dd-home-tab-${focusTab}`)?.focus({preventScroll:true});});
+  };
+  const openPlanTool=(tool:PlanTool)=>{setPlanTool(tool);setMode('plan');showCanvas(tool);};
+  const drawOnPlan=()=>openPlanTool('outline');
+  const startOver=()=>{
+    void (async()=>{
+      const next=deckReleaseData(structuredClone(NEW_DECK));
+      try{
+        const {readFeatureLabourDefaults}=await import('../features/deckcraft/featureLabourStorage');
+        const saved=await readFeatureLabourDefaults();
+        if(JSON.stringify(saved)!==JSON.stringify(DEFAULT_FEATURE_LABOUR))next.featureLabour=saved;
+      }catch{/* Built-in man-hours defaults apply when device storage is unavailable. */}
+      try{
+        const {customHardscapeLabourDefaults}=await import('../features/deckcraft/hardscapeLabourStorage');
+        const saved=await customHardscapeLabourDefaults();
+        if(saved)next.hardscapeLabour=saved;
+      }catch{/* Built-in setting rates apply when device storage is unavailable. */}
+      replace(next);clearJobContext();closeSections();setSaved(false);setDesignStatus('A new default design is ready.');setDesignError('');resumeAutosave();
+    })();
+  };
+  const restoreRevision=(candidate:DeckData)=>{
+    const next=parseDesign(serializeDesign(candidate));
+    // JobRevisionDialog supplies a validated local snapshot. Public serialization intentionally
+    // omits contractor prices; retain the exact reviewed local rates, including absent values.
+    for(const key of ['materialMarkup','customLaborCost','customOverrides','featureLabour','hardscapeLabour','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf','quoteResolutions','pergolaQuoteCosts','poolQuoteInputs'] as const){
+      delete next[key];
+      if(Object.hasOwn(candidate,key))(next as unknown as Record<string,unknown>)[key]=structuredClone(candidate[key]);
+    }
+    const diff=Object.fromEntries(Object.keys({...data,...next}).filter(k=>JSON.stringify(data[k as keyof DeckData])!==JSON.stringify(next[k as keyof DeckData])).map(k=>[k,next[k as keyof DeckData]]));
+    if(Object.keys(diff).length){changes.edit(diff,data,true);replaceDesign(next);setSaved(false);}
+    setSelection({partIds:[],boards:[]});setDesignError('');setJobsOpen(false);setMode('plan');setPlanTool('outline');showCanvas('outline');
+    setDesignStatus('Saved job version restored as one undoable change. Pricing uses the current price book.');
+    resumeAutosave();
+  };
+  const locateIssue=(action:{section:SectionId;partIds?:string[];guidance:string})=>{
+    setIssuesOpen(false);setDesignStatus(action.guidance);
+    if(action.partIds?.length){setSelection({partIds:action.partIds,boards:[]});setPlanTool('components');setMode('plan');if(action.section==='house')showCanvas();else openSection(action.section,true);}
+    else openSection(action.section,true);
+  };
+  const currentIssues=[...new Set([...reviewFlags,...lightingCheck.warnings,...estimate.quoteRequired])];
+  // The Pro workspace (Designer Mode) reaches the same actions through a menu bar and ribbon. The page hands over its own
+  // functions as they are; the Pro chunks, loaded only in Designer Mode, build the menu and ribbon actions from them.
+  const priceBar=<WorkspacePrice onSend={()=>setSendOpen(true)} onQuoteReview={pro?()=>setQuoteReviewOpen(true):undefined} issues={pro||!designReady?0:issueCount} onIssues={()=>setIssuesOpen(true)} ledger={schedule} changes={changes.records} onFullList={showFullList}/>;
+  const proPage:ProPage|undefined=pro?{cad,price:priceBar,open,renderSection,data,apply:atomicUpdate,ready:mounted&&designReady,issues:currentIssues,canUndo,canRedo,undo,redo,openSection,setPlanTool,setMode,showCanvas,showFullList,saveJSON,openProposal,downloadPdf,exportModel,exportPermit,setPresetsOpen,setPermitOpen,setJobsOpen,setSendOpen,setQuoteReviewOpen,setIssuesOpen,setSketchOpen,setAgentOpen,setAskOpen,setAskExpert:(expert)=>{setAskExpert(expert);showCanvas();setAskOpen(true);}}:undefined;
+  // The new look's rail and price pill: picking the open group (or the quote) again puts the panel away.
+  const toggleTab=(id:HomeTabId)=>id===homeTab&&panelOpen?hidePanel():selectHomeTab(id);
+  const fileTools=<WorkspaceTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={()=>saveJSON()} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} autosavePaused={autosavePaused} onDownloadPrevious={unrestoredDesign?()=>downloadFile(unrestoredDesign,'application/json','golden-maple-previous-design.json'):undefined} compact={next} extra={next?<><button type="button" className="dd-secondary dd-next-phone-only" onClick={e=>{const menu=e.currentTarget.closest('details');setMode('drawing');menu?.removeAttribute('open');menu?.querySelector('summary')?.focus();}}>Framing view</button>{mounted&&<Suspense fallback={null}><LayerMenu data={data} apply={atomicUpdate} openBackyard={()=>openSection('backyard')}/></Suspense>}{mounted&&<Suspense fallback={null}><ProjectFileTools data={data} onChange={update}/></Suspense>}</>:undefined}/>;
+  const menu=proPage&&mounted&&<Suspense fallback={null}><ProMenuBar page={proPage}/></Suspense>;
+  const saveState=autosavePaused?'Auto-save paused':mounted?'Auto-save on this device':'Loading your design';
+  return <div className="deck-designer" data-ui={next?'next':cad?'cad':undefined} data-home-tab={next&&panelOpen?homeTab:undefined} data-drawing-focus={pro||next?undefined:'true'} data-home-panel={!proPage&&panelOpen||undefined} data-pro={pro||undefined} data-customer={customer||undefined} data-workspace-view={workspaceView} data-assistant-open={askOpen||undefined} data-embedded={embed?'estimator':undefined}>
+    {embed?embed.renderBar({data,estimate}):<SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>}
+    {next?<Suspense fallback={null}><NextTopBar data={data} mode={mode} setMode={setMode} saveState={saveState} saving={autosaveState==='saving'} internalMode={internalMode} tools={fileTools} onSend={()=>setSendOpen(true)}/></Suspense>:<header className={cad?'dd-header dd-cad-title':'dd-header'}><Link to="/" className="dd-workspace-brand" aria-label="Golden Maple home"><span className="dd-brand-symbol" aria-hidden="true">↗</span><span>DeckCraft<small>{cad?'Pro':'Golden Maple'}</small></span></Link>{cad&&menu}<div className="dd-workspace-project"><h1>Draw your deck on your house.</h1><span className="dd-save-state"><i aria-hidden="true"/>{saveState}</span>{internalMode?<span className="dd-internal-badge" role="status">Internal · no leads</span>:null}</div>{fileTools}{pro&&<div id="dd-workspace-agent-slot"><button type="button" className="dd-agent-open" disabled={!mounted||!designReady} aria-haspopup="dialog" onClick={()=>setPresetsOpen(true)}>Presets</button><button type="button" className="dd-agent-open" aria-haspopup="dialog" onClick={()=>setAgentOpen(true)}>Agents</button></div>}<button type="button" className="dd-send-top" onClick={()=>setSendOpen(true)}>Send my design</button></header>}
+    {!cad&&menu}
+    {mounted&&<Suspense fallback={null}><EasyEditTools onIssueCount={setIssueCount} issues={currentIssues} autosaveState={autosaveState} savedAt={lastAutosaveAt} jobLabel={jobLabel}/></Suspense>}
     <main className="dd-workspace">
-      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} snapshotLighting={snapshotLighting} tool={planTool} setTool={setPlanTool} stairEdges={stairEdges} onOpenSection={id=>openSection(id,true)} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={openExterior}/>
+      <Suspense fallback={<div className="dd-preview" role="status">Preparing design workspace…</div>}><PreviewPanel pro={proPage} previewData={geometryPreview} onPreviewData={setGeometryPreview} assistantTargets={assistantTargets} data={data} update={update} applyComponent={atomicUpdate} estimate={estimate} selectedFeatureId={selectedYardFeatureId} onSelectFeature={setYardFeatureId} onSelectYardTarget={setYardTarget} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} snapshotLighting={snapshotLighting} tool={planTool} setTool={setPlanTool} pendingInlay={pendingInlay} onPendingInlay={setPendingInlay} externalSelection={selection} onSelectionChange={setSelection} stairEdges={stairEdges} onOpenSection={id=>openSection(id,true)} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={openExterior} onSketch={()=>setSketchOpen(true)} sketchReady={mounted&&designReady} homeTab={homeTab} homeTabs={homeTabs} onHomeTab={selectHomeTab} onHomeSettings={()=>openSection('deck',true)} next={next}/></Suspense>
+      {next&&<Suspense fallback={null}><NextRail groups={NEXT_TABS.filter(t=>t.id!=='send')} open={panelOpen?homeTab:null} onPick={toggleTab}/></Suspense>}
       <section className="dd-controls" aria-label="Deck configuration">
-        <SectionList data={data} ledger={schedule} open={open} onToggle={toggleSection} onOpen={id=>openSection(id,true)} renderBody={renderSection}/>
+        {/* In the Pro workspace the open section docks beside the drawing (ProProperties) instead of this panel. */}
+        {!proPage&&(panelOpen||panelUsed)&&<Suspense fallback={null}><HomePanel hidden={!panelOpen} tab={homeTabs.find(t=>t.id===homeTab)??homeTabs[0]} data={data} ledger={schedule} expanded={[...open][0]} onExpand={id=>openSection(id)} onCollapse={()=>setOpen(new Set())} renderBody={renderSection} onClose={hidePanel} onEdit={id=>openSection(id,true)} focus={focusSection??undefined} onFocused={()=>setFocusSection(null)} onSend={()=>setSendOpen(true)} onDownloadPdf={()=>void downloadPdf()} pdfBusy={pdfBusy} onWarmShare={warmShare} onSchedule={next?openSchedule:undefined} drawer={next} quick={next&&homeTab!=='send'?<Suspense fallback={null}><QuickPicks group={homeTab} data={data} update={update} wrapWidth={!!(wrap?.left&&wrap.right)} autoCounts={autoCounts} canAddScreen={canAddScreen} onSelectYard={setYardFeatureId} onPlanTool={openPlanTool}/></Suspense>:undefined}/></Suspense>}
       </section>
-      <PriceLedger ledger={schedule} variant="column" changes={changes.records} onFullList={showFullList}/>
+      <aside id="dd-assistant-dock" className="dd-assistant-slot" hidden={!askOpen}><button type="button" className="dd-assistant-back" onClick={()=>showCanvas()}>↑ Back to drawing</button></aside>
+      {next?<Suspense fallback={null}><NextPricePill ledger={schedule} open={panelOpen&&homeTab==='send'} onOpen={()=>toggleTab('send')} issues={designReady?issueCount:0} onIssues={()=>setIssuesOpen(true)} onSend={()=>setSendOpen(true)}/>{CAMERA_MODES.includes(mode)&&mounted&&hasWebGL&&!panelOpen&&<NextViewButton/>}</Suspense>:cad?null:priceBar}
     </main>
-    <PhoneDeckBar ledger={schedule} changes={changes.records} onFullList={showFullList} docked={docked} onToggleDock={toggleDock} onSend={()=>setSendOpen(true)}/>
+    {mounted&&<Suspense fallback={null}><DeckAgentBridge onSelect={next=>{setSelection(next);setYardFeatureId(next.hardscape?.id??'');if(next.partIds.length)setPlanTool('components');else if(next.boards.length)setPlanTool('boards');}} onPreviewDesign={next=>setGeometryPreview(next?{...data,...next}:null)} open={agentOpen} onClose={()=>setAgentOpen(false)} plainLanguageOpen={askOpen} initialExpert={askExpert} key={`ask-${askExpert}-${askOpen}`} dockTargetId="dd-assistant-dock" onTargetsChange={setAssistantTargets} onClosePlainLanguage={()=>{setAskOpen(false);setAssistantTargets(null);}} selection={assistantSelection} adapter={{data,estimate,reviewFlags,view:mode,openSections:[...open],canUndo,canRedo,ready:mounted&&designReady,commitDesign:next=>{const diff=Object.fromEntries(Object.keys({...data,...next}).filter(k=>JSON.stringify(data[k as keyof DeckData])!==JSON.stringify(next[k as keyof DeckData])).map(k=>[k,next[k as keyof DeckData]]));changes.edit(diff,data,true);replaceDesign(next);},undo,redo,setView:setMode,openSection:id=>openSection(id,true),actions:{'save.json':()=>saveJSON(true),'export.obj':()=>exportModel('obj',true),'export.dxf':()=>exportModel('dxf',true),'export.dxf2d':()=>exportPermit('dxf2d',true),'permit.pdf':()=>exportPermit('pdf',true),'proposal.open':()=>openProposal(true),'proposal.pdf':()=>downloadPdf(undefined,true),'review.open':()=>setSendOpen(true)}}}/></Suspense>}
+    {quoteReviewOpen&&<Suspense fallback={<p role="status">Opening quote-cost review…</p>}><QuoteReviewPanel data={data} estimate={estimate} onUpdate={atomicUpdate} onClose={()=>setQuoteReviewOpen(false)}/></Suspense>}
     <ChangeAnnouncer record={changes.records.at(-1)}/>
+    {scheduleOpen&&<Suspense fallback={<p role="status">Opening price schedule…</p>}><LedgerDrawer ledger={schedule} changes={changes.records} opener={scheduleOpener} onClose={()=>setScheduleOpen(false)} onFullList={()=>{setScheduleOpen(false);showFullList();}}/></Suspense>}
+    {jobsOpen&&<Suspense fallback={<p role="status">Opening saved jobs…</p>}><JobRevisionDialog data={data} onRestore={restoreRevision} onClose={()=>setJobsOpen(false)} onSaved={status=>setJobLabel(`${status.job} · ${status.revision}`)}/></Suspense>}
+    {permitOpen&&<Suspense fallback={<p role="status">Drawing the permit sheets…</p>}><PermitSetDialog data={data} model={estimate.model} reviewItems={reviewFlags} materialName={material.name} railingName={railingName} date={proposalDate()} onClose={()=>setPermitOpen(false)} onOutput={kind=>trackDeck('deckcraft_output',`deck_${kind}`)} onSiteChange={site=>update({permitSite:site})}/></Suspense>}
+    {issuesOpen&&<Suspense fallback={<p role="status">Opening design review…</p>}><IssueReviewDialog data={data} model={estimate.model} messages={currentIssues} onLocate={locateIssue} onClose={()=>setIssuesOpen(false)}/></Suspense>}
+    {sketchOpen&&<Suspense fallback={<p role="status">Opening your sketch canvas…</p>}><SketchDesigner data={data} onClose={()=>setSketchOpen(false)} onApply={patch=>{atomicUpdate(patch);setSketchOpen(false);setMode('plan');setPlanTool('outline');setBoardPaint(null);setExteriorOpen(false);setSelectedHouseOpeningId('');setDesignStatus('The same design is ready on the plan. Pull any point or edge, or tap an edge dimension.');showCanvas();}}/></Suspense>}
+    {presetsOpen&&<Suspense fallback={<p role="status">Opening contractor presets…</p>}><ContractorPresets data={data} onApply={patch=>{atomicUpdate(patch);setPresetsOpen(false);}} onClose={()=>setPresetsOpen(false)}/></Suspense>}
     {sendOpen&&<Suspense fallback={null}><SendDesignDialog data={data} estimate={estimate} summary={summary} reviewItems={reviewFlags} send={postDesign} onPrint={()=>{setSendOpen(false);void openProposal();}} onDownloadPdf={downloadPdf} onClose={closeSend}/></Suspense>}
     {proposal&&<Suspense fallback={null}><ProposalDialog data={data} estimate={estimate} facts={proposalFacts} reviewItems={reviewFlags} image={proposal.shots[0]?.src??null} shots={proposal.shots} date={proposal.date} onClose={closeProposal} onDownloadPdf={()=>void downloadPdf(proposal.shots)} pdfBusy={pdfBusy}/></Suspense>}
   </div>;
 }
+

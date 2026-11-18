@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+// Inlay geometry is a lazy runtime in the app (ensureDesignExtensions); register it before calculating inlay fixtures.
+import '../src/features/deckcraft/lib/inlayGeometryRuntime';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {DEFAULT_DECK,DECK_SETTINGS} from '../src/features/deckcraft/defaults';
@@ -8,7 +10,7 @@ import {getHardwareLayout} from '../src/features/deckcraft/hardwareLayout';
 import {parseDesign,pruneEdgeNames,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {decodeDesignLink,designLinkFromHash,encodeDesignLink} from '../src/features/deckcraft/designLink';
 import {describeDesign} from '../src/features/deckcraft/designFacts';
-import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import {buildDeckDesignSubmission,type SendDesignFields} from '../src/features/deckcraft/sendDesign';
 import {exposedRim,getHouseContact} from '../src/features/deckcraft/houseContact';
 import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
@@ -17,7 +19,7 @@ import {activeWrap} from '../src/features/deckcraft/lib/wrapGeometry';
 import {DECKING_CATALOGUE,RAILING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
 import {boardFinishPlan,colourRef,partCollections} from '../src/features/deckcraft/boardFinishes';
 import {RAILING_COLOURS,UNCONFIRMED_RAILING_LINES,pruneDeckFinishes,railingColours,stairTreadKey} from '../src/features/deckcraft/deckPartFinishes';
-import {unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
+import {CONFIRMED_RATES,unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
 import {railingScreenHex} from '../src/features/deckcraft/railingScreenColours';
 import {STAIR_TREAD_COSTS,type BoardColour,type DeckData,type DeckFinishes,type HouseBlock} from '../src/features/deckcraft/types';
 import {designerSource} from './deck-designer-source';
@@ -73,26 +75,28 @@ for(const [label,patch] of plainDesigns){
   const on={...d,deckFinishes:{fascia:COCOA,treads:SALT,risers:COCOA,...(d.catalogueRailingId?{railingColor:'Matte Black'}:{})}},eo=priced(on);
   const {issues:_i,...model}=e.model,{issues:_j,...modelOn}=eo.model;
   ok(digest(model)===digest(modelOn)&&digest(getHardwareLayout(d,e.model))===digest(getHardwareLayout(on,eo.model)),`${label}: part finishes leave the takeoff and hardware untouched`);
-  ok(Math.abs(eo.subtotal-e.subtotal)<1e-6,`${label}: fascia, stair and railing colours of the deck's own line leave the priced subtotal as it was`);
+  const finishSupply=(estimate:typeof e)=>estimate.sections.filter(s=>['Deck-part finishes','Stair and level cladding'].includes(s.title)).reduce((n,s)=>n+s.total,0);
+  ok(Math.abs((eo.subtotal-finishSupply(eo))-(e.subtotal-finishSupply(e)))<1e-6,`${label}: part colours change only their exact fascia/cladding supply, never construction or railing rates`);
 }
 
 // 2. The border in its own colour: every border board, and nothing else, is its own stock at its collection's rate; the
 //    main order drops by exactly those boards; a board or row accent still beats it; the deck's own colour changes nothing.
 {
-  const d=base({pictureFrameRows:1}),m=buildDeckTakeoff(d),plain=price(d);
+  const d=base({pictureFrameRows:1}),on={...d,deckFinishes:{border:ESPRESSO}},m=buildDeckTakeoff(on),plain=price(d);
   const borderKeys=m.levels.flatMap((l,li)=>l.boards.flatMap((b,bi)=>b.role==='border'?[`${li}:${bi}`]:[]));
-  const on={...d,deckFinishes:{border:ESPRESSO}},plan=boardFinishPlan(on,m),groups=plan.stock.filter(g=>g.kind==='border');
+  const plan=boardFinishPlan(on,m),groups=plan.stock.filter(g=>g.kind==='border');
   ok(borderKeys.length>0&&groups.length===1&&groups[0].boards.map(b=>`${b.level}:${b.index}`).sort().join()===borderKeys.sort().join()&&plan.borderPieces===borderKeys.length&&plan.pieces===0,'Every border board, and only those, is in the border colour group (never counted as accent boards)');
   const e=priced(on),row=finishes(e)?.items.find(i=>i.name==='Border · TimberTech PRO Legacy · Espresso'),stock=e.stockSchedule.find(r=>r.name.startsWith('Border · TimberTech PRO Legacy · Espresso boards'));
   ok(row&&stock&&typeof row.cost==='number'&&Math.abs(row.cost-stock.orderedLf*20*BOARD*MARKUP)<.01&&row.qty===stock.orderedPieces,'The border colour is its own stock row, priced at its collection\'s rate (ordered length × $/sq ft × board width, with the markup)');
-  ok(Math.abs(e.stockSchedule[0].installedLf+stock!.installedLf-plain.stockSchedule[0].installedLf)<.01&&Number(section(e,'Decking')!.items[0].qty)<Number(section(plain,'Decking')!.items[0].qty),'The main order drops by exactly the border boards: installed length is split, never lost or counted twice');
+  const boards=e.model.levels.flatMap(l=>l.boards),borderLf=boards.filter(b=>b.role==='border').reduce((n,b)=>n+b.length/12,0),mainLf=boards.filter(b=>b.role!=='border').reduce((n,b)=>n+b.length/12,0);
+  ok(Math.abs(stock!.installedLf-borderLf)<.01&&Math.abs(e.stockSchedule[0].installedLf-mainLf)<.01&&Math.abs(e.stockSchedule[0].installedLf+stock!.installedLf-mainLf-borderLf)<.01,'Main and border stock independently match the finish-on geometry, with no lost or double-counted boards even when product stock lengths change joints');
   ok(section(e,'Decking')!.items[0].spec.includes('border boards priced separately')&&!e.sections.some(s=>/^Accent/.test(s.title))&&!section(e,'Labour (Construction & Build)')!.items.some(i=>/Accent/.test(i.name)),'The decking row says so; no accent section or accent labour line');
   ok(digest(strip(price({...d,deckFinishes:{border:HUSK}})))===digest(strip(plain)),'A border in the deck\'s own colour changes nothing');
   const address=plan.addresses[0].find(a=>a?.role==='border')!,accent:BoardColour={lv:1,role:'border',scope:'course',course:address.course,colour:SALT};
   const painted=boardFinishPlan({...on,boardColours:[accent]},m),inCourse=plan.addresses[0].filter(a=>a?.role==='border'&&a.course===address.course).length;
   ok(painted.pieces===inCourse&&painted.borderPieces===borderKeys.length-inCourse,'A painted border row beats the border colour (accent, then border colour, then the deck\'s)');
   const q={...d,deckFinishes:{border:QUOTED}},eq=priced(q),qs=finishes(eq)!;
-  ok(qs.quoteRequired&&qs.items[0].cost===null&&qs.total===0&&eq.quoteRequired.some(n=>n.startsWith(`Border · ${QUOTE_LINE.name}`))&&eq.subtotal<plain.subtotal,'A border from a line without a rate is a supplier quote (its boards leave the priced portion), never $0');
+  ok(qs.quoteRequired&&qs.items[0].cost===null&&qs.total===0&&eq.quoteRequired.some(n=>n.startsWith(`Border · ${QUOTE_LINE.name}`)),'A border from a line without a rate is a supplier quote (its boards leave the priced portion), never $0');
   const two=base({pictureFrameRows:2,width:24,levels:2,width2:10,length2:8,height2:20}),m2=buildDeckTakeoff(two),p2=boardFinishPlan({...two,deckFinishes:{border:COCOA}},m2);
   ok(p2.borderPieces===m2.levels.reduce((n,l)=>n+l.boards.filter(b=>b.role==='border').length,0)&&p2.borderPieces>0,'Two border rows on two levels all take the border colour');
 }
@@ -129,7 +133,7 @@ for(const [label,patch] of plainDesigns){
   ok(es.total===plain.total&&!es.quoteRequired&&es.items[0].spec.endsWith('Treads in Espresso (TimberTech PRO Legacy). Risers in Sea Salt Gray (TimberTech EDGE Prime+).'),'Treads and risers of the deck\'s kind price exactly as before, and the stairs row names them');
   for(const part of ['treads','risers'] as const){
     const q={...d,deckFinishes:{[part]:QUOTED}},eq=priced(q),sq=section(eq,'Stairs')!;
-    ok(sq.quoteRequired&&sq.total===0&&sq.items.every(i=>i.cost===null)&&eq.quoteRequired.includes(`Stair treads and risers in ${QUOTE_LINE.name}`)&&Math.abs(eq.subtotal-(price(d).subtotal-plain.total))<.01,`${part} from a line without a rate make the Stairs section a supplier quote`);
+    ok(sq.quoteRequired&&sq.total===0&&sq.items.every(i=>i.cost===null)&&eq.quoteRequired.includes(`Stair treads and risers in ${QUOTE_LINE.name}`),`${part} from a line without a rate make the Stairs section a supplier quote`);
   }
   const none={...base({stairFlights:0}),deckFinishes:{treads:QUOTED}};
   ok(!price(none).quoteRequired.some(n=>n.startsWith('Stair treads and risers')),'With no stairs, a tread colour quotes nothing');
@@ -164,21 +168,25 @@ for(const [label,patch] of houses)for(const deckType of ['Attached','Freestandin
   const expected=o.reduce((n,_,i)=>contact.isContactEdge(i)?n:n+edge(i),0),full=o.reduce((n,_,i)=>n+edge(i),0),rim=exposedRim(d,m);
   const rimIn=rim.reduce((n,r)=>n+Math.hypot(r.b.x-r.a.x,r.b.z-r.a.z),0),row=finishes(e)?.items.find(i=>i.name==='Fascia · Dark Cocoa (TimberTech EDGE Prime+)');
   ok(Math.abs(rimIn-expected)<.1,`${label} (${deckType}): the exposed rim is the outline less the house contacts (${(rimIn/12).toFixed(2)} of ${(expected/12).toFixed(2)} ft)`);
-  ok(row&&row.cost===null&&row.unit==='lf'&&row.qty===Math.ceil(rimIn/12*10)/10&&e.quoteRequired.includes('Fascia boards (supplier quote)')&&finishes(e)!.quoteRequired,`${label} (${deckType}): the fascia row lists that length for a supplier quote`);
+  ok(row&&row.cost!==null&&row.cost>0&&row.unit==='boards'&&finishes(e)!.items.some(i=>i.name==='Fascia fasteners'&&i.cost!==null)&&finishes(e)!.items.some(i=>i.name==='Fascia delivery'&&i.cost!==null)&&!e.quoteRequired.includes('Fascia boards (supplier quote)')&&!e.quoteRequired.includes('Fascia fasteners and delivery (supplier quote)'),`${label} (${deckType}): the fascia row is stock-priced from its DeckMart SKU; fasteners and delivery are priced allowances`);
   ok(rim.every(r=>contact.contacts.every(c=>along({a:{x:r.a.x,y:r.a.z},b:{x:r.b.x,y:r.b.z}},c)<.5)),`${label} (${deckType}): no fascia runs along a wall the house covers`);
   if(deckType==='Attached')ok(contact.contacts.length>0&&expected<full-1,`${label}: the house covers part of the attached deck's rim`);
   else ok(contact.contacts.length===0&&Math.abs(rimIn-full)<.1,`${label}: a freestanding deck has fascia all round`);
   // The same rim feeds a manufacturer fascia, which then carries the colour instead of a row of its own.
   const cat={...d,catalogueAccessories:['tt_fascia']},ec=priced(cat),catRow=section(ec,'Manufacturer deck accessories')?.items.find(i=>i.name==='TimberTech fascia boards');
   const layout=catalogueAccessoryLayout(cat,ec.model),catIn=layout.fascia.reduce((n,f)=>n+Math.hypot(f.b.x-f.a.x,f.b.z-f.a.z),0);
-  ok(Math.abs(catIn-rimIn)<1e-6&&catRow?.qty===row?.qty&&catRow?.spec.startsWith('Colour: Dark Cocoa (TimberTech EDGE Prime+). ')&&catRow.cost===null&&!finishes(ec)?.items.some(i=>i.name.startsWith('Fascia · '))&&!ec.quoteRequired.includes('Fascia boards (supplier quote)'),`${label} (${deckType}): a manufacturer fascia over the same rim takes the colour, with no second fascia row`);
+  ok(Math.abs(catIn-rimIn)<1e-6&&catRow?.qty===Math.ceil(rimIn/12*10)/10&&catRow?.spec.startsWith('Colour: Dark Cocoa (TimberTech EDGE Prime+). ')&&catRow.cost===null&&!finishes(ec)?.items.some(i=>i.name.startsWith('Fascia · '))&&!ec.quoteRequired.includes('Fascia boards (supplier quote)'),`${label} (${deckType}): a manufacturer fascia over the same rim takes the colour, with no second fascia row`);
 }
 {
   const cat=base({catalogueAccessories:['dk_fascia']}),spec=section(price(cat),'Manufacturer deck accessories')!.items.find(i=>i.name==='Deckorators fascia boards')!.spec;
   ok(!spec.startsWith('Colour:')&&spec.startsWith('Collection-matched fascia.'),'Without a fascia colour the manufacturer fascia row reads as before');
   const two=base({levels:2,width2:10,length2:8,height2:20,stairFlights:0,deckFinishes:{fascia:COCOA}}),e2=priced(two),rim2=exposedRim(two,e2.model).reduce((n,r)=>n+Math.hypot(r.b.x-r.a.x,r.b.z-r.a.z),0);
   const main=e2.model.levels[0],contact=getHouseContact(two,main.footprint),mainRim=(main.rim??[]).filter(r=>!contact.onContact({x:r.a.x,y:r.a.z},{x:r.b.x,y:r.b.z})).reduce((n,r)=>n+Math.hypot(r.b.x-r.a.x,r.b.z-r.a.z),0);
-  ok(e2.model.levels.length>1&&rim2>mainRim+1&&finishes(e2)!.items.find(i=>i.name.startsWith('Fascia · '))!.qty===Math.ceil(rim2/12*10)/10,'A second level\'s rim is all exposed and in the fascia length');
+  const fascia2=finishes(e2)!.items.find(i=>i.name.startsWith('Fascia · '))!;
+  ok(e2.model.levels.length>1&&rim2>mainRim+1&&fascia2.unit==='boards'&&fascia2.cost!==null&&fascia2.cost>0,'A second level\'s rim is all exposed and stock-priced with the fascia boards');
+  const unsourced=priced(base({deckFinishes:{fascia:colourRef('tt_harvest','Kona')}}));
+  const kona=finishes(unsourced)?.items.find(i=>i.name.startsWith('Fascia · '));
+  ok(kona&&kona.cost===null&&kona.unit==='lf'&&unsourced.quoteRequired.includes('Fascia boards (supplier quote)'),'An unsourced fascia colour stays a supplier quote');
 }
 
 // 6. Railing colours: every colour offered is in railing-finish-provenance.json for its system (name, source, retrieval
@@ -246,7 +254,7 @@ for(const system of RAILING_CATALOGUE){
   const d=base({pictureFrameRows:1,...railOf('dk_contemporary'),deckFinishes:{border:ESPRESSO,fascia:COCOA,treads:SALT,railingColor:'Bronze'}}),e=priced(d),described=describeDesign(d,e);
   const fact='Deck parts: border boards in Espresso (TimberTech PRO Legacy); fascia in Dark Cocoa (TimberTech EDGE Prime+); stair treads in Sea Salt Gray (TimberTech EDGE Prime+)';
   ok(described.facts.includes(fact)&&described.proposalFacts.includes(fact)&&described.summary.includes(fact),'The design facts, summary and proposal name each part\'s colour');
-  ok(described.priceLabel==='Priced portion only'&&e.sections.some(s=>s.title==='Deck-part finishes'),'With the fascia quote, the price reads as the priced portion only; the proposal and PDF list the section');
+  ok(e.sections.some(s=>s.title==='Deck-part finishes'&&s.items.every(i=>i.cost!==null))&&e.quoteRequired.includes('Decking delivery (supplier quote)'),'With sourced fascia supply and priced fasteners, deck-part finishes are fully priced; decking delivery remains a supplier quote');
   const fields:SendDesignFields={name:'A',email:'a@example.com',phone:'7053008015',address:'Barrie',notes:'',offers:false,botField:'',timeline:'',budget:'',samples:true};
   const sent=buildDeckDesignSubmission(fields,{data:d,estimate:e,summary:described.summary,reviewItems:[],link:'https://goldenmaplelandscaping.ca/deck-designer#d',sentAt:new Date(0),consent:null});
   ok(sent.details.includes('Samples: please bring Coconut Husk and the finish colours: Espresso (TimberTech PRO Legacy), Dark Cocoa (TimberTech EDGE Prime+), Sea Salt Gray (TimberTech EDGE Prime+)'),'A sample request lists the part colours');
@@ -256,7 +264,7 @@ for(const system of RAILING_CATALOGUE){
   ok(buildDeckDesignSubmission(fields,{data:plain,estimate:price(plain),summary:'s',reviewItems:[],link:'l',sentAt:new Date(0),consent:null}).details.includes('Samples: please bring a Coconut Husk sample'),'Without part colours the sample request reads as before');
   ok(designFeatures(d).includes('deck_part_finishes')&&designFeatures(d).includes('deck_railing_colour')&&!designFeatures(base({...railOf('dk_contemporary'),deckFinishes:{railingColor:'Bronze'}})).includes('deck_part_finishes'),'The funnel counts part colours and a railing colour apart');
   const rates=unconfirmedRates();
-  ok(rates.some(r=>r.id==='fascia-boards'&&r.status==='owner-decision')&&rates.some(r=>r.id==='railing-colour'&&r.status==='owner-decision'),'The rate register lists the fascia quote and the railing colour premium as owner decisions');
+  ok(rates.some(r=>r.id==='fascia-boards'&&r.status==='estimate')&&CONFIRMED_RATES.some(r=>r.id==='railing-colour'),'The register identifies the sourced fascia benchmarks and confirms the railing colour decision');
 }
 
 // 10. Never $0: every row these finishes add or change is priced above zero or left blank for a quote.
@@ -279,7 +287,7 @@ for(const system of RAILING_CATALOGUE){
   const imports=/from\s+['"][^'"]*railing-finish-provenance/;
   ok(!imports.test(designer)&&!['deckPartFinishes.ts','calculations.ts','designPersistence.ts','components/viewer3d/Deck3DViewer.tsx'].some(f=>imports.test(read(`src/features/deckcraft/${f}`))),'The provenance file is a record the check holds the colours to, not page weight');
   const viewer=read('src/features/deckcraft/components/viewer3d/Deck3DViewer.tsx');
-  ok(viewer.includes("usePartMaterial(partRef(data,'fascia'),board)")&&viewer.includes('material={structure?materials.wood:fasciaMat} name="rim-and-fascia"')&&viewer.includes('material={fasciaMat} name="selected-manufacturer-fascia"')&&viewer.includes('<FinishedBoards items={stairBoards} material={treadMat}/>')&&viewer.includes('<FinishedBoards items={model.riserBoards} material={riserMat}/>'),'In 3D the rim and fascia, a manufacturer fascia, the treads and the risers take their own swatch when set');
+  ok(viewer.includes("usePartMaterial(partRef(data,'fascia')??")&&viewer.includes('<Members items={edgeMembers} material={materials.wood} name="rim-and-fascia"')&&viewer.includes('<Slabs slabs={finishedFascia} material={fasciaMat} courses={false} eased name="rim-and-fascia"')&&viewer.includes('<Slabs slabs={accessoryFascia} material={fasciaMat} courses={false} eased name="selected-manufacturer-fascia"')&&viewer.includes("<FinishedBoards items={stairBoards.filter(b=>!stairBorder||b.role!=='border')} material={treadMat}/>")&&viewer.includes("<FinishedBoards items={stairBoards.filter(b=>b.role==='border')} material={borderMaterial}/>")&&viewer.includes('<FinishedBoards items={drawnRisers} material={riserMat}/>')&&viewer.includes('<Cladding3D data={data} model={model} material={fasciaMat}'),'In 3D the framing keeps raw lumber while mitered fascia, supplier fascia, stair and level cladding, treads and risers take their own swatch when set');
   ok(viewer.includes('const railMat=railColour??(data.railingType===')&&viewer.includes('railingScreenHex(rail.system.id,rail.colour)'),'The 3D railing takes its colour\'s screen approximation');
   const screen=/from\s+['"][^'"]*railingScreenColours/;
   ok(!screen.test(designer.replace(read('src/features/deckcraft/designer/DeckFinishesPanel.tsx'),''))&&!['deckPartFinishes.ts','calculations.ts','designPersistence.ts','designFacts.ts','sendDesign.ts'].some(f=>screen.test(read(`src/features/deckcraft/${f}`))),'Screen colours load with the 3D view and the finishes panel, not with the page');

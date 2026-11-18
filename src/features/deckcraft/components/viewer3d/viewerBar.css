@@ -1,0 +1,21 @@
+/* 3D-first layout: one compact bar over the top of the 3D view. Loaded with the viewer, not the page. */
+.dd-3d-bar{position:absolute;top:8px;left:8px;z-index:20;display:flex;align-items:flex-start;gap:6px;max-width:calc(100% - 16px)}
+.dd-3d-bar-main{display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none;padding:4px;border-radius:10px;background:rgb(255 255 255/.9);box-shadow:0 1px 4px rgb(0 0 0/.18)}
+.dd-3d-bar-main::-webkit-scrollbar{display:none}
+.dd-3d-bar .dd-scene-tools{flex:0 0 auto;flex-wrap:nowrap;margin:0;gap:6px}
+.dd-3d-bar .dd-view-toggle,.dd-3d-bar .dd-day-night{width:auto;flex:0 0 auto;flex-wrap:nowrap;margin:0}
+.dd-3d-bar .dd-view-toggle button{flex:0 0 auto}
+.dd-3d-bar .dd-day-night button{min-width:0}
+.dd-3d-bar button,.dd-3d-bar label{white-space:nowrap}
+.dd-3d-bar-main>button[aria-pressed]{min-height:44px;padding:0 12px;border-radius:8px;border:1px solid rgb(0 0 0/.15);background:#fff;font:inherit;font-size:13px}
+.dd-3d-bar-main>button[aria-pressed=true]{background:#1f3a2c;color:#fff;border-color:#1f3a2c}
+.dd-3d-more{position:relative;flex:0 0 auto}
+.dd-3d-more>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;padding:0 12px;border-radius:10px;background:rgb(255 255 255/.9);box-shadow:0 1px 4px rgb(0 0 0/.18);font-size:13px}
+.dd-3d-more>summary::-webkit-details-marker{display:none}
+.dd-3d-more[open]>summary{background:#1f3a2c;color:#fff}
+.dd-3d-more-panel{position:absolute;top:calc(100% + 6px);left:0;width:min(360px,calc(100vw - 32px));max-height:min(60vh,420px);overflow:auto;padding:10px;border-radius:10px;background:#fff;color:#1d2420;box-shadow:0 6px 20px rgb(0 0 0/.22)}
+.deck-designer .dd-preview .dd-3d-more-panel>[aria-label="Landscape presentation controls"]{flex-direction:column;align-items:stretch;padding:0}
+.deck-designer .dd-preview .dd-3d-more-panel>[aria-label="Landscape presentation controls"]>label{display:grid;gap:4px;max-width:none}
+.deck-designer .dd-preview .dd-3d-more-panel select{width:100%}
+.dd-3d-wheel-hint{position:absolute;left:50%;bottom:52px;transform:translateX(-50%);z-index:20;margin:0;padding:6px 12px;border-radius:999px;background:rgb(20 26 22/.82);color:#fff;font-size:13px;pointer-events:none}
+@media(max-width:600px){.dd-3d-bar{left:6px;top:6px;max-width:calc(100% - 12px)}.dd-3d-more-panel{left:auto;right:0}}

@@ -1,0 +1,13 @@
+/* Walk mode's controls (S7): a column at the right of the 3D view, clear of the rail, the view bar and the price. */
+.dd-walk{position:absolute;z-index:6;right:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;max-width:180px;padding:10px;border:1px solid #ded8cf;border-radius:16px;background:rgba(255,255,255,.95);box-shadow:0 6px 20px rgba(20,30,24,.16);color:#1f2a24;font:600 13px/1.3 system-ui,sans-serif}
+.dd-walk-hint{margin:0;text-align:center;font-weight:500;font-size:12px;color:#38413b}
+.dd-walk-pad{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(2,44px);grid-template-areas:". forward ." "left back right";gap:4px}
+.dd-walk-pad button,.dd-walk-stop{min-width:44px;min-height:44px;border:1px solid #ded8cf;border-radius:12px;background:#f9f7f2;color:#1f2a24;font:inherit;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
+.dd-walk-pad button:active{background:#1f2a24;color:#fff}
+.dd-walk-pad button[aria-label="Walk forward"]{grid-area:forward}.dd-walk-pad button[aria-label="Walk back"]{grid-area:back}
+.dd-walk-pad button[aria-label="Turn left"]{grid-area:left}.dd-walk-pad button[aria-label="Turn right"]{grid-area:right}
+.dd-walk-stop{width:100%;padding:0 12px;background:#1f2a24;color:#fff;border-color:#1f2a24}
+.dd-walk :focus-visible{outline:2px solid #1f2a24;outline-offset:2px}
+@media(max-width:800px),(pointer:coarse){.dd-walk-hint{display:none}}
+/* A phone keeps the View sheet and the price row at the foot of the view: the pad sits under the top bar. */
+@media(max-width:800px){.dd-walk{top:84px;right:12px;transform:none}}

@@ -1,0 +1,157 @@
+{
+  "checkedOn": "2026-09-30",
+  "note": "Official product colour photographs. Portofino uses original JPEG paths displayed on the manufacturer page; Oaks uses the full photo WebP files served by its page. Downloaded files are byte-for-byte unchanged; texture UV windows omit presentation margins and pictured edges. These are not calibrated PBR scans. Existing Ontario colours and cap stock dimensions remain unchanged.",
+  "samples": [
+    {
+      "product": "techo-portofino-cap",
+      "color": "riviera",
+      "sourceUrl": "https://www.techo-bloc.com/assets/46/7c/467c3c99-1655-4923-97ac-a32023fa17b4/Portofino-Cap-Riviera-9430.jpg",
+      "page": "https://www.techo-bloc.com/shop/caps/portofino",
+      "file": "cap-7660576db46988e8300dc902.jpg",
+      "sha256": "7660576db46988e8300dc902dba473bc3438724cff3865ec4e4b1ef195cd75c1",
+      "bytes": 6389,
+      "width": 160,
+      "height": 160
+    },
+    {
+      "product": "techo-portofino-cap",
+      "color": "azzurro",
+      "sourceUrl": "https://www.techo-bloc.com/assets/bc/26/bc268447-7b0d-47d1-93c1-12eee4ce67c5/Portofino-Cap-Azzuro-9430.jpg",
+      "page": "https://www.techo-bloc.com/shop/caps/portofino",
+      "file": "cap-ecad8e2714bf3a8fbc692135.jpg",
+      "sha256": "ecad8e2714bf3a8fbc692135c2e08f204e7a37e2d77f2fa40bf54dd97885f056",
+      "bytes": 6528,
+      "width": 160,
+      "height": 160
+    },
+    {
+      "product": "techo-portofino-cap",
+      "color": "onyx-black",
+      "sourceUrl": "https://www.techo-bloc.com/assets/5c/27/5c27aeaa-b7b1-44e3-ae28-f774c61c8c53/Portofino-Onyx-Black-9435.jpg",
+      "page": "https://www.techo-bloc.com/shop/caps/portofino",
+      "file": "cap-af8251d2c3aefdbc9a5694ec.jpg",
+      "sha256": "af8251d2c3aefdbc9a5694ec262f5b2b5bc5328a107407f11e84fa6bb489a161",
+      "bytes": 5429,
+      "width": 160,
+      "height": 160
+    },
+    {
+      "product": "techo-portofino-cap",
+      "color": "rock-garden-brown",
+      "sourceUrl": "https://www.techo-bloc.com/assets/8c/08/8c08a7f6-b977-4c5f-a841-048493df3510/Portofino-Cap-Rock-Garden-Brown-9435.jpg",
+      "page": "https://www.techo-bloc.com/shop/caps/portofino",
+      "file": "cap-b14a88291ae22813803c5e01.jpg",
+      "sha256": "b14a88291ae22813803c5e012df55c927c1a4d7958f31f3c62e542a866275632",
+      "bytes": 5723,
+      "width": 160,
+      "height": 160
+    },
+    {
+      "product": "oaks-modan-coping",
+      "color": "champagne",
+      "sourceUrl": "https://bramptonbrick.com/sites/default/files/styles/product_model__image__full/public/pm_image/ModanCoping_Champagne_2.jpg.webp?h=c9f16406&itok=YOIVbSG8",
+      "page": "https://bramptonbrick.com/en/landscape-products-products/modan-coping-copings-caps",
+      "file": "cap-4e3ee904aa406969e9413005.webp",
+      "sha256": "4e3ee904aa406969e9413005857f06785ade4b2bf99c055d2e0cf63c6f0ba602",
+      "bytes": 836310,
+      "width": 621,
+      "height": 363
+    },
+    {
+      "product": "oaks-modan-coping",
+      "color": "cloudburst",
+      "sourceUrl": "https://bramptonbrick.com/sites/default/files/styles/product_model__image__full/public/pm_image/ModanCoping_Cloudburst.jpg.webp?h=0823d948&itok=HuKTiOGv",
+      "page": "https://bramptonbrick.com/en/landscape-products-products/modan-coping-copings-caps",
+      "file": "cap-e5eb53cf0d3714727693e1ff.webp",
+      "sha256": "e5eb53cf0d3714727693e1ff4d492fae4b2d5c2d17e6477999af6b37649cfd1d",
+      "bytes": 805562,
+      "width": 621,
+      "height": 363
+    },
+    {
+      "product": "oaks-modan-coping",
+      "color": "marble-grey",
+      "sourceUrl": "https://bramptonbrick.com/sites/default/files/styles/product_model__image__full/public/pm_image/ModanCoping_MarbleGrey.jpg.webp?h=48a4d3f0&itok=I5qo7JX0",
+      "page": "https://bramptonbrick.com/en/landscape-products-products/modan-coping-copings-caps",
+      "file": "cap-ff20a2a3efe8002fa545475c.webp",
+      "sha256": "ff20a2a3efe8002fa545475cc147f80f7e74f3cffa24ada3b663844e25d5b253",
+      "bytes": 814358,
+      "width": 621,
+      "height": 363
+    },
+    {
+      "product": "oaks-modan-coping",
+      "color": "milano",
+      "sourceUrl": "https://bramptonbrick.com/sites/default/files/styles/product_model__image__full/public/pm_image/ModanCoping_Milano.jpg.webp?h=55b11354&itok=8T4V1jr5",
+      "page": "https://bramptonbrick.com/en/landscape-products-products/modan-coping-copings-caps",
+      "file": "cap-dd1d916680ccc9907d770430.webp",
+      "sha256": "dd1d916680ccc9907d770430398ae6e2cbfda1e2f3fd98a7082cccd765ba984d",
+      "bytes": 857348,
+      "width": 621,
+      "height": 363
+    },
+    {
+      "product": "oaks-modan-coping",
+      "color": "twilight",
+      "sourceUrl": "https://bramptonbrick.com/sites/default/files/styles/product_model__image__full/public/pm_image/ModanCoping_Twilight.jpg.webp?h=21ddc59a&itok=Hwcwahoy",
+      "page": "https://bramptonbrick.com/en/landscape-products-products/modan-coping-copings-caps",
+      "file": "cap-4edf2d649abebfa9b57e449c.webp",
+      "sha256": "4edf2d649abebfa9b57e449c60dcdeea3a22f5c9e383ba38e4a612f3f595cded",
+      "bytes": 761354,
+      "width": 621,
+      "height": 363
+    },
+    {
+      "product": "oaks-nueva-coping",
+      "color": "champagne",
+      "sourceUrl": "https://bramptonbrick.com/sites/default/files/styles/product_model__image__full/public/pm_image/Nueva-Coping_Champagne_TEMP.jpg.webp?h=24088419&itok=nWIdHXll",
+      "page": "https://bramptonbrick.com/en/landscape-products-products/nuevar-coping-copings-caps",
+      "file": "cap-3ba64193361f5c028a19fec2.webp",
+      "sha256": "3ba64193361f5c028a19fec2bad57deea0a28f6ae16e29ad404ee42ec76fe1e4",
+      "bytes": 325222,
+      "width": 621,
+      "height": 363
+    },
+    {
+      "product": "oaks-nueva-coping",
+      "color": "cloudburst",
+      "sourceUrl": "https://bramptonbrick.com/sites/default/files/styles/product_model__image__full/public/pm_image/Nueva-Coping_Cloudburst_TEMP.jpg.webp?h=6ea9a4aa&itok=_6aEeP_H",
+      "page": "https://bramptonbrick.com/en/landscape-products-products/nuevar-coping-copings-caps",
+      "file": "cap-998d4e8e1f2a8df091beeb15.webp",
+      "sha256": "998d4e8e1f2a8df091beeb1511dc99e5f0778f1ae95d921d0b98d52dde6fd7f3",
+      "bytes": 333446,
+      "width": 621,
+      "height": 363
+    },
+    {
+      "product": "oaks-nueva-coping",
+      "color": "marble-grey",
+      "sourceUrl": "https://bramptonbrick.com/sites/default/files/styles/product_model__image__full/public/pm_image/Nueva-Coping_Marble-Grey_TEMP.jpg.webp?h=29f17ece&itok=EEw9XzVN",
+      "page": "https://bramptonbrick.com/en/landscape-products-products/nuevar-coping-copings-caps",
+      "file": "cap-84a1fce29ffcc924a5b32e16.webp",
+      "sha256": "84a1fce29ffcc924a5b32e162a0a6812a3643d3b98e07612bf9f9f77c6c1b98e",
+      "bytes": 346044,
+      "width": 621,
+      "height": 363
+    },
+    {
+      "product": "oaks-nueva-coping",
+      "color": "milano",
+      "sourceUrl": "https://bramptonbrick.com/sites/default/files/styles/product_model__image__full/public/pm_image/Nueva-Coping_Milano_TEMP.jpg.webp?h=fa95eabc&itok=WVz4EtvE",
+      "page": "https://bramptonbrick.com/en/landscape-products-products/nuevar-coping-copings-caps",
+      "file": "cap-8431f92eef838a4f2fb111b4.webp",
+      "sha256": "8431f92eef838a4f2fb111b45cf7cb53eca82e107dd47d6b39d2525a3830e509",
+      "bytes": 267642,
+      "width": 621,
+      "height": 363
+    }
+  ],
+  "familyAliases": [
+    {
+      "key": "permacon-grande-wedge-wall/split/grey",
+      "sampleFrom": "permacon-grande-wall/split/grey",
+      "page": "https://permacon.ca/en/product/grande-wall/",
+      "note": "Manufacturer family page includes Grande Wedge units/caps and the Grey sample. Uses that shared finish sample, not a separate calibrated cap scan."
+    }
+  ]
+}

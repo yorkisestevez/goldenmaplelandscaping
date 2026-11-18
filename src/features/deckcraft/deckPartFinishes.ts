@@ -1,5 +1,5 @@
 import {colourName,deckColourRef,parseColourRef,partAllowed} from './boardFinishes';
-import {RAILING_CATALOGUE,type CatalogueRailing} from './manufacturerCatalog';
+import {RAILING_CATALOGUE,type CatalogueRailing} from './manufacturerRuntimeCatalogue';
 import type {ColourRef,DeckData,DeckFinishes} from './types';
 
 /**

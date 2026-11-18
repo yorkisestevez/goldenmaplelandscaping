@@ -1,0 +1,27 @@
+# The production deploy command is `npm run lint && npm run build` (netlify.toml).
+# DeckCraft E2E builds the site but does not run lint, so a drawing regression can
+# merge and then fail the deploy. This is that lint gate on every pull request.
+name: PR lint
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - run: npm run lint

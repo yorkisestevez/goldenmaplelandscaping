@@ -1,16 +1,16 @@
 import {Suspense,lazy} from 'react';
-import {defaultLevel3} from '../../designPersistence';
+import {usesCurrentBuildRules} from '../../buildRules';
 import {wrapBlockers,wrapHips,type activeWrap,WRAP_PORCH_DEPTH_FT,WRAP_PORCH_RUN_FT,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from '../../lib/wrapGeometry';
 import {activeCornerChamfers,chamferFaceFt,CORNER_CHAMFER_FT,describeChamfers} from '../../lib/cornerChamfers';
 import type {DeckData,DeckShape,HouseConfig} from '../../types';
 import {Field,NumberField,controlsFor,type Update} from '../fields';
-import {chooseShape,porchKey,setPorch,setPorchSize,setWing,setWingSize,splitLevel,wrapFix,wrapFixNames,wrapFixStatus} from '../deckShapeActions';
+import {DECK_TYPES} from '../optionGroups';
+import {SHAPES,chooseShape,levelsPatch,porchKey,setPorch,setPorchSize,setWing,setWingSize,splitLevel,wrapFix,wrapFixNames,wrapFixStatus} from '../deckShapeActions';
 
 export type StairEdge={id:string;name:string;ft:string};
 
 // Only a custom outline needs the editor, so it loads when one is chosen.
 const OutlineEditor=lazy(()=>import('../OutlineEditor'));
-const SHAPES:[DeckShape,string][]=[['Rectangle','Rectangle'],['L-Shape','L-Shape'],['Multi-corner','Multi-corner'],['Curved','Curved'],['Custom','Custom outline']];
 
 /** The Deck shape & size section: the footprint, shape, angled corners, levels and wrap-around. The house has its own section. */
 export default function DimensionsStep({data,update,houseConfig,wrap,wrapStatus,setWrapStatus,stairEdges,onDrawOnPlan}:{data:DeckData;update:Update;houseConfig:HouseConfig;wrap:ReturnType<typeof activeWrap>;wrapStatus:string;setWrapStatus:(status:string)=>void;stairEdges:StairEdge[];
@@ -18,18 +18,20 @@ export default function DimensionsStep({data,update,houseConfig,wrap,wrapStatus,
   onDrawOnPlan?:()=>void}){
   const {number,select}=controlsFor(data,update);
   // The shape, wrap, porch and split-level changes are pure patches in deckShapeActions.ts; these apply them.
-  const custom=data.shape==='Custom';
-  // Wrap-around: side wings around one or both house corners, mitred on corner-to-corner hips.
+  const free=!!data.deckOutlines?.main,custom=data.shape==='Custom'&&!free;
+  // Wrap-around: side wings around one or both house corners. Current rules turn the boards at the house corner.
   const wrapPaused=wrapBlockers(data),attachedDeck=data.deckType==='Attached'||data.deckType==='Add-on';
   const toggleWing=(side:'left'|'right',on:boolean)=>{const {patch,status}=setWing(data,houseConfig,side,on);setWrapStatus(status);update(patch);};
   const sizeWing=(side:'left'|'right',patch:Partial<{widthFt:number;runFt:number}>)=>{const next=setWingSize(data,side,patch);if(next)update(next);};
   const wrapHipNotes=wrap?wrapHips(wrap):[];
   const togglePorch=(side:'left'|'right',on:boolean)=>update(setPorch(data,houseConfig,side,on));
   const sizePorch=(side:'left'|'right',patch:Partial<{depthFt:number;runFt:number}>)=>{const next=setPorchSize(data,side,patch);if(next)update(next);};
-  const hipNote=(h:{angleDeg:number;corner:'front'|'far'},want:string)=>Math.abs(h.angleDeg-45)<.5?`Mitred at 45°: the hip runs from the house corner to the outside corner.`:`Corner-to-corner hip at ${h.angleDeg.toFixed(0)}° to the ${h.corner==='front'?'back':'street-side'} wall. A true 45° mitre needs ${want}.`;
+  const hipNote=(h:{angleDeg:number;corner:'front'|'far'},want:string)=>wrap?.miter==='house'
+    ?'The front of the deck keeps one board direction. Beside the house the boards run the other way, so the pattern turns where the deck wraps the corner.'
+    :`Corner-to-corner hip at ${h.angleDeg.toFixed(0)}° to the ${h.corner==='front'?'back':'street-side'} wall. A true 45° mitre needs ${want}.`;
   const trimFt=(inches:number)=>(inches/12).toFixed(1).replace(/\.0$/,'');
   const wrapSection=<fieldset className="dd-wrap"><legend>Wrap around the house</legend>
-    <p className="dd-note">Continue the deck around one or both house corners. A side wing is fastened to the house side wall with its own ledger, and each corner is mitred on a doubled hip from the house corner to the deck&apos;s outside corner.</p>
+    <p className="dd-note">{wrap?.miter==='house'||(!wrap&&usesCurrentBuildRules(data))?"Continue the deck around one or both house corners. A side wing is fastened to the house side wall with its own ledger. The front of the deck keeps one board direction; beside the house the boards run the other way, so the pattern turns where the deck wraps the corner.":"Continue the deck around one or both house corners. A side wing is fastened to the house side wall with its own ledger, and each corner is mitred on a doubled hip from the house corner to the deck's outside corner."}</p>
     {!attachedDeck&&<p className="dd-note">Attach the deck to the house (Attached or Add-on) to wrap it around a corner.</p>}
     {(['left','right'] as const).map(side=>{const wing=data.wrap?.[side],label=side==='left'?'Left':'Right',hip=wrapHipNotes.find(h=>h.side===side&&h.corner==='front'),farHip=wrapHipNotes.find(h=>h.side===side&&h.corner==='far'),porch=data.wrap?.[porchKey(side)],otherPorch=data.wrap?.[porchKey(side==='left'?'right':'left')];
       return <div key={side} className="dd-wrap-wing">
@@ -47,7 +49,7 @@ export default function DimensionsStep({data,update,houseConfig,wrap,wrapStatus,
         {farHip&&<p className="dd-note" role="status">{hipNote(farHip,`a ${wing.widthFt} ft deep porch (the wing width)`)}</p>}</>}</>}
       </div>;})}
     {wrap?.left&&wrap.right&&<p className="dd-note" role="status">Deck width is set by the house: {trimFt(wrap.left.widthIn)} ft left wing + {houseConfig.widthFt} ft house + {trimFt(wrap.right.widthIn)} ft right wing = {trimFt(wrap.W)} ft.</p>}
-    {(data.wrap?.porchLeft||data.wrap?.porchRight)&&<p className="dd-note">Porch wraps price labour at the two-corner wrap factor. The extra porch-wrap labour is listed for a builder quote until Golden Maple sets its rate.</p>}
+    {(data.wrap?.porchLeft||data.wrap?.porchRight)&&<p className="dd-note">Porch wraps add ×0.15 to the wrap labour factor (on top of the one- or two-corner wrap rate) for the street-side porch framing.</p>}
     {wrapStatus&&<p className="dd-note" role="status">{wrapStatus}</p>}
     {data.wrap&&wrapPaused.length>0&&<div className="dd-quote-notice" role="status"><strong>The wrap-around is paused</strong><ul>{wrapPaused.map(r=><li key={r}>{r}</li>)}</ul>{attachedDeck&&<button type="button" className="dd-secondary" onClick={()=>{setWrapStatus(wrapFixStatus(wrapFixNames(data)));update(wrapFix(data));}}>Use a rectangle with straight boards</button>}</div>}
   </fieldset>;
@@ -88,5 +90,5 @@ export default function DimensionsStep({data,update,houseConfig,wrap,wrapStatus,
       </div>
       <label className="dd-check"><input type="checkbox" checked={!!l3.fullStep} onChange={e=>setL3({fullStep:e.target.checked||undefined})}/><span>Full-width step to the third level<small>The step or stair runs the whole shared edge.</small></span></label></>}
   </>;
-  return <><p>Width and depth describe the structural framing footprint. Picture-framed decking uses your outer-frame overhang setting beyond the finished fascia (default 1½ in). Measure height up from grade.</p><div className="dd-fields three">{wrap?.left&&wrap.right?<NumberField label="Deck width" value={data.width} min={4} max={200} unit="ft" increment={0.5} disabled hint="Set by the wrap-around" onValue={()=>{}}/>:custom?<NumberField label="Deck width" value={data.width} min={4} max={60} unit="ft" increment={0.5} disabled hint="Set by the outline" onValue={()=>{}}/>:number('width','Deck width',4,60,'ft',0.5)}{custom?<NumberField label="Deck depth" value={data.length} min={4} max={60} unit="ft" increment={0.5} disabled hint="Set by the outline" onValue={()=>{}}/>:number('length','Deck depth',4,60,'ft',0.5)}{number('height','Height above ground',8,144,'in')}</div><div className="dd-fields">{select('deckType','How the deck connects',['Attached','Freestanding','Floating','Add-on'])}<Field label="Deck shape"><select aria-label="Deck shape" value={data.shape} onChange={e=>update(chooseShape(data,e.target.value as DeckShape))}>{SHAPES.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></Field></div>{['L-Shape','Multi-corner'].includes(data.shape)&&<div className="dd-fields">{number('cutoutWidth','Corner cutout width',0,data.width*0.8,'ft',0.5)}{number('cutoutLength','Corner cutout depth',0,data.length*0.8,'ft',0.5)}</div>}{data.shape==='Multi-corner'&&<div className="dd-fields">{number('cutoutWidth2','Second cutout width',0,(data.width-data.cutoutWidth)*0.8,'ft',0.5)}{number('cutoutLength2','Second cutout depth',0,data.length*0.8,'ft',0.5)}</div>}{data.shape==='Rectangle'&&cornersSection}{custom&&<Suspense fallback={<p className="dd-note" role="status">Loading the outline editor…</p>}><OutlineEditor data={data} update={update} onDrawOnPlan={onDrawOnPlan}/></Suspense>}<div className="dd-fields"><Field label="Number of levels" hint={custom?'A custom outline is one level':undefined}><select aria-label="Number of levels" value={data.levels} disabled={custom} onChange={e=>{const levels=Number(e.target.value);update({levels,...(levels===3&&!data.level3?{level3:defaultLevel3(data)}:{})});}}>{[1,2,3].map(n=><option key={n} value={n}>{n}</option>)}</select></Field></div>{wrapSection}{!custom&&levelsSection}</>;
+  return <><p>Width and depth describe the structural framing footprint. Picture-framed decking uses your outer-frame overhang setting beyond the finished fascia (a new design starts at the most its board allows: ½ in for TimberTech PVC, 1 in for composite). Measure height up from grade.</p><div className="dd-fields three">{wrap?.left&&wrap.right?<NumberField label="Deck width" value={data.width} min={4} max={200} unit="ft" increment={0.5} disabled hint="Set by the wrap-around" onValue={()=>{}}/>:custom?<NumberField label="Deck width" value={data.width} min={4} max={60} unit="ft" increment={0.5} disabled hint="Set by the outline" onValue={()=>{}}/>:number('width','Deck width',4,60,'ft',0.5)}{custom?<NumberField label="Deck depth" value={data.length} min={4} max={60} unit="ft" increment={0.5} disabled hint="Set by the outline" onValue={()=>{}}/>:number('length','Deck depth',4,60,'ft',0.5)}{number('height','Height above ground',8,144,'in')}</div><div className="dd-fields">{select('deckType','How the deck connects',DECK_TYPES)}<Field label="Deck shape"><select aria-label="Deck shape" value={free?'Edited':data.shape} onChange={e=>update(chooseShape(data,e.target.value as DeckShape))}>{free&&<option value="Edited" disabled>Edited outline</option>}{SHAPES.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></Field></div>{!free&&['L-Shape','Multi-corner'].includes(data.shape)&&<div className="dd-fields">{number('cutoutWidth','Corner cutout width',0,data.width*0.8,'ft',0.5)}{number('cutoutLength','Corner cutout depth',0,data.length*0.8,'ft',0.5)}</div>}{!free&&data.shape==='Multi-corner'&&<div className="dd-fields">{number('cutoutWidth2','Second cutout width',0,(data.width-data.cutoutWidth)*0.8,'ft',0.5)}{number('cutoutLength2','Second cutout depth',0,data.length*0.8,'ft',0.5)}</div>}{!free&&data.shape==='Rectangle'&&cornersSection}{free&&<p className="dd-note">This outline follows your edited points. <button type="button" className="dd-linklike" onClick={onDrawOnPlan}>Edit points on the plan</button></p>}{custom&&<Suspense fallback={<p className="dd-note" role="status">Loading the outline editor…</p>}><OutlineEditor data={data} update={update} onDrawOnPlan={onDrawOnPlan}/></Suspense>}<div className="dd-fields"><Field label="Number of levels" hint={custom?'A custom outline is one level':undefined}><select aria-label="Number of levels" value={data.levels} disabled={custom} onChange={e=>update(levelsPatch(data,Number(e.target.value)))}>{[1,2,3].map(n=><option key={n} value={n}>{n}</option>)}</select></Field></div>{wrapSection}{!custom&&levelsSection}</>;
 }

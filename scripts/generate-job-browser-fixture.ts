@@ -1,0 +1,10 @@
+import {mkdirSync,writeFileSync} from 'node:fs';
+import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {emptyJobLibrary,saveJobRevision,compareJobRevisions} from '../src/features/deckcraft/designer/jobRevisionLibrary';
+const ratesA={materialMarkup:12,customLaborCost:12000,customOverrides:{'Decking boards':{cost:420}},addOnTransitionLabor:310,addOnHardwareCost:120,addOnFlashingLf:9};
+const ratesB={materialMarkup:47,customLaborCost:26000,customOverrides:{'Decking boards':{cost:900}},addOnTransitionLabor:650,addOnHardwareCost:260,addOnFlashingLf:18};
+let library=saveJobRevision(emptyJobLibrary(),{...structuredClone(DEFAULT_DECK),...ratesA},'Private rates','Rate A');
+library=saveJobRevision(library,{...structuredClone(DEFAULT_DECK),width:22,...ratesB},'','Rate B',library.jobs[0].id);
+const [a,b]=library.jobs[0].revisions;
+const fixture={library,ratesA,ratesB,firstExpected:compareJobRevisions(DEFAULT_DECK,undefined,a,true).right.estimate.total,expectedCurrent:compareJobRevisions(a.data,undefined,b).right.estimate.total,expectedSaved:compareJobRevisions(a.data,undefined,b,true).right.estimate.total};
+mkdirSync('e2e/fixtures',{recursive:true});writeFileSync('e2e/fixtures/job-private-pricing.json',JSON.stringify(fixture,null,2));console.log('Private-price browser fixture generated from the actual release engine.');

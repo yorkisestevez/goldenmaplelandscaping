@@ -13,6 +13,39 @@
  * conversation costs LLM tokens only, not call minutes.
  */
 
+import { LANDSCAPE_MAINTENANCE } from '../data/business';
+import { isPriceQuestion, projectFromText } from '../data/sophieTeasers';
+import { samePath } from './trailingSlash';
+
+const maintenanceQuestion = /\b(?:mow(?:s|ing|ed)?|lawn[ -]care|(?:landscape|landscaping|property|lawn) maintenance)\b/i;
+
+export const MAINTENANCE_CHAT_REPLY = `${LANDSCAPE_MAINTENANCE.summary} Send us the property address and what you’d like looked after at ${LANDSCAPE_MAINTENANCE.enquiryPath}. We’ll confirm coverage, timing and the written scope for your property.`;
+
+function serviceTopic(text: string): 'maintenance' | 'other' | undefined {
+  if (maintenanceQuestion.test(text)) return 'maintenance';
+  if (projectFromText(text) || /\b(?:hardscap\w*|outdoor kitchens?|landscape design|(?:spring|fall|seasonal) clean[ -]?ups?)\b/i.test(text)) return 'other';
+  if (/\bmaintenance\b/i.test(text) && !/\blow[ -]maintenance\b/i.test(text)) return 'maintenance';
+}
+
+export function maintenanceReply(
+  text: string,
+  history: readonly { role: 'user' | 'assistant'; content: string }[] = [],
+  pathname = '',
+): string | null {
+  const topic = serviceTopic(text);
+  if (topic) return topic === 'maintenance' ? MAINTENANCE_CHAT_REPLY : null;
+  if (!isPriceQuestion(text) && !/\b(?:quotes?|estimates?|rates?)\b/i.test(text)) return null;
+
+  // Only a visitor's most recent named service overrides the page context.
+  for (let index = history.length - 1; index >= 0; index--) {
+    const message = history[index];
+    if (message.role !== 'user') continue;
+    const priorTopic = serviceTopic(message.content);
+    if (priorTopic) return priorTopic === 'maintenance' ? MAINTENANCE_CHAT_REPLY : null;
+  }
+  return samePath(pathname, LANDSCAPE_MAINTENANCE.path) ? MAINTENANCE_CHAT_REPLY : null;
+}
+
 const AGENT_ID = 'agent_8901knsvwj12f57axdj4z9fm9gzs';
 const WS_URL = `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${AGENT_ID}`;
 
@@ -21,6 +54,8 @@ const CONNECT_TIMEOUT_MS = 8000;
 
 export interface SophieSession {
   send: (text: string) => void;
+  /** Background facts for the agent (e.g. the planning range the visitor just saw); never shown as a turn. */
+  sendContext: (text: string) => void;
   close: () => void;
 }
 
@@ -76,6 +111,7 @@ export function openSophieSession(handlers: SophieHandlers): Promise<SophieSessi
           clearTimeout(timer);
           resolve({
             send: (text: string) => ws.send(JSON.stringify({ type: 'user_message', text })),
+            sendContext: (text: string) => ws.send(JSON.stringify({ type: 'contextual_update', text })),
             close: () => { try { ws.close(); } catch { /* already closing */ } },
           });
           break;

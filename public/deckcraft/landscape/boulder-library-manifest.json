@@ -1,0 +1,559 @@
+{
+ "created": "2026-10-20",
+ "license": "CC0-1.0",
+ "note": "Natural stone boulder shapes. Base colour maps are grey luminance (linear mean 0.5) for stone-type tinting. fillShare is scan volume over bounding-box volume, measured on LOD0.",
+ "assets": [
+  {
+   "id": "boulder-fieldstone-round",
+   "sourceId": "namaqualand_boulder_06",
+   "sourceURL": "https://polyhaven.com/a/namaqualand_boulder_06",
+   "license": "CC0-1.0",
+   "licenseURL": "https://polyhaven.com/license",
+   "selectedSourceNode": 0,
+   "lods": [
+    {
+     "uri": "boulder-fieldstone-round-lod0.glb",
+     "bytes": 309060,
+     "sha256": "d6b237c26c6aa997a696c77d30c9868da395e0d3bfaf0fa819b6d5b6aba0c9a1",
+     "triangles": 10228,
+     "bounds": {
+      "min": [
+       -0.3372455571699132,
+       0.0004908088889417073,
+       -0.6059378385543823
+      ],
+      "max": [
+       0.3352128599691381,
+       0.649875760048956,
+       0.6056779623031616
+      ]
+     },
+     "textureLimit": 512
+    },
+    {
+     "uri": "boulder-fieldstone-round-lod1.glb",
+     "bytes": 88468,
+     "sha256": "e194e8d02428f340882bc1c9c5c8b81f12545a9dc42dbb162faac666802d9934",
+     "triangles": 3196,
+     "bounds": {
+      "min": [
+       -0.33725353955102,
+       0.00046809516266976825,
+       -0.6053239703178406
+      ],
+      "max": [
+       0.3352309155352119,
+       0.6498984737752279,
+       0.6052736639976501
+      ]
+     },
+     "textureLimit": 256
+    },
+    {
+     "uri": "boulder-fieldstone-round-lod2.glb",
+     "bytes": 26736,
+     "sha256": "2cfc723e76c2924cc31a26be12a5054664e786082573cdf830a08f217680c61d",
+     "triangles": 798,
+     "bounds": {
+      "min": [
+       -0.33719811593278026,
+       0.000496661158446654,
+       -0.6032923460006714
+      ],
+      "max": [
+       0.32973174010499096,
+       0.649869907779451,
+       0.6052736639976501
+      ]
+     },
+     "textureLimit": 128
+    }
+   ],
+   "fillShare": 0.4826,
+   "sizeM": [
+    0.672,
+    0.649,
+    1.212
+   ],
+   "genericVisualProxy": true,
+   "sourceDescriptor": {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/namaqualand_boulder_06/namaqualand_boulder_06_1k.gltf",
+    "sha256": "4331febbf2e4b20ebdee384522dd5cb9056a22450285ec45cada819dcb6d49db",
+    "bytes": 2880
+   },
+   "note": "Rounded loaf-shaped boulder; reads as glacial fieldstone."
+  },
+  {
+   "id": "boulder-fieldstone-dome",
+   "sourceId": "namaqualand_boulder_04",
+   "sourceURL": "https://polyhaven.com/a/namaqualand_boulder_04",
+   "license": "CC0-1.0",
+   "licenseURL": "https://polyhaven.com/license",
+   "selectedSourceNode": 0,
+   "lods": [
+    {
+     "uri": "boulder-fieldstone-dome-lod0.glb",
+     "bytes": 274780,
+     "sha256": "645e29bf0fa6e829fa7cf2a17d414b44e2e73d1b6f5735a91576bb50fe745ea2",
+     "triangles": 10150,
+     "bounds": {
+      "min": [
+       -1.2571278810501099,
+       -0.000079754077981109,
+       -1.2462807032980998
+      ],
+      "max": [
+       1.26107656955719,
+       1.8965469629402858,
+       1.2482533786215861
+      ]
+     },
+     "textureLimit": 512
+    },
+    {
+     "uri": "boulder-fieldstone-dome-lod1.glb",
+     "bytes": 78480,
+     "sha256": "98f7bffcb67f382cab6372838de27ef78e73d261a7a4828eef17b116f5a9a69c",
+     "triangles": 3230,
+     "bounds": {
+      "min": [
+       -1.2571278810501099,
+       -0.00005385982807271095,
+       -1.2461691524477703
+      ],
+      "max": [
+       1.2605997323989868,
+       1.8965210686903773,
+       1.2371353532763225
+      ]
+     },
+     "textureLimit": 256
+    },
+    {
+     "uri": "boulder-fieldstone-dome-lod2.glb",
+     "bytes": 23068,
+     "sha256": "d5bd342dda8c5be005f93e56b1056721bc0f5642acce8d34d0a3b8c45a2b6c66",
+     "triangles": 806,
+     "bounds": {
+      "min": [
+       -1.2571278810501099,
+       -0.00002345457051422528,
+       -1.233926445475852
+      ],
+      "max": [
+       1.2541675567626953,
+       1.890786498927814,
+       1.237209111682212
+      ]
+     },
+     "textureLimit": 128
+    }
+   ],
+   "fillShare": 0.4186,
+   "sizeM": [
+    2.518,
+    1.897,
+    2.495
+   ],
+   "genericVisualProxy": true,
+   "sourceDescriptor": {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/namaqualand_boulder_04/namaqualand_boulder_04_1k.gltf",
+    "sha256": "04c858a3bdb22873efa988633e0c0d9d1468055f34c94d47742f75165a192078",
+    "bytes": 2818
+   },
+   "note": "Broad weathered dome; lichen in the source photo becomes darker grey patches."
+  },
+  {
+   "id": "boulder-quarried-block",
+   "sourceId": "namaqualand_boulder_03",
+   "sourceURL": "https://polyhaven.com/a/namaqualand_boulder_03",
+   "license": "CC0-1.0",
+   "licenseURL": "https://polyhaven.com/license",
+   "selectedSourceNode": 0,
+   "lods": [
+    {
+     "uri": "boulder-quarried-block-lod0.glb",
+     "bytes": 263788,
+     "sha256": "29ee3b5cd361be3cb4ab4a292c9c9ffa82e7358b1b455488e9f0f73506a53627",
+     "triangles": 10126,
+     "bounds": {
+      "min": [
+       -1.199380943561039,
+       0.000038006040332327906,
+       -1.5327030420303345
+      ],
+      "max": [
+       1.2035847399477577,
+       1.4731551625998045,
+       1.530673861503601
+      ]
+     },
+     "textureLimit": 512
+    },
+    {
+     "uri": "boulder-quarried-block-lod1.glb",
+     "bytes": 76420,
+     "sha256": "57f4fcba91f13a290d4ad0d43d665c4181f3c9cecbe04be37c16a2311b1ea9b0",
+     "triangles": 3290,
+     "bounds": {
+      "min": [
+       -1.1985151033891612,
+       0.00011184095161265173,
+       -1.5327030420303345
+      ],
+      "max": [
+       1.203609750796693,
+       1.472858167898485,
+       1.529125452041626
+      ]
+     },
+     "textureLimit": 256
+    },
+    {
+     "uri": "boulder-quarried-block-lod2.glb",
+     "bytes": 22940,
+     "sha256": "9db9987f59e3cfd5acecf584e9c85f53bc154d35020d879b53536d7b0a498459",
+     "triangles": 822,
+     "bounds": {
+      "min": [
+       -1.1993315333023744,
+       -0.000055695044298365026,
+       -1.5327030420303345
+      ],
+      "max": [
+       1.2020495051041322,
+       1.470183277594347,
+       1.5092443227767944
+      ]
+     },
+     "textureLimit": 128
+    }
+   ],
+   "fillShare": 0.4044,
+   "sizeM": [
+    2.403,
+    1.473,
+    3.063
+   ],
+   "genericVisualProxy": true,
+   "sourceDescriptor": {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/namaqualand_boulder_03/namaqualand_boulder_03_1k.gltf",
+    "sha256": "14560936aaad68da0c0fc549b54c67bba4cd573dfe5b07f92835b9ca044a0092",
+    "bytes": 2823
+   },
+   "note": "Blocky flat-topped stone, the same scan as natural-boulder, rebuilt for stone colouring."
+  },
+  {
+   "id": "boulder-quarried-fractured",
+   "sourceId": "boulder_01",
+   "sourceURL": "https://polyhaven.com/a/boulder_01",
+   "license": "CC0-1.0",
+   "licenseURL": "https://polyhaven.com/license",
+   "selectedSourceNode": 0,
+   "lods": [
+    {
+     "uri": "boulder-quarried-fractured-lod0.glb",
+     "bytes": 341396,
+     "sha256": "497cfb84d46e32d2a9ede77f69b032b956dfaab70cf1e98adcf89fa24d38dbe7",
+     "triangles": 10330,
+     "bounds": {
+      "min": [
+       -0.6360270620778508,
+       -0.000042312800162092046,
+       -0.9107338190078735
+      ],
+      "max": [
+       0.6360270620778508,
+       1.0036140615336826,
+       0.9108463525772095
+      ]
+     },
+     "textureLimit": 512
+    },
+    {
+     "uri": "boulder-quarried-fractured-lod1.glb",
+     "bytes": 105692,
+     "sha256": "84f9380069ed96df91a06717f48508d43c703638b6742f0e6c61e82608ad85f8",
+     "triangles": 3228,
+     "bounds": {
+      "min": [
+       -0.6336248774540436,
+       0.0006256244526849919,
+       -0.9107338190078735
+      ],
+      "max": [
+       0.6353160996449005,
+       1.003614895845796,
+       0.9108463525772095
+      ]
+     },
+     "textureLimit": 256
+    },
+    {
+     "uri": "boulder-quarried-fractured-lod2.glb",
+     "bytes": 34716,
+     "sha256": "c8f7127d0035ea0c7174a723b6956465709cb9cc950a0401b682f6d9cacee334",
+     "triangles": 806,
+     "bounds": {
+      "min": [
+       -0.6200211541069203,
+       0.01727194985116215,
+       -0.8952984809875488
+      ],
+      "max": [
+       0.6353010432136708,
+       0.9958874891165426,
+       0.9108463525772095
+      ]
+     },
+     "textureLimit": 128
+    }
+   ],
+   "fillShare": 0.316,
+   "sizeM": [
+    1.272,
+    1.004,
+    1.822
+   ],
+   "genericVisualProxy": true,
+   "sourceDescriptor": {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/boulder_01/boulder_01_1k.gltf",
+    "sha256": "51487934db898b4c24072780a451e34eca5c02e3ada24a62bbc600bbc4019e92",
+    "bytes": 2773
+   },
+   "note": "Jagged fractured faces; reads as blasted or quarried rock."
+  },
+  {
+   "id": "boulder-bench",
+   "sourceId": "namaqualand_boulder_05",
+   "sourceURL": "https://polyhaven.com/a/namaqualand_boulder_05",
+   "license": "CC0-1.0",
+   "licenseURL": "https://polyhaven.com/license",
+   "selectedSourceNode": 0,
+   "lods": [
+    {
+     "uri": "boulder-bench-lod0.glb",
+     "bytes": 314700,
+     "sha256": "b5c7dd3ee016a19f30e683f7697c7fc47a6e9f5d1978b3978611378b1f43f97e",
+     "triangles": 10496,
+     "bounds": {
+      "min": [
+       -0.6820153594017029,
+       0.000013609481046339411,
+       -0.3740292369899167
+      ],
+      "max": [
+       0.6820153594017029,
+       0.5362262529609703,
+       0.3740292369899167
+      ]
+     },
+     "textureLimit": 512
+    },
+    {
+     "uri": "boulder-bench-lod1.glb",
+     "bytes": 91168,
+     "sha256": "f645fd8afead10a7f8e32c50650ab2180492655af89cbb473f5dcc973bd2fba4",
+     "triangles": 3150,
+     "bounds": {
+      "min": [
+       -0.6820153594017029,
+       0.000013609481046339411,
+       -0.3722063981520266
+      ],
+      "max": [
+       0.6820153594017029,
+       0.5362262529609703,
+       0.37402043571344323
+      ]
+     },
+     "textureLimit": 256
+    },
+    {
+     "uri": "boulder-bench-lod2.glb",
+     "bytes": 28340,
+     "sha256": "087edf46fc37756e9588eb305c0db6e4eb0cee1ead40b53397db9f7683a87b96",
+     "triangles": 786,
+     "bounds": {
+      "min": [
+       -0.6783835887908936,
+       0.000024657085627488584,
+       -0.3722093894167728
+      ],
+      "max": [
+       0.6820153594017029,
+       0.538297076389104,
+       0.3740234269781894
+      ]
+     },
+     "textureLimit": 128
+    }
+   ],
+   "fillShare": 0.4192,
+   "sizeM": [
+    1.364,
+    0.536,
+    0.748
+   ],
+   "genericVisualProxy": true,
+   "sourceDescriptor": {
+    "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/namaqualand_boulder_05/namaqualand_boulder_05_1k.gltf",
+    "sha256": "f8e5fd8fd981e889d621ba4e53170a52c47cd3053b8748ee7025ed1083f36a5f",
+    "bytes": 2872
+   },
+   "note": "Low slab with a flat top at seat height."
+  }
+ ],
+ "originalDownloads": [
+  {
+   "sourceId": "namaqualand_boulder_06",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/namaqualand_boulder_06/namaqualand_boulder_06_1k.gltf",
+   "sha256": "4331febbf2e4b20ebdee384522dd5cb9056a22450285ec45cada819dcb6d49db",
+   "bytes": 2880
+  },
+  {
+   "sourceId": "namaqualand_boulder_06",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_06/namaqualand_boulder_06_nor_gl_1k.jpg",
+   "sha256": "68ef851810c372e879534249c453289112cd3d0cb670d77e9216d9aeb2d5011c",
+   "bytes": 1080458
+  },
+  {
+   "sourceId": "namaqualand_boulder_06",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_06/namaqualand_boulder_06_arm_1k.jpg",
+   "sha256": "27675c935809c6d8bffefa47135f76303d1c7668392d83ac65845cdbf6a17a4f",
+   "bytes": 733753
+  },
+  {
+   "sourceId": "namaqualand_boulder_06",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/namaqualand_boulder_06/namaqualand_boulder_06.bin",
+   "sha256": "c74e1f84fd9b48ba86420263804da0899d4d2d2f470276be801ef450ac5e08f3",
+   "bytes": 2463356
+  },
+  {
+   "sourceId": "namaqualand_boulder_06",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_06/namaqualand_boulder_06_diff_1k.jpg",
+   "sha256": "b052fcaa6b9a32f871e6d3fa106ff7598ffb8d0c7f900365ee8d2893262295d7",
+   "bytes": 971983
+  },
+  {
+   "sourceId": "namaqualand_boulder_04",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/namaqualand_boulder_04/namaqualand_boulder_04_1k.gltf",
+   "sha256": "04c858a3bdb22873efa988633e0c0d9d1468055f34c94d47742f75165a192078",
+   "bytes": 2818
+  },
+  {
+   "sourceId": "namaqualand_boulder_04",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_04/namaqualand_boulder_04_arm_1k.jpg",
+   "sha256": "b9556284b65a603cee0c282f1a13f1642ac64cd586db14caa065e7322ec95db2",
+   "bytes": 600523
+  },
+  {
+   "sourceId": "namaqualand_boulder_04",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_04/namaqualand_boulder_04_diff_1k.jpg",
+   "sha256": "1673e031ebcf5015206fec10bec676e55b049705b01fcef6bb2b2fb79e8de54c",
+   "bytes": 886013
+  },
+  {
+   "sourceId": "namaqualand_boulder_04",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_04/namaqualand_boulder_04_nor_gl_1k.jpg",
+   "sha256": "a7042070d6e369c80d818b7e787b977bf84c1f78b0c83e3ecf690ac2fa17d291",
+   "bytes": 906782
+  },
+  {
+   "sourceId": "namaqualand_boulder_04",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/namaqualand_boulder_04/namaqualand_boulder_04.bin",
+   "sha256": "99ba28ddc8da9ba24e1a419e69ed05f14c4b483bf06268a8a77495545985318a",
+   "bytes": 1319676
+  },
+  {
+   "sourceId": "namaqualand_boulder_03",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/namaqualand_boulder_03/namaqualand_boulder_03_1k.gltf",
+   "sha256": "14560936aaad68da0c0fc549b54c67bba4cd573dfe5b07f92835b9ca044a0092",
+   "bytes": 2823
+  },
+  {
+   "sourceId": "namaqualand_boulder_03",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_03/namaqualand_boulder_03_diff_1k.jpg",
+   "sha256": "cd1a44c22932eb18a5989474f60bdccd622a1fdb0854fd69899a32ab8efe3bd4",
+   "bytes": 867015
+  },
+  {
+   "sourceId": "namaqualand_boulder_03",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_03/namaqualand_boulder_03_nor_gl_1k.jpg",
+   "sha256": "c4c1d34d5fe79fdda70ddf1dc52046f3bb6002576d75c9a4643403c0ecdc55f4",
+   "bytes": 851531
+  },
+  {
+   "sourceId": "namaqualand_boulder_03",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/namaqualand_boulder_03/namaqualand_boulder_03.bin",
+   "sha256": "d24151021ed310fe3207f1b5964bff22b583e77d2617427a88b5dcbc0447a475",
+   "bytes": 1450268
+  },
+  {
+   "sourceId": "namaqualand_boulder_03",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_03/namaqualand_boulder_03_arm_1k.jpg",
+   "sha256": "604806ac2a67d6ae97d7bdeea2a0c859eac2cc42a08af480abdec70fd0385cf5",
+   "bytes": 607318
+  },
+  {
+   "sourceId": "boulder_01",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/boulder_01/boulder_01_1k.gltf",
+   "sha256": "51487934db898b4c24072780a451e34eca5c02e3ada24a62bbc600bbc4019e92",
+   "bytes": 2773
+  },
+  {
+   "sourceId": "boulder_01",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/boulder_01/boulder_01_arm_1k.jpg",
+   "sha256": "c57187c5746b6be913fa53846cb44ff78743e7ca5000f131c9627b99563c2b87",
+   "bytes": 659386
+  },
+  {
+   "sourceId": "boulder_01",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/boulder_01/boulder_01_diff_1k.jpg",
+   "sha256": "c38f0e918f6dc16b8d386ba3cdd89805c78320c119a1ceec85856f82b09a65b8",
+   "bytes": 987467
+  },
+  {
+   "sourceId": "boulder_01",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/boulder_01/boulder_01.bin",
+   "sha256": "7f5b06503d62bd95bfe9c6b8a354a5cc8ff04a4d271a8cf87a3e3125db4232d7",
+   "bytes": 2938808
+  },
+  {
+   "sourceId": "boulder_01",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/boulder_01/boulder_01_nor_gl_1k.jpg",
+   "sha256": "0810cf6e89d89bb6eb065b4d2e2855288f5dcbd2c15c6e40ab90d462021b50aa",
+   "bytes": 1183552
+  },
+  {
+   "sourceId": "namaqualand_boulder_05",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/namaqualand_boulder_05/namaqualand_boulder_05_1k.gltf",
+   "sha256": "f8e5fd8fd981e889d621ba4e53170a52c47cd3053b8748ee7025ed1083f36a5f",
+   "bytes": 2872
+  },
+  {
+   "sourceId": "namaqualand_boulder_05",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_05/namaqualand_boulder_05_arm_1k.jpg",
+   "sha256": "1466c8467188f54c2fb655b05f9e1d0a9a93a366f3cd45878bcf6905487c5f3e",
+   "bytes": 713844
+  },
+  {
+   "sourceId": "namaqualand_boulder_05",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_05/namaqualand_boulder_05_nor_gl_1k.jpg",
+   "sha256": "027359a8a79febee925cc29af3106cc12bdeed5bc91cb26f1d88f589c77f448d",
+   "bytes": 1099873
+  },
+  {
+   "sourceId": "namaqualand_boulder_05",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/namaqualand_boulder_05/namaqualand_boulder_05.bin",
+   "sha256": "a60ade71de8612c873f9112159ed5d93dcba58979007a0915bc10d551a9ed03c",
+   "bytes": 2015628
+  },
+  {
+   "sourceId": "namaqualand_boulder_05",
+   "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_05/namaqualand_boulder_05_diff_1k.jpg",
+   "sha256": "58d1fba55e16a56fe2d6e016ac75bcddfbc3bb2273ca8c9127f1de497c54db2a",
+   "bytes": 867775
+  }
+ ]
+}

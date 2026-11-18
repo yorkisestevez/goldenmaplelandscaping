@@ -1,9 +1,8 @@
-import { Helmet } from 'react-helmet-async';
-import { motion } from 'motion/react';
 import { MapPin, CheckCircle, ArrowRight, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { publicContact } from '../../data/business';
+import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import { trackEngagement, trackCall } from '../../utils/analytics';
 
 const COMMUNITIES = [
@@ -42,7 +41,7 @@ const PRICING = [
   { project: "Interlocking patio (200-400 sq ft)", range: "$12,000 – $25,000" },
   { project: "Full backyard transformation", range: "$35,000 – $90,000" },
   { project: "Composite deck (200-350 sq ft)", range: "$15,000 – $35,000" },
-  { project: "Retaining wall (30-60 linear ft)", range: "$8,000 – $20,000" },
+  { project: "Retaining wall (30-60 linear ft, 2-4 ft high, before HST)", range: "$13,000 – $32,500" },
   { project: "Extended rural driveway", range: "$25,000 – $55,000" },
   { project: "Premium outdoor living space", range: "$90,000 – $160,000+" },
 ];
@@ -64,50 +63,31 @@ const FAQS = [
     q: "How do you handle clay soil in Springwater?",
     a: "Clay soil is common in Springwater and requires deeper excavation and geotextile fabric to prevent base contamination. We adjust base preparation specs for local soil conditions — this is factored into every quote.",
   },
-  {
-    q: "What warranty do you offer?",
-    a: "Ask us for the current written workmanship terms for your specific project. Manufacturer coverage depends on the selected product and must be confirmed with its current documentation.",
-  },
 ];
 
-const localBusinessSchema = {
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": "Golden Maple Landscaping",
-  "description": "Premium landscaping and hardscape contractor serving Springwater Township, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design.",
-  "url": "https://goldenmaplelandscaping.ca/locations/springwater",
-  "telephone": publicContact.phoneTel,
-  "email": publicContact.email,
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Barrie",
-    "addressRegion": "ON",
-    "addressCountry": "CA",
-  },
-  "geo": {
-    "@type": "GeoCoordinates",
-    "latitude": 44.3894,
-    "longitude": -79.6903,
-  },
-  "areaServed": {
-    "@type": "AdministrativeArea",
-    "name": "Springwater",
-    "url": "https://en.wikipedia.org/wiki/Springwater,_Ontario",
-  },
-};
+const PAGE_PATH = '/locations/springwater/';
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": FAQS.map((faq) => ({
-    "@type": "Question",
-    "name": faq.q,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": faq.a,
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({
+    path: PAGE_PATH,
+    name: 'Landscaping & hardscape construction in Springwater',
+    serviceType: 'Landscaping and hardscape construction',
+    description: "Premium landscaping and hardscape contractor serving Springwater Township, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design.",
+    areaServed: {
+      "@type": "AdministrativeArea",
+      "name": "Springwater",
+      "sameAs": "https://en.wikipedia.org/wiki/Springwater,_Ontario",
     },
-  })),
-};
+  }),
+  breadcrumb([
+    { name: 'Home', path: '/' },
+    { name: 'Service Areas', path: '/service-areas/' },
+    { name: 'Springwater', path: PAGE_PATH },
+  ]),
+  faqPage(PAGE_PATH, FAQS),
+);
+
 
 export default function SpringwaterLanding() {
   return (
@@ -116,20 +96,13 @@ export default function SpringwaterLanding() {
         title="Landscaping & Outdoor Construction Springwater"
         description="Serving Springwater Township with premium hardscape & landscape construction. Driveways, patios, decks & walls. Local Simcoe County contractor. Free quotes."
         canonical="https://goldenmaplelandscaping.ca/locations/springwater"
-        schema={localBusinessSchema}
+        schema={pageSchema}
       />
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
-      </Helmet>
 
       <div className="container-custom">
         <div className="max-w-5xl mx-auto">
           {/* Hero */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
+          <div>
             <span className="flex items-center gap-2 font-sans text-xs tracking-widest uppercase text-brand-gold-dark mb-6">
               <MapPin size={16} /> Serving Springwater & Midhurst
             </span>
@@ -159,16 +132,10 @@ export default function SpringwaterLanding() {
                 <Phone size={18} /> Call {publicContact.phoneDisplay}
               </a>
             </div>
-          </motion.div>
+          </div>
 
           {/* Why Choose Us */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="mb-24"
-          >
+          <div className="mb-24">
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-10">
               Why Springwater Homeowners Choose <span className="text-brand-gold-dark italic">Golden Maple</span>
             </h2>
@@ -196,7 +163,7 @@ export default function SpringwaterLanding() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Services */}
           <div className="mb-24">
@@ -205,14 +172,7 @@ export default function SpringwaterLanding() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {SERVICES.map((service, idx) => (
-                <motion.div
-                  key={service.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: idx * 0.1 }}
-                  className="bg-brand-surface p-8 border border-brand-dim/20 rounded-sm group hover:border-brand-gold/30 transition-all"
-                >
+                <div key={service.title} className="bg-brand-surface p-8 border border-brand-dim/20 rounded-sm group hover:border-brand-gold/30 transition-all">
                   <h3 className="font-display text-2xl mb-4 text-brand-bonewhite">{service.title}</h3>
                   <p className="font-sans text-sm text-brand-muted font-light leading-relaxed mb-6">{service.desc}</p>
                   <Link
@@ -222,19 +182,13 @@ export default function SpringwaterLanding() {
                     <span>View Service</span>
                     <ArrowRight size={14} />
                   </Link>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
 
           {/* Communities */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="mb-24"
-          >
+          <div className="mb-24">
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-10">
               Springwater Communities <span className="text-brand-gold-dark italic">We Serve</span>
             </h2>
@@ -246,16 +200,10 @@ export default function SpringwaterLanding() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Pricing */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="mb-24"
-          >
+          <div className="mb-24">
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-10">
               What Does Landscaping Cost <span className="text-brand-gold-dark italic">in Springwater?</span>
             </h2>
@@ -283,16 +231,10 @@ export default function SpringwaterLanding() {
             <p className="font-sans text-sm text-brand-muted font-light mt-6">
               Want a faster answer? Use our <Link to="/cost-estimator?city=springwater" className="text-brand-gold-dark hover:underline">Cost Estimator</Link> for an instant ballpark.
             </p>
-          </motion.div>
+          </div>
 
           {/* FAQ */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="mb-24"
-          >
+          <div className="mb-24">
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-12">
               Frequently Asked <span className="text-brand-gold-dark italic">Questions</span>
             </h2>
@@ -304,7 +246,7 @@ export default function SpringwaterLanding() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* CTA */}
           <div className="text-center bg-brand-surface p-12 md:p-16 border border-brand-dim/20 rounded-sm">

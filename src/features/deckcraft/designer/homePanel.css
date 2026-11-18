@@ -1,0 +1,64 @@
+/* The homeowner's tab panel (HomePanel.tsx). It loads with the panel, which the page never opens on its first paint, so
+   none of this is in the route's stylesheet. Desktop: docked beside the drawing, which keeps the rest of the width.
+   Phones: a drawer over the foot of the screen, above the price bar, so the deck stays in view while choosing. */
+.dd-home-panel{display:flex;flex-direction:column;min-width:0;background:#fff;color:var(--dc-ink,#242729)}
+.dd-home-panel[hidden]{display:none}
+.dd-home-panel-top{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid #e6e1d9}
+.dd-home-panel-top h2{margin:0;font-size:17px;font-weight:600}
+.dd-home-panel-top .dd-linklike{min-height:44px;font-size:12px}
+.dd-home-section{border-bottom:1px solid #eeeae3}
+.dd-home-row{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;padding:10px 16px;border:0;background:none;color:inherit;text-align:left;cursor:pointer}
+.dd-home-row:hover{background:#f7f5f0}
+.dd-home-row[aria-expanded=true]{background:#f4f1ea}
+.dd-home-row svg{flex:none;color:#7b5a3f}
+.dd-home-row>span{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dd-home-row strong{font-size:13px;font-weight:600}
+.dd-home-row small,.dd-home-quote-list small{font-size:11px;color:#60665e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dd-home-row em,.dd-home-quote-list em{flex:none;font-style:normal;font-size:12px;font-variant-numeric:tabular-nums;color:#3d4440}
+.dd-home-row em[data-kind=quote],.dd-home-quote-list em[data-kind=quote]{color:#8f4c29}
+.dd-home-section>.dd-section-body{padding:14px 16px 20px}
+.dd-home-section>.dd-section-body>p:first-child{margin-top:0;color:#596256;font-size:12px}
+/* Section bodies as the old inspector styled them (workspace.css, .dd-workspace-inspector), for a 360 px column. */
+.dd-home-panel .dd-panel h3{font-size:15px;margin-top:26px}
+.dd-home-panel .dd-panel h4{font-size:13px}
+.dd-home-panel .dd-panel>p,.dd-home-panel .dd-note,.dd-home-panel .dd-field small{font-size:12px;color:#596256;line-height:1.55}
+.dd-home-panel :is(.dd-wrap,.dd-simple-lighting,.dd-screen,.dd-lighting-zones,.dd-skirting-sides,.dd-house-block,.dd-inlay-card,.dd-colour-pick,.dd-colour-one,.dd-legacy-stripe){padding:12px;border-radius:8px;border-color:#e2ded6}
+.dd-home-panel .dd-quote-notice{border-radius:8px;background:#fcf3ec;color:#8e522f}
+.dd-home-panel :is(.dd-materials,.dd-colours) button{border-radius:8px;border-color:#e3ded5}
+.dd-home-panel :is(.dd-materials,.dd-colours) button[aria-pressed=true]{border-color:#a76a43}
+.dd-home-panel .dd-materials img{height:72px}
+.dd-home-panel .dd-materials button>span{padding:9px}
+.dd-home-panel .dd-materials strong{font-size:11px}
+.dd-home-panel .dd-materials small{font-size:10px}
+.dd-home-panel .dd-materials .dd-delta{font-size:11px}
+.dd-home-panel .dd-summary{border-radius:8px;background:#f9f7f2}
+.dd-home-panel .dd-lighting{grid-template-columns:1fr}
+.dd-home-panel .dd-lighting article{border-radius:8px}
+.dd-home-quote{padding:12px 16px 18px;border-bottom:1px solid #eeeae3}
+.dd-home-quote-list{margin:0;padding:0;list-style:none}
+.dd-home-quote-list li{display:flex;align-items:center;gap:10px;min-height:52px;border-bottom:1px solid #f0ece5}
+.dd-home-quote-list li>span{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dd-home-quote-list strong{font-size:13px}
+.dd-home-quote-list .dd-linklike{flex:none;min-height:44px;padding:0 4px;font-size:12px}
+.dd-home-quote-total{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;margin:14px 0 8px}
+.dd-home-quote-total span{flex-basis:100%;font-size:11px;color:#646b61}
+.dd-home-quote-total strong{font-size:24px;font-weight:650;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.dd-home-quote-total small{font-size:11px;color:#646b61}
+.dd-home-quote-open{margin:0 0 12px;padding:10px 12px;border-radius:8px;background:#fbf1e8;font-size:12px;color:#7a3f22}
+.dd-home-quote-open ul{margin:6px 0 0;padding-left:18px}
+.dd-home-quote-actions{display:flex;flex-direction:column;gap:8px}
+/* The deeper gold: white on it reads at 4.9:1 (the price bar's #bb744b is 3.7:1, under AA for 13 px text). */
+.dd-home-quote-actions>.dd-primary{background:var(--dc-gold-deep);border-color:var(--dc-gold-deep)}
+.dd-home-quote-actions>.dd-primary:hover{background:var(--dc-gold-ink)}
+@media(min-width:801px){
+  .deck-designer[data-home-panel] .dd-workspace{grid-template-columns:minmax(0,1fr) 360px}
+  .deck-designer[data-home-panel] .dd-home-panel{grid-column:2;grid-row:1;min-height:0;overflow:auto;overscroll-behavior:contain;border-left:1px solid #e0ddd5}
+  /* The price keeps the sheet-tab row's free space, left of the panel. */
+  .deck-designer[data-home-panel][data-drawing-focus=true] .dd-workspace>.dd-workspace-price{right:370px}
+}
+@media(max-width:800px){
+  .dd-home-panel .dd-materials{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dd-home-panel .dd-materials img{height:110px}
+  .dd-home-panel .dd-materials strong{font-size:13px}
+  .deck-designer[data-home-panel] .dd-home-panel{position:fixed;left:0;right:0;bottom:var(--dd-price-height,116px);z-index:45;max-height:min(40dvh,360px);overflow:auto;overscroll-behavior:contain;border-top:1px solid #d9d2c6;border-radius:14px 14px 0 0;box-shadow:0 -8px 24px #2a221a1f}
+}

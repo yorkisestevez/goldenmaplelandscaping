@@ -1,3 +1,5 @@
+import '../src/features/deckcraft/hardscapeCatalogue';
+import '../src/features/deckcraft/lib/inlayGeometryRuntime';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createElement} from 'react';
@@ -12,11 +14,22 @@ import {DECKING_CATALOGUE,MANUFACTURER_ACCESSORIES,RAILING_CATALOGUE} from '../s
 import {priceBookLabel} from '../src/features/deckcraft/priceBook';
 import type {DeckData,PrivacyScreen} from '../src/features/deckcraft/types';
 import {GROUP_MS} from '../src/features/deckcraft/designer/designHistory';
-import PriceLedger from '../src/features/deckcraft/designer/PriceLedger';
+import {register} from 'node:module';
 import {isBuilderQuote,priceLedger,quoteLabel,sectionPriceEffect,type Ledger,type QuoteKind} from '../src/features/deckcraft/designer/priceLedgerModel';
 import {SECTIONS,SECTION_BY_ID,ownsTitle} from '../src/features/deckcraft/designer/sections';
 import {EMPTY_CHANGES,MAX_CHANGES,announceChange,changeLedger,changeValue,describeChange,describeEdit,priceState,signedDollars,type ChangeAction,type ChangeLedgerState,type PriceState} from '../src/features/deckcraft/designer/useChangeLedger';
+import {DEFAULT_FEATURE_LABOUR,mergeFeatureLabour} from '../src/features/deckcraft/featureLabour';
 import {legacyScenarios} from './deck-legacy-scenarios';
+// The schedule imports its stylesheet (priceLedger.css, loaded with it); Node has no CSS loader.
+register('data:text/javascript,'+encodeURIComponent('export async function load(url,context,next){if(url.endsWith(".css"))return {format:"module",source:"",shortCircuit:true};return next(url,context);}'));
+const {default:PriceLedger}=await import('../src/features/deckcraft/designer/PriceLedger');
+const quoteFeatures=mergeFeatureLabour(undefined,{
+  scopes:{
+    accent:{...DEFAULT_FEATURE_LABOUR.scopes.accent,mode:'quote'},
+    medallion:{...DEFAULT_FEATURE_LABOUR.scopes.medallion,mode:'quote'},
+    customInlay:{...DEFAULT_FEATURE_LABOUR.scopes.customInlay,mode:'quote'},
+  },
+});
 
 /**
  * The price schedule (designer/priceLedgerModel.ts and PriceLedger.tsx) and "Your changes" (useChangeLedger.ts).
@@ -38,7 +51,7 @@ const ZERO=/\$0(?![\d.,])/;
 // 1. Every title the engine can give an estimate section (read from calculations.ts), HST aside, belongs to exactly one
 // design section, and every title a section claims is one the engine can give.
 {
-  const engine=read('src/features/deckcraft/calculations.ts');
+  const engine=read('src/features/deckcraft/calculations.ts')+'\n'+read('src/features/deckcraft/underDeckPricing.ts')+'\n'+read('src/features/deckcraft/quoteResolutions.ts')+'\n'+read('src/features/deckcraft/pergolaPricing.ts');
   const titles=[...engine.matchAll(/title:\s*([^,\n]+?),/g)].flatMap(m=>[...m[1].matchAll(/'([^']+)'|`([^`$]*)\$\{/g)].map(t=>t[1]??`${t[2]}*`));
   const owners=(t:string)=>t.endsWith('*')?SECTIONS.filter(s=>s.ledger.includes(t)):SECTIONS.filter(s=>ownsTitle(s,t));
   ok(titles.length>=18&&titles.includes('HST (13%)')&&titles.includes('Structural Framing (*')&&titles.includes('Yard · *'),`The engine's section titles are read (${titles.length})`);
@@ -75,10 +88,12 @@ const designs:[string,Partial<DeckData>][]=[
   ['hidden clips from a manufacturer on an add-on deck with flashing tape',{deckType:'Add-on',catalogueAccessories:['tt_concealoc','tt_protac_flashing']}],
   ['a Dark Slate border',{pictureFrameRows:1,borderFinish:'Dark Slate'}],
   ['accent boards',{width:20,boardColours:[{lv:1,role:'field',scope:'course',course:'r5',colour:'tt_prime_plus:Dark Cocoa'}]}],
+  ['accent boards as builder quote',{width:20,boardColours:[{lv:1,role:'field',scope:'course',course:'r5',colour:'tt_prime_plus:Dark Cocoa'}],featureLabour:quoteFeatures}],
   // A deck in a collection without a rate takes its own colours as accents: a supplier quote too.
   ['accent boards from a collection without a rate',{width:20,deckingMaterial:quotedDeck.id,deckingColor:quotedDeck.colors[0].name,boardColours:[{lv:1,role:'field',scope:'course',course:'r5',colour:colour(quotedDeck.id,1)}]}],
   ['a framed rug and a diamond',{width:20,length:16,inlays:[{id:'a',kind:'rug',widthFt:6,depthFt:4,dxFt:-4},{id:'d',kind:'diamond',widthFt:4,depthFt:4,dxFt:5}]}],
   ['a band and a compass medallion',{width:20,length:16,inlays:[{id:'b',kind:'band',direction:'across',boards:2},{id:'m',kind:'medallion',diameterFt:5,style:'compass'}]}],
+  ['medallion labour as builder quote',{width:20,length:16,inlays:[{id:'m',kind:'medallion',diameterFt:5,style:'compass'}],featureLabour:quoteFeatures}],
   ['a porch wrap',{width:22,length:12,houseConfig:{...house,widthFt:26,depthFt:22},wrap:{left:{widthFt:8,runFt:8},porchLeft:{depthFt:8,runFt:10}}}],
   ['a wrap round both corners',{width:22,length:12,houseConfig:{...house,widthFt:26,depthFt:22},wrap:{left:{widthFt:8,runFt:8},right:{widthFt:6,runFt:6}}}],
   ['priced lighting',{lightingSystem:{wireDistance:20,selectedItems:[{productId:'wedge',qty:4,zone:'stairs'},{productId:'hub100',qty:1}]}}],
@@ -86,11 +101,14 @@ const designs:[string,Partial<DeckData>][]=[
   ['post and step lights',{autoLighting:{posts:true,stairs:true},lightingSystem:{wireDistance:20,selectedItems:[{productId:'puck',qty:10,zone:'posts',auto:true},{productId:'evo_hyde',qty:4,zone:'stairs',auto:true},{productId:'hub100',qty:1,auto:true}]}}],
   ['a slatted screen and a manufacturer screen',{privacySqft:48,privacyScreens:[screen,hideaway]}],
   ['every extra',{benchLf:8,privacySqft:48,pergolaSqft:64,hasDrainage:true,hasDemo:true}],
+  ['under-deck supply and installation',{height:108,underDeck:{drainage:'rainescape',ceiling:'pvc',scope:'main',gravel:true,gravelDepthIn:3,floorMesh:true}}],
+  ['integrated under-deck ceiling',{height:108,underDeck:{drainage:'dryspace',ceiling:'none',scope:'all',gravel:false,gravelDepthIn:3,floorMesh:false}}],
   ['lattice skirting',{height:48,skirting:{style:'Lattice',clearanceIn:2,accessPanels:1}}],
   ['board skirting',{height:30,skirting:{style:'Horizontal boards',clearanceIn:2}}],
   ['a border in its own colour',{pictureFrameRows:1,deckFinishes:{border:'tt_legacy:Espresso'}}],
   ['a border from a collection without a rate',{pictureFrameRows:1,deckFinishes:{border:colour('tt_premier_plus')}}],
-  ['fascia boards',{deckFinishes:{fascia:'tt_prime_plus:Dark Cocoa'}}],
+  ['fascia boards',{deckFinishes:{fascia:'tt_harvest:Kona'}}],
+  ['priced fascia boards',{deckFinishes:{fascia:'tt_prime_plus:Dark Cocoa'}}],
   ['stair treads from a line without a rate',{deckFinishes:{treads:'tt_terrain_plus:Dark Oak'}}],
   ['a railing colour',{catalogueRailingId:'tt_classic_composite',railingType:'TT Classic',deckFinishes:{railingColor:'Matte Black'}}],
   ['Terrain decking on a freestanding deck (stair veneer connections)',{deckType:'Freestanding',deckingMaterial:'tt_terrain',deckingColor:rated('tt_terrain').colors[0].name,height:48}],
@@ -168,7 +186,7 @@ for(const [label,e] of estimates){
 }
 {
   const plain=priceLedger(calculateDeckReleaseEstimate(design()));
-  ok(sectionPriceEffect(SECTION_BY_ID.house,plain)?.text==='Looks never priced; size can move the ledger'&&sectionPriceEffect(SECTION_BY_ID.proposal,plain)===null,'The House row says looks are never priced; the proposal has no price of its own');
+  ok(sectionPriceEffect(SECTION_BY_ID.house,plain)?.text==='Colours never priced; size, brick or stone can move the ledger'&&sectionPriceEffect(SECTION_BY_ID.proposal,plain)===null,'The House row says looks are never priced; the proposal has no price of its own');
   ok(plain.stamp===`${priceBookLabel()} · CAD · before HST`,'The stamp names the price book, the currency and that HST is extra');
 }
 
@@ -182,21 +200,25 @@ const paths:[string,boolean][]=[
   ['a flashing line nulled by an accessory',has('Add-ons & Extras',s=>s.items.some(i=>i.name==='Ledger Flashing'&&i.cost===null))],
   ['Dark Slate border',has('Picture-frame border finish',s=>!!s.quoteRequired)],
   ['accent boards (builder labour)',all.some(e=>e.quoteRequired.includes('Accent-colour board labour (builder quote)'))],
+  ['accent boards (priced man-hours)',all.some(e=>e.sections.some(s=>s.title.startsWith('Labour')&&s.items.some(i=>i.name==='Accent-colour board labour'&&i.cost!==null&&Number(i.cost)>0)))],
   ['accent boards without a rate',has('Accent-colour boards',s=>s.items.some(i=>i.cost===null))],
   ['inlays',has('Accent colours & inlays',()=>true)],
-  ['medallion labour',all.some(e=>e.quoteRequired.includes('Medallion inlay labour (builder quote)'))],
-  ['porch wrap',all.some(e=>e.quoteRequired.includes('Porch-wrap labour premium (builder quote)'))],
+  ['medallion labour (builder quote mode)',all.some(e=>e.quoteRequired.includes('Medallion inlay labour (builder quote)'))],
+  ['medallion labour (priced man-hours)',all.some(e=>e.sections.some(s=>s.title.startsWith('Labour')&&s.items.some(i=>i.name==='Medallion inlay labour'&&i.cost!==null&&Number(i.cost)>0)))],
+  ['porch wrap priced in labour',all.some(e=>e.sections.some(s=>s.title.startsWith('Labour')&&s.total>0)&&!e.quoteRequired.some(q=>/Porch-wrap/.test(q)))],
   ['lighting quote',has('in-lite',s=>!!s.quoteRequired)],
   ['priced lighting',has('in-lite',s=>!s.quoteRequired&&s.total>0)],
   ['manufacturer privacy screen',has('Add-ons & Extras',s=>s.items.some(i=>i.name==='Manufacturer privacy screen'))],
   ['extras with a finish to quote',all.some(e=>e.quoteRequired.includes('Built-in Bench with selected finish'))],
-  ['F7 skirting',has('Deck skirting',s=>!!s.quoteRequired)],
+  ['F7 skirting',has('Deck skirting',s=>!s.quoteRequired&&s.total>0&&s.items.every(i=>i.cost!==null&&Number(i.cost)>0))],
+  ['under-deck known supplies and installation with pending site details',has('Under-deck options',s=>s.total>0&&!!s.quoteRequired&&s.items.some(i=>i.name==='Under-deck installation planning allowance'&&Number(i.cost)>0))],
+  ['legacy drainage replaced without duplicate charge',all.some(e=>e.sections.some(s=>s.title==='Under-deck options'))&&!all.some(e=>e.sections.flatMap(s=>s.items).some(i=>i.name==='Drainage System'))],
   ['F6 border boards',has('Deck-part finishes',s=>s.items.some(i=>i.cost!==null))],
   ['F6 border without a rate',has('Deck-part finishes',s=>s.items.some(i=>i.cost===null&&!i.name.startsWith('Fascia')))],
   ['F6 fascia',all.some(e=>e.quoteRequired.includes('Fascia boards (supplier quote)'))],
   ['F6 quote-only treads',all.some(e=>e.quoteRequired.some(q=>q.startsWith('Stair treads and risers in')))],
   ['terrain stair connections',has('Terrain stair support connections',()=>true)],
-  ['connector quotes',all.some(e=>e.quoteRequired.includes('Joist-to-beam ties'))],
+  ['connector quotes',all.some(e=>e.quoteRequired.includes('Support post timber')||e.quoteRequired.includes('Splice fasteners'))],
   ['priced yard',has('Yard · ',s=>s.total>0)],
   ['unpriced yard lines',has('Yard · ',s=>!!s.quoteRequired)],
   ['yard allowances',has('Yard · ',s=>s.title.includes('(estimator allowance)')&&s.total>0)],
@@ -206,15 +228,18 @@ for(const [path,covered] of paths)ok(covered,`The designs cover ${path}`);
 
 // 4. Builder or supplier, as the engine words it.
 const expect=(label:string,kind:QuoteKind)=>ok(kinds.get(label)===kind,`"${label.replace(/^item:/,'')}" is a ${kind} quote (got ${kinds.get(label)??'none'})`);
-for(const label of ['Accent-colour board labour (builder quote)','Medallion inlay labour (builder quote)','Porch-wrap labour premium (builder quote)','Deck skirting (builder quote)','Fire pit, wood-burning (estimator allowance)'])expect(label,'builder');
-for(const label of ['Joist-to-beam ties','Deckorators Dark Slate picture-frame boards','Fascia boards (supplier quote)','Stair treads and risers in TimberTech Composite Terrain+','Built-in Bench with selected finish',unrated[0].name,RAILING_CATALOGUE[0].name,`${nullLight.name} supply and installation`])expect(label,'supplier');
-for(const item of ['Accent-colour board labour','Medallion inlay labour','Porch-wrap labour premium','Skirting backing','Skirting labour'])expect(`item:${item}`,'builder');
-for(const item of ['Skirting face','Manufacturer privacy screen','Deckorators Dark Slate'])expect(`item:${item}`,'supplier');
+for(const label of ['Accent-colour board labour (builder quote)','Medallion inlay labour (builder quote)','Fire pit, wood-burning (estimator allowance)'])expect(label,'builder');
+for(const label of ['Deckorators Dark Slate picture-frame boards','Fascia boards (supplier quote)','Stair treads and risers in TimberTech Composite Terrain+','Built-in Bench with selected finish',unrated[0].name,RAILING_CATALOGUE[0].name,`${nullLight.name} supply and installation`])expect(label,'supplier');
+// Legacy saves still quote Support post timber; 2026-10 designs price it from HD stock.
+if(kinds.has('Support post timber'))expect('Support post timber','supplier');
+for(const item of ['Accent-colour board labour','Medallion inlay labour'])expect(`item:${item}`,'builder');
+for(const item of ['Manufacturer privacy screen','Deckorators Dark Slate'])expect(`item:${item}`,'supplier');
+ok([...kinds.keys()].every(k=>!/Porch-wrap|Deck skirting|Skirting /.test(k)),'Porch wrap and skirting are priced, not quote tags');
 for(const [label,kind] of kinds)if(!label.startsWith('item:')){
   if(/\(builder quote\)/.test(label))ok(kind==='builder',`"${label}" says builder quote and is one`);
   if(/\(supplier quote\)/.test(label))ok(kind==='supplier',`"${label}" says supplier quote and is one`);
 }
-ok(quoteLabel('Deck skirting (builder quote)')==='Deck skirting'&&quoteLabel('Fascia boards (supplier quote)')==='Fascia boards'&&quoteLabel('Joist-to-beam ties')==='Joist-to-beam ties','A listed quote drops the words its tag already says');
+ok(quoteLabel('Deck skirting (builder quote)')==='Deck skirting'&&quoteLabel('Fascia boards (supplier quote)')==='Fascia boards'&&quoteLabel('Support post timber')==='Support post timber','A listed quote drops the words its tag already says');
 
 // 5. On the legacy parity designs the schedule shows the old breakdown's figures (EstimateStep's .dd-breakdown, R1).
 {
@@ -292,19 +317,19 @@ ok(quoteLabel('Deck skirting (builder quote)')==='Deck skirting'&&quoteLabel('Fa
 // 7. The page: the schedule replaces the big total, the finish row and the quote notice; every edit, undo, redo and new
 // design is noted for Your changes; the price bar opens the drawer.
 {
-  const page=read('src/pages/DeckDesigner.tsx'),preview=read('src/features/deckcraft/designer/PreviewPanel.tsx'),estimate=read('src/features/deckcraft/designer/steps/EstimateStep.tsx'),bar=read('src/features/deckcraft/designer/PhoneDeckBar.tsx'),list=read('src/features/deckcraft/designer/SectionList.tsx'),css=read('src/pages/DeckDesigner.css');
+  const page=read('src/pages/DeckDesigner.tsx'),preview=read('src/features/deckcraft/designer/PreviewPanel.tsx'),estimate=read('src/features/deckcraft/designer/steps/EstimateStep.tsx'),bar=read('src/features/deckcraft/designer/WorkspacePrice.tsx'),list=read('src/features/deckcraft/designer/HomePanel.tsx'),css=read('src/features/deckcraft/designer/workspace.css')+read('src/features/deckcraft/designer/classicChrome.css');
   ok(!/dd-live-price|dd-quote-notice|dd-finish/.test(preview),'The preview no longer carries its own total, finish row or quote notice');
   ok(estimate.includes('<PriceLedger ledger={ledger} variant="full"/>')&&!estimate.includes('dd-breakdown'),'Proposal & files shows the full price list in place of the old breakdown');
-  ok(page.includes('const schedule=useMemo(()=>priceLedger(estimate),[estimate]);')&&page.includes('<PriceLedger ledger={schedule} variant="column" changes={changes.records} onFullList={showFullList}/>')&&page.includes('<SectionList data={data} ledger={schedule} '),'The page builds one schedule for the column, the rows and the full list');
+  ok(page.includes('const schedule=useMemo(()=>priceLedger(estimate),[estimate]);')&&page.includes('WorkspacePrice')&&page.includes('onQuoteReview={pro?()=>setQuoteReviewOpen(true):undefined}')&&page.includes('ledger={schedule}')&&/<HomePanel [^\n]*?\bdata=\{data\} ledger=\{schedule\} /.test(page),'The page builds one schedule for the persistent price bar, the tab panel and the full list; quote-cost review is a Designer Mode link');
   ok(/changes\.edit\(patch,data\);\s*applyUpdate\(patch\);/.test(page),'Every edit is noted before it is applied');
-  ok(page.includes('const replace=(next:DeckData)=>{changes.loaded();replaceDesign(next);};')&&page.includes('onReplaced:()=>{closeSections();changes.loaded();}'),'Import, start over, links and going back to your own design clear the list');
+  ok(page.includes('const replace=(next:DeckData)=>{changes.loaded();replaceDesign(next);};')&&/onReplaced:\(\)=>\{closeSections\(\);changes\.loaded\(\);(?:clearJobContext\(\);)?\}/.test(page),'Import, start over, links and going back to your own design clear the list');
   ok(page.includes('const undo=()=>{if(canUndo)changes.undo();undoDesign();},redo=()=>{if(canRedo)changes.redo();redoDesign();};'),'Undo and redo are noted');
   ok(page.includes('useEffect(()=>{notePrice(priceState(schedule));},[schedule,notePrice]);')&&page.includes('<ChangeAnnouncer record={changes.records.at(-1)}/>'),'Every estimate reaches the list, and the newest change is announced');
-  ok(list.includes('sectionPriceEffect(section,ledger)'),'The section rows take their price effect from the schedule');
+  ok(list.split('sectionPriceEffect(section,ledger)').length===3,'The panel rows and the Price & send summary take their price effect from the schedule');
   const drawer=read('src/features/deckcraft/designer/PriceLedger.tsx');
   ok(drawer.includes('onKeyDown={trap}')&&drawer.includes('close.current?.focus();')&&drawer.includes('return ()=>{opener.current?.focus();};')&&/if\(e\.key==='Escape'\)\{e\.preventDefault\(\);onClose\(\);return;\}/.test(drawer)&&drawer.includes('last.focus()')&&drawer.includes('first.focus()'),'The drawer traps focus itself: in on opening, Tab looping, Escape closing, back to the price bar');
   ok(bar.includes('aria-haspopup="dialog"')&&bar.includes('<LedgerDrawer ')&&bar.includes('ledger.quotes.length'),'The price bar shows the quote count and opens the schedule drawer');
-  ok(/\.dd-ledger-column\{display:none\}/.test(css)&&/@media\(min-width:1280px\)\{[^}]*\{[^}]*\}\.dd-ledger-column\{display:block/.test(css)&&/@media\(max-width:1279\.98px\)\{\.deck-designer\{padding-bottom:84px\}\.dd-phone-bar\{display:flex/.test(css),'The column shows from 1280 px; the price bar below it');
+  ok(css.includes('.dd-workspace-price')&&bar.includes('aria-label="Priced subtotal"')&&bar.includes('aria-label="Still to be quoted: not in the planning total"')&&bar.includes('These costs are not included in the priced total.')&&bar.includes('<LedgerDrawer ledger={ledger} changes={changes}'),'The persistent price bar shows the priced portion, keeps outstanding quotes visible, and opens the same complete ledger on every screen');
 }
 
 console.log(`DECK LEDGER OK — ${estimates.length} designs and 213 legacy designs: engine figures in engine order, lines add up, one HST and total, every quote listed once and tagged, nothing unpriced at $0, every title owned by one section; Your changes grouped, reset and worded; ${checks} checks.`);

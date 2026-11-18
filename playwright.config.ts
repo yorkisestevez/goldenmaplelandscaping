@@ -1,17 +1,25 @@
 import {defineConfig,devices} from '@playwright/test';
 
+// Workers fork after this file loads. E2E_OUTPUTS makes their fs writes to `outputs/` land in that directory.
+if(process.env.E2E_OUTPUTS && !process.env.NODE_OPTIONS?.includes('register-outputs.mjs')){
+  const hook=`--import ${new URL('./e2e/register-outputs.mjs',import.meta.url).href}`;
+  process.env.NODE_OPTIONS=[process.env.NODE_OPTIONS,hook].filter(Boolean).join(' ');
+}
+
 /**
  * DeckCraft smoke tests against the production build (run `npm run build` first). Locally they drive the
  * installed Microsoft Edge so no browser download is needed; CI installs Playwright's Chromium.
  * WebGL runs on SwiftShader in headless mode; the tests assert on the page, never on canvas pixels.
  */
 const PORT=Number(process.env.E2E_PORT||4031);
-const channel=process.env.CI?undefined:(process.env.E2E_CHANNEL||'msedge');
+const channel=process.env.CI||process.env.E2E_CHANNEL==='chromium'?undefined:(process.env.E2E_CHANNEL||'msedge');
 const launchOptions={args:['--enable-unsafe-swiftshader','--use-angle=swiftshader']};
 
 export default defineConfig({
   testDir:'e2e',
-  timeout:90_000,
+  // CI runners draw SwiftShader WebGL about 3x slower than a workstation: the heaviest 3D tests take about 60s
+  // here and up to 3 minutes there.
+  timeout:process.env.CI?300_000:90_000,
   expect:{timeout:15_000},
   fullyParallel:false,
   workers:1,

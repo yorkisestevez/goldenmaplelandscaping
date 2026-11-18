@@ -19,7 +19,9 @@ export type LocationKey =
   | 'orillia'
   | 'wasaga-beach'
   | 'midland'
-  | 'collingwood';
+  | 'collingwood'
+  | 'bradford-west-gwillimbury'
+  | 'newmarket';
 
 export interface ServiceDef {
   slug: ServiceKey;
@@ -28,6 +30,8 @@ export interface ServiceDef {
   blurb: string;
   startingPriceText: string;
   perUnitText: string;
+  /** What the rate assumes, shown beside it in the quote panel (kept out of perUnitText, which feeds meta descriptions). */
+  rateBasis?: string;
   scope: string[];
   whyMatters: string;
   faqs: { q: string; a: string }[];
@@ -56,15 +60,16 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     shortName: 'Interlocking',
     blurb:
       'Patios, walkways, and driveways planned around site conditions and Ontario freeze-thaw cycles; final base depth is confirmed in the written scope.',
-    startingPriceText: '$55–$85',
-    perUnitText: 'per square foot installed',
+    startingPriceText: '$40–$45',
+    perUnitText: 'per sq ft before HST, interlocking patios',
+    rateBasis: '300–1,000 sq ft, mid-tier pavers',
     scope: [
       'Base prep and materials specified for the site; excavation depth is confirmed per project',
       'Geotextile separation on clay soils',
       'Premium Techo-Bloc, Permacon, or Unilock pavers',
       'Polymeric or Romex jointing',
       'Drainage planning + 1.5–2% slope away from foundation',
-      'Ask for current written workmanship terms for your project',
+      'Written scope covering base, drainage, materials, and the work included',
     ],
     whyMatters:
       "A patio's performance depends on what is below the surface: appropriate excavation, compaction, drainage and materials. Ask for the proposed base specification in your written scope; the right depth depends on the site and intended loading.",
@@ -79,11 +84,11 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
       },
       {
         q: 'What stops the patio from sinking?',
-        a: 'Site-appropriate excavation, compaction, separation and drainage help manage settlement risk. Ask for the materials, depth, drainage design and inspection records applicable to your project in the written scope.',
+        a: 'On clay, we separate the subgrade with geotextile, compact the base in lifts, and grade the surface so water leaves the foundation. The depth and the stone are written for that property. A patio that has already settled is a re-level, not a new install.',
       },
       {
-        q: "What's included in your warranty?",
-        a: 'Ask us for the current written workmanship terms, coverage, exclusions, and remedy for your project before contracting.',
+        q: 'What is written down before you start?',
+        a: 'The scope lists the area, the base and drainage plan for that property, the paver, and what is included in the price. Work that is not in that scope is a written change before the price moves.',
       },
     ],
     heroImg: '/images/projects/paver-driveway.JPG',
@@ -94,8 +99,8 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     shortName: 'Composite Decking',
     blurb:
       'Composite deck options for Ontario weather; available products and any manufacturer warranty are confirmed with the selected product documentation.',
-    startingPriceText: '$45–$85',
-    perUnitText: 'per square foot installed',
+    startingPriceText: 'Priced online',
+    perUnitText: 'in the deck estimator',
     scope: [
       'Pressure-treated structural framing on engineered concrete piers',
       'TimberTech AZEK Vintage or Trex Transcend deck boards',
@@ -132,8 +137,9 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     shortName: 'Retaining Walls',
     blurb:
       'Engineered structural walls built with geogrid reinforcement to hold sloped lots flat — for decades, not seasons.',
-    startingPriceText: '$60–$140',
-    perUnitText: 'per square foot of wall face',
+    startingPriceText: '$330–$670',
+    perUnitText: 'per linear foot before HST, retaining walls',
+    rateBasis: 'under 2 ft up to 4–6 ft high, about 50 ft on an accessible site',
     scope: [
       '3/4" clear stone footing on compacted aggregate',
       'Allan Block, Techo-Bloc Mini-Creta, or Permacon engineered units',
@@ -155,7 +161,7 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
       },
       {
         q: "What's the lifespan of an engineered retaining wall?",
-        a: 'Service life varies with materials, design, loading, drainage and maintenance. Do not treat a general lifespan estimate as a project warranty; request the applicable written terms.',
+        a: 'A segmental wall lasts when the drain tile, clear-stone backfill, and reinforcement stay intact. Those details are in the written scope. A year-count on this page is not a warranty.',
       },
       {
         q: 'Can you tier a tall slope?',
@@ -185,11 +191,11 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     faqs: [
       {
         q: 'Is the design fee refunded if I build with you?',
-        a: 'Design-session pricing and any construction credit are currently subject to confirmation. Ask for the current written policy before booking.',
+        a: 'Any fee for the drawings is written in the design agreement before you book. That agreement also says whether the fee changes the construction price.',
       },
       {
         q: 'Can I take your design to another builder?',
-        a: 'Confirm design ownership, permitted use and transfer rights in the design agreement before commissioning work.',
+        a: 'The design agreement says who owns the drawings and whether you can hand them to another builder. Read that clause before you commission the plan.',
       },
       {
         q: 'How long does the design process take?',
@@ -197,7 +203,7 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
       },
       {
         q: 'What if I just want plants and beds, not hardscaping?',
-        a: 'Tell us which planting, garden, lighting or irrigation work you have in mind. Confirm current service availability and scope before booking.',
+        a: 'Tell us if the job is planting beds, lighting, or irrigation, with or without hardscape. We confirm which of those we can include before the visit is booked.',
       },
     ],
     heroImg: '/images/portfolio/gazebo-patio-1-v1-full-1280.webp',
@@ -381,6 +387,50 @@ export const LOCATIONS: Record<LocationKey, LocationDef> = {
     intro:
       "Collingwood is a town that takes design seriously — from downtown heritage restorations to Blue Mountain chalets perched on the escarpment. You moved here, or built here, because you wanted something better than ordinary. Your outdoor space should match that decision. We build to that level, every project.",
   },
+  'bradford-west-gwillimbury': {
+    slug: 'bradford-west-gwillimbury',
+    name: 'Bradford',
+    region: 'Simcoe County',
+    postalRoot: 'L3Z',
+    lat: 44.13,
+    lng: -79.63,
+    population: '43,000+',
+    terrain:
+      'Bradford sits on the uplands between Lake Simcoe and the Holland Marsh — flatter than Barrie’s drumlin country, with the Holland River corridors cutting through town. New subdivisions in Bradford and Bond Head sit on generous lots with gentle grades falling toward the marsh and the river valleys.',
+    soil:
+      'Productive farmland loams transitioning to suburban lots. The Holland Marsh muck soils are protected agricultural land, but low-lying lots near the Holland River corridors can carry high water tables and soft ground — drainage-first base design matters here more than most places we build.',
+    projects: [
+      'Interlock patios for new-build subdivisions',
+      'Double driveways and front walkway upgrades',
+      'Grading and drainage for low-lying lots',
+      'Family backyard makeovers with room to grow',
+    ],
+    anchors: ['Bradford', 'Bond Head', 'Deerhurst', 'Green Valley', 'Newton Robinson', "Coulson's Hill"],
+    intro:
+      'Bradford is one of Simcoe County’s fastest-growing towns — new streets rising between the Holland River and the marsh, full of young families who need their outdoor space to work as hard as they do. We bring Barrie-honed hardscape craft south to Bradford and Bond Head: patios, driveways and drainage-first designs engineered for flat land and high water tables, built for Ontario winters.',
+  },
+  newmarket: {
+    slug: 'newmarket',
+    name: 'Newmarket',
+    region: 'York Region',
+    postalRoot: 'L3X',
+    lat: 44.06,
+    lng: -79.46,
+    population: '88,000+',
+    terrain:
+      'Newmarket climbs the southern edge of the Oak Ridges Moraine — the town’s protected moraine lands carry Natural Core and Settlement Area designations, with kames, kettles and rolling ridges. The East Holland River corridors thread green ravines through Glenway, Stonehaven and the older neighbourhoods.',
+    soil:
+      'Fast-draining moraine sands and gravels over the tighter Newmarket Till — the geological formation named after this town. Excellent natural drainage, but the sand demands proper compaction and base design, and lots near the protected moraine areas or river corridors come with strict site-alteration rules.',
+    projects: [
+      'Moraine-edge patios with ravine outlooks',
+      'Outdoor living for Glenway and Stonehaven subdivisions',
+      'Retaining walls for sloped moraine lots',
+      'Front entrance upgrades in established neighbourhoods',
+    ],
+    anchors: ['Glenway Estates', 'Stonehaven-Wyndham', 'Armitage', 'Central Newmarket', 'Summerhill Estates', 'Woodland Hill'],
+    intro:
+      'Newmarket is York Region’s seat — a town of 88,000 built on the edge of the Oak Ridges Moraine, where the ground itself carries the town’s name. Mature streets, new subdivisions, ravine lots and moraine-protected edges: this is terrain with real variety, and it rewards a builder who reads the site before drawing the plan. That’s how we work, every project.',
+  },
 };
 
 export const SERVICE_KEYS: ServiceKey[] = ['interlocking', 'composite-decking', 'retaining-walls', 'landscape-design'];
@@ -393,6 +443,8 @@ export const LOCATION_KEYS: LocationKey[] = [
   'wasaga-beach',
   'midland',
   'collingwood',
+  'bradford-west-gwillimbury',
+  'newmarket',
 ];
 
 /**
@@ -406,7 +458,7 @@ export const HAND_BUILT_COMBOS = new Set<string>([
   'landscape-design-barrie',
 ]);
 
-/** All combos that should be auto-generated (28 of them: 4 services × 7 non-Barrie locations). */
+/** All combos that should be auto-generated (36 of them: 4 services × 9 non-Barrie locations). */
 export function getAutoCombos(): { service: ServiceKey; location: LocationKey; slug: string }[] {
   const out: { service: ServiceKey; location: LocationKey; slug: string }[] = [];
   for (const svc of SERVICE_KEYS) {

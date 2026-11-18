@@ -32,9 +32,9 @@ export default function ProjectCard({ project, sizes = CARD_SIZES, priority = fa
           {project.category}
         </span>
         <div className="flex items-start justify-between gap-4">
-          <h3 className="font-display text-2xl font-light leading-tight text-brand-ink transition-colors group-hover:text-brand-gold-dark md:text-3xl">
+          <h2 className="font-display text-2xl font-light leading-tight text-brand-ink transition-colors group-hover:text-brand-gold-dark md:text-3xl">
             {project.title}
-          </h3>
+          </h2>
           <ArrowRight size={18} className="mt-2 shrink-0 text-brand-gold-dark" aria-hidden="true" />
         </div>
         <p className="mt-2 font-sans text-sm font-light text-brand-muted">{project.town}, ON</p>

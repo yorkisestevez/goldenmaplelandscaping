@@ -61,7 +61,7 @@ export default function ClearStoneVsGranularA() {
         <li><strong>Bedding course: HPB (High Performance Bedding).</strong> A 1 to 1.5 inch layer of small angular chip directly under the pavers. Levels the surface to ±2mm tolerance and stays put under load — won't migrate the way concrete sand does in the first heavy rain.</li>
       </ul>
 
-      <p>The cost difference per square foot is small — usually $1.50 to $2.50 more in materials. The lifespan difference is enormous. Ask each contractor for current written workmanship terms, including coverage, exclusions, remedy, and maintenance requirements.</p>
+      <p>The cost difference per square foot is small — usually $1.50 to $2.50 more in materials. The lifespan difference is enormous.</p>
 
       <h2>Why Most Barrie Contractors Still Use Granular A</h2>
 

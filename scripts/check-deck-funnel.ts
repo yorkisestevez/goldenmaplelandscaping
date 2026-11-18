@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {DEFAULT_DECK,NEW_DECK} from '../src/features/deckcraft/defaults';
+import {hasPictureFrame} from '../src/features/deckcraft/borderLighting';
 import {deckReleaseData} from '../src/features/deckcraft/deckRelease';
 import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
 import {MANUFACTURER_ACCESSORIES,RAILING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
-import {DECK_LABEL,designFeatures,resetDeckAnalyticsVisit,setDeckAnalyticsSink,stepLabel,trackDeck,type DeckEvent} from '../src/features/deckcraft/deckAnalytics';
+import {DECK_LABEL,resetDeckAnalyticsVisit,setDeckAnalyticsSink,stepLabel,trackDeck,type DeckEvent} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import type {DeckData} from '../src/features/deckcraft/types';
 import {SECTIONS} from '../src/features/deckcraft/designer/sections';
 import {designerSource} from './deck-designer-source';
@@ -17,7 +19,7 @@ import {designerSource} from './deck-designer-source';
 let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);checks++;};
 const sent:[DeckEvent,string][]=[];
 setDeckAnalyticsSink((event,label)=>sent.push([event,label]));
-const base=():DeckData=>structuredClone(DEFAULT_DECK);
+const base=():DeckData=>structuredClone(NEW_DECK);
 const design=(patch:Partial<DeckData>):DeckData=>deckReleaseData({...base(),...patch});
 const house=getHouseConfig({...base(),width:20});
 
@@ -38,7 +40,7 @@ const expectations:[Partial<DeckData>,string][]=[
   [{catalogueRailingId:RAILING_CATALOGUE[0].id,railingType:RAILING_CATALOGUE[0].baseType},'deck_catalogue_railing'],
   [{railingType:'Frameless Glass'},'deck_frameless_glass'],[{railingType:'Frameless Glass',glassMount:'Spigots'},'deck_glass_spigots'],[{railingType:'Frameless Glass',glassMount:'Fascia-mount base shoe'},'deck_glass_fascia_mount'],
   [{catalogueAccessories:[MANUFACTURER_ACCESSORIES.find(a=>a.previewSupported)!.id]},'deck_accessory'],
-  [{pictureFrameRows:1},'deck_border_rows'],[{hasInlay:true,inlayLf:10},'deck_inlay'],
+  [{pictureFrameRows:2},'deck_border_extra_row'],[{pictureFrameRows:0},'deck_border_none'],[{skirting:undefined},'deck_skirting_none'],[{skirting:{...NEW_DECK.skirting!,style:'Lattice'}},'deck_skirting_style'],[{hasInlay:true,inlayLf:10},'deck_inlay'],
   [{privacyScreens:[{id:'s1',side:'Left',lengthFt:8,heightFt:6,offsetPct:30,lights:false}]},'deck_privacy_screen'],
   [{lightingSystem:{wireDistance:20,selectedItems:[{productId:'wedge',qty:4,zone:'stairs'},{productId:'hub100',qty:1}]}},'deck_lighting'],
   [{benchLf:8},'deck_bench'],[{pergolaSqft:64},'deck_pergola'],[{hasDemo:true},'deck_demolition'],
@@ -64,6 +66,19 @@ ok(!designFeatures(design({width:22,length:12,houseConfig:{...house,widthFt:26,d
   ok(designFeatures(restyled).includes('deck_doors_windows'),'Restyling a door counts');
   const moved=design({houseConfig:{...house,openings:house.openings.map(o=>o===door?{...o,offsetPct:Math.min(100,o.offsetPct+10)}:o)}});
   ok(!designFeatures(moved).includes('deck_doors_windows'),'Sliding a door along its wall is not counted as an edit');
+}
+// The border (owner 2026-10-04): new designs start with one row, so only a departure from it is a choice. A save from
+// before the default (legacy build rules, rows 0) was never given the border and is not counted as removing it;
+// `deck_border_rows` (one or more rows) is retired so its GA4 history keeps that meaning.
+ok(DEFAULT_DECK.pictureFrameRows===1&&DEFAULT_DECK.buildRules==='2026-10-frame','New designs start with a one-row picture frame under the current rules (structural review, sized piers, wall ledger rule, fascia and board-maximum overhang)');
+{
+  const legacy=design({pictureFrameRows:0,buildRules:'legacy'}),unmarked=design({pictureFrameRows:0});delete unmarked.buildRules;
+  ok(designFeatures(legacy).every(f=>!f.startsWith('deck_border'))&&designFeatures(unmarked).every(f=>!f.startsWith('deck_border')),`A legacy unframed save reports no border label (got ${designFeatures(legacy).join(', ')||'none'})`);
+  ok(designFeatures(design({pictureFrameRows:2,buildRules:'legacy'})).includes('deck_border_extra_row'),'A legacy save with two rows still reports the extra row');
+  ok(([0,1,2] as const).every(rows=>!designFeatures(design({pictureFrameRows:rows})).includes('deck_border_rows')),'The retired deck_border_rows label is never sent');
+  // The Picture Frame layout still draws (and prices) a one-row border at rows 0, so it has not removed the border.
+  const pfZero=design({pattern:'Picture Frame',pictureFrameRows:0});
+  ok(hasPictureFrame(pfZero)&&!designFeatures(pfZero).includes('deck_border_none'),`A Picture Frame layout at rows 0 keeps its border and does not report deck_border_none (got ${designFeatures(pfZero).join(', ')||'none'})`);
 }
 // Nothing the customer types can become a label.
 ok(!designFeatures(design({customerName:'Jane Q Customer',projectAddress:'12 Example Crescent',width:23.5})).some(f=>/jane|example|23/i.test(f)),'Labels never carry names, addresses or sizes');
@@ -102,10 +117,13 @@ ok(!designFeatures(design({customerName:'Jane Q Customer',projectAddress:'12 Exa
   const share=readFileSync(new URL('../src/features/deckcraft/ShareDesignLink.tsx',import.meta.url),'utf8');
   ok(/setDeckAnalyticsSink\(\(event,label\)=>trackEngagement\(event,label\)\)/.test(page),'The page sends DeckCraft events through the site analytics');
   ok(page.includes("trackDeck('deckcraft_step',stepLabel(0));},[]);")&&page.includes("trackDeck('deckcraft_step',stepLabel(section.legacyStep))")&&page.includes("trackDeck('deckcraft_view',`deck_view_${mode}`)")&&page.includes('designFeatures(data)'),'The page load and each section opened report their step; views and features are reported');
+  ok(page.includes("const first=id==='send'?undefined:tab.sections[0];")&&/if\(first\)trackSection\(first\);\s*else trackDeck\('deckcraft_step',stepLabel\(SECTION_BY_ID\.proposal\.legacyStep\)\);/.test(page),'The Price & send tab opens no section but still reports the estimate step, so its senders stay in the funnel');
   ok(page.includes("const [mode,setMode]=useState<PreviewMode>('plan');"),'The page opens on the site plan, so deck_view_plan is the view counted on load');
   for(const label of ['deck_plan_drag','deck_plan_typed','deck_plan_shortcut','deck_plan_stairs','deck_plan_outline','deck_plan_house'])ok(page.includes(`trackDeck('deckcraft_plan','${label}')`),`The site plan reports ${label}`);
   const report=readFileSync(new URL('../docs/deckcraft/funnel-report.md',import.meta.url),'utf8');
-  for(const label of ['deck_plan_stairs','deck_plan_outline','deck_plan_house'])ok(report.includes(`\`${label}\``),`The funnel report explains ${label}`);
+  for(const label of ['deck_plan_stairs','deck_plan_outline','deck_plan_house','deck_border_extra_row','deck_border_none','deck_skirting_none','deck_skirting_style'])ok(report.includes(`\`${label}\``),`The funnel report explains ${label}`);
+  ok(/`deck_border_rows` is retired/.test(report),'The funnel report says deck_border_rows is retired and what its history means');
+  ok(/`deck_skirting` is retired/.test(report),'The funnel report says deck_skirting is retired and what its history means');
   ok(page.includes("trackDeck('deckcraft_section',`deck_section_${section.id}`)")&&/for\(const id of sectionsOfPatch\(patch,data\)\)[^\n]*trackDeck\('deckcraft_section',`deck_changed_\$\{id\}`\)/.test(page),'Opening a section and the first edit in it are reported, through the fields it owns');
   for(const label of ['deck_proposal','deck_summary','deck_json_save','deck_json_import','deck_link_opened','deck_link_failed','deck_link_went_back'])ok(page.includes(`'${label}'`),`The page reports ${label}`);
   ok(page.includes("trackDeck('deckcraft_output',`deck_${kind}`)"),'DXF and OBJ exports are reported');

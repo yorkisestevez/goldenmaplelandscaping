@@ -1,0 +1,263 @@
+{
+  "format": "golden-maple-deck-design",
+  "version": 1,
+  "units": "inches-and-feet",
+  "configuration": {
+    "customerName": "",
+    "projectAddress": "",
+    "scopeOfWork": "",
+    "deckType": "Attached",
+    "municipality": "Barrie",
+    "siteType": "Standard",
+    "soilCondition": "Clay",
+    "buildSeason": "Spring-Summer",
+    "intendedLoad": "Standard",
+    "foundation": "Helical Piles",
+    "foundationDepthIn": 48,
+    "shape": "Rectangle",
+    "levels": 1,
+    "width": 12,
+    "length": 5,
+    "height": 30,
+    "cornerChamfers": {
+      "frontLeftFt": 0,
+      "frontRightFt": 0
+    },
+    "deckingMaterial": "tt_landmark",
+    "deckingColor": "American Walnut",
+    "pattern": "Picture Frame",
+    "pictureFrameRows": 1,
+    "pictureFrameOverhangIn": 1,
+    "borderFinish": "Matching",
+    "boardWidth": 5.5,
+    "framingSize": "2x8",
+    "joistSpacing": 12,
+    "fasteningSystem": "Hidden",
+    "hasInlay": false,
+    "inlayLf": 0,
+    "inlays": [],
+    "deckFinishes": {
+      "border": "tt_landmark:Castle Gate",
+      "fascia": "tt_landmark:Castle Gate",
+      "risers": "tt_landmark:Castle Gate",
+      "railingColor": "Black"
+    },
+    "railingType": "Frameless Glass",
+    "catalogueAccessories": [
+      "tt_fascia",
+      "tt_concealoc"
+    ],
+    "stairFlights": 1,
+    "stairType": "Straight",
+    "stairPosition": "Front",
+    "stairOffset": 25,
+    "stairWidth": 48,
+    "stairTurn": "Right",
+    "landingDepthIn": 48,
+    "skirting": {
+      "style": "Horizontal boards",
+      "colour": "tt_landmark:Castle Gate",
+      "clearanceIn": 2,
+      "accessPanels": 1
+    },
+    "pergolaSqft": 0,
+    "benchLf": 0,
+    "hasDrainage": false,
+    "hasDemo": false,
+    "autoLighting": {
+      "posts": true,
+      "stairs": true,
+      "border": true
+    },
+    "lightingPreviewOn": false,
+    "sceneLighting": "Daylight",
+    "houseVisible": true,
+    "terrainConfig": {
+      "widthFt": 120,
+      "depthFt": 120,
+      "elevationIn": 0,
+      "slopePct": 0
+    },
+    "lightingSystem": {
+      "wireDistance": 90,
+      "selectedItems": [
+        {
+          "productId": "smart_hub150",
+          "qty": 1
+        },
+        {
+          "productId": "fusion",
+          "qty": 12,
+          "zone": "deck"
+        }
+      ]
+    },
+    "houseConfig": {
+      "widthFt": 34,
+      "depthFt": 32,
+      "storeys": 2,
+      "storeyHeightIn": 120,
+      "roofShape": "Hip",
+      "roofPitch": 7,
+      "floorHeightIn": 34.12,
+      "cladding": "Stucco",
+      "claddingColor": "#e8e1d2",
+      "roofFinish": "Architectural shingles",
+      "roofColor": "#2a2c2e",
+      "trimColor": "#1f2021",
+      "footprint": {
+        "rects": [
+          {
+            "id": "garage1",
+            "kind": "garage",
+            "wall": "Left",
+            "offsetFt": 4,
+            "widthFt": 24,
+            "depthFt": 24,
+            "storeys": 1,
+            "roofShape": "Hip"
+          }
+        ]
+      },
+      "openings": [
+        {
+          "id": "slider",
+          "type": "Door",
+          "facade": "Front",
+          "offsetPct": 10.294117647058822,
+          "bottomIn": 34.12,
+          "widthIn": 72,
+          "heightIn": 82,
+          "style": "Sliding"
+        }
+      ],
+      "gableAccent": {
+        "cladding": "Siding",
+        "color": "#e8e1d2"
+      },
+      "doorColor": "#5a3f2b",
+      "windowColor": "#1f2021",
+      "garageDoorColor": "#5a3f2b",
+      "wainscot": {
+        "cladding": "Ledgestone",
+        "color": "#4f4d4b",
+        "heightIn": 37
+      },
+      "fasciaColor": "#1f2021",
+      "gutterColor": "#1f2021"
+    },
+    "siteModel": {
+      "version": 1,
+      "points": [
+        {
+          "id": "P1",
+          "xIn": 156.416,
+          "zIn": 0,
+          "elevationIn": 10.58
+        },
+        {
+          "id": "P2",
+          "xIn": 0,
+          "zIn": 0,
+          "elevationIn": 0
+        },
+        {
+          "id": "P3",
+          "xIn": -4.838,
+          "zIn": -9.421,
+          "elevationIn": -4.17
+        },
+        {
+          "id": "P4",
+          "xIn": 57.726,
+          "zIn": 55.909,
+          "elevationIn": 10.26
+        },
+        {
+          "id": "P5",
+          "xIn": 36.577,
+          "zIn": 45.669,
+          "elevationIn": 6.02
+        },
+        {
+          "id": "P6",
+          "xIn": -0.914,
+          "zIn": 50.294,
+          "elevationIn": -1.58
+        },
+        {
+          "id": "P7",
+          "xIn": -18.562,
+          "zIn": 78.592,
+          "elevationIn": -7.37
+        },
+        {
+          "id": "P8",
+          "xIn": 8.725,
+          "zIn": 131.744,
+          "elevationIn": -4.79
+        },
+        {
+          "id": "P9",
+          "xIn": 56.392,
+          "zIn": 143.122,
+          "elevationIn": 1.25
+        },
+        {
+          "id": "P10",
+          "xIn": 76.594,
+          "zIn": 116.946,
+          "elevationIn": 5.98
+        },
+        {
+          "id": "P11",
+          "xIn": 145.275,
+          "zIn": 103.858,
+          "elevationIn": 6.68
+        }
+      ],
+      "grading": []
+    },
+    "housePlacement": {
+      "anchor": "left",
+      "offsetIn": 0
+    },
+    "glassMount": "Top-mount base shoe",
+    "glassFinish": "Black",
+    "yardFeatures": [
+      {
+        "id": "landing",
+        "kind": "patio",
+        "name": "Stone landing",
+        "enabled": true,
+        "xFt": 4,
+        "zFt": 9.32,
+        "widthFt": 5.5,
+        "depthFt": 3.2,
+        "heightIn": 0,
+        "rotationDeg": 0,
+        "productId": "techo-para-slab",
+        "color": "#2b2b2b",
+        "finishedElevationIn": 5,
+        "hardscape": {
+          "finishId": "hd",
+          "colorId": "onyx-black",
+          "unitId": "500-500-60-mm-500-500-60",
+          "patternId": "stack-bond",
+          "angleDeg": 0,
+          "jointMm": 3
+        }
+      }
+    ],
+    "stairTargets": [
+      {
+        "flightId": "grade-0",
+        "elevationIn": 5,
+        "riserCount": 4,
+        "treadDepthIn": 10.6875,
+        "surface": "patio",
+        "patioId": "landing"
+      }
+    ]
+  }
+}

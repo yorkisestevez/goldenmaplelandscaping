@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-09-21T00:00:00.000Z",
+  "lastRunAt": "2026-11-09T14:04:00.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -23,10 +23,18 @@
     "auto-019",
     "auto-020",
     "auto-021",
-    "auto-022"
+    "auto-022",
+    "auto-023",
+    "auto-024",
+    "auto-025",
+    "auto-026",
+        "auto-027",
+    "auto-028",
+        "auto-029",
+    "auto-030"
   ],
   "publishedSlugs": [],
-  "currentDraft": "backyard-entertaining-wasaga-beach",
+  "currentDraft": "patio-heater-vs-firepit-vs-fireplace",
   "history": [
     {
       "topicId": "auto-001",
@@ -110,7 +118,7 @@
     {
       "topicId": "auto-006",
       "slug": "natural-stone-vs-pavers-barrie",
-      "at": "2026-06-23T02:09:29.503Z",
+      "at": "2026-06-23T02:09:33.787Z",
       "validation": {
         "ok": true,
         "errors": [],
@@ -159,8 +167,7 @@
         "linkCount": 8,
         "hasTable": true,
         "numericCount": 26
-      },
-      "generatedBy": "claude-cloud-routine"
+      }
     },
     {
       "topicId": "auto-009",
@@ -173,8 +180,7 @@
         "linkCount": 9,
         "hasTable": true,
         "numericCount": 34
-      },
-      "generatedBy": "claude-cloud-routine"
+      }
     },
     {
       "topicId": "auto-010",
@@ -187,8 +193,7 @@
         "linkCount": 6,
         "hasTable": true,
         "numericCount": 37
-      },
-      "generatedBy": "claude-cloud-routine"
+      }
     },
     {
       "topicId": "auto-011",
@@ -201,8 +206,7 @@
         "linkCount": 6,
         "hasTable": true,
         "numericCount": 13
-      },
-      "generatedBy": "claude-cloud-routine"
+      }
     },
     {
       "topicId": "auto-012",
@@ -215,8 +219,7 @@
         "linkCount": 4,
         "hasTable": true,
         "numericCount": 39
-      },
-      "generatedBy": "claude-cloud-routine"
+      }
     },
     {
       "topicId": "auto-013",
@@ -229,8 +232,7 @@
         "linkCount": 6,
         "hasTable": true,
         "numericCount": 20
-      },
-      "generatedBy": "claude-cloud-routine"
+      }
     },
     {
       "topicId": "auto-014",
@@ -257,7 +259,7 @@
         "hasTable": true,
         "numericCount": 8
       },
-      "generatedBy": "claude-cloud-routine"
+      "generatedBy": "claude-routine"
     },
     {
       "topicId": "auto-016",
@@ -271,12 +273,12 @@
         "hasTable": true,
         "numericCount": 41
       },
-      "generatedBy": "claude-cloud-routine"
+      "generatedBy": "claude-routine"
     },
     {
       "topicId": "auto-017",
       "slug": "permacon-pavers-honest-review-2026",
-      "at": "2026-08-17T00:00:00.000Z",
+      "at": "2026-08-17T12:58:02.811Z",
       "validation": {
         "ok": true,
         "errors": [],
@@ -285,7 +287,7 @@
         "hasTable": true,
         "numericCount": 7
       },
-      "generatedBy": "claude-cloud-routine"
+      "generatedBy": "claude-routine"
     },
     {
       "topicId": "auto-018",
@@ -298,8 +300,7 @@
         "linkCount": 8,
         "hasTable": true,
         "numericCount": 42
-      },
-      "generatedBy": "claude-cloud-routine"
+      }
     },
     {
       "topicId": "auto-019",
@@ -312,8 +313,7 @@
         "linkCount": 8,
         "hasTable": true,
         "numericCount": 30
-      },
-      "generatedBy": "claude-cloud-routine"
+      }
     },
     {
       "topicId": "auto-020",
@@ -326,8 +326,7 @@
         "linkCount": 4,
         "hasTable": true,
         "numericCount": 19
-      },
-      "generatedBy": "claude-cloud-routine"
+      }
     },
     {
       "topicId": "auto-021",
@@ -340,8 +339,7 @@
         "linkCount": 8,
         "hasTable": true,
         "numericCount": 53
-      },
-      "generatedBy": "claude-cloud-routine"
+      }
     },
     {
       "topicId": "auto-022",
@@ -355,7 +353,48 @@
         "hasTable": true,
         "numericCount": 40
       },
-      "generatedBy": "claude-cloud-routine"
-    }
+      "generatedBy": "claude-routine"
+    },
+    {
+      "topicId": "auto-023",
+      "slug": "hpb-vs-limestone-screenings-barrie",
+      "at": "2026-09-28T12:59:00.000Z",
+      "validation": {
+        "ok": true
+      },
+      "generatedBy": "muse-autopilot"
+    },
+    {
+      "topicId": "auto-024",
+      "slug": "best-pavers-ontario-winters",
+      "at": "2026-10-05T15:00:41.000Z",
+      "validation": {
+        "ok": true
+      },
+      "generatedBy": "muse-autopilot"
+    },
+    {
+      "topicId": "auto-025",
+      "slug": "front-steps-heaving-barrie",
+      "at": "2026-10-12T13:35:00.000Z",
+      "validation": {
+        "ok": true
+      },
+      "generatedBy": "muse-autopilot"
+    },
+    {
+      "topicId": "auto-026",
+      "slug": "geogrid-retaining-wall-explained",
+      "at": "2026-10-19T12:55:00.000Z",
+      "validation": {
+        "ok": true
+      },
+      "generatedBy": "muse-autopilot"
+    },
+        {"topicId":"auto-027","slug":"outdoor-kitchen-gas-electrical-ontario","at":"2026-10-26T13:51:00.000Z","validation":{"ok":true},"generatedBy":"muse-autopilot"},
+    {"topicId":"auto-028","slug":"porcelain-vs-concrete-pavers-barrie","at":"2026-11-02T15:27:00.000Z","validation":{"ok":true},"generatedBy":"muse-autopilot"},
+        {"topicId":"auto-029","slug":"retaining-wall-permit-barrie","at":"2026-11-09T14:04:00.000Z","validation":{"ok":true},"generatedBy":"muse-autopilot"},
+    {"topicId":"auto-030","slug":"patio-heater-vs-firepit-vs-fireplace","at":"2026-11-09T14:08:29.000Z","validation":{"ok":true},"generatedBy":"claude-cloud-routine","mode":"draft-pr","humanizedAt":"2026-11-12"}
   ]
+  
 }

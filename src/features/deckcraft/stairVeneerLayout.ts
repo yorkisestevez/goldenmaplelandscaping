@@ -4,14 +4,18 @@ import type {Box,DeckTakeoff} from './deckTakeoff';
 export interface StairVeneerRow {id:string;name:string;qty:number;unit:string;rate:null;basis:string;cutLengthsIn?:number[]}
 export interface StairVeneerLayout {applicable:boolean;woodBoxes:Box[];bracketBoxes:Box[];rows:StairVeneerRow[];issues:string[];sourceUrl:string;sourcePage:number;supportedTreads:number;status:'not-required'|'modeled-straight'|'partial'|'unsupported'}
 const sourceUrl='https://assets.timbertech.com/content/dam/wp-content/TimberTech-Composite-Installation-Guide-ENG.pdf';
+/** Terrain treads are the manufacturer's p8 veneer detail: two full boards over flat blocks. getStairBoards keeps
+ * them unframed (production behaviour) so every block stays under a board. */
+export const TERRAIN_VENEER_MATERIALS:readonly string[]=['tt_terrain','tt_terrain_plus'];
 
 /** Printed page 8: flat 2x6 blocks span BETWEEN stringers under the veneer.
  * The existing stringer notch elevations must not be lowered. Angle envelopes
  * illustrate connector placement; holes and nail count need the fastening schedule.
  */
 export function stairVeneerLayout(data:DeckData,model:DeckTakeoff):StairVeneerLayout{
-  const result:StairVeneerLayout={applicable:['tt_terrain','tt_terrain_plus'].includes(data.deckingMaterial),woodBoxes:[],bracketBoxes:[],rows:[],issues:[],sourceUrl,sourcePage:8,supportedTreads:0,status:'not-required'};
+  const result:StairVeneerLayout={applicable:TERRAIN_VENEER_MATERIALS.includes(data.deckingMaterial),woodBoxes:[],bracketBoxes:[],rows:[],issues:[],sourceUrl,sourcePage:8,supportedTreads:0,status:'not-required'};
   if(!result.applicable||!model.treads.length)return result;
+  if(data.pictureFrameRows||data.pattern==='Picture Frame')result.issues.push('Terrain stair treads keep the manufacturer two-board veneer detail, so the picture frame is applied to the deck surface only. A framed Terrain stair needs its own supported-tread detail (builder quote).');
   if(Math.abs(data.boardWidth-5.5)>.001){result.status='unsupported';result.issues.push('Terrain veneer support is modeled only for the two-board 5½-inch planning profile. The selected board width needs a separate supported-tread assembly.');return result;}
   result.status='modeled-straight';const cuts:number[]=[];let angles=0;
   for(const flight of model.flights){

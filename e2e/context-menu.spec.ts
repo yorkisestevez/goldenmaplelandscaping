@@ -1,0 +1,33 @@
+import {test,expect,type Page} from '@playwright/test';
+import {openDesignerMode,pickPlanTool,proofDir,showProjectControls,startOnPlan} from './nav';
+const shots=proofDir('context-menu');
+async function patioPoint(page:Page){
+  return page.locator('.dd-hardscape-plan-picks').evaluate(svg=>{const poly=[...svg.querySelectorAll('polygon')].find(node=>node.getAttribute('data-context-hardscape')?.includes('menu-patio'));if(!poly)return null;const box=(poly as SVGGraphicsElement).getBBox(),point=(svg as SVGSVGElement).createSVGPoint();point.x=box.x+box.width/2;point.y=box.y+box.height/2;const screen=point.matrixTransform((svg as SVGSVGElement).getScreenCTM()!);return {x:screen.x,y:screen.y};});
+}
+test.beforeEach(async({page,context})=>{await context.addInitScript('window.__name=(target,value)=>target;');await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));await page.goto('/deck-designer/');await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
+ // The menu mounts after the page starts (it is not in the prerendered drawing): right-clicks before that get the browser's.
+ await expect(page.locator('[data-context-menu]')).toBeAttached();});
+test('right-click deck selects object, opens properties and preserves geometry',async({page})=>{
+ const before=await page.evaluate(()=>(window as any).deckcraft.read().design);const surface=page.locator('.dd-plan-stage .dd-site-plan');await showProjectControls(page);await surface.scrollIntoViewIfNeeded();
+ const point=await surface.evaluate((svg:SVGSVGElement)=>{const p=new DOMPoint(96,72).matrixTransform(svg.getScreenCTM()!);return{x:p.x,y:p.y};});await page.mouse.click(point.x,point.y,{button:'right'});
+ const menu=page.getByRole('menu',{name:'Object edit menu'});await expect(menu).toBeVisible();await expect(menu).toContainText('Deck level 1');await page.screenshot({path:`${shots}/deck-menu.png`});await expect(menu.getByRole('menuitem',{name:'Properties…'})).toBeFocused();
+ await page.keyboard.press('Escape');await expect(menu).not.toBeVisible();expect(await page.evaluate(()=>(window as any).deckcraft.read().design)).toEqual(before);
+ await page.mouse.click(point.x,point.y,{button:'right'});await menu.getByRole('menuitem',{name:'Properties…'}).click();const panel=page.locator('#dd-home-panel');await expect(panel).toBeVisible();await panel.getByRole('button',{name:'Hide panel',exact:true}).click();await expect(panel).toBeHidden();
+ await page.getByLabel('Deck drawing canvas',{exact:true}).focus();await page.keyboard.press('Shift+F10');await expect(menu).toContainText('Deck level 1');await menu.getByRole('menuitem',{name:'Edit points / shape'}).click();await expect(page.getByRole('radio',{name:'Shape & points',exact:true})).toHaveAttribute('aria-checked','true');
+});
+test('context duplicate is undoable and right-click drawing still closes the patio',async({page})=>{
+ // Select parts is a Designer Mode tool.
+ await openDesignerMode(page);await expect(page.locator('[data-context-menu]')).toBeAttached();await pickPlanTool(page,'Select parts');const opening=page.locator('.dd-component-handle[data-kind=opening]').first();await opening.click({button:'right'});const menu=page.getByRole('menu',{name:'Object edit menu'});await expect(menu).toBeVisible();const before=await page.evaluate(()=>(window as any).deckcraft.read().design);await menu.getByRole('menuitem',{name:'Duplicate',exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft.read().design)).not.toEqual(before);await page.getByRole('region',{name:'Save and restore design',exact:true}).getByRole('button',{name:'Undo',exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft.read().design)).toEqual(before);
+ await pickPlanTool(page,'Patios & walls');await page.getByRole('button',{name:'Draw patio',exact:true}).click();const surface=page.getByLabel('Yard shape drawing surface',{exact:true});await surface.scrollIntoViewIfNeeded();const b=(await surface.boundingBox())!;for(const [x,y] of [[.4,.4],[.6,.4],[.6,.6]])await page.mouse.click(b.x+b.width*x,b.y+b.height*y);await surface.click({button:'right'});await expect(menu).not.toBeVisible();await expect(surface).not.toBeVisible();
+});
+test('patio right-click chooses the clicked item and menu stays inside viewport',async({page})=>{
+ // Same race as the 3D keys test: after the first autosave, IndexedDB wins and a localStorage seed on reload drops the patio.
+ await expect(page.locator('[data-autosave-state="saved"]')).toBeVisible();
+ const answer=await page.evaluate(async()=>{const api=(window as any).deckcraft,live=api.read();return api.execute({id:'menu-patio-create',expectedRevision:live.revision,commands:[{type:'yard.create',kind:'patio',id:'menu-patio',name:'Menu patio',xFt:25,zFt:8,widthFt:8,depthFt:8,heightIn:0,rotationDeg:0,productId:'permacon-melville'}]});});
+ expect(answer.ok,answer.ok?'':answer.error?.message).toBe(true);
+ await expect(page.locator('[data-autosave-state="saving"]')).toBeVisible();
+ await expect(page.locator('[data-autosave-state="saved"]')).toBeVisible();
+ await page.reload();await startOnPlan(page);await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
+ await pickPlanTool(page,'Patios & walls');const at=await patioPoint(page);expect(at).toBeTruthy();await page.mouse.click(at!.x,at!.y,{button:'right'});const menu=page.getByRole('menu',{name:'Object edit menu'});await expect(menu).toContainText('Menu patio');const box=(await menu.boundingBox())!,vp=page.viewportSize()!;expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(vp.width);expect(box.y+box.height).toBeLessThanOrEqual(vp.height);await menu.getByRole('menuitem',{name:'Properties…'}).click();await expect(page.getByRole('region',{name:'Landscape object inspector'})).toContainText('Menu patio');
+ await page.getByRole('tab',{name:'3D',exact:true}).click();const canvas=page.locator('.dd-canvas canvas');await expect(canvas).toBeVisible();await expect(canvas).toHaveAttribute('data-object-context-ready','true');for(const [x,y] of [[.5,.2],[.5,.28],[.5,.38],[.45,.28]]){const b=(await canvas.boundingBox())!;await canvas.click({button:'right',position:{x:b.width*x,y:b.height*y}});await expect(menu).toBeVisible();if(await menu.getByRole('menuitem',{name:'Properties…'}).count())break;await page.keyboard.press('Escape');}await expect(menu.getByRole('menuitem',{name:'Properties…'})).toBeVisible();await page.screenshot({path:`${shots}/3d-menu.png`});await page.keyboard.press('Escape');await expect(menu).not.toBeVisible();
+});

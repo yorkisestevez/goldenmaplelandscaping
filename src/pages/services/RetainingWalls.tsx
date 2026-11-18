@@ -1,8 +1,11 @@
-import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
+import { breadcrumb, faqPage, graph, howToNode, serviceNode } from '../../utils/schema';
+import { engineFactRange } from '../../data/publishedPrices';
+import { ServicePageFreshness, ServiceReviewer, pageUpdateNode } from '../../components/PageFreshness';
 import Testimonials from '../../components/Testimonials';
+import PlanningQuote from '../../components/PlanningQuote';
 import { publicContact } from '../../data/business';
 import { trackCall, trackEngagement } from '../../utils/analytics';
 
@@ -21,49 +24,52 @@ const FAQ = [
   }
 ];
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQ.map((item) => ({
-    "@type": "Question",
-    name: item.q,
-    acceptedAnswer: { "@type": "Answer", text: item.a },
-  })),
-};
+const PATH = '/services/retaining-walls-barrie/';
+const NAME = 'Retaining wall construction in Barrie';
+
+// One list drives the visible process cards and the HowTo schema.
+const PROCESS_STEPS = [
+  { title: "Drainage Systems", desc: "We install perforated drainage pipes and clear stone backfill to prevent hydrostatic pressure buildup." },
+  { title: "Base Engineering", desc: "A minimum 12-inch compacted aggregate base ensures the wall remains level for decades." },
+  { title: "Geogrid Reinforcement", desc: "For taller walls, we use high-strength geogrid to tie the wall into the soil for maximum stability." },
+  { title: "Precision Leveling", desc: "Every block is laser-leveled to ensure architectural perfection and structural balance." }
+];
+
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({
+    path: PATH,
+    name: NAME,
+    serviceType: 'Retaining wall construction',
+    areaServed: 'Barrie',
+    price: engineFactRange('wall.rate', 'per linear foot'),
+    priceDescription: 'Planning range per linear foot for walls from under 2 ft up to 4–6 ft high, about 50 ft on an accessible site, before HST. Not a quote for a specific property.',
+  }),
+  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: NAME, path: PATH }]),
+  faqPage(PATH, FAQ),
+  howToNode({ path: PATH, name: 'How Golden Maple builds a retaining wall', steps: PROCESS_STEPS }),
+  pageUpdateNode(PATH, PATH, NAME),
+);
 
 export default function RetainingWalls() {
-  const engineeringSteps = [
-    { title: "Drainage Systems", desc: "We install perforated drainage pipes and clear stone backfill to prevent hydrostatic pressure buildup." },
-    { title: "Base Engineering", desc: "A minimum 12-inch compacted aggregate base ensures the wall remains level for decades." },
-    { title: "Geogrid Reinforcement", desc: "For taller walls, we use high-strength geogrid to tie the wall into the soil for maximum stability." },
-    { title: "Precision Leveling", desc: "Every block is laser-leveled to ensure architectural perfection and structural balance." }
-  ];
-
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Retaining Wall Construction Barrie"
+        title="Retaining Wall Contractor Barrie | Wall Design & Construction"
         description="Custom retaining walls for Barrie properties. Armour stone, natural stone & block walls built with engineering precision. Solve grading issues beautifully."
         canonical="https://goldenmaplelandscaping.ca/services/retaining-walls-barrie"
-        schema={faqSchema}
+        schema={pageSchema}
       />
       
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-40">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-                Structural Engineering
-              </span>
-              <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
+            <div>
+              <h1 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">Retaining Wall Contractor in Barrie</h1>
+              <p className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 Walls that hold <br />
                 <span className="italic text-brand-gold-dark">for generations.</span>
-              </h1>
+              </p>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 A retaining wall is one of those things you don't think about — until it starts to lean. We've spent years rebuilding walls other contractors put up without geogrid, without proper drainage, without an engineering plan. We're not interested in being the next chapter of that story. We build walls the way they should be built the first time, so the slope you've been ignoring becomes the feature your property is known for — <span className="text-brand-gold-dark font-normal">no job minimum, priced to your real scope.</span>
               </p>
@@ -83,37 +89,44 @@ export default function RetainingWalls() {
                   <Phone size={14} strokeWidth={1.5} /> Call {publicContact.phoneDisplay}
                 </a>
               </div>
-            </motion.div>
+              <ServicePageFreshness updateKey={PATH} className="mt-12" />
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
-            >
+            <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
               <img
-                src="/images/portfolio/sloped-backyard-patio-steps-2-v1-full-1280.webp"
+                src="/images/portfolio/sloped-backyard-patio-steps-2-v1-full-720.webp"
+                srcSet="/images/portfolio/sloped-backyard-patio-steps-2-v1-full-720.webp 720w, /images/portfolio/sloped-backyard-patio-steps-2-v1-full-1280.webp 1280w, /images/portfolio/sloped-backyard-patio-steps-2-v1-full-1920.webp 1920w"
+                sizes="(min-width: 1024px) 42vw, 100vw"
+                width={1920}
+                height={1069}
                 alt="Block retaining wall with built-in steps down to a slab patio in Simcoe County, ON"
                 loading="lazy"
                 decoding="async"
+                fetchPriority="low"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
-            </motion.div>
+            </div>
           </div>
 
           <div className="mb-40">
             <div className="text-center max-w-3xl mx-auto mb-24">
               <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-                Engineering Standards
+                How the wall is built
               </span>
               <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite leading-tight">
-                Built to hold back time.
+                Built to hold the slope.
               </h2>
             </div>
+            <PlanningQuote
+              source="retaining-walls-barrie"
+              rate="$330–$670"
+              rateDetail="per linear foot for walls from under 2 ft up to 4–6 ft high, about 50 ft on an accessible site, before HST. A planning range, not a quote for your property."
+              categories={['Walls & steps']}
+              defaultService="Retaining wall"
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-              {engineeringSteps.map((step, idx) => (
+              {PROCESS_STEPS.map((step, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
                   <span className="font-display text-6xl font-light text-brand-gold-dark/10 block mb-10">0{idx + 1}</span>
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{step.title}</h3>
@@ -174,6 +187,8 @@ export default function RetainingWalls() {
               ))}
             </div>
           </div>
+
+          <ServiceReviewer updateKey={PATH} />
         </div>
       </section>
 

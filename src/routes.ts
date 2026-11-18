@@ -1,5 +1,7 @@
 import { type RouteConfig, index, route } from '@react-router/dev/routes';
 
+
+
 // Mirrors the former <Routes> tree in App.tsx. In framework mode RR7 code-splits
 // each route module automatically (no manual React.lazy needed).
 export default [
@@ -8,7 +10,6 @@ export default [
   // Services
   route('services', 'pages/Services.tsx'),
   route('services/interlocking-barrie', 'pages/services/Interlocking.tsx'),
-  route('services/porcelain-patios-barrie', 'pages/services/PorcelainPatiosBarrie.tsx'),
   route('interlocking-barrie', 'pages/InterlockingBarrieAds.tsx'),
   route('services/retaining-walls-barrie', 'pages/services/RetainingWalls.tsx'),
   route('retaining-walls-barrie', 'pages/RetainingWallsBarrieAds.tsx'),
@@ -16,15 +17,30 @@ export default [
   route('landscape-design-barrie', 'pages/LandscapeDesignBarrieAds.tsx'),
   route('services/composite-decking-barrie', 'pages/services/CompositeDecking.tsx'),
   route('composite-decking-barrie', 'pages/CompositeDeckingBarrieAds.tsx'),
+  route('paver-patios', 'pages/PaverPatioBarrieAds.tsx'),
+  // Data-driven Barrie money pages (src/data/barrieServices.ts). Static routes win — over services/:slug; scripts/check-barrie-services.ts keeps the slugs disjoint.
+  route('services/interlocking-driveways-barrie', 'pages/services/barrie/InterlockingDriveways.tsx'),
+  route('services/porcelain-patios-barrie', 'pages/services/barrie/PorcelainPatios.tsx'),
+  route('services/outdoor-kitchens-barrie', 'pages/services/barrie/OutdoorKitchens.tsx'),
+  route('services/front-entrance-landscaping-barrie', 'pages/services/barrie/FrontEntranceLandscaping.tsx'),
+  route('services/landscape-maintenance-barrie', 'pages/services/barrie/LandscapeMaintenance.tsx'),
+  route('services/seasonal-cleanup-barrie', 'pages/services/barrie/SeasonalCleanup.tsx'),
   route('services/:slug', 'pages/services/ServiceLocation.tsx'),
 
   // Core pages
   route('about', 'pages/About.tsx'),
+  route('about/yorkis-estevez', 'pages/AuthorProfile.tsx'),
+  route('faq', 'pages/Faq.tsx'),
   route('service-areas', 'pages/ServiceAreas.tsx'),
   route('portfolio', 'pages/Portfolio.tsx'),
   route('portfolio/:slug', 'pages/ProjectDetail.tsx'),
   route('contact', 'pages/Contact.tsx'),
+  route('thank-you', 'pages/ThankYou.tsx'),
+  route('reviews', 'pages/Reviews.tsx'),
   route('resources', 'pages/Resources.tsx'),
+  // Outdoor Construction Library — topic hubs over /resources posts (src/data/library.ts).
+  route('library', 'pages/library/LibraryHub.tsx'),
+  route('library/:section', 'pages/library/LibrarySection.tsx'),
 
   // Process
   route('process', 'pages/ProcessPage.tsx'),
@@ -38,7 +54,10 @@ export default [
   // Lead / cost
   route('buyers-guide', 'pages/BuyersGuide.tsx'),
   route('cost-estimator', 'pages/CostEstimator.tsx'),
-  route('deck-designer', 'pages/DeckDesigner.tsx'),
+  // The 3D deck designer is the owner's private tool (owner decision 2026-11-11: "local only"). netlify.toml builds the
+  // live site with GM_DECKCRAFT_ROUTE=off, so production has no /deck-designer page and ships none of its code;
+  // `npm run dev`, local builds and the DeckCraft e2e build keep it. Visitors price decks in the cost estimator.
+  ...(process.env.GM_DECKCRAFT_ROUTE !== 'off' ? [route('deck-designer', 'pages/DeckDesigner.tsx')] : []),
   route('cost-guide', 'pages/CostGuide.tsx'),
   route('cost-guide/thank-you', 'pages/CostGuideThankYou.tsx'),
   route('book', 'pages/Book.tsx'),
@@ -96,11 +115,32 @@ export default [
   route('resources/sodding-vs-seeding-simcoe-county', 'pages/blog/SoddingVsSeedingSimcoeCounty.tsx'),
   route('resources/heated-driveway-worth-it-barrie', 'pages/blog/HeatedDrivewayWorthItBarrie.tsx'),
   route('resources/backyard-entertaining-wasaga-beach', 'pages/blog/BackyardEntertainingWasagaBeach.tsx'),
+  route('resources/hpb-vs-limestone-screenings-barrie', 'pages/blog/HpbVsLimestoneScreeningsBarrie.tsx'),
 
+  route('resources/best-pavers-ontario-winters', 'pages/blog/BestPaversOntarioWinters.tsx'),
+  route('resources/front-steps-heaving-barrie', 'pages/blog/FrontStepsHeavingBarrie.tsx'),
+  route('resources/geogrid-retaining-wall-explained', 'pages/blog/GeogridRetainingWallExplained.tsx'),
+        route('resources/outdoor-kitchen-gas-electrical-ontario', 'pages/blog/OutdoorKitchenGasElectricalOntario.tsx'),
+  // BEGIN PORCELAIN PUBLICATION
+  route('resources/before-you-buy-porcelain-for-your-patio-settle-these-five-details', 'pages/blog/porcelain-scheduled/before-you-buy-porcelain-for-your-patio-settle-these-five-details.tsx'),
+  route('resources/a-porcelain-installation-brief-your-trade-partner-can-actually-price', 'pages/blog/porcelain-scheduled/a-porcelain-installation-brief-your-trade-partner-can-actually-price.tsx'),
+  // END PORCELAIN PUBLICATION
+  route('resources/porcelain-vs-concrete-pavers-barrie', 'pages/blog/PorcelainVsConcretePaversBarrie.tsx'),
+    route('resources/retaining-wall-permit-barrie', 'pages/blog/RetainingWallPermitBarrie.tsx'),
+  route('resources/patio-heater-vs-firepit-vs-fireplace', 'pages/blog/PatioHeaterVsFirepitVsFireplace.tsx'),
+  
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),
   route('locations/innisfil', 'pages/locations/Innisfil.tsx'),
   route('locations/oro-medonte', 'pages/locations/OroMedonte.tsx'),
   route('locations/springwater', 'pages/locations/Springwater.tsx'),
+  route('locations/alliston', 'pages/locations/Alliston.tsx'),
+  route('locations/angus', 'pages/locations/Angus.tsx'),
+  route('locations/keswick', 'pages/locations/Keswick.tsx'),
+  route('locations/thornton', 'pages/locations/Thornton.tsx'),
+  route('locations/elmvale', 'pages/locations/Elmvale.tsx'),
+  route('locations/stayner', 'pages/locations/Stayner.tsx'),
   route('locations/:slug', 'pages/locations/LocationLanding.tsx'),
+
+  route('*', 'pages/NotFound.tsx'),
 ] satisfies RouteConfig;

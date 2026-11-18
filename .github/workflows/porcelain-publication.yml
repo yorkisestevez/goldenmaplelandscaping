@@ -1,0 +1,54 @@
+name: Publish due porcelain articles
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+      timezone: "America/Toronto"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: porcelain-publication
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Check publication window
+        id: window
+        run: node scripts/porcelain-publisher/materialize.cjs --github-dispatch-output >> "$GITHUB_OUTPUT"
+
+      - name: Record this week's dispatch request
+        if: steps.window.outputs.receipt != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RECEIPT: ${{ steps.window.outputs.receipt }}
+        run: |
+          path=content/porcelain/dispatch-receipt.json
+          sha="$(git rev-parse "HEAD:$path")"
+          gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/$path" \
+            -f branch=main -f sha="$sha" -f content="$RECEIPT" \
+            -f message="Record porcelain publication dispatch request" --silent
+
+      - name: Start the existing Netlify workflow
+        if: steps.window.outputs.due == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run netlify-deploy.yml --repo "$GITHUB_REPOSITORY" --ref main

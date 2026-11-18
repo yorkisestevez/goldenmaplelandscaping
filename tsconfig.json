@@ -23,5 +23,11 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "desktop/deckcraft/node_modules",
+    "desktop/deckcraft/release"
+  ]
 }

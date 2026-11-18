@@ -1,11 +1,13 @@
 ﻿import { Link, useLocation } from 'react-router-dom';
 import React, { useRef, useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
-import { Menu, X, Phone, MapPin, Mail, Shield, CheckCircle, Award, ChevronDown, Instagram, Facebook } from 'lucide-react';
+import { lazy, Suspense } from 'react';
+import { Phone, MapPin, Mail, Shield, Award, ChevronDown, Instagram, Facebook } from 'lucide-react';
 import { trackEngagement, trackCall } from '../utils/analytics';
-import ChatWidget from './ChatWidget';
+import { onInteractOrIdle } from '../utils/defer';
+const ChatWidget = lazy(() => import('./ChatWidget'));
 import { cn } from '../utils/cn';
-import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
+import { samePath, underPath } from '../utils/trailingSlash';
+import { BUSINESS, LANDSCAPE_MAINTENANCE, publicClaimCopy, publicContact } from '../data/business';
 
 // Canonical profile URLs live in src/data/business.ts — never hardcode handles here.
 const SOCIAL_LINKS = [
@@ -13,6 +15,20 @@ const SOCIAL_LINKS = [
   { name: 'Facebook', Icon: Facebook, url: BUSINESS.urls.facebook.value },
 ] as const;
 
+
+// Service pages linked from the mobile menu and the site-wide footer.
+const SERVICE_LINKS = [
+  { href: "/services/interlocking-barrie", label: "Interlocking Stone" },
+  { href: "/services/interlocking-driveways-barrie", label: "Interlock Driveways" },
+  { href: "/services/porcelain-patios-barrie", label: "Porcelain Patios" },
+  { href: "/services/composite-decking-barrie", label: "Composite Decking" },
+  { href: "/services/retaining-walls-barrie", label: "Retaining Walls" },
+  { href: "/services/outdoor-kitchens-barrie", label: "Outdoor Kitchens" },
+  { href: "/services/front-entrance-landscaping-barrie", label: "Front Entrances" },
+  { href: LANDSCAPE_MAINTENANCE.path, label: "Landscape Maintenance" },
+  { href: "/services/seasonal-cleanup-barrie", label: "Seasonal Clean-Ups" },
+  { href: "/services/landscape-design-barrie", label: "Landscape Design" },
+];
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -54,6 +70,7 @@ const Navbar = () => {
     { href: "/services/interlocking-barrie", label: "Interlocking Stone", desc: "Patios, walkways, driveways" },
     { href: "/services/composite-decking-barrie", label: "Composite Decking", desc: "TimberTech & Trex builds" },
     { href: "/services/retaining-walls-barrie", label: "Retaining Walls", desc: "Engineered with geogrid" },
+    { href: LANDSCAPE_MAINTENANCE.path, label: "Landscape Maintenance", desc: "2027 mowing and property care" },
     { href: "/services/landscape-design-barrie", label: "Landscape Design", desc: "3D plans + fixed quotes" },
   ];
 
@@ -69,6 +86,7 @@ const Navbar = () => {
   ];
 
   const resourceLinks = [
+    { href: "/library", label: "Outdoor Construction Library" },
     { href: "/cost-guide", label: "Free 2026 Cost Guide (PDF)" },
     { href: "/buyers-guide", label: "Buyer's Guide" },
     { href: "/cost-estimator", label: "Cost Estimator" },
@@ -82,18 +100,12 @@ const Navbar = () => {
     { href: "/resources/unilock-vs-techo-bloc-vs-permacon", label: "Paver Brand Comparison" },
   ];
 
-  const services = [
-    { href: "/services/interlocking-barrie", label: "Interlocking Stone" },
-    { href: "/services/composite-decking-barrie", label: "Composite Decking" },
-    { href: "/services/retaining-walls-barrie", label: "Retaining Walls" },
-    { href: "/services/landscape-design-barrie", label: "Landscape Design" },
-  ];
 
   return (
     <>
       <header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+          "fixed top-0 left-0 right-0 z-50 max-w-full overflow-x-clip transition-all duration-500",
           isScrolled || isMobileMenuOpen
             ? 'bg-brand-nearblack/95 backdrop-blur-md border-b border-brand-dim/70 py-3'
             : 'bg-brand-nearblack/95 backdrop-blur-md border-b border-brand-dim/70 py-5'
@@ -107,22 +119,26 @@ const Navbar = () => {
             className="flex items-center gap-2.5 group relative z-50 shrink-0 mr-6"
           >
             <img
-              src="/logo-mark.png"
+              src="/logo-mark.webp"
               alt="Golden Maple Landscaping"
+              width={160}
+              height={129}
+              decoding="async"
+              fetchPriority="low"
               className="h-9 md:h-11 w-auto"
             />
             <span className="flex flex-col">
-              <span className="font-display text-xl md:text-3xl leading-none tracking-tight text-brand-bonewhite group-hover:text-brand-gold-dark transition-colors duration-500">
+              <span className="font-display text-lg md:text-2xl xl:text-xl 2xl:text-3xl leading-none tracking-tight text-brand-bonewhite group-hover:text-brand-gold-dark transition-colors duration-500">
                 GOLDEN MAPLE
               </span>
-              <span className="font-sans text-[10px] md:text-[12px] uppercase tracking-[0.45em] font-light text-brand-gold-dark mt-1.5">
+              <span className="font-sans text-[9px] md:text-[11px] uppercase tracking-[0.22em] xl:tracking-[0.14em] 2xl:tracking-[0.28em] font-light text-brand-gold-dark mt-1.5">
                 Landscaping
               </span>
             </span>
           </Link>
 
           {/* Desktop Nav - centered */}
-          <nav className="hidden xl:flex items-center gap-7 mx-auto">
+          <nav className="hidden xl:flex items-center gap-3 2xl:gap-6 mx-auto min-w-0">
             {navLinks.map((link) => (
               link.hasServicesDropdown ? (
                 <div
@@ -135,22 +151,16 @@ const Navbar = () => {
                   <Link
                     to={link.href}
                     className={cn(
-                      "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap flex items-center gap-1",
-                      location.pathname.startsWith('/services') ? "text-brand-gold-dark" : "text-brand-bonewhite"
+                      "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap flex items-center gap-1",
+                      underPath(location.pathname, '/services') ? "text-brand-gold-dark" : "text-brand-bonewhite"
                     )}
                   >
                     {link.label}
                     <ChevronDown size={10} strokeWidth={2} className={cn("transition-transform", servicesOpen && "rotate-180")} />
                   </Link>
-                  <AnimatePresence>
+                  
                     {servicesOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-[640px]"
-                      >
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-[640px]">
                         <div className="bg-brand-surface border border-brand-dim/40 rounded-[2px] shadow-2xl p-8 grid grid-cols-2 gap-x-8 gap-y-2">
                           <div>
                             <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark font-medium mb-4 block">
@@ -198,9 +208,9 @@ const Navbar = () => {
                             </div>
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     )}
-                  </AnimatePresence>
+                  
                 </div>
               ) : link.hasDropdown ? (
                 <div 
@@ -213,22 +223,16 @@ const Navbar = () => {
                   <Link 
                     to={link.href} 
                     className={cn(
-                      "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap flex items-center gap-1",
-                      location.pathname.startsWith('/resources') || location.pathname === '/buyers-guide' || location.pathname === '/cost-estimator' ? "text-brand-gold-dark" : "text-brand-bonewhite"
+                      "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap flex items-center gap-1",
+                      underPath(location.pathname, '/resources') || samePath(location.pathname, '/buyers-guide') || samePath(location.pathname, '/cost-estimator') ? "text-brand-gold-dark" : "text-brand-bonewhite"
                     )}
                   >
                     {link.label}
                     <ChevronDown size={10} strokeWidth={2} className={cn("transition-transform", resourcesOpen && "rotate-180")} />
                   </Link>
-                  <AnimatePresence>
+                  
                     {resourcesOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-64"
-                      >
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-64">
                         <div className="bg-brand-surface border border-brand-dim/40 rounded-[2px] shadow-2xl py-2 overflow-hidden">
                           {resourceLinks.map((item) => (
                             <Link
@@ -248,17 +252,17 @@ const Navbar = () => {
                             </Link>
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     )}
-                  </AnimatePresence>
+                  
                 </div>
               ) : (
                 <Link 
                   key={link.href} 
                   to={link.href} 
                   className={cn(
-                    "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap",
-                    location.pathname === link.href ? "text-brand-gold-dark" : "text-brand-bonewhite"
+                    "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap",
+                    samePath(location.pathname, link.href) ? "text-brand-gold-dark" : "text-brand-bonewhite"
                   )}
                 >
                   {link.label}
@@ -268,23 +272,25 @@ const Navbar = () => {
           </nav>
 
           {/* Right Side CTA group */}
-          <div className="hidden xl:flex items-center gap-5 shrink-0">
+          <div className="hidden xl:flex items-center gap-3 2xl:gap-5 shrink-0 ml-3 pl-3 border-l border-brand-dim/50">
             <Link 
               to="/contact" 
               className={cn(
-                "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold-dark font-medium",
-                location.pathname === "/contact" ? "text-brand-gold-dark" : "text-brand-bonewhite"
+                "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium",
+                samePath(location.pathname, "/contact") ? "text-brand-gold-dark" : "text-brand-bonewhite"
               )}
             >
               Contact
             </Link>
             
-            <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('phone_call')} className="w-10 h-10 flex items-center justify-center rounded-full border border-brand-gold text-brand-gold-dark bg-brand-gold/5 hover:bg-brand-gold hover:text-brand-black hover:shadow-[0_0_16px_rgba(212,175,99,0.25)] transition-all group" aria-label="Call Us">
-              <Phone size={16} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
+            <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('phone_call')} className="inline-flex items-center gap-2 font-sans text-[12px] 2xl:text-[13px] tabular-nums text-brand-bonewhite hover:text-brand-gold-dark whitespace-nowrap" aria-label={`Call ${publicContact.phoneDisplay}`}>
+              <Phone size={14} strokeWidth={2} />
+              <span>{publicContact.phoneDisplay}</span>
             </a>
 
-            <Link to="/contact" onClick={() => trackEngagement('cta_click', 'get_estimate_nav')} className="btn-primary py-2.5 px-6 whitespace-nowrap">
-              Get My Free Estimate
+            <Link to="/contact" onClick={() => trackEngagement('cta_click', 'get_estimate_nav')} className="btn-primary !py-2 !px-3 2xl:!py-2.5 2xl:!px-5 whitespace-nowrap !text-xs 2xl:!text-[13px]">
+              <span className="2xl:hidden">Get estimate</span>
+              <span className="hidden 2xl:inline">Get my estimate</span>
             </Link>
           </div>
 
@@ -296,17 +302,23 @@ const Navbar = () => {
             className="xl:hidden relative z-50 w-10 h-10 flex items-center justify-center text-brand-gold-dark"
           >
             <div className="relative w-6 h-5">
-              <motion.span 
-                animate={isMobileMenuOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
-                className="absolute top-0 left-0 w-full h-0.5 bg-brand-ink block rounded-full"
+              <span
+                className={cn(
+                  'absolute top-0 left-0 w-full h-0.5 bg-brand-ink block rounded-full transition-transform duration-200',
+                  isMobileMenuOpen && 'translate-y-2 rotate-45',
+                )}
               />
-              <motion.span 
-                animate={isMobileMenuOpen ? { opacity: 0 } : { opacity: 1 }}
-                className="absolute top-2.5 left-0 w-full h-0.5 bg-brand-ink block rounded-full"
+              <span
+                className={cn(
+                  'absolute top-2.5 left-0 w-full h-0.5 bg-brand-ink block rounded-full transition-opacity duration-200',
+                  isMobileMenuOpen && 'opacity-0',
+                )}
               />
-              <motion.span 
-                animate={isMobileMenuOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
-                className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-ink block rounded-full"
+              <span
+                className={cn(
+                  'absolute bottom-0 left-0 w-full h-0.5 bg-brand-ink block rounded-full transition-transform duration-200',
+                  isMobileMenuOpen && '-translate-y-2 -rotate-45',
+                )}
               />
             </div>
           </button>
@@ -314,34 +326,23 @@ const Navbar = () => {
       </header>
 
       {/* Mobile Menu Overlay */}
-      <AnimatePresence>
+      
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 bg-brand-burgundy/98 backdrop-blur-xl pt-40 px-8 pb-32 overflow-y-auto flex flex-col items-center text-center xl:hidden"
-          >
+          <div className="fixed inset-0 z-40 bg-brand-burgundy/98 backdrop-blur-xl pt-40 px-8 pb-32 overflow-y-auto flex flex-col items-center text-center xl:hidden">
             <nav className="w-full max-w-sm flex flex-col gap-14">
               <div className="flex flex-col gap-6">
                 {navLinks.map((link, idx) => (
-                  <motion.div
-                    key={link.href}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + idx * 0.05 }}
-                  >
+                  <div key={link.href}>
                     <Link 
                       to={link.href} 
                       className={cn(
                         "font-display text-5xl font-light tracking-tight transition-colors",
-                        location.pathname === link.href ? "text-brand-gold" : "text-brand-porcelain"
+                        samePath(location.pathname, link.href) ? "text-brand-gold" : "text-brand-porcelain"
                       )}
                     >
                       {link.label}
                     </Link>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
 
@@ -350,6 +351,7 @@ const Navbar = () => {
               <div className="flex flex-col gap-6">
                 <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold font-medium">Resources</span>
                 <div className="grid grid-cols-1 gap-4">
+                  <Link to="/library" className="font-sans text-sm text-brand-porcelain-soft hover:text-brand-gold transition-colors py-2 block">Construction Library</Link>
                   <Link to="/buyers-guide" className="font-sans text-sm text-brand-porcelain-soft hover:text-brand-gold transition-colors py-2 block">Buyer's Guide</Link>
                   <Link to="/cost-estimator" className="font-sans text-sm text-brand-porcelain-soft hover:text-brand-gold transition-colors py-2 block">Cost Estimator</Link>
                   <Link to="/resources" className="font-sans text-sm text-brand-gold hover:text-brand-gold-light transition-colors py-2 block">All Articles →</Link>
@@ -361,46 +363,30 @@ const Navbar = () => {
               <div className="flex flex-col gap-6">
                 <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold font-medium">Flagship Services</span>
                 <div className="grid grid-cols-1 gap-4">
-                  {services.map((service, idx) => (
-                    <motion.div
-                      key={service.href}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 + idx * 0.05 }}
-                    >
+                  {SERVICE_LINKS.map((service, idx) => (
+                    <div key={service.href}>
                       <Link 
                         to={service.href} 
                         className="font-sans text-sm text-brand-porcelain-soft hover:text-brand-gold transition-colors py-2 block"
                       >
                         {service.label}
                       </Link>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </div>
 
               <div className="flex justify-center gap-10 pt-10 border-t border-brand-dim/10">
                 {SOCIAL_LINKS.map((social, idx) => (
-                  <motion.a
-                    key={social.name}
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Golden Maple on ${social.name}`}
-                    onClick={() => trackEngagement('outbound_click', `nav_${social.name.toLowerCase()}`)}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.7 + idx * 0.1 }}
-                    className="w-12 h-12 rounded-full border border-brand-dim/30 flex items-center justify-center text-brand-gold hover:border-brand-gold hover:bg-brand-gold/5 transition-all"
-                  >
+                  <a key={social.name} href={social.url} target="_blank" rel="noopener noreferrer" aria-label={`Golden Maple on ${social.name}`} onClick={() => trackEngagement('outbound_click', `nav_${social.name.toLowerCase()}`)} className="w-12 h-12 rounded-full border border-brand-dim/30 flex items-center justify-center text-brand-gold hover:border-brand-gold hover:bg-brand-gold/5 transition-all">
                     <social.Icon size={18} strokeWidth={1.5} aria-hidden="true" />
-                  </motion.a>
+                  </a>
                 ))}
               </div>
             </nav>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      
     </>
   );
 };
@@ -409,11 +395,11 @@ const Footer = () => {
   // The estimator page runs its own contextual sticky bar — the global dock
   // would cover it (z-50 vs z-40) and steal its taps.
   const { pathname } = useLocation();
-  const hideDock = pathname.startsWith('/cost-estimator');
+  const hideDock = underPath(pathname, '/cost-estimator');
   return (
     <footer className="bg-brand-surface text-brand-bonewhite pt-32 pb-24 md:pb-12">
       <div className="container-custom">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-20 mb-32">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 xl:gap-16 mb-32">
           <div className="space-y-10">
             <Link to="/" className="flex flex-col">
               <span className="font-display text-4xl md:text-5xl leading-none tracking-tight text-brand-gold-dark">
@@ -424,42 +410,48 @@ const Footer = () => {
               </span>
             </Link>
             <p className="font-sans font-light text-sm text-brand-muted leading-relaxed max-w-xs">
-              Architectural outdoor construction serving Barrie, Simcoe County, and Cottage Country. Crafted for Canadian seasons. Designed to last a lifetime.
+              Outdoor construction in Barrie, Simcoe County and Cottage Country. In 2027, we’re adding landscape maintenance for homes and commercial properties in the Barrie area.
             </p>
             <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark font-normal">
-                <Shield size={14} strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available.')}
-              </div>
-              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark font-normal">
-                <Award size={14} strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage is documented.')}
-              </div>
+              {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, '') && (
+                <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark font-normal">
+                  <Shield size={14} strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, '')}
+                </div>
+              )}
+              {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, '') && (
+                <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark font-normal">
+                  <Award size={14} strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, '')}
+                </div>
+              )}
+              <Link to="/reviews" className="font-sans text-[11px] uppercase tracking-[0.18em] text-brand-gold-dark hover:text-brand-bonewhite">Read our Google reviews</Link>
             </div>
           </div>
           
           <div>
-            <h4 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Navigation</h4>
+            <p className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Navigation</p>
             <ul className="space-y-5 font-sans text-sm text-brand-muted font-light">
               <li><Link to="/services" className="hover:text-brand-gold-dark transition-colors">Services</Link></li>
               <li><Link to="/portfolio" className="hover:text-brand-gold-dark transition-colors">Portfolio</Link></li>
               <li><Link to="/about" className="hover:text-brand-gold-dark transition-colors">Our Story</Link></li>
+              <li><Link to="/faq" className="hover:text-brand-gold-dark transition-colors">FAQ</Link></li>
+              <li><Link to="/library" className="hover:text-brand-gold-dark transition-colors">Construction Library</Link></li>
               <li><Link to="/contact" className="hover:text-brand-gold-dark transition-colors">Contact</Link></li>
+              <li><Link to="/reviews" className="hover:text-brand-gold-dark transition-colors">Google reviews</Link></li>
               <li><Link to="/service-areas" className="hover:text-brand-gold-dark transition-colors">Service Areas</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Expertise</h4>
+            <p className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Expertise</p>
             <ul className="space-y-5 font-sans text-[13px] text-brand-muted font-light">
-              <li>Interlocking & Hardscape</li>
-              <li>Composite Decking</li>
-              <li>Natural Stone & Flagstone</li>
-              <li>Porcelain Installation</li>
-              <li>Retaining Walls</li>
+              {SERVICE_LINKS.map((service) => (
+                <li key={service.href}><Link to={service.href} className="hover:text-brand-gold-dark transition-colors">{service.label}</Link></li>
+              ))}
             </ul>
           </div>
 
-          <div>
-            <h4 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Connect</h4>
+          <div className="min-w-0">
+            <p className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Connect</p>
             <ul className="space-y-6 font-sans text-[13px] text-brand-muted font-light">
               <li className="flex items-start gap-4">
                 <MapPin size={18} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" />
@@ -469,9 +461,9 @@ const Footer = () => {
                 <Phone size={18} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" />
                 <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('footer_phone')} className="hover:text-brand-gold-dark transition-colors">{publicContact.phoneDisplay}</a>
               </li>
-              <li className="flex items-center gap-4">
+              <li className="flex items-center gap-4 min-w-0">
                 <Mail size={18} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" />
-                <a href={`mailto:${publicContact.email}`} className="hover:text-brand-gold-dark transition-colors">{publicContact.email}</a>
+                <a href={`mailto:${publicContact.email}`} className="hover:text-brand-gold-dark transition-colors break-all min-w-0">{publicContact.email}</a>
               </li>
               <li className="flex items-center gap-3 pt-2">
                 {SOCIAL_LINKS.map((social) => (
@@ -499,6 +491,12 @@ const Footer = () => {
             <Link to="/locations/innisfil" className="hover:text-brand-gold-dark transition-colors">Innisfil</Link>
             <Link to="/locations/oro-medonte" className="hover:text-brand-gold-dark transition-colors">Oro-Medonte</Link>
             <Link to="/locations/springwater" className="hover:text-brand-gold-dark transition-colors">Springwater</Link>
+            <Link to="/patios-barrie" className="hover:text-brand-gold-dark transition-colors ml-2 border-l border-brand-dim/20 pl-4">Patios</Link>
+            <Link to="/outdoor-living-barrie" className="hover:text-brand-gold-dark transition-colors">Outdoor Living</Link>
+            <Link to="/premium-patio-rebuild-barrie" className="hover:text-brand-gold-dark transition-colors">Patio Rebuilds</Link>
+            <Link to="/sloped-backyard-solutions-barrie" className="hover:text-brand-gold-dark transition-colors">Sloped Backyards</Link>
+            <Link to="/full-backyard-transformations-barrie" className="hover:text-brand-gold-dark transition-colors">Full Transformations</Link>
+            <Link to="/luxury-landscape-barrie" className="hover:text-brand-gold-dark transition-colors">Luxury Landscapes</Link>
             <Link to="/privacy" className="hover:text-brand-gold-dark transition-colors ml-2 border-l border-brand-dim/20 pl-4">Privacy</Link>
             <Link to="/terms" className="hover:text-brand-gold-dark transition-colors">Terms</Link>
           </div>
@@ -518,7 +516,7 @@ const Footer = () => {
           to="/contact"
           className="flex-[1.5] bg-brand-gold text-brand-black font-sans text-[10px] uppercase tracking-[0.25em] py-5 flex items-center justify-center gap-3"
         >
-          Get My Free Estimate
+          Get my estimate
         </Link>
       </div>
       )}
@@ -527,17 +525,21 @@ const Footer = () => {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  // Client-only interactive widgets — gated so they never render during the
-  // build-time prerender (avoids any window/document access at SSR).
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  // Chat is absent from the prerender and stays out of the first paint.
+  // It loads on the first input, or when the browser has been idle.
+  const [chatReady, setChatReady] = useState(false);
+  useEffect(() => onInteractOrIdle(() => setChatReady(true), 8000), []);
 
   return (
     <div className="bg-brand-nearblack min-h-screen selection:bg-brand-gold/20 selection:text-brand-gold-dark">
       <Navbar />
       <main className="flex-grow overflow-x-clip">{children}</main>
       <Footer />
-      {mounted && <ChatWidget />}
+      {chatReady && (
+        <Suspense fallback={null}>
+          <ChatWidget />
+        </Suspense>
+      )}
     </div>
   );
 }

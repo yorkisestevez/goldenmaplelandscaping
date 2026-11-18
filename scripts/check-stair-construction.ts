@@ -3,6 +3,7 @@ import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {getStairSupport,getStringerOffsets} from '../src/features/deckcraft/stairConstruction';
 import {getStairBoards} from '../src/features/deckcraft/stairBoards';
+import {TERRAIN_VENEER_MATERIALS,stairVeneerLayout} from '../src/features/deckcraft/stairVeneerLayout';
 
 assert.deepEqual(getStringerOffsets(48,12),[-23,-11,1,13,23]);
 let layouts=0;
@@ -19,9 +20,25 @@ for(const stairTurn of ['Left','Right'] as const){
  const d={...structuredClone(DEFAULT_DECK),deckingMaterial:material,width:12,length:12,height:72,height2:36,levels:2,stairFlights:2,stairWidth:48,stairType,stairTurn};
  const m=buildDeckTakeoff(d),support=getStairSupport(d,m.gap);
  const straightOnly={...m,treads:m.treads.filter(t=>t.kind==='tread')};
- const treadBoards=getStairBoards(d,straightOnly);
- assert.equal(treadBoards.length,straightOnly.treads.length*2,'Every ordinary tread uses two full planks, no accidental narrow third sliver');
- assert(treadBoards.every(b=>Math.abs(b.d-d.boardWidth)<1e-6));
+ const treadBoards=getStairBoards(d,straightOnly),treads=straightOnly.treads.length;
+ assert.equal(d.pictureFrameRows,1,'New designs default to a one-row picture frame');
+ const framed=!TERRAIN_VENEER_MATERIALS.includes(material);
+ assert.equal(treadBoards.length,treads*(framed?4:2),framed?'Framed tread: one nosing, two mitred returns and one full field plank, no narrow sliver':'Terrain veneer tread keeps two full planks over its p8 supports');
+ assert(treadBoards.every(b=>Math.abs(b.d-d.boardWidth)<1e-6),'Every tread piece is a full-width plank');
+ if(framed){assert.equal(treadBoards.filter(b=>b.role==='border').length,treads*3);assert.equal(treadBoards.filter(b=>b.role==='field').length,treads);}
+ else assert(treadBoards.every(b=>b.role===undefined),'Terrain veneer treads carry no frame pieces');
+ const plain={...d,pictureFrameRows:0 as const},plainModel=buildDeckTakeoff(plain),plainTreads=plainModel.treads.filter(t=>t.kind==='tread'),plainBoards=getStairBoards(plain,{...plainModel,treads:plainTreads});
+ assert.equal(plainBoards.length,plainTreads.length*2,'Unframed designs keep two full planks per tread, no accidental narrow third sliver');
+ assert(plainBoards.every(b=>Math.abs(b.d-d.boardWidth)<1e-6&&b.role===undefined),'Unframed tread planks are full width with no frame role');
+ // Legacy framed control: a save from before the 2026-10 build rules (marked 'legacy' or unmarked) keeps 9b2ee11's two full
+ // planks per tread on a framed deck, row pattern or picture-frame layout alike, so its drawing, cut list and quote lines are unchanged.
+ for(const legacy of [{...d,buildRules:'legacy' as const},(({buildRules:_rules,...rest})=>rest)(d),{...d,buildRules:'legacy' as const,pictureFrameRows:0 as const,pattern:'Picture Frame' as const}]){
+  const lm=buildDeckTakeoff(legacy),lt=lm.treads.filter(t=>t.kind==='tread'),lb=getStairBoards(legacy,{...lm,treads:lt});
+  assert(legacy.pictureFrameRows||legacy.pattern==='Picture Frame','The legacy control is a framed deck');
+  assert.equal(lb.length,lt.length*2,'Legacy framed treads keep two full planks, no mitred stair frame');
+  assert(lb.every(b=>Math.abs(b.d-d.boardWidth)<1e-6&&b.role===undefined),'Legacy framed tread planks are full width with no frame role');
+  assert(lt.flatMap(t=>[t.w,t.w]).every((w,i)=>Math.abs(lb[i].w-w)<1e-6),'Each legacy tread plank runs the full tread width, as at 9b2ee11');
+ }
  assert.equal(m.quantities.riserBoardPieces,m.riserBoards.length);
  assert.equal(m.riserBoards.length,m.quantities.totalRisers,'Every actual rise is closed, including winder and level connection');
  assert(Math.abs(m.quantities.riserBoardLf-m.riserBoards.reduce((n,b)=>n+b.w/12,0))<1e-7);
@@ -41,7 +58,9 @@ for(const stairTurn of ['Left','Right'] as const){
   for(let j=1;j<strings.length;j++)assert(Math.abs(Math.hypot(strings[j].a.x-strings[j-1].a.x,strings[j].a.z-strings[j-1].a.z)-(f.stringerOffsets[j]-f.stringerOffsets[j-1]))<1e-7,'Actual world geometry matches scheduled center stations');
  }
  assert.equal(m.stairSupport.spacingIn,({pressure_treated:12,tt_vintage:10,tt_legacy:10,tt_premier:9,deck_voyage:9,deck_vista:8,tt_terrain:12} as Record<string,number>)[material]);
- if(material==='tt_terrain'){assert.equal(support.status,'assembly-review');assert(m.issues.some(s=>s.includes('veneer')));}
+ if(material==='tt_terrain'){assert.equal(support.status,'assembly-review');assert(m.issues.some(s=>s.includes('veneer')));
+  assert(stairVeneerLayout(d,m).issues.some(s=>s.includes('picture frame is applied to the deck surface only')),'Unframed Terrain stair treads are disclosed on a framed deck');
+  assert(!stairVeneerLayout(plain,buildDeckTakeoff(plain)).issues.some(s=>s.includes('picture frame')),'No frame disclosure on an unframed deck');}
  scenarios++;
 }
 console.log(`Stair construction passed: ${layouts} fixed-pitch layouts and ${scenarios} closed-riser / flight / manufacturer cases.`);

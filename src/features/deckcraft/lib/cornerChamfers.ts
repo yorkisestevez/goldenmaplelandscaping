@@ -18,6 +18,7 @@ export interface ActiveChamfers{leftIn:number;rightIn:number;reduced:boolean;shr
  * each leg leaves at least 36 in of straight side edge, and the two legs leave 24 in of front edge.
  * A corner too small to cut stays square and gives its share of the front back to the other corner. */
 export function activeCornerChamfers(data:DeckData):ActiveChamfers|null{
+  if(data.deckOutlines?.main)return null;
   const c=data.cornerChamfers;
   if(!c||data.shape!=='Rectangle')return null;
   const asked={l:Math.max(0,Number(c.frontLeftFt)||0)*12,r:Math.max(0,Number(c.frontRightFt)||0)*12};

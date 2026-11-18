@@ -1,0 +1,10 @@
+import {writeFileSync,mkdirSync} from 'node:fs';
+import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
+import {validateDesign} from '../src/features/deckcraft/designPersistence';
+import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
+import {extrasLayout} from '../src/features/deckcraft/extrasLayout';
+const data=validateDesign({...DEFAULT_DECK,width:20,length:20,height:48,stairFlights:0,houseConfig:{...getHouseConfig(DEFAULT_DECK),widthFt:30,depthFt:20,storeys:2,openings:[{id:'selection-a',type:'Window',facade:'Front',widthIn:48,heightIn:36,bottomIn:100,offsetPct:25},{id:'selection-b',type:'Window',facade:'Front',widthIn:48,heightIn:36,bottomIn:100,offsetPct:75}]},privacyScreens:[{id:'screen-a',side:'Left',lengthFt:4,heightFt:6,offsetPct:20,lights:false},{id:'screen-b',side:'Left',lengthFt:4,heightFt:6,offsetPct:60,lights:false}]});
+const screen=extrasLayout(data,buildDeckTakeoff(data)).wood.filter(b=>b.screenId==='screen-a').sort((a,b)=>b.y-a.y)[0];
+if(!screen)throw new Error('Expected actual highest screen-a slat.');
+mkdirSync('e2e/fixtures',{recursive:true});writeFileSync('e2e/fixtures/easy-selection-projection.json',JSON.stringify({fixture:'20x20 measured deck, left 4x6 screen-a at20%',screen},null,2)+'\n');console.log('Saved actual geometry projection fixture.');

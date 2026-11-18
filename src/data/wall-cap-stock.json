@@ -1,0 +1,237 @@
+{
+  "unilock-umbriano/mottled/coping-chamfered-355-600-60": {
+    "name": "COPING CHAMFERED",
+    "sourceUrl": "https://unilock.com/product/umbriano-ontario/",
+    "colors": [
+      "summer-wheat",
+      "winter-marvel",
+      "midnight-sky",
+      "french-grey",
+      "grenada-white"
+    ]
+  },
+  "unilock-umbriano/mottled/coping-fullnose-355-600-60": {
+    "name": "COPING FULLNOSE",
+    "sourceUrl": "https://unilock.com/product/umbriano-ontario/",
+    "colors": [
+      "summer-wheat",
+      "winter-marvel",
+      "midnight-sky",
+      "french-grey",
+      "grenada-white"
+    ]
+  },
+  "unilock-ledgestone/current-ontario-manufacturer-surface/coping-610-305-70": {
+    "name": "COPING",
+    "sourceUrl": "https://unilock.com/product/ledgestone-ontario/",
+    "colors": [
+      "buff"
+    ]
+  },
+  "unilock-pisa-smooth/smooth/coping-550-350-85": {
+    "name": "COPING",
+    "sourceUrl": "https://unilock.com/product/pisa-smooth-ontario/",
+    "colors": [
+      "cliffside-grey",
+      "granite",
+      "dusk",
+      "safari",
+      "charcoal"
+    ]
+  },
+  "unilock-pisa-2/split-face/coping-24-double-unit-600-300-75": {
+    "name": "COPING 24\" DOUBLE UNIT",
+    "sourceUrl": "https://unilock.com/product/pisa-2-ontario/",
+    "colors": [
+      "granite",
+      "natural"
+    ]
+  },
+  "unilock-quarry-smooth/smooth/coping-trapezoid-304.8-304.8-114": {
+    "name": "COPING TRAPEZOID",
+    "sourceUrl": "https://unilock.com/product/quarry-smooth-ontario/",
+    "colors": [
+      "charcoal",
+      "sandstone",
+      "natural-grey"
+    ]
+  },
+  "unilock-sienastone/split-face/coping-1200-500-185": {
+    "name": "COPING",
+    "sourceUrl": "https://unilock.com/product/sienastone-ontario/",
+    "colors": [
+      "natural",
+      "granite"
+    ]
+  },
+  "unilock-sienastone/split-face/closed-end-coping-1200-500-185": {
+    "name": "CLOSED-END COPING",
+    "sourceUrl": "https://unilock.com/product/sienastone-ontario/",
+    "colors": [
+      "natural",
+      "granite"
+    ]
+  },
+  "unilock-sienastone-smooth/smooth/coping-1200-383-180": {
+    "name": "COPING",
+    "sourceUrl": "https://unilock.com/product/sienastone-smooth-ontario/",
+    "colors": [
+      "granite",
+      "dusk",
+      "safari",
+      "charcoal"
+    ]
+  },
+  "techo-venetian-overlay-slab/smooth/cap-356-397-50": {
+    "name": "Cap",
+    "sourceUrl": "https://techo-bloc.canto.com/direct/document/5n0fd5e79t6hj74aths6js354m/F4A0zkJwtPt-QeZIzOY0-0EUZ7g/original?content-type=application%2Fpdf&name=TB2026_Catalog_Web_EN.pdf#page=77",
+    "colors": [
+      "chestnut-brown",
+      "champlain-grey",
+      "beige-cream",
+      "greyed-nickel",
+      "shale-grey"
+    ]
+  },
+  "techo-venetian-overlay-slab/slate/cap-356-406-45": {
+    "name": "Cap",
+    "sourceUrl": "https://techo-bloc.canto.com/direct/document/5n0fd5e79t6hj74aths6js354m/F4A0zkJwtPt-QeZIzOY0-0EUZ7g/original?content-type=application%2Fpdf&name=TB2026_Catalog_Web_EN.pdf#page=77",
+    "colors": [
+      "chestnut-brown",
+      "champlain-grey",
+      "shale-grey"
+    ]
+  },
+  "permacon-grande-wall/split/cap": {
+    "name": "Cap",
+    "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=54",
+    "colors": [
+      "grey"
+    ]
+  },
+  "permacon-grande-smooth-wall/smooth/cap": {
+    "name": "Cap",
+    "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=56",
+    "colors": [
+      "grey",
+      "range-newport-grey"
+    ]
+  },
+  "permacon-grande-wedge-wall/split/cap-tapered": {
+    "name": "Cap tapered",
+    "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=58",
+    "colors": [
+      "grey"
+    ]
+  },
+  "permacon-lafitt-tandem-wall/compatible-cap-lafitt-tandem-wall/lafitt-plus-cap": {
+    "name": "Lafitt Plus cap",
+    "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=72",
+    "colors": [
+      "range-margaux-beige",
+      "range-newport-grey",
+      "range-scandina-grey",
+      "rockland-black"
+    ]
+  },
+  "permacon-melville-tandem-wall/compatible-cap-melville-tandem-wall/melville-plus-cap60": {
+    "name": "Melville Plus cap60",
+    "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=77",
+    "colors": [
+      "range-amber-beige",
+      "range-margaux-beige",
+      "range-newport-grey",
+      "range-scandina-grey",
+      "range-shaded-grey",
+      "rockland-black"
+    ]
+  },
+  "permacon-melville-tandem-wall/compatible-cap-melville-tandem-wall/melville-plus-cap90": {
+    "name": "Melville Plus cap90",
+    "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=77",
+    "colors": [
+      "range-amber-beige",
+      "range-newport-grey",
+      "range-scandina-grey",
+      "rockland-black"
+    ]
+  },
+  "permacon-rb-wall/compatible-cap-rb-wall/rb24-inch-cap": {
+    "name": "RB24-inch cap",
+    "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=79",
+    "colors": [
+      "grey",
+      "granite-blend",
+      "sierra-black"
+    ]
+  },
+  "permacon-wallstone-wall/compatible-cap-wallstone-wall/wallstone12-inch-cap": {
+    "name": "Wallstone12-inch cap",
+    "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=80",
+    "colors": [
+      "desert-grey-blend",
+      "granite-blend"
+    ]
+  },
+  "permacon-wedgestone-wall/compatible-cap-wedgestone-wall/wedgestone-tapered-cap": {
+    "name": "Wedgestone tapered cap",
+    "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=81",
+    "colors": [
+      "desert-grey-blend",
+      "granite-blend"
+    ]
+  },
+  "permacon-keystone-wall/split/cap": {
+    "name": "Cap",
+    "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=111",
+    "colors": [
+      "smoke-grey"
+    ]
+  },
+  "oaks-ortana/split/2-ft-split-face-coping": {
+    "name": "2 ft split-face coping",
+    "sourceUrl": "https://landscapeguides.bramptonbrick.com/view/917121197/43/",
+    "colors": [
+      "desert",
+      "greyfield",
+      "mountain",
+      "natural",
+      "onyx",
+      "sandalwood"
+    ]
+  },
+  "oaks-proterra-smooth/smooth/coping-step": {
+    "name": "Coping-step",
+    "sourceUrl": "https://landscapeguides.bramptonbrick.com/view/917121197/46/",
+    "colors": [
+      "greyfield",
+      "natural"
+    ]
+  },
+  "oaks-proterra-smooth/smooth/coping-corner-end": {
+    "name": "Coping corner/end",
+    "sourceUrl": "https://landscapeguides.bramptonbrick.com/view/917121197/46/",
+    "colors": [
+      "greyfield",
+      "natural"
+    ]
+  },
+  "oaks-proterra-split/split/coping-step": {
+    "name": "Coping-step",
+    "sourceUrl": "https://landscapeguides.bramptonbrick.com/view/917121197/47/",
+    "colors": [
+      "greyfield",
+      "natural",
+      "timberwood"
+    ]
+  },
+  "oaks-proterra-split/split/coping-corner-end": {
+    "name": "Coping corner/end",
+    "sourceUrl": "https://landscapeguides.bramptonbrick.com/view/917121197/47/",
+    "colors": [
+      "greyfield",
+      "natural",
+      "timberwood"
+    ]
+  }
+}

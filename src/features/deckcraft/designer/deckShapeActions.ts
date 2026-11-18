@@ -1,28 +1,63 @@
-import {frontFromOutline,outlineProblems,rectangleFront} from '../lib/customOutline';
+import {defaultLevel3} from '../designPersistence';
 import {unnotchedMainOutline} from '../lib/deckGeometry';
 import {activeCornerChamfers} from '../lib/cornerChamfers';
+import {frontFromOutline,outlineProblems,rectangleFront} from '../lib/customOutline';
+import {boundaryBounds,boundaryProblem,savedBoundary} from '../lib/freeOutline';
 import type {DeckData,DeckShape,HouseConfig,WrapPorch,WrapWing} from '../types';
 
 /**
  * The deck's shape actions, as pure functions of the design: each returns the patch to hand to `update` (and, for a
- * wing, the status line to show), and none reads or sets page state. The footprint fields use them today; the shape
- * shortcuts on the plan will call the same ones, so a shape change means one thing wherever it is made.
+ * wing, the status line to show), and none reads or sets page state. The footprint fields and the plan's named
+ * shape shortcuts use them. Draw my own is drawOwnOutline, not the Deck menu's Custom outline.
  */
 type Side='left'|'right';
 type HouseSize=Pick<HouseConfig,'widthFt'|'depthFt'>;
 
+/** The Deck menu's shapes, with their names. */
+export const SHAPES:readonly (readonly [DeckShape,string])[]=[['Rectangle','Rectangle'],['L-Shape','L-Shape'],['Multi-corner','Multi-corner'],['Curved','Curved'],['Custom','Custom outline']];
+/** A number of levels; a third level starts from its default size when the design has none yet. */
+export const levelsPatch=(data:DeckData,levels:number):Partial<DeckData>=>({levels,...(levels===3&&!data.level3?{level3:defaultLevel3(data)}:{})});
+
 /**
- * A new shape. A custom outline starts from the deck as drawn now (angled corners become its 45° edges), or from the
- * outline it had before; it sets the width and depth and is one level.
+ * A new shape from the Deck menu. "Custom outline" is the constrained front (square or 45° edges, shape presets,
+ * keyboard edge moves). It starts from the deck as drawn now, or from the outline it already had, and clears any free
+ * point outline so that editor is the one on screen. Other shapes clear the free outline too. Draw my own on the plan
+ * is `drawOwnOutline`: that one keeps the real footprint as free points.
  */
 export function chooseShape(data:DeckData,shape:DeckShape):Partial<DeckData>{
-  if(shape!=='Custom')return {shape};
+  const deckOutlines=data.deckOutlines?{...data.deckOutlines,main:undefined}:undefined;
+  if(shape!=='Custom')return {shape,...(data.deckOutlines?{deckOutlines}:{})};
   const kept=data.customFront&&!outlineProblems(data.customFront).length?data.customFront:null;
-  return {shape,customFront:kept??frontFromOutline(unnotchedMainOutline(data))??rectangleFront(data.width,data.length),levels:1};
+  return {shape,deckOutlines,customFront:kept??frontFromOutline(unnotchedMainOutline(data))??rectangleFront(data.width,data.length),levels:1};
+}
+
+/**
+ * Draw my own: seed a free-form outline (`deckOutlines.main`) from the deck as drawn now so the plan's point editor
+ * can pull any corner — including L-shapes, wraps and already-edited outlines — without collapsing them to a
+ * constrained front or a rectangle. An existing valid free outline is kept.
+ */
+export function drawOwnOutline(data:DeckData):Partial<DeckData>{
+  if(data.deckOutlines?.main&&!boundaryProblem(data.deckOutlines.main.map(p=>({x:p.x*12,y:p.y*12})))){
+    return {shape:'Custom',levels:1,customFront:undefined};
+  }
+  const outline=unnotchedMainOutline(data);
+  const problem=boundaryProblem(outline);
+  const points=problem?(()=>{const W=Math.max(4,Number(data.width)||16),L=Math.max(4,Number(data.length)||12);return [{x:0,y:0},{x:W*12,y:0},{x:W*12,y:L*12},{x:0,y:L*12}];})():outline;
+  const bounds=boundaryBounds(points);
+  return {
+    shape:'Custom',
+    levels:1,
+    width:Math.round(bounds.w/12*1000)/1000,
+    length:Math.round(bounds.h/12*1000)/1000,
+    deckOutlines:{...data.deckOutlines,main:savedBoundary(points)},
+    customFront:undefined,
+    wrap:undefined,
+    cornerChamfers:undefined,
+  };
 }
 
 /** What a wrap-around needs before its corner can be mitred: a rectangle, no inlay, straight boards and square front corners. */
-export const wrapFix=(data:DeckData):Partial<DeckData>=>({shape:'Rectangle',hasInlay:false,...(data.pattern==='Diagonal'||data.pattern==='Herringbone'?{pattern:'Straight' as const}:{}),...(data.cornerChamfers?{cornerChamfers:undefined}:{})});
+export const wrapFix=(data:DeckData):Partial<DeckData>=>({shape:'Rectangle',hasInlay:false,...(data.deckOutlines?{deckOutlines:{...data.deckOutlines,main:undefined}}:{}),...(data.pattern==='Diagonal'||data.pattern==='Herringbone'?{pattern:'Straight' as const}:{}),...(data.cornerChamfers?{cornerChamfers:undefined}:{})});
 /** The changes `wrapFix` makes to this design, in words. */
 export const wrapFixNames=(data:DeckData)=>[data.shape!=='Rectangle'&&'a rectangle',data.hasInlay&&'no inlay',(data.pattern==='Diagonal'||data.pattern==='Herringbone')&&'straight boards',activeCornerChamfers({...data,shape:'Rectangle'})&&'square front corners'].filter(Boolean) as string[];
 /** The status line after `wrapFix`. */

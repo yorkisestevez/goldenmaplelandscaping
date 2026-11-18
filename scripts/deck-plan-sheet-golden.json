@@ -1,69 +1,69 @@
 {
- "note": "ConstructionPlan default (contractor) markup, captured from bd5fd89 before R4 added the site variant. Regenerate only for an owner-approved change to the contractor plan.",
+ "note": "ConstructionPlan default (contractor) markup. Reviewed 2026-10-04 after the owner-requested picture-frame default, stock-length seam policy and railing termination, 2026-10-06 after the owner-approved inside-corner fix (new designs seat railing posts on the boards; designs saved before the 2026-10 rules keep their drawings), 2026-10-07 after wrap-around boards were set to keep one direction across the front and turn beside the house (legacy saves keep the corner-to-corner hip), 2026-10-08 after new designs anchor wrap field rows on the outer edge and drop hairline rips, and 2026-10-09 after new designs (2026-10-struct) size beams apart from the joist depth, size concrete piers for tributary load, and price ledger flashing on an attached ledger. Designs saved before those rules keep their drawings. Regenerate only for an owner-approved change to the contractor plan.",
  "cases": {
   "default": {
-   "sha256": "727ec208fd2772ae11d1e5325235d72cd582a4339b61069f8dab6db3fe8c9c3d",
-   "bytes": 11734
+   "sha256": "32ae4ad18fdcba95eb4b40353e24bf2208b4a93d90dbbd5eedc96f0c1ee9b9be",
+   "bytes": 11836
   },
   "default, model only": {
-   "sha256": "ca5fbbb13a60b13111484ba71cb5ab6f2a8793e03c51299e7af21fea2c965af7",
-   "bytes": 10433
+   "sha256": "e79e5d793b6ffe87559c12006d4a9a68d70937fa46d0a5bf4fde43bdaa58da82",
+   "bytes": 10643
   },
   "house hidden": {
-   "sha256": "135dd2eb81daa72cad9fc6bd8ef88e67d3acde430ca1462b75d57fe9a1dc98f8",
-   "bytes": 11319
+   "sha256": "c7fa48790c2a1c15e8a70ce313deee139b09e22de166c3f140bf2db3b78dc0d2",
+   "bytes": 11529
   },
   "house blocks (bump-out, wing, garage)": {
-   "sha256": "1cd3c4bbfc40f1345016ebe2415c5d088d69a8ecd94810411f57426383ad5e1c",
-   "bytes": 13499
+   "sha256": "57dba6293d21ad7f050edb03a798b62ae512ae49b5b275bc3b4f54f9249ff15f",
+   "bytes": 13800
   },
   "narrow house placed left": {
-   "sha256": "040008a4f3b10ee730a176e0e593eb43830feb229d60d343d8dada72951de435",
-   "bytes": 16508
+   "sha256": "0a7c7cbca0ce23f9585a64c11ac7355113750e19be27c5fc344c9c852ec96d55",
+   "bytes": 14257
   },
   "wrap left with a porch": {
-   "sha256": "48571e4d0671ac9c6d0ac05c3f4f2ff4c9c5873a15aa8f85bad8de5abfba59e1",
-   "bytes": 43812
+   "sha256": "d5cf7235931a0cb2d0532e1dce27739fdeadfc3bbe3994f0d95eb5e645a2f198",
+   "bytes": 35979
   },
   "wrap both": {
-   "sha256": "d2e1635e6b9cf28454f9148e92b4a45ab78caabbe6def5659ac87a3f61380d3d",
-   "bytes": 40777
+   "sha256": "aad035ecc2aa660ef50be0b2de57ca1cbd184b67382c48b78e2577290d02d090",
+   "bytes": 29598
   },
   "accent row and rug inlay": {
-   "sha256": "85918a68327f87ac16975c79b47a95253c345966b70968507ea3663b5ced5698",
-   "bytes": 22516
+   "sha256": "f361de087270a2f690f57dc49b777c20665d07781b3b5d318d5c148c7718ebd3",
+   "bytes": 20505
   },
   "band and medallion inlays": {
-   "sha256": "7c9bdd1e58297a7df1b3c7f186398d4cda0989cb55df4d61bba63440055dafd5",
-   "bytes": 33836
+   "sha256": "f4963582c5389fab715874fbd432394d5f669e46f7309eb89057ee1ae6b4cf44",
+   "bytes": 31098
   },
   "custom outline T": {
-   "sha256": "eb4bff8ae772cb5c63f7a21b45879f5e5ca9404732f9b6b4e3e0969b1d1d1fc2",
-   "bytes": 17942
+   "sha256": "369e23ed0381cff921843f8f1ee165556ae9a6a01ad650231bc87900f3cd48b1",
+   "bytes": 15609
   },
   "angled front corners": {
-   "sha256": "09697841032a1b3dd638074cb8c77a9875577aea41b791114a51c7217ce43b47",
-   "bytes": 14090
+   "sha256": "7eece0d86d652d7def33c84a4c4a5893bb3bc85b1ef7ef82a35926cb63a77742",
+   "bytes": 14248
   },
   "L-shape, picture frame, landing stairs": {
-   "sha256": "95d2a575eae653213d34c2b13281fbdd3b95f338e7e53498fbb5f3ff0492cdfa",
-   "bytes": 31128
+   "sha256": "57d76390cdb5114b614858c8d3a55e7545f97271b2e9e0f806795e14bbb93623",
+   "bytes": 31230
   },
   "multi-corner freestanding, 2 levels": {
-   "sha256": "33f6ecce9c67cb6020150a44302d710b34f7271d6a9d28d83bd05c86666e215e",
-   "bytes": 33891
+   "sha256": "99b8a659153f342e9516768bba4abb1265c0f8be2fc236a8f5ef24cf0395a160",
+   "bytes": 34669
   },
   "curved, herringbone, winder stairs": {
-   "sha256": "dbc69332927666b151d306299ee4f1fd3b0738b5be4e8d71c69d7c31db469cca",
-   "bytes": 49242
+   "sha256": "7d21c66aaee423bea5d2d095509588195ad2904617579c868b8ae77beba643ea",
+   "bytes": 51573
   },
   "split level with a third level": {
-   "sha256": "759f3a775bf9d3ced54dab1d19eddd3d84985db1d2a149b4bf2df158ad0ce2c6",
-   "bytes": 36664
+   "sha256": "f606cb007aaba2847c6c90ae5be1d28e5150bbf15946b7fa8769f78dca8fec51",
+   "bytes": 29461
   },
   "yard patio": {
-   "sha256": "021c2f115b9afa5f052d48fb68d5de641950bb5f9249f8763af80bc81058a3d6",
-   "bytes": 54762
+   "sha256": "7451fff1039171bda3ef6f3896a95d14d9a63ca69890f74a39d09e59985ce175",
+   "bytes": 53176
   }
  }
 }

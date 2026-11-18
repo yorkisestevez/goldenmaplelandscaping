@@ -1,0 +1,12 @@
+/* Pro workspace rulers (Designer Mode only): drawn over the plan's top and left edges, under the plan's own floating
+   controls (z-index 8), and never in the way of a pointer. */
+.dd-pro-rulers{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden}
+.dd-pro-ruler{position:absolute;top:0;left:0;display:block;overflow:hidden;background:#fbfaf6eb}
+.dd-pro-ruler-x{border-bottom:1px solid #d6d2c8;box-sizing:content-box}
+.dd-pro-ruler-y{border-right:1px solid #d6d2c8;box-sizing:content-box}
+.dd-pro-ruler line{stroke:#7b7e75;stroke-width:1;shape-rendering:crispEdges}
+.dd-pro-ruler line[data-kind=major]{stroke:#4c4f48}
+.dd-pro-ruler text{fill:#4c4f48;font:500 9px/1 var(--dc-body,Arial,sans-serif);font-variant-numeric:tabular-nums}
+.dd-pro-ruler-corner{position:absolute;top:0;left:0;width:20px;height:20px;background:#f1eee6;border-right:1px solid #d6d2c8;border-bottom:1px solid #d6d2c8}
+/* The pan hint starts inside the rulers rather than on top of the figures. */
+.dd-plan-viewport[data-rulers] .dd-plan-pan-hint{top:32px;left:32px;max-width:calc(100% - 44px)}

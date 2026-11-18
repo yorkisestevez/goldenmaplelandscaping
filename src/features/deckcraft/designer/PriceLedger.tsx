@@ -1,7 +1,8 @@
-import {useEffect,useId,useRef,useState,type KeyboardEvent,type RefObject} from 'react';
+import {useEffect,useId,useRef,type KeyboardEvent,type RefObject} from 'react';
 import {dollars} from '../designFacts';
-import {quoteLabel,quoteTag,type Ledger} from './priceLedgerModel';
-import {announceChange,describeChange,type ChangeRecord} from './useChangeLedger';
+import {lineBasis,quoteLabel,quoteTag,type Ledger} from './priceLedgerModel';
+import {describeChange,type ChangeRecord} from './useChangeLedger';
+import './priceLedger.css';
 
 const Tag=({kinds}:{kinds:readonly ('supplier'|'builder')[]})=><span className="dd-tag" data-kind={kinds.length>1?'both':kinds[0]}>{quoteTag(kinds)}</span>;
 
@@ -25,8 +26,8 @@ export default function PriceLedger({ledger,variant,changes,onFullList}:{
     <p className="dd-ledger-stamp">{ledger.stamp}</p>
     <table className="dd-ledger-table">
       <tbody>{ledger.lines.map(line=><tr key={line.title} className="dd-ledger-line">
-        <th scope="row">{line.title}{full&&<ul className="dd-ledger-items">{line.items.map((item,i)=><li key={i}><span>{item.name}</span> <span className="dd-ledger-qty">{item.qty} {item.unit}</span>{item.quote&&<> <Tag kinds={[item.quote]}/></>}</li>)}</ul>}</th>
-        <td>{line.quotes.length&&line.amount<.005?<Tag kinds={line.quotes}/>:line.text}</td>
+        <th scope="row">{line.title}{full&&<ul className="dd-ledger-items">{line.items.map((item,i)=><li key={i}><span>{item.name}</span> <span className="dd-ledger-qty">{item.qty} {item.unit}</span>{item.quote?<> <Tag kinds={[item.quote]}/></>:<small className="dd-ledger-qty"> · {item.status==='confirmed'?'Confirmed scope':'Planning allowance'}</small>}</li>)}</ul>}</th>
+        <td>{line.quotes.length&&line.amount<.005?<Tag kinds={line.quotes}/>:<>{line.text}{!full&&lineBasis(line)==='Planning allowance'&&<small className="dd-ledger-qty"> · allowance</small>}</>}</td>
       </tr>)}</tbody>
       <tbody className="dd-ledger-sums">
         {/* With a backyard, the deck and backyard subtotals come before HST. */}
@@ -50,13 +51,7 @@ export default function PriceLedger({ledger,variant,changes,onFullList}:{
   </section>;
 }
 
-/** One polite announcement per gesture: the newest change, once it has settled (drags and the lighting sync included). */
-export function ChangeAnnouncer({record}:{record?:ChangeRecord}){
-  const [text,setText]=useState('');
-  const next=record&&record.kind!=='loaded'?announceChange(record):'';
-  useEffect(()=>{if(!next)return;const timer=setTimeout(()=>setText(next),700);return ()=>clearTimeout(timer);},[next]);
-  return <p className="dd-sr" role="status">{text}</p>;
-}
+export {default as ChangeAnnouncer} from './ChangeAnnouncer';
 
 const FOCUSABLE='a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
 

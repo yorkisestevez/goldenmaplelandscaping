@@ -1,5 +1,8 @@
-import {chamferLabourFactor} from './lib/cornerChamfers';
+import {CLADDING_RATES,FASCIA_FINISH_RATES,STAIR_FRAME_RATES} from './claddingPricing';
+import {FASCIA_RETAIL_RATES} from './supplierRates';
 import {MATERIAL_TIERS} from './types';
+import {DEFAULT_HARDSCAPE_LABOUR} from './hardscapeLabour';
+import {FENCE_HEIGHT_STEP,FENCE_RATES,FENCE_RATE_SOURCE} from './fenceRuntime';
 
 /**
  * Rates the deck estimate uses today that the owner has not confirmed: the list to settle with the owner.
@@ -12,38 +15,48 @@ import {MATERIAL_TIERS} from './types';
  */
 export type RateStatus='conflict'|'estimate'|'unconfirmed'|'owner-decision';
 /** Rates the owner has confirmed as they stand, kept out of the list (and why). */
-export const CONFIRMED_RATES=[{id:'crew-day-rate',on:'2026-09-23',note:'Crew day rate: $3,700/day in every area.'}] as const;
+export const CONFIRMED_RATES=[
+  {id:'crew-day-rate',on:'2026-09-23',note:'Crew day rate: $3,700/day in every area.'},
+  {id:'angled-corner-labour',on:'2026-10-08',note:'Angled front corner labour reuses L-Shape / Multi-corner factors as priced.'},
+  {id:'porch-wrap-labour',on:'2026-10-08',note:'Porch wraps add ×0.15 on the wrap labour factor; no separate builder-quote line.'},
+  {id:'accent-board-labour',on:'2026-10-08',note:'Accent boards default to crew-hours in featureLabour; editable per user.'},
+  {id:'inlay-labour',on:'2026-10-08',note:'Decorative inlay labour reuses breaker-board / pattern factors as priced.'},
+  {id:'medallion-labour',on:'2026-10-08',note:'Medallion inlays default to crew-hours in featureLabour; editable per user.'},
+  {id:'custom-inlay-labour',on:'2026-10-08',note:'Custom inlay fabrication defaults to crew-hours in featureLabour; editable per user.'},
+  {id:'skirting',on:'2026-10-08',note:'Deck skirting priced from SKIRTING_RATES (face, backing, panels, labour).'},
+  {id:'railing-colour',on:'2026-10-08',note:'Manufacturer railing colours offered with supplier-confirmation note; no rate premium in the book.'},
+  {id:'frameless-glass',on:'2026-10-08',note:'Frameless glass supply stays a supplier quote; install labour uses the Glass Panels basis until a glass package rate is set.'},
+  {id:'hd-connectors',on:'2026-10-08',note:'Home Depot Canada framing connector retail benchmarks priced on 2026-10 designs.'},
+  {id:'hd-posts',on:'2026-10-08',note:'Home Depot Canada PT 6×6 support post stock priced on 2026-10 designs.'},
+  {id:'g-tape',on:'2026-10-08',note:'G-Tape 3040BK framing protection priced from Deck Shoppe Canada retail on 2026-10 designs.'},
+  {id:'stair-cladding-finish',on:'2026-10-08',note:`Stair/level cladding finish: labour $${CLADDING_RATES.labourPerSqft}/sq ft, fasteners $${CLADDING_RATES.fastenersPerSqft}/sq ft, delivery $${CLADDING_RATES.delivery} when supply is priced.`},
+  {id:'stair-frame-detail',on:'2026-10-08',note:`Stair picture-frame net premium: mitre $${STAIR_FRAME_RATES.mitreLabourPerLf}/lf, fasteners $${STAIR_FRAME_RATES.fastenersPerLf}/lf, delivery $${STAIR_FRAME_RATES.delivery}; different-collection border boards supplied separately.`},
+  {id:'fascia-finish',on:'2026-10-08',note:`Fascia fasteners $${FASCIA_FINISH_RATES.fastenersPerBoard}/board and delivery $${FASCIA_FINISH_RATES.delivery} when fascia supply is priced.`},
+  {id:'manufacturer-accessories',on:'2026-10-08',note:'Selected manufacturer deck accessories stay supplier quotes for branded product pricing.'},
+  {id:'guillotined-setting',on:'2026-10-21',note:`Guillotined armour stone setting: ${DEFAULT_HARDSCAPE_LABOUR.scopes.guillotinedSetting.tonsPerCrewDay} t per crew-day (industry timing: RSMeans dry-set cut stone on the 3 × 9 h crew day) at the $${DEFAULT_HARDSCAPE_LABOUR.crewDayRate.toLocaleString('en-CA')} hardscape crew day, half crew-day steps, 1 crew-day minimum; editable per user.`},
+  {id:'under-deck-site-quotes',on:'2026-10-08',note:'Under-deck supply can be priced; site discharge, waterproofing and ground/freight confirmations stay builder quotes.'},
+] as const;
 export interface RateNote{id:string;rate:string;value:string;status:RateStatus;where:string;note:string}
 
 const tier=(id:string)=>MATERIAL_TIERS.find(m=>m.id===id);
 const perSqft=(id:string)=>`$${tier(id)?.costPerSqft?.toFixed(2)}/sq ft`;
 
+/** Still open: order-specific retail benches that need supplier confirmation on the configured colour/stock. */
 export function unconfirmedRates():RateNote[]{
-  const one=chamferLabourFactor({leftIn:48,rightIn:0,reduced:false,shrunk:false}),two=chamferLabourFactor({leftIn:48,rightIn:48,reduced:false,shrunk:false});
   return [
     {id:'cedar',rate:'Western Red Cedar decking',value:perSqft('cedar'),status:'estimate',where:'types.ts MATERIAL_TIERS (cedar)',
       note:'A market-rate estimate: cedar is not stocked at Carr. Confirm with a supplier.'},
-    {id:'tt-reserve',rate:'TimberTech PRO Reserve decking',value:`${perSqft('tt_reserve')} (the same as Terrain+)`,status:'unconfirmed',where:'types.ts MATERIAL_TIERS (tt_reserve)',
-      note:'The price book lists Reserve on the Terrain+ price ladder. Confirm the Reserve price with Carr.'},
-    {id:'tt-terrain',rate:'TimberTech Terrain decking',value:perSqft('tt_terrain'),status:'unconfirmed',where:'manufacturerCatalog.ts (tt_terrain)',
-      note:'The legacy price-book entry was labelled Terrain+; the rate is kept pending supplier confirmation.'},
-    {id:'angled-corner-labour',rate:'Angled front corner labour',value:`×${one.toFixed(2)} one corner, ×${two.toFixed(2)} two`,status:'owner-decision',where:'lib/cornerChamfers.ts chamferLabourFactor',
-      note:'Reuses the L-Shape and Multi-corner labour factors. Awaiting the owner\'s sign-off.'},
-    {id:'porch-wrap-labour',rate:'Porch wrap labour premium',value:'Builder quote (labour priced at the two-corner wrap factor)',status:'owner-decision',where:'calculations.ts (porch wrap)',
-      note:'Listed for a builder quote until the owner sets a factor.'},
-    {id:'accent-board-labour',rate:'Accent-colour board labour',value:'Builder quote (the boards themselves are priced at their own collection rate)',status:'owner-decision',where:'calculations.ts (accent-colour boards)',
-      note:'Fitting boards in a second colour has no labour rate in the price book. Listed for a builder quote until the owner sets one.'},
-    {id:'inlay-labour',rate:'Decorative inlay labour',value:'Breaker-board rate (1.5 crew-hours per 10 ft) on each frame\'s fitted edge and each cut-in band\'s length, plus the inside at its pattern\'s labour factor over the deck\'s',status:'owner-decision',where:'lib/inlayGeometry.ts inlayCrewDays',
-      note:'Reuses existing rates, as the owner chose on 2026-09-23. A band of recoloured rows across a straight deck adds none. A dedicated inlay rate would replace it.'},
-    {id:'medallion-labour',rate:'Medallion inlay labour',value:'Builder quote (the boards and solid blocking are priced)',status:'owner-decision',where:'calculations.ts (medallion inlays)',
-      note:'Cutting and fitting a round or compass medallion has no labour rate in the price book. Listed for a builder quote until the owner sets one.'},
-    {id:'skirting',rate:'Deck skirting (face, backing, access panels and labour)',value:'Builder quote (every row listed with its quantity, none priced)',status:'owner-decision',where:'calculations.ts (deck skirting)',
-      note:'The price book has no skirting rates. Listed for a builder quote until the owner sets rates; setting them is a price-book change.'},
-    {id:'fascia-boards',rate:'Fascia boards in a chosen colour',value:'Supplier quote (the exposed rim length is listed; fitting stays in the priced labour)',status:'owner-decision',where:'calculations.ts (deck-part finishes)',
-      note:'The price book has no fascia board rate. Listed for a supplier quote until the owner sets one; setting it is a price-book change.'},
-    {id:'railing-colour',rate:'Manufacturer railing colours',value:'No change to the railing rate; the supplier confirms availability and any colour premium',status:'owner-decision',where:'deckPartFinishes.ts (railing colours)',
-      note:'Eight lines (five TimberTech, three Deckorators) are not confirmed as sold in Canada; the owner chose to offer them with a supplier-confirmation note.'},
-    {id:'frameless-glass',rate:'Frameless glass railing (glass, shoe or spigots, stair handrail)',value:'Supplier quote; installation labour on the Glass Panels basis (20 ft per crew-day and its ×1.40 on the job)',status:'owner-decision',where:'calculations.ts (frameless glass)',
-      note:'The price book and the Carr data have no frameless glass rate. The owner chose on 2026-09-25 to list it for a supplier quote and reuse the Glass Panels labour until a rate is set; setting one is a price-book change.'},
+    {id:'tt-reserve',rate:'TimberTech PRO Reserve decking',value:perSqft('tt_reserve'),status:'estimate',where:'supplierRates.ts DECKING_RATE_SOURCES (tt_reserve)',
+      note:'2026-10-08 DeckMart recheck: RCGV5412AL still $103.54 regular retail. Confirm colour, profile, lengths and delivery on order; this is not a Carr trade quote.'},
+    {id:'tt-terrain',rate:'TimberTech Terrain decking',value:perSqft('tt_terrain'),status:'estimate',where:'supplierRates.ts DECKING_RATE_SOURCES (tt_terrain)',
+      note:'2026-10-08 DeckMart recheck: TCGV5412SM sale $59.25 / compare-at $74.06 — book keeps $74.06 (clearance excluded). Terrain+ remains its own collection. Confirm the configured supply order.'},
+    {id:'fascia-boards',rate:'Fascia boards in a chosen colour',value:`${Object.keys(FASCIA_RETAIL_RATES).length} TimberTech colour SKUs have dated DeckMart retail benchmarks; Deckorators and unmatched colours need a supplier quote`,status:'estimate',where:'supplierRates.ts FASCIA_RETAIL_RATES',
+      note:'Owner 2026-10-08: DeckMart fascia retail benchmarks. Fitting in labour; fasteners and delivery priced when supply is known. Harvest Kona, Vintage Cypress and Deckorators fascia still need a quote.'},
+    {id:'fence-runs',rate:'Fences, installed per lf at 6 ft',value:`pressure-treated $${FENCE_RATES.pressureTreated}, cedar $${FENCE_RATES.cedar}, horizontal cedar $${FENCE_RATES.horizontalCedar}, vinyl $${FENCE_RATES.vinyl}, aluminum $${FENCE_RATES.aluminum}, chain link $${FENCE_RATES.chainLink}`,status:'unconfirmed',where:'fenceRuntime.ts FENCE_RATES',
+      note:`Owner 2026-11-03: standard rates until the owner sets them (editable per user). ${FENCE_RATE_SOURCE}. Horizontal cedar uses cedar's row.`},
+    {id:'fence-gates',rate:'Fence gates, installed',value:`single (4 ft) $${FENCE_RATES.singleGate}, double (10 ft) $${FENCE_RATES.doubleGate}`,status:'unconfirmed',where:'fenceRuntime.ts FENCE_RATES',
+      note:`Owner 2026-11-03: standard rates until the owner sets them (editable per user). ${FENCE_RATE_SOURCE}.`},
+    {id:'fence-height-step',rate:'Fences under 6 ft',value:`${FENCE_HEIGHT_STEP*100}% less per foot`,status:'unconfirmed',where:'fenceRuntime.ts FENCE_HEIGHT_STEP',
+      note:'The guide gives +8–15% per foot above the usual height; the midpoint is applied per foot under 6 ft.'},
   ];
 }

@@ -17,6 +17,9 @@
  *   attestedBy    who confirmed it is a Golden Maple job photographed by the owner
  *   attestedOn    ISO date of that confirmation, or null (=> NOT emitted)
  *   cardPosition  sharp `position` for the 4:3 card crop ('attention' | 'south' | 'centre' ...)
+ *   stage         optional construction stage for case-study phase photos:
+ *                 before | excavation | base | bedding | laying | finished
+ *                 (checked against src/data/projects.ts caseStudy.phasePhotos)
  *   version       bump to re-crop; never overwrite an existing versioned file
  *                 (netlify.toml serves /images/* immutable for a year)
  */
@@ -39,7 +42,7 @@ const owned = (id, project, master, extra = {}) => ({
 });
 
 export const SOURCES = [
-  // Barrie bungalow — interlocking patio behind a brick bungalow
+  // Barrie gazebo patio — slug kept for URL stability; the house is not a bungalow (owner, 2026-10-12)
   owned('barrie-bungalow-patio-1', 'barrie-bungalow-patio', `${S26}/IMG_3743.jpg`),
   owned('barrie-bungalow-patio-2', 'barrie-bungalow-patio', `${S26}/Barrie1.jpeg`),
 

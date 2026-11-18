@@ -1,34 +1,51 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
 
+/* The display webfont loads after first input or idle, so a local serif paints
+   first. Scale that fallback to Fraunces' advance width (measured "What will
+   yours cost?" at 48px: Fraunces 463.6 / Georgia 452.6) and lock its em box
+   to Fraunces' font bounding box, so headings do not re-wrap or jump when the
+   webfont arrives. */
+@font-face {
+  font-family: "Fraunces Fallback";
+  src: local("Georgia"), local("Times New Roman"), local("Liberation Serif"), local("Nimbus Roman"), local("DejaVu Serif");
+  font-weight: 300 700;
+  font-style: oblique 0deg 20deg;
+  font-display: optional;
+  size-adjust: 102.4%;
+  ascent-override: 95.6%;
+  descent-override: 24.4%;
+  line-gap-override: 0%;
+}
+
 @theme {
-  /* Ivory, charcoal and bronze. Existing token names remain compatible with
-     every route; green-named tokens are warm neutrals in this visual system. */
-  --color-brand-gold: #C6A47D;
-  --color-brand-gold-light: #DEC5A8;
-  --color-brand-gold-dark: #78563E;
-  --color-brand-burgundy: #272522;
-  --color-brand-green: #BBAA93;
-  --color-brand-green-light: #D8C5AD;
-  --color-brand-green-dark: #69513E;
-  --color-brand-nearblack: #F7F5F0;
-  --color-brand-black: #23221F;
-  --color-brand-surface: #FFFFFF;
-  --color-brand-midsurface: #EFEAE2;
-  --color-brand-bonewhite: #292824;
-  --color-brand-muted: #68645C;
-  --color-brand-dim: #D8D2C8;
-  --color-brand-cream: #EAE4DA;
-  --color-brand-cream-light: #FAF8F4;
-  --color-brand-ink: #292824;
-  --color-brand-ink-soft: #68645C;
-  --color-brand-bone: #292824;
-  --color-brand-porcelain: #F7F5F0;
-  --color-brand-porcelain-soft: #C9C3B9;
+  /* Evergreen, limestone and copper. Token names are legacy and kept so every
+     route stays compatible: nearblack is the limestone page, burgundy and black
+     are the deep greens, gold is copper, green is sage. */
+  --color-brand-gold: #D9966A;
+  --color-brand-gold-light: #EBC2A3;
+  --color-brand-gold-dark: #96491F;
+  --color-brand-burgundy: #1D3A2C;
+  --color-brand-green: #A9BFA8;
+  --color-brand-green-light: #CFDCCB;
+  --color-brand-green-dark: #2C5340;
+  --color-brand-nearblack: #F2EEE5;
+  --color-brand-black: #14261C;
+  --color-brand-surface: #FBF9F4;
+  --color-brand-midsurface: #EAE4D6;
+  --color-brand-bonewhite: #18231C;
+  --color-brand-muted: #5C6A60;
+  --color-brand-dim: #DAD3C4;
+  --color-brand-cream: #E6DFCF;
+  --color-brand-cream-light: #F8F5EE;
+  --color-brand-ink: #18231C;
+  --color-brand-ink-soft: #5C6A60;
+  --color-brand-bone: #18231C;
+  --color-brand-porcelain: #F6F2E9;
+  --color-brand-porcelain-soft: #B9C6BA;
   --color-brand-error: #B3261E;
   --color-brand-success: #2F6B47;
-  --font-display: "Cormorant Garamond", serif;
-  --font-sans: "Inter", sans-serif;
+  --font-display: Fraunces, "Fraunces Fallback", Georgia, "Iowan Old Style", serif;
+  --font-sans: "DM Sans", "Segoe UI", system-ui, sans-serif;
 }
 
 html, body {
@@ -63,7 +80,7 @@ html, body {
   border-radius: 9999px;
   background: var(--color-brand-gold);
   border: 3px solid var(--color-brand-surface);
-  box-shadow: 0 2px 10px rgba(212, 175, 99, 0.45);
+  box-shadow: 0 2px 10px rgba(217, 150, 106, 0.45);
   cursor: grab;
   transition: transform 0.15s ease;
 }
@@ -74,7 +91,7 @@ html, body {
   border-radius: 9999px;
   background: var(--color-brand-gold);
   border: 3px solid var(--color-brand-surface);
-  box-shadow: 0 2px 10px rgba(212, 175, 99, 0.45);
+  box-shadow: 0 2px 10px rgba(217, 150, 106, 0.45);
   cursor: grab;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -84,16 +101,16 @@ html, body {
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center bg-brand-black text-brand-porcelain font-sans text-[11px] font-medium uppercase tracking-[0.18em] py-4 px-8 rounded-[2px] transition-all duration-300 hover:bg-brand-gold-dark cursor-pointer;
+    @apply inline-flex items-center justify-center bg-brand-black text-brand-porcelain font-sans text-sm font-semibold py-4 px-8 rounded-full transition-all duration-300 hover:bg-brand-gold-dark cursor-pointer;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center bg-transparent text-brand-gold border border-brand-gold font-sans text-[10px] md:text-[11px] font-normal uppercase tracking-[0.25em] py-4 px-8 rounded-[2px] transition-all duration-300 hover:bg-brand-gold/5 cursor-pointer;
+    @apply inline-flex items-center justify-center bg-transparent text-brand-gold border border-brand-gold font-sans text-sm font-medium py-4 px-8 rounded-full transition-all duration-300 hover:bg-brand-gold/5 cursor-pointer;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center bg-transparent text-brand-bonewhite border border-brand-dim font-sans text-[10px] md:text-[11px] font-normal uppercase tracking-[0.25em] py-4 px-8 rounded-[2px] transition-all duration-300 hover:bg-brand-bonewhite/5 cursor-pointer;
+    @apply inline-flex items-center justify-center bg-transparent text-brand-bonewhite border border-brand-dim font-sans text-sm font-medium py-4 px-8 rounded-full transition-all duration-300 hover:bg-brand-bonewhite/5 cursor-pointer;
   }
   .btn-accent {
-    @apply inline-flex items-center justify-center bg-brand-green text-brand-black font-sans text-[10px] md:text-[11px] font-medium uppercase tracking-[0.25em] py-4 px-8 rounded-[2px] transition-all duration-300 hover:bg-brand-green-light cursor-pointer;
+    @apply inline-flex items-center justify-center bg-brand-green text-brand-black font-sans text-sm font-semibold py-4 px-8 rounded-full transition-all duration-300 hover:bg-brand-green-light cursor-pointer;
   }
   .section-padding {
     @apply py-16 md:py-40;
@@ -172,9 +189,9 @@ html, body {
 
 /* "Live" pulse — used by the chat assistant's online indicator + FAB */
 @keyframes gm-live-pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(166, 135, 101, 0.55); }
-  70%  { box-shadow: 0 0 0 10px rgba(166, 135, 101, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(166, 135, 101, 0); }
+  0%   { box-shadow: 0 0 0 0 rgba(217, 150, 106, 0.55); }
+  70%  { box-shadow: 0 0 0 10px rgba(217, 150, 106, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(217, 150, 106, 0); }
 }
 .gm-live-dot {
   animation: gm-live-pulse 2.2s ease-out infinite;
@@ -205,13 +222,14 @@ html, body {
   .gm-blob, .gm-float { animation: none; }
 }
 
-/* The opening is editorial: readable type on ivory, unobscured photography. */
+/* The opening is editorial: readable type on limestone, unobscured photography. */
 .home-hero { padding: 6.5rem 0 3rem; }
 .home-hero-grid { display: grid; gap: 3rem; align-items: center; }
 .home-hero h1 { font-size: 3.375rem; line-height: 0.98; letter-spacing: -0.045em; }
 /* The framed picture. .home-hero-frame is the box you see at rest; the window and
    stack inside it are what HeroDepth.tsx opens out to full bleed on desktop. */
-.home-hero-frame { position: relative; width: 100%; height: 390px; }
+/* Arched top: the frame clips the picture, so the arch needs no extra markup. */
+.home-hero-frame { position: relative; width: 100%; height: 390px; overflow: hidden; border-radius: 50% 50% 20px 20px / 40% 40% 20px 20px; }
 .home-hero-window { position: absolute; inset: 0; overflow: hidden; }
 .home-hero-stack { position: absolute; inset: 0; }
 .home-hero-stack picture { display: contents; }
@@ -242,32 +260,63 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--color-brand-gol
   .home-hero-frame { height: 620px; }
 }
 
-/* Pinned depth push-in. This query is mirrored as STAGE_QUERY in HeroDepth.tsx —
-   change both. All LAYOUT lives here so the prerendered HTML is already right
-   and hydration shifts nothing; the component only drives transforms.
-   At rest, pre-measurement: the stack is viewport-sized and positioned so the
-   picture's focal point (55% / 60%, the dining table) sits at the frame centre. */
-@media (min-width: 1024px) and (min-height: 640px) and (prefers-reduced-motion: no-preference) {
-  .home-hero-stage { padding: 0; height: 260vh; }
-  .home-hero-pin { position: sticky; top: 0; height: 100vh; overflow: clip; display: flex; align-items: center; padding-top: 5.5rem; }
-  .home-hero-copy { position: relative; z-index: 1; }
-  .home-hero-frame { height: min(620px, 100vh - 17rem); }
-  .home-hero-window { z-index: 5; will-change: clip-path; }
-  .home-hero-stack { inset: auto; left: calc(50% - 55vw); top: calc(50% - 60vh); width: 100vw; height: 100vh; will-change: transform; }
-  .home-hero-flat { display: none; }
-  .home-hero-depth { display: block; will-change: transform; transition: opacity .45s ease; }
-  .home-hero-stack[data-ready="false"] .home-hero-depth { opacity: 0; }
-  /* The closing line sits on a real background-color, faded out at its top edge
-     with a mask, rather than on a gradient laid over the picture. Measured
-     against the actual pixels, gold text over a gradient scrim reached only
-     2.2:1; and a contrast auditor can read a background-color but not a gradient,
-     so this also keeps the site-optimizer's daily audit honest. */
-  .home-hero-closing { display: flex; align-items: flex-end; position: absolute; left: 0; right: 0; bottom: 0; height: 74vh; padding-bottom: 9vh; z-index: 6; opacity: 0; background-color: rgb(15 24 19 / .82); -webkit-mask-image: linear-gradient(to top, #000 0%, #000 56%, transparent 100%); mask-image: linear-gradient(to top, #000 0%, #000 56%, transparent 100%); }
-  .home-hero-closing[inert] { pointer-events: none; }
-  /* Ink button on an ink panel disappears; on the dark panel the fill goes gold. */
-  .home-hero-closing .btn-primary { background-color: var(--color-brand-gold); color: var(--color-brand-black); }
-  .home-hero-closing .btn-primary:hover { background-color: var(--color-brand-porcelain); }
-  .home-hero-closing-line { font-size: clamp(3.25rem, 6.2vw, 6.5rem); line-height: 1; letter-spacing: -.035em; }
+@media (max-width: 639px) { .home-hero .home-project-link { display: none; } }
+
+/* Tailwind preflight zeros heading margins. :where loses to any utility, so an
+   explicit mb-* still wins. Headings with no utility no longer collide with the next element. */
+:where(h1, h2, h3, h4, h5, h6) {
+  margin-bottom: 0.65rem;
 }
 
-@media (max-width: 639px) { .home-hero .home-project-link { display: none; } }
+.home-hero,
+.home-hero-grid,
+.home-hero-frame {
+  max-width: 100%;
+}
+.gm-consent {
+  position: fixed;
+  z-index: 70;
+  left: 0;
+  right: 0;
+  bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.4rem 0.75rem;
+  background: #fff;
+  color: #18231C;
+  border-top: 1px solid #DAD3C4;
+  box-shadow: 0 -4px 16px rgb(20 38 28 / 8%);
+}
+.gm-consent p { margin: 0; font-size: 0.75rem; line-height: 1.3; flex: 1 1 auto; }
+.gm-consent a { text-decoration: underline; }
+.gm-consent-actions { display: flex; flex: 0 0 auto; gap: 0.4rem; }
+.gm-consent button {
+  min-height: 2.75rem;
+  min-width: 5.5rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0.55rem 0.8rem;
+  border: 2px solid #18231C;
+  background: #fff;
+  color: #18231C;
+}
+.gm-consent-accept { background: #18231C; color: #fff; }
+.gm-consent button:focus-visible { outline: 2px solid #96491F; outline-offset: 2px; }
+html.gm-consent-open { scroll-padding-bottom: calc(12rem + env(safe-area-inset-bottom, 0px)); }
+html.gm-consent-open body { padding-bottom: calc(12rem + env(safe-area-inset-bottom, 0px)); }
+@media (min-width: 1280px) {
+  .gm-consent {
+    left: auto;
+    right: 1rem;
+    bottom: 1rem;
+    max-width: 36rem;
+    border: 1px solid #DAD3C4;
+    border-radius: 2px;
+  }
+  html.gm-consent-open { scroll-padding-bottom: 5.5rem; }
+  html.gm-consent-open body { padding-bottom: 5.5rem; }
+}

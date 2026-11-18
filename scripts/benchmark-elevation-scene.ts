@@ -1,0 +1,16 @@
+import {readFileSync} from 'node:fs';
+import {performance} from 'node:perf_hooks';
+import {ensureLiveDesignExtensions} from '../src/features/deckcraft/designExtensions';
+import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
+import {buildYardModel} from '../src/features/deckcraft/yardModel';
+import {calculateEstimate} from '../src/features/deckcraft/calculations';
+import type {DeckData} from '../src/features/deckcraft/types';
+const d=JSON.parse(readFileSync('../../outputs/elevation-phase/terraced-fixed-slopes.json','utf8')) as DeckData;
+const time=async<T>(name:string,fn:()=>T|Promise<T>)=>{console.log(`Starting ${name}`);const t=performance.now(),v=await fn();console.log(`${name}: ${(performance.now()-t).toFixed(1)}ms`);return v;};
+await time('extensions',()=>ensureLiveDesignExtensions(d));
+const deck=await time('deck',()=>buildDeckTakeoff(d));
+const yard=await time('yard',()=>buildYardModel(d,deck));
+console.log(yard.features.map(f=>({id:f.config.id,boxes:f.boxes.length,warnings:f.warnings.length,excluded:f.excluded})),{triangles:yard.siteSurface?.proposedTriangles.length,excavationCells:yard.sharedExcavationRegions.length});
+console.log(Object.fromEntries([...new Set(yard.boxes.map(b=>b.role))].map(role=>[role,yard.boxes.filter(b=>b.role===role).length])));
+const estimate=await time('estimate',()=>calculateEstimate(d));
+console.log({total:estimate.total});

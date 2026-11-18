@@ -1,0 +1,321 @@
+import {useEffect,useMemo,useRef,useState} from 'react';
+import {createPortal} from 'react-dom';
+import type {DeckData} from '../types';
+import type {EstimateResult} from '../calculations';
+import {dollars} from '../designFacts';
+import {
+  DEFAULT_FEATURE_LABOUR,
+  FEATURE_LABOUR_LABELS,
+  FEATURE_LABOUR_SCOPES,
+  mergeFeatureLabour,
+  validateFeatureLabour,
+  type FeatureLabourScope,
+  type FeatureLabourScopeSettings,
+  type FeatureLabourSettings,
+} from '../featureLabour';
+import {readFeatureLabourDefaults,saveFeatureLabourDefaults} from '../featureLabourStorage';
+import {DEFAULT_HARDSCAPE_LABOUR,validateHardscapeLabour,type HardscapeLabourSettings,type HardscapeSetting} from '../hardscapeLabour';
+import {readHardscapeLabourDefaults,saveHardscapeLabourDefaults} from '../hardscapeLabourStorage';
+import type {FenceRateId} from '../fences';
+import {FENCE_HEIGHT_STEP,FENCE_RATES,FENCE_RATE_SOURCE} from '../fenceRuntime';
+import {DEFAULT_CREW_MEMBERS,DEFAULT_PERSON_HOUR_RATE,quoteCostFromCrewHours} from './quoteLabourHours';
+import {OWNER_COST_LIMITS,bookInstallationLabour,parseOwnerMarkup,parseOwnerMoney} from './ownerCostLimits';
+import './ownerCostEditor.css';
+
+const FENCE_RATE_LABELS:readonly (readonly [FenceRateId,string])[]=[['pressureTreated','Pressure-treated privacy per lf'],['cedar','Cedar privacy per lf'],['horizontalCedar','Horizontal cedar per lf'],['vinyl','Vinyl privacy per lf'],['aluminum','Aluminum picket per lf'],['chainLink','Chain link per lf'],['singleGate','Single gate (4 ft)'],['doubleGate','Double gate (10 ft)']];
+
+type Props={
+  data:DeckData;
+  estimate:EstimateResult;
+  onUpdate:(patch:Partial<DeckData>)=>void;
+  onClose?:()=>void;
+  /** Inline block in Proposal & files, or a modal from the price bar. */
+  variant?:'inline'|'dialog';
+};
+
+const MATERIAL_SECTIONS=/^(Foundation|Structural Framing|Decking|Hardware|Railing|Stairs|Add-ons|Accent|Deck-part|Skirting|Under-deck|Stair and level cladding|Picture-frame|Custom board)/i;
+const LABOUR_ITEM='Installation Labour';
+
+/** Private owner editor for material markup, installation labour, and priced line overrides. */
+export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant='dialog'}:Props){
+  const [error,setError]=useState('');
+  const [status,setStatus]=useState('');
+  const [markupDraft,setMarkupDraft]=useState(String(data.materialMarkup??35));
+  const [labourDraft,setLabourDraft]=useState(data.customLaborCost===undefined?'':String(data.customLaborCost));
+  const [crewMembers,setCrewMembers]=useState(String(DEFAULT_CREW_MEMBERS));
+  const [hours,setHours]=useState('');
+  const [personHourRate,setPersonHourRate]=useState(String(DEFAULT_PERSON_HOUR_RATE));
+  const [lineDrafts,setLineDrafts]=useState<Record<string,string>>({});
+  const [feature,setFeature]=useState<FeatureLabourSettings>(()=>validateFeatureLabour(data.featureLabour));
+  const [hardscape,setHardscape]=useState<HardscapeLabourSettings>(()=>validateHardscapeLabour(data.hardscapeLabour));
+  const closeRef=useRef(onClose);closeRef.current=onClose;
+
+  useEffect(()=>setMarkupDraft(String(data.materialMarkup??35)),[data.materialMarkup]);
+  useEffect(()=>setLabourDraft(data.customLaborCost===undefined?'':String(data.customLaborCost)),[data.customLaborCost]);
+  useEffect(()=>setFeature(validateFeatureLabour(data.featureLabour)),[data.featureLabour]);
+  useEffect(()=>setHardscape(validateHardscapeLabour(data.hardscapeLabour)),[data.hardscapeLabour]);
+  useEffect(()=>{
+    const next:Record<string,string>={};
+    for(const [name,row] of Object.entries(data.customOverrides??{}))if(row.cost!==undefined)next[name]=String(row.cost);
+    setLineDrafts(next);
+  },[data.customOverrides]);
+
+  const labourOverridden=data.customLaborCost!==undefined;
+  const book=labourOverridden?0:bookInstallationLabour(estimate);
+  const overrides=data.customOverrides??{};
+  const commitFeature=(next:FeatureLabourSettings)=>{
+    try{
+      const clean=validateFeatureLabour(next);
+      setFeature(clean);
+      onUpdate({featureLabour:clean});
+      setError('');setStatus('Inlay & special-feature labour updated for this job.');
+    }catch(e){setFeature(validateFeatureLabour(data.featureLabour));setError(e instanceof Error?e.message:'Feature labour settings could not be saved.');}
+  };
+  const patchScope=(id:FeatureLabourScope,patch:Partial<FeatureLabourScopeSettings>)=>{
+    commitFeature(mergeFeatureLabour(feature,{scopes:{[id]:{...feature.scopes[id],...patch}}}));
+  };
+  const commitHardscape=(next:HardscapeLabourSettings,message='Guillotined armour stone setting updated for this job.')=>{
+    try{
+      const clean=validateHardscapeLabour(next);
+      setHardscape(clean);onUpdate({hardscapeLabour:clean});setError('');setStatus(message);
+    }catch(e){setHardscape(validateHardscapeLabour(data.hardscapeLabour));setError(e instanceof Error?e.message:'Setting labour could not be saved.');}
+  };
+  const setting=hardscape.scopes.guillotinedSetting;
+  const draftSetting=(patch:Partial<HardscapeSetting>)=>setHardscape(h=>({...h,scopes:{guillotinedSetting:{...h.scopes.guillotinedSetting,...patch}}}));
+  const patchSetting=(patch:Partial<HardscapeSetting>)=>commitHardscape({...hardscape,scopes:{guillotinedSetting:{...setting,...patch}}});
+  const settingRow=estimate.sections.find(s=>s.title==='Yard · Guillotined armour stone setting')?.items[0];
+
+  const materialLines=useMemo(()=>estimate.sections
+    .filter(s=>MATERIAL_SECTIONS.test(s.title))
+    .flatMap(s=>s.items.filter(i=>i.cost!==null&&Number(i.qty)>0&&i.name!==LABOUR_ITEM).map(i=>({section:s.title,name:i.name,cost:i.cost as number,qty:i.qty,unit:i.unit}))),
+  [estimate]);
+
+  const commitMarkup=()=>{
+    try{
+      if(!markupDraft.trim()){onUpdate({materialMarkup:undefined});setMarkupDraft('35');setError('');return;}
+      const n=parseOwnerMarkup(markupDraft);onUpdate({materialMarkup:n});setMarkupDraft(String(n));setError('');
+    }catch(e){setMarkupDraft(String(data.materialMarkup??35));setError(e instanceof Error?e.message:'Material markup could not be saved.');}
+  };
+
+  const commitLabour=()=>{
+    try{
+      if(!labourDraft.trim()){onUpdate({customLaborCost:undefined});setError('');return;}
+      const n=parseOwnerMoney(labourDraft,'Labour cost');onUpdate({customLaborCost:n});setLabourDraft(String(n));setError('');
+    }catch(e){setLabourDraft(data.customLaborCost===undefined?'':String(data.customLaborCost));setError(e instanceof Error?e.message:'Labour cost could not be saved.');}
+  };
+
+  const commitLine=(name:string,raw:string)=>{
+    try{
+      const next={...overrides};
+      if(!raw.trim()){
+        const cur=next[name];
+        if(cur?.qty!==undefined)next[name]={qty:cur.qty};else delete next[name];
+      }else{
+        next[name]={...next[name],cost:parseOwnerMoney(raw,name)};
+      }
+      if(Object.keys(next).length>OWNER_COST_LIMITS.overrideMax)throw Error(`At most ${OWNER_COST_LIMITS.overrideMax} line overrides.`);
+      onUpdate({customOverrides:Object.keys(next).length?next:undefined});setError('');
+    }catch(e){
+      setLineDrafts(d=>{const copy={...d};const cur=overrides[name]?.cost;if(cur===undefined)delete copy[name];else copy[name]=String(cur);return copy;});
+      setError(e instanceof Error?e.message:'That line cost could not be saved.');
+    }
+  };
+
+  const applyCrewLabour=()=>{
+    try{
+      const costs=quoteCostFromCrewHours({crewMembers,hours,personHourRate,materials:0});
+      onUpdate({customLaborCost:costs.installationCost});setLabourDraft(String(costs.installationCost));setError('');
+    }catch(e){setError(e instanceof Error?e.message:'Crew-hours labour could not be applied.');}
+  };
+
+  const clearAll=()=>{
+    onUpdate({materialMarkup:undefined,customLaborCost:undefined,customOverrides:undefined,featureLabour:undefined,hardscapeLabour:undefined});
+    setMarkupDraft('35');setLabourDraft('');setLineDrafts({});setFeature(validateFeatureLabour(undefined));setHardscape(validateHardscapeLabour(undefined));setError('');setStatus('Owner costs reset to book defaults.');
+  };
+  const saveDeviceDefaults=async()=>{
+    try{await saveFeatureLabourDefaults(feature);setStatus('Saved as your device defaults for new jobs.');setError('');}
+    catch(e){setError(e instanceof Error?e.message:'Device defaults could not be saved.');}
+  };
+  const loadDeviceDefaults=async()=>{
+    try{const next=await readFeatureLabourDefaults();commitFeature(next);setStatus('Loaded your device defaults onto this job.');}
+    catch(e){setError(e instanceof Error?e.message:'Device defaults could not be loaded.');}
+  };
+  // Setting labour and fence rates share one stored settings object; each section saves and loads only its own part.
+  const withFenceRates=(base:HardscapeLabourSettings,rates:HardscapeLabourSettings['fenceRates']):HardscapeLabourSettings=>{const {fenceRates:_,...rest}=base;return rates?{...rest,fenceRates:rates}:rest;};
+  const saveSettingDefaults=async()=>{
+    try{await saveHardscapeLabourDefaults(withFenceRates(hardscape,(await readHardscapeLabourDefaults()).fenceRates));setStatus('Setting labour saved as your device defaults for new jobs.');setError('');}
+    catch(e){setError(e instanceof Error?e.message:'Device defaults could not be saved.');}
+  };
+  const loadSettingDefaults=async()=>{
+    try{commitHardscape(withFenceRates(await readHardscapeLabourDefaults(),hardscape.fenceRates),'Loaded your setting labour defaults onto this job.');}
+    catch(e){setError(e instanceof Error?e.message:'Device defaults could not be loaded.');}
+  };
+  const saveFenceDefaults=async()=>{
+    try{await saveHardscapeLabourDefaults(withFenceRates(await readHardscapeLabourDefaults(),hardscape.fenceRates));setStatus('Fence rates saved as your device defaults for new jobs.');setError('');}
+    catch(e){setError(e instanceof Error?e.message:'Device defaults could not be saved.');}
+  };
+  const loadFenceDefaults=async()=>{
+    try{commitHardscape(withFenceRates(hardscape,(await readHardscapeLabourDefaults()).fenceRates),'Loaded your fence rates onto this job.');}
+    catch(e){setError(e instanceof Error?e.message:'Device defaults could not be loaded.');}
+  };
+  const fenceRate=(id:FenceRateId)=>hardscape.fenceRates?.[id]??FENCE_RATES[id];
+  // A field left empty is refused (it would price fences at $0), and leaving a field unchanged saves nothing.
+  const blurFenceRate=(id:FenceRateId,text:string)=>{
+    const value=Number(text);
+    if(!text.trim()||!Number.isFinite(value)){setError('Enter a fence rate, or use Reset fence rates for the standard ones.');return false;}
+    if(value!==fenceRate(id))commitHardscape(withFenceRates(hardscape,{...hardscape.fenceRates,[id]:value}),'Fence rate updated for this job.');
+    return true;
+  };
+
+  const body=<div className="dd-owner-costs" data-variant={variant}>
+    <header className="dd-owner-costs-header">
+      <div>
+        <span className="dd-owner-costs-eyebrow">Golden Maple · Owner costs</span>
+        <h3 id="dd-owner-costs-title">Edit your material &amp; labour costs</h3>
+        <p>Private to this job. Changes the planning total; not written into public share links or design JSON.</p>
+      </div>
+      {onClose&&<button type="button" className="dd-owner-costs-close" onClick={onClose} aria-label="Close owner cost editor">×</button>}
+    </header>
+
+    <section aria-labelledby="dd-owner-materials-title">
+      <h4 id="dd-owner-materials-title">Materials</h4>
+      <label className="dd-owner-costs-field">Material markup
+        <input aria-label="Material markup percent" type="number" min={OWNER_COST_LIMITS.markupMin} max={OWNER_COST_LIMITS.markupMax} step="0.1" value={markupDraft} onChange={e=>setMarkupDraft(e.target.value)} onBlur={commitMarkup} onKeyDown={e=>{if(e.key==='Enter')(e.target as HTMLInputElement).blur();}}/>
+        <small>Percent on supply lines (book default 35%). Clear and leave the field to restore the default.</small>
+      </label>
+      <details className="dd-owner-costs-lines">
+        <summary>Override priced material lines ({materialLines.length})</summary>
+        <p>Type your CAD total for a line, then leave the field. Clear a field to restore the book amount. Quantities stay as modeled.</p>
+        <ul>
+          {materialLines.map(line=>{
+            const own=overrides[line.name]?.cost!==undefined;
+            return <li key={`${line.section}:${line.name}`}>
+              <label>
+                <span>{line.name}<small>{line.section} · {line.qty} {line.unit} · {own?`your override ${dollars(line.cost)}`:`priced ${dollars(line.cost)}`}</small></span>
+                <input aria-label={`${line.name} cost override`} type="number" min={OWNER_COST_LIMITS.amountMin} max={OWNER_COST_LIMITS.amountMax} step=".01" placeholder={own?undefined:String(line.cost)} value={lineDrafts[line.name]??''} onChange={e=>setLineDrafts(d=>({...d,[line.name]:e.target.value}))} onBlur={e=>commitLine(line.name,e.target.value)} onKeyDown={e=>{if(e.key==='Enter')(e.target as HTMLInputElement).blur();}}/>
+              </label>
+            </li>;
+          })}
+        </ul>
+      </details>
+    </section>
+
+    <section aria-labelledby="dd-owner-labour-title">
+      <h4 id="dd-owner-labour-title">Labour</h4>
+      <p role="status">{labourOverridden
+        ?<>Your labour override is on. Modeled crew planning stays at <strong>{estimate.manHours.toFixed(1)} person-hours</strong>; clear the field to restore book labour.</>
+        :<>Book installation labour: <strong>{dollars(book)}</strong> ({estimate.manHours.toFixed(1)} planned person-hours). Your override replaces that total only.</>}</p>
+      <label className="dd-owner-costs-field">Your installation labour · CAD
+        <input aria-label="Your installation labour cost" type="number" min={OWNER_COST_LIMITS.amountMin} max={OWNER_COST_LIMITS.amountMax} step=".01" placeholder={labourOverridden?undefined:String(Math.round(book*100)/100)} value={labourDraft} onChange={e=>setLabourDraft(e.target.value)} onBlur={commitLabour} onKeyDown={e=>{if(e.key==='Enter')(e.target as HTMLInputElement).blur();}}/>
+        <small>{labourOverridden?'Override on.':'Using the book labour total.'}</small>
+      </label>
+      <div className="dd-owner-costs-actions">
+        <button type="button" className="dd-secondary" onClick={()=>{setLabourDraft('');onUpdate({customLaborCost:undefined});setError('');}}>Use book labour</button>
+      </div>
+      <details className="dd-owner-costs-crew">
+        <summary>Fill labour from crew × hours</summary>
+        <p>Man-hours = crew members × hours × person-hour rate (default CAD {DEFAULT_PERSON_HOUR_RATE.toFixed(2)} from $3,700 ÷ 27).</p>
+        <div className="dd-owner-costs-grid">
+          <label>Crew members<input aria-label="Owner labour crew members" type="number" min="1" max="12" step="1" value={crewMembers} onChange={e=>setCrewMembers(e.target.value)}/></label>
+          <label>Hours<input aria-label="Owner labour hours" type="number" min=".25" max="999" step=".25" value={hours} onChange={e=>setHours(e.target.value)}/></label>
+          <label>Person-hour rate · CAD<input aria-label="Owner labour person-hour rate" type="number" min="0" max={OWNER_COST_LIMITS.amountMax} step=".01" value={personHourRate} onChange={e=>setPersonHourRate(e.target.value)}/></label>
+        </div>
+        <button type="button" className="dd-secondary" onClick={applyCrewLabour}>Apply as installation labour</button>
+      </details>
+    </section>
+
+    <section aria-labelledby="dd-owner-features-title">
+      <h4 id="dd-owner-features-title">Inlays &amp; special features</h4>
+      <p>Accent boards, medallions and custom inlays default to man-hours plus any extra materials. Board supply stays on the material lines. Edit your rates here per job, or save them as this device’s defaults.</p>
+      <label className="dd-owner-costs-field">Person-hour rate · CAD
+        <input aria-label="Feature labour person-hour rate" type="number" min="0.01" max={OWNER_COST_LIMITS.amountMax} step=".01" value={feature.personHourRate} onChange={e=>setFeature(f=>({...f,personHourRate:Number(e.target.value)}))} onBlur={e=>commitFeature({...feature,personHourRate:Number(e.target.value)})} onKeyDown={e=>{if(e.key==='Enter')(e.target as HTMLInputElement).blur();}}/>
+        <small>Default CAD {DEFAULT_FEATURE_LABOUR.personHourRate.toFixed(2)} from $3,700 ÷ 27.</small>
+      </label>
+      {FEATURE_LABOUR_SCOPES.map(id=>{
+        const s=feature.scopes[id];
+        return <details key={id} className="dd-owner-costs-crew" open={s.mode==='crew-hours'}>
+          <summary>{FEATURE_LABOUR_LABELS[id]}</summary>
+          <label className="dd-owner-costs-field">Pricing
+            <select aria-label={`${FEATURE_LABOUR_LABELS[id]} pricing`} value={s.mode} onChange={e=>patchScope(id,{mode:e.target.value as 'crew-hours'|'quote'})}>
+              <option value="crew-hours">Man-hours + materials (default)</option>
+              <option value="quote">Builder quote (enter in Quote Review)</option>
+            </select>
+          </label>
+          {s.mode==='crew-hours'&&<>
+            <div className="dd-owner-costs-grid">
+              <label>Crew members<input aria-label={`${FEATURE_LABOUR_LABELS[id]} crew`} type="number" min="1" max="12" step="1" value={s.crewMembers} onChange={e=>setFeature(f=>({...f,scopes:{...f.scopes,[id]:{...f.scopes[id],crewMembers:Number(e.target.value)}}}))} onBlur={e=>patchScope(id,{crewMembers:Number(e.target.value)})}/></label>
+              <label>Hours{s.hoursPerUnit?' / unit':''}<input aria-label={`${FEATURE_LABOUR_LABELS[id]} hours`} type="number" min=".25" max="999" step=".25" value={s.hours} onChange={e=>setFeature(f=>({...f,scopes:{...f.scopes,[id]:{...f.scopes[id],hours:Number(e.target.value)}}}))} onBlur={e=>patchScope(id,{hours:Number(e.target.value)})}/></label>
+              <label>Extra materials · CAD<input aria-label={`${FEATURE_LABOUR_LABELS[id]} materials`} type="number" min="0" max={OWNER_COST_LIMITS.amountMax} step=".01" value={s.materialsCad} onChange={e=>setFeature(f=>({...f,scopes:{...f.scopes,[id]:{...f.scopes[id],materialsCad:Number(e.target.value)}}}))} onBlur={e=>patchScope(id,{materialsCad:Number(e.target.value)})}/></label>
+            </div>
+            <label className="dd-owner-costs-check"><input type="checkbox" checked={s.hoursPerUnit} onChange={e=>patchScope(id,{hoursPerUnit:e.target.checked})}/> Hours are per board / medallion / inlay</label>
+          </>}
+        </details>;
+      })}
+      <div className="dd-owner-costs-actions">
+        <button type="button" className="dd-secondary" onClick={()=>void saveDeviceDefaults()}>Save as my defaults</button>
+        <button type="button" className="dd-secondary" onClick={()=>void loadDeviceDefaults()}>Load my defaults</button>
+        <button type="button" className="dd-secondary" onClick={()=>commitFeature(structuredClone(DEFAULT_FEATURE_LABOUR))}>Reset feature labour</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="dd-owner-setting-title">
+      <h4 id="dd-owner-setting-title">Guillotined armour stone setting</h4>
+      <p>Timed at an industry production rate and priced on your hardscape crew day, with no markup. Base, drainage stone and backfill stay builder quotes. Homeowners see tons and crew-days, never your rate.</p>
+      <p role="status">{settingRow&&settingRow.cost!==null
+        ?<>This job: <strong>{settingRow.qty} {settingRow.unit}</strong> of setting = <strong>{dollars(settingRow.cost)}</strong>.</>
+        :<>No setting is priced on this job: it has no guillotined wall{setting.mode==='quote'?', or setting is a builder quote':''}.</>}</p>
+      <label className="dd-owner-costs-field">Pricing
+        <select aria-label="Guillotined setting pricing" value={setting.mode} onChange={e=>patchSetting({mode:e.target.value as HardscapeSetting['mode']})}>
+          <option value="production">Production rate (default)</option>
+          <option value="quote">Builder quote (enter in Quote Review)</option>
+        </select>
+      </label>
+      {setting.mode==='production'&&<div className="dd-owner-costs-grid">
+        <label>Tons per crew-day<input aria-label="Guillotined setting tons per crew-day" type="number" min=".1" max="200" step=".1" value={setting.tonsPerCrewDay} onChange={e=>draftSetting({tonsPerCrewDay:Number(e.target.value)})} onBlur={e=>patchSetting({tonsPerCrewDay:Number(e.target.value)})}/></label>
+        <label>Crew-day rate · CAD<input aria-label="Guillotined setting crew-day rate" type="number" min=".01" max="20000" step=".01" value={hardscape.crewDayRate} onChange={e=>setHardscape(h=>({...h,crewDayRate:Number(e.target.value)}))} onBlur={e=>commitHardscape({...hardscape,crewDayRate:Number(e.target.value)})}/></label>
+        <label>Bill crew-days
+          <select aria-label="Guillotined setting crew-day steps" value={setting.stepCrewDays} onChange={e=>patchSetting({stepCrewDays:Number(e.target.value)})}>
+            <option value="0">Exactly</option>
+            <option value="0.25">In quarter days</option>
+            <option value="0.5">In half days (default)</option>
+            <option value="1">In whole days</option>
+          </select>
+        </label>
+        <label>Minimum crew-days<input aria-label="Guillotined setting minimum crew-days" type="number" min="0" max="10" step=".25" value={setting.minCrewDays} onChange={e=>draftSetting({minCrewDays:Number(e.target.value)})} onBlur={e=>patchSetting({minCrewDays:Number(e.target.value)})}/></label>
+      </div>}
+      <small>Defaults: {DEFAULT_HARDSCAPE_LABOUR.scopes.guillotinedSetting.tonsPerCrewDay} tons per crew-day (RSMeans dry-set cut stone on 3 people × 9 h) at CAD {DEFAULT_HARDSCAPE_LABOUR.crewDayRate.toLocaleString('en-CA')} per hardscape crew-day, half-day steps, 1 crew-day minimum.</small>
+      <div className="dd-owner-costs-actions">
+        <button type="button" className="dd-secondary" aria-label="Save setting labour as my defaults" onClick={()=>void saveSettingDefaults()}>Save as my defaults</button>
+        <button type="button" className="dd-secondary" aria-label="Load my setting labour defaults" onClick={()=>void loadSettingDefaults()}>Load my defaults</button>
+        <button type="button" className="dd-secondary" onClick={()=>commitHardscape(withFenceRates(structuredClone(DEFAULT_HARDSCAPE_LABOUR),hardscape.fenceRates),'Setting labour reset to the built-in defaults.')}>Reset setting labour</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="dd-owner-fence-title">
+      <h4 id="dd-owner-fence-title">Fences &amp; gates</h4>
+      <p>Installed prices with no markup. Until you set your own, these are standard rates: the midpoints of a published Canadian guide, not confirmed for your area. Fences under 6 ft take {FENCE_HEIGHT_STEP*100}% off per foot.</p>
+      <div className="dd-owner-costs-grid">
+        {FENCE_RATE_LABELS.map(([id,label])=><label key={id}>{label} · CAD<input aria-label={`${label} rate`} type="number" min="0" max="100000" step=".01" key={fenceRate(id)} defaultValue={fenceRate(id)} onBlur={e=>{if(!blurFenceRate(id,e.target.value))e.target.value=String(fenceRate(id));}}/></label>)}
+      </div>
+      <small>Standard: {FENCE_RATE_SOURCE}.</small>
+      <div className="dd-owner-costs-actions">
+        <button type="button" className="dd-secondary" onClick={()=>void saveFenceDefaults()}>Save fence rates as my defaults</button>
+        <button type="button" className="dd-secondary" onClick={()=>void loadFenceDefaults()}>Load my fence rates</button>
+        <button type="button" className="dd-secondary" onClick={()=>commitHardscape(withFenceRates(hardscape,undefined),'Fence rates reset to the standard rates.')}>Reset fence rates</button>
+      </div>
+    </section>
+
+    <footer className="dd-owner-costs-footer">
+      <button type="button" className="dd-secondary" onClick={clearAll}>Reset markup, labour &amp; line overrides</button>
+      {onClose&&<button type="button" className="dd-primary" onClick={onClose}>Done</button>}
+    </footer>
+    {status&&<p className="dd-owner-costs-status" role="status">{status}</p>}
+    {error&&<p className="dd-owner-costs-error" role="alert">{error}</p>}
+  </div>;
+
+  if(variant==='inline')return body;
+  if(typeof document==='undefined')return null;
+  return createPortal(<div className="dd-owner-costs-backdrop" role="presentation" onClick={e=>{if(e.target===e.currentTarget)closeRef.current?.();}}>
+    <div className="dd-owner-costs-dialog" role="dialog" aria-modal="true" aria-labelledby="dd-owner-costs-title">{body}</div>
+  </div>,document.body);
+}

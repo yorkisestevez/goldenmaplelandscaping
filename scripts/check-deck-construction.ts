@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,readdirSync} from 'node:fs';
 import {DEFAULT_DECK,DECK_SETTINGS} from '../src/features/deckcraft/defaults';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {calculateEstimate} from '../src/features/deckcraft/calculations';
 import {getHardwareLayout} from '../src/features/deckcraft/hardwareLayout';
 import {planStock,deckBoardStock} from '../src/features/deckcraft/stockPlan';
 import type {DeckData} from '../src/features/deckcraft/types';
-const ref=readFileSync('src/features/deckcraft/referenceConstruction.ts','utf8');
-for(const commercial of ['class PriceBook','function computeQuote','function quickPrice','price-book/v1','foundSale','costPerSqft'])assert(!ref.includes(commercial),`Reference price leak: ${commercial}`);
+// The framing engine carries structure only: no price book, quote or sale logic may live beside the span tables.
+const engine=readdirSync('src/features/deckcraft/structure').filter(f=>f.endsWith('.ts')).map(f=>readFileSync(`src/features/deckcraft/structure/${f}`,'utf8')).join('\n');
+for(const commercial of ['PriceBook','computeQuote','quickPrice','price-book','foundSale','costPerSqft','materialMarkup'])assert(!engine.includes(commercial),`Price logic in the framing engine: ${commercial}`);
 let cases=0;
 for(const width of [8,16,24,30,40])for(const length of [8,12,24])for(const deckType of ['Attached','Freestanding'] as const)for(const pattern of ['Straight','Picture Frame','Diagonal'] as const){
  const d:DeckData={...structuredClone(DEFAULT_DECK),width,length,deckType,pattern};
@@ -33,6 +34,6 @@ assert.equal(planStock([96,96],192).bins.length,2,'Kerf prevents an impossible e
 assert.equal(planStock([192],192).bins.length,1);
 assert.deepEqual(planStock([240],192).unresolved,[240]);
 const base=buildDeckTakeoff({...DEFAULT_DECK,width:16,length:12});assert.equal(base.quantities.footings,3);assert.equal(base.quantities.stringers,6);assert.equal(base.quantities.stairTreads,4);
-const wide=buildDeckTakeoff({...DEFAULT_DECK,width:30,length:12});assert(wide.quantities.breakerBoards>0);assert(wide.levels[0].joists.length>wide.levels[0].reference.jCount);
-console.log(`DECK CONSTRUCTION OK — ${cases} geometry/quantity/price scenarios, stock/kerf checks, no reference prices imported.`);
+const wide=buildDeckTakeoff({...DEFAULT_DECK,width:30,length:12});assert(wide.quantities.breakerBoards>0);assert(wide.levels[0].joists.length>wide.levels[0].reference.joistXsIn.length);
+console.log(`DECK CONSTRUCTION OK — ${cases} geometry/quantity/price scenarios, stock/kerf checks, no price logic in the framing engine.`);
 

@@ -1,0 +1,2870 @@
+{
+ "capturedAt": "41d3eba",
+ "cases": {
+  "parity:std/Rectangle/Straight/Straight/freestanding-2lvl": {
+   "subtotal": 55688.37,
+   "total": 62927.86,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 4374,
+    "Decking": 4276.8,
+    "Hardware & Fasteners": 1037.99,
+    "Railing System": 12810.81,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 29710.27,
+    "HST (13%)": 7239.49
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Rectangle/Straight/Landing/freestanding-2lvl": {
+   "subtotal": 56137.92,
+   "total": 63435.85,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 4374,
+    "Decking": 4276.8,
+    "Hardware & Fasteners": 1037.99,
+    "Railing System": 12810.81,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 30159.82,
+    "HST (13%)": 7297.93
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Rectangle/Straight/Winder/freestanding-2lvl": {
+   "subtotal": 56437.62,
+   "total": 63774.51,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 4374,
+    "Decking": 4276.8,
+    "Hardware & Fasteners": 1037.99,
+    "Railing System": 12810.81,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 30459.52,
+    "HST (13%)": 7336.89
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Rectangle/Diagonal/Straight/freestanding-2lvl": {
+   "subtotal": 63019.2,
+   "total": 71211.69,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 5151.6,
+    "Decking": 4633.2,
+    "Hardware & Fasteners": 1292.76,
+    "Railing System": 12810.81,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 35652.32,
+    "HST (13%)": 8192.5
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Rectangle/Diagonal/Landing/freestanding-2lvl": {
+   "subtotal": 63558.66,
+   "total": 71821.28,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 5151.6,
+    "Decking": 4633.2,
+    "Hardware & Fasteners": 1292.76,
+    "Railing System": 12810.81,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 36191.78,
+    "HST (13%)": 8262.63
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Rectangle/Diagonal/Winder/freestanding-2lvl": {
+   "subtotal": 63918.3,
+   "total": 72227.67,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 5151.6,
+    "Decking": 4633.2,
+    "Hardware & Fasteners": 1292.76,
+    "Railing System": 12810.81,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 36551.42,
+    "HST (13%)": 8309.38
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Rectangle/Picture Frame/Straight/freestanding-2lvl": {
+   "subtotal": 65758.05,
+   "total": 74306.6,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 5151.6,
+    "Decking": 4900.5,
+    "Hardware & Fasteners": 1306.8,
+    "Railing System": 13782.81,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 37137.84,
+    "HST (13%)": 8548.55
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Rectangle/Picture Frame/Landing/freestanding-2lvl": {
+   "subtotal": 66319.99,
+   "total": 74941.58,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 5151.6,
+    "Decking": 4900.5,
+    "Hardware & Fasteners": 1306.8,
+    "Railing System": 13782.81,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 37699.77,
+    "HST (13%)": 8621.6
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Rectangle/Picture Frame/Winder/freestanding-2lvl": {
+   "subtotal": 66694.61,
+   "total": 75364.91,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 5151.6,
+    "Decking": 4900.5,
+    "Hardware & Fasteners": 1306.8,
+    "Railing System": 13782.81,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 38074.4,
+    "HST (13%)": 8670.3
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Rectangle/Herringbone/Straight/freestanding-2lvl": {
+   "subtotal": 69351.13,
+   "total": 78366.77,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 7776,
+    "Decking": 4811.4,
+    "Hardware & Fasteners": 1851.07,
+    "Railing System": 12810.81,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 38623.35,
+    "HST (13%)": 9015.65
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Rectangle/Herringbone/Landing/freestanding-2lvl": {
+   "subtotal": 69935.54,
+   "total": 79027.16,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 7776,
+    "Decking": 4811.4,
+    "Hardware & Fasteners": 1851.07,
+    "Railing System": 12810.81,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 39207.76,
+    "HST (13%)": 9091.62
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Rectangle/Herringbone/Winder/freestanding-2lvl": {
+   "subtotal": 70325.15,
+   "total": 79467.42,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 7776,
+    "Decking": 4811.4,
+    "Hardware & Fasteners": 1851.07,
+    "Railing System": 12810.81,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 39597.37,
+    "HST (13%)": 9142.27
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/L-Shape/Straight/Straight/freestanding-2lvl": {
+   "subtotal": 59550.04,
+   "total": 67291.54,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3078,
+    "Structural Framing (2x10 Joists)": 4762.8,
+    "Decking": 4276.8,
+    "Hardware & Fasteners": 1061.53,
+    "Railing System": 13018.71,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 32438.69,
+    "HST (13%)": 7741.5
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/L-Shape/Straight/Landing/freestanding-2lvl": {
+   "subtotal": 60044.54,
+   "total": 67850.33,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3078,
+    "Structural Framing (2x10 Joists)": 4762.8,
+    "Decking": 4276.8,
+    "Hardware & Fasteners": 1061.53,
+    "Railing System": 13018.71,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 32933.2,
+    "HST (13%)": 7805.79
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/L-Shape/Straight/Winder/freestanding-2lvl": {
+   "subtotal": 60374.21,
+   "total": 68222.86,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3078,
+    "Structural Framing (2x10 Joists)": 4762.8,
+    "Decking": 4276.8,
+    "Hardware & Fasteners": 1061.53,
+    "Railing System": 13018.71,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 33262.87,
+    "HST (13%)": 7848.65
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/L-Shape/Diagonal/Straight/freestanding-2lvl": {
+   "subtotal": 66470.96,
+   "total": 75112.19,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3078,
+    "Structural Framing (2x10 Joists)": 5346,
+    "Decking": 3920.4,
+    "Hardware & Fasteners": 1267.92,
+    "Railing System": 13018.71,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 38926.43,
+    "HST (13%)": 8641.23
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/L-Shape/Diagonal/Landing/freestanding-2lvl": {
+   "subtotal": 67064.37,
+   "total": 75782.74,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3078,
+    "Structural Framing (2x10 Joists)": 5346,
+    "Decking": 3920.4,
+    "Hardware & Fasteners": 1267.92,
+    "Railing System": 13018.71,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 39519.84,
+    "HST (13%)": 8718.37
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/L-Shape/Diagonal/Winder/freestanding-2lvl": {
+   "subtotal": 67459.97,
+   "total": 76229.77,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3078,
+    "Structural Framing (2x10 Joists)": 5346,
+    "Decking": 3920.4,
+    "Hardware & Fasteners": 1267.92,
+    "Railing System": 13018.71,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 39915.44,
+    "HST (13%)": 8769.8
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/L-Shape/Picture Frame/Straight/freestanding-2lvl": {
+   "subtotal": 69470.65,
+   "total": 78501.84,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3078,
+    "Structural Framing (2x10 Joists)": 5443.2,
+    "Decking": 4187.7,
+    "Hardware & Fasteners": 1309.18,
+    "Railing System": 13990.71,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 40548.36,
+    "HST (13%)": 9031.19
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/L-Shape/Picture Frame/Landing/freestanding-2lvl": {
+   "subtotal": 70088.79,
+   "total": 79200.33,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3078,
+    "Structural Framing (2x10 Joists)": 5443.2,
+    "Decking": 4187.7,
+    "Hardware & Fasteners": 1309.18,
+    "Railing System": 13990.71,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 41166.5,
+    "HST (13%)": 9111.54
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/L-Shape/Picture Frame/Winder/freestanding-2lvl": {
+   "subtotal": 70500.87,
+   "total": 79665.99,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3078,
+    "Structural Framing (2x10 Joists)": 5443.2,
+    "Decking": 4187.7,
+    "Hardware & Fasteners": 1309.18,
+    "Railing System": 13990.71,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 41578.58,
+    "HST (13%)": 9165.11
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/L-Shape/Herringbone/Straight/freestanding-2lvl": {
+   "subtotal": 72504.69,
+   "total": 81930.3,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3078,
+    "Structural Framing (2x10 Joists)": 7484.4,
+    "Decking": 4098.6,
+    "Hardware & Fasteners": 1741.18,
+    "Railing System": 13018.71,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 42170.3,
+    "HST (13%)": 9425.61
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/L-Shape/Herringbone/Landing/freestanding-2lvl": {
+   "subtotal": 73147.55,
+   "total": 82656.73,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3078,
+    "Structural Framing (2x10 Joists)": 7484.4,
+    "Decking": 4098.6,
+    "Hardware & Fasteners": 1741.18,
+    "Railing System": 13018.71,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 42813.16,
+    "HST (13%)": 9509.18
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/L-Shape/Herringbone/Winder/freestanding-2lvl": {
+   "subtotal": 73576.12,
+   "total": 83141.01,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3078,
+    "Structural Framing (2x10 Joists)": 7484.4,
+    "Decking": 4098.6,
+    "Hardware & Fasteners": 1741.18,
+    "Railing System": 13018.71,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 43241.73,
+    "HST (13%)": 9564.9
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Multi-corner/Straight/Straight/freestanding-2lvl": {
+   "subtotal": 63288.88,
+   "total": 71516.43,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3591,
+    "Structural Framing (2x10 Joists)": 4082.4,
+    "Decking": 3296.7,
+    "Hardware & Fasteners": 1128.6,
+    "Railing System": 13226.61,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 37050.06,
+    "HST (13%)": 8227.55
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Multi-corner/Straight/Landing/freestanding-2lvl": {
+   "subtotal": 63850.81,
+   "total": 72151.42,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3591,
+    "Structural Framing (2x10 Joists)": 4082.4,
+    "Decking": 3296.7,
+    "Hardware & Fasteners": 1128.6,
+    "Railing System": 13226.61,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 37612,
+    "HST (13%)": 8300.61
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Multi-corner/Straight/Winder/freestanding-2lvl": {
+   "subtotal": 64225.44,
+   "total": 72574.75,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3591,
+    "Structural Framing (2x10 Joists)": 4082.4,
+    "Decking": 3296.7,
+    "Hardware & Fasteners": 1128.6,
+    "Railing System": 13226.61,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 37986.62,
+    "HST (13%)": 8349.31
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Multi-corner/Diagonal/Straight/freestanding-2lvl": {
+   "subtotal": 71512.34,
+   "total": 80808.95,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3591,
+    "Structural Framing (2x10 Joists)": 4568.4,
+    "Decking": 3474.9,
+    "Hardware & Fasteners": 1277.86,
+    "Railing System": 13226.61,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 44460.07,
+    "HST (13%)": 9296.6
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Multi-corner/Diagonal/Landing/freestanding-2lvl": {
+   "subtotal": 72186.67,
+   "total": 81570.94,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3591,
+    "Structural Framing (2x10 Joists)": 4568.4,
+    "Decking": 3474.9,
+    "Hardware & Fasteners": 1277.86,
+    "Railing System": 13226.61,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 45134.4,
+    "HST (13%)": 9384.27
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Multi-corner/Diagonal/Winder/freestanding-2lvl": {
+   "subtotal": 72636.22,
+   "total": 82078.93,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3591,
+    "Structural Framing (2x10 Joists)": 4568.4,
+    "Decking": 3474.9,
+    "Hardware & Fasteners": 1277.86,
+    "Railing System": 13226.61,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 45583.95,
+    "HST (13%)": 9442.71
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Multi-corner/Picture Frame/Straight/freestanding-2lvl": {
+   "subtotal": 74797.47,
+   "total": 84521.14,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3591,
+    "Structural Framing (2x10 Joists)": 4665.6,
+    "Decking": 3742.2,
+    "Hardware & Fasteners": 1373.98,
+    "Railing System": 14198.61,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 46312.58,
+    "HST (13%)": 9723.67
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Multi-corner/Picture Frame/Landing/freestanding-2lvl": {
+   "subtotal": 75499.89,
+   "total": 85314.88,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3591,
+    "Structural Framing (2x10 Joists)": 4665.6,
+    "Decking": 3742.2,
+    "Hardware & Fasteners": 1373.98,
+    "Railing System": 14198.61,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 47015,
+    "HST (13%)": 9814.99
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Multi-corner/Picture Frame/Winder/freestanding-2lvl": {
+   "subtotal": 75968.17,
+   "total": 85844.03,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3591,
+    "Structural Framing (2x10 Joists)": 4665.6,
+    "Decking": 3742.2,
+    "Hardware & Fasteners": 1373.98,
+    "Railing System": 14198.61,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 47483.28,
+    "HST (13%)": 9875.86
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Multi-corner/Herringbone/Straight/freestanding-2lvl": {
+   "subtotal": 77966.6,
+   "total": 88102.26,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3591,
+    "Structural Framing (2x10 Joists)": 6609.6,
+    "Decking": 3742.2,
+    "Hardware & Fasteners": 1718.6,
+    "Railing System": 13226.61,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 48165.08,
+    "HST (13%)": 10135.66
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Multi-corner/Herringbone/Landing/freestanding-2lvl": {
+   "subtotal": 78697.12,
+   "total": 88927.74,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3591,
+    "Structural Framing (2x10 Joists)": 6609.6,
+    "Decking": 3742.2,
+    "Hardware & Fasteners": 1718.6,
+    "Railing System": 13226.61,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 48895.6,
+    "HST (13%)": 10230.63
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Multi-corner/Herringbone/Winder/freestanding-2lvl": {
+   "subtotal": 79184.13,
+   "total": 89478.07,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3591,
+    "Structural Framing (2x10 Joists)": 6609.6,
+    "Decking": 3742.2,
+    "Hardware & Fasteners": 1718.6,
+    "Railing System": 13226.61,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 49382.61,
+    "HST (13%)": 10293.94
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.353
+  },
+  "parity:std/Curved/Straight/Straight/freestanding-2lvl": {
+   "subtotal": 73389.75,
+   "total": 82930.42,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 4276.8,
+    "Decking": 4455,
+    "Hardware & Fasteners": 1053.11,
+    "Railing System": 14928.31,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 45198.03,
+    "HST (13%)": 9540.67
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.829
+  },
+  "parity:std/Curved/Straight/Landing/freestanding-2lvl": {
+   "subtotal": 74064.07,
+   "total": 83692.4,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 4276.8,
+    "Decking": 4455,
+    "Hardware & Fasteners": 1053.11,
+    "Railing System": 14928.31,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 45872.35,
+    "HST (13%)": 9628.33
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.829
+  },
+  "parity:std/Curved/Straight/Winder/freestanding-2lvl": {
+   "subtotal": 74513.62,
+   "total": 84200.39,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 4276.8,
+    "Decking": 4455,
+    "Hardware & Fasteners": 1053.11,
+    "Railing System": 14928.31,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 46321.9,
+    "HST (13%)": 9686.77
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.829
+  },
+  "parity:std/Curved/Diagonal/Straight/freestanding-2lvl": {
+   "subtotal": 84133.16,
+   "total": 95070.47,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 5346,
+    "Decking": 4811.4,
+    "Hardware & Fasteners": 1331.32,
+    "Railing System": 14928.31,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 54237.63,
+    "HST (13%)": 10937.31
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.829
+  },
+  "parity:std/Curved/Diagonal/Landing/freestanding-2lvl": {
+   "subtotal": 84942.35,
+   "total": 95984.86,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 5346,
+    "Decking": 4811.4,
+    "Hardware & Fasteners": 1331.32,
+    "Railing System": 14928.31,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 55046.82,
+    "HST (13%)": 11042.51
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.829
+  },
+  "parity:std/Curved/Diagonal/Winder/freestanding-2lvl": {
+   "subtotal": 85481.81,
+   "total": 96594.45,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 5346,
+    "Decking": 4811.4,
+    "Hardware & Fasteners": 1331.32,
+    "Railing System": 14928.31,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 55586.28,
+    "HST (13%)": 11112.64
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.829
+  },
+  "parity:std/Curved/Picture Frame/Straight/freestanding-2lvl": {
+   "subtotal": 87446.93,
+   "total": 98815.03,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 5054.4,
+    "Decking": 5167.8,
+    "Hardware & Fasteners": 1348.38,
+    "Railing System": 15900.31,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 56497.53,
+    "HST (13%)": 11368.1
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.829
+  },
+  "parity:std/Curved/Picture Frame/Landing/freestanding-2lvl": {
+   "subtotal": 88289.83,
+   "total": 99767.51,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 5054.4,
+    "Decking": 5167.8,
+    "Hardware & Fasteners": 1348.38,
+    "Railing System": 15900.31,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 57340.44,
+    "HST (13%)": 11477.68
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.829
+  },
+  "parity:std/Curved/Picture Frame/Winder/freestanding-2lvl": {
+   "subtotal": 88851.77,
+   "total": 100402.5,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 5054.4,
+    "Decking": 5167.8,
+    "Hardware & Fasteners": 1348.38,
+    "Railing System": 15900.31,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 57902.38,
+    "HST (13%)": 11550.73
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.829
+  },
+  "parity:std/Curved/Herringbone/Straight/freestanding-2lvl": {
+   "subtotal": 92245.53,
+   "total": 104237.45,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 8067.6,
+    "Decking": 5078.7,
+    "Hardware & Fasteners": 1934.98,
+    "Railing System": 14928.31,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 58757.43,
+    "HST (13%)": 11991.92
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.829
+  },
+  "parity:std/Curved/Herringbone/Landing/freestanding-2lvl": {
+   "subtotal": 93122.15,
+   "total": 105228.03,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 8067.6,
+    "Decking": 5078.7,
+    "Hardware & Fasteners": 1934.98,
+    "Railing System": 14928.31,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 59634.06,
+    "HST (13%)": 12105.88
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.829
+  },
+  "parity:std/Curved/Herringbone/Winder/freestanding-2lvl": {
+   "subtotal": 93706.57,
+   "total": 105888.42,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2565,
+    "Structural Framing (2x10 Joists)": 8067.6,
+    "Decking": 5078.7,
+    "Hardware & Fasteners": 1934.98,
+    "Railing System": 14928.31,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 60218.47,
+    "HST (13%)": 12181.85
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 97.829
+  },
+  "parity:big/Rectangle/Straight/Straight/freestanding-2lvl": {
+   "subtotal": 101563.02,
+   "total": 114766.21,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3334.5,
+    "Structural Framing (2x10 Joists)": 9525.6,
+    "Decking": 9711.9,
+    "Hardware & Fasteners": 1661.69,
+    "Railing System": 18146.53,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 57695.55,
+    "HST (13%)": 13203.19
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.025
+  },
+  "parity:big/Rectangle/Straight/Landing/freestanding-2lvl": {
+   "subtotal": 108008.2,
+   "total": 122049.26,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 4360.5,
+    "Structural Framing (2x10 Joists)": 9720,
+    "Decking": 9711.9,
+    "Hardware & Fasteners": 1858.95,
+    "Railing System": 19071.28,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 61798.31,
+    "HST (13%)": 14041.07
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 146.652
+  },
+  "parity:big/Rectangle/Straight/Winder/freestanding-2lvl": {
+   "subtotal": 111640.23,
+   "total": 126153.46,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 5386.5,
+    "Structural Framing (2x10 Joists)": 9525.6,
+    "Decking": 9711.9,
+    "Hardware & Fasteners": 2130.14,
+    "Railing System": 19780.7,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 63618.15,
+    "HST (13%)": 14513.23
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 144.466
+  },
+  "parity:big/Rectangle/Diagonal/Straight/freestanding-2lvl": {
+   "subtotal": 110604.25,
+   "total": 124982.8,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3334.5,
+    "Structural Framing (2x10 Joists)": 10400.4,
+    "Decking": 8642.7,
+    "Hardware & Fasteners": 2055.51,
+    "Railing System": 18146.53,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 66537.36,
+    "HST (13%)": 14378.55
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.025
+  },
+  "parity:big/Rectangle/Diagonal/Landing/freestanding-2lvl": {
+   "subtotal": 118143.76,
+   "total": 133502.45,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 4360.5,
+    "Structural Framing (2x10 Joists)": 10594.8,
+    "Decking": 8910,
+    "Hardware & Fasteners": 2259.25,
+    "Railing System": 19071.28,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 71460.68,
+    "HST (13%)": 15358.69
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 146.652
+  },
+  "parity:big/Rectangle/Diagonal/Winder/freestanding-2lvl": {
+   "subtotal": 121865.99,
+   "total": 137708.56,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 5386.5,
+    "Structural Framing (2x10 Joists)": 10400.4,
+    "Decking": 8642.7,
+    "Hardware & Fasteners": 2523.96,
+    "Railing System": 19780.7,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 73644.48,
+    "HST (13%)": 15842.58
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 144.466
+  },
+  "parity:big/Rectangle/Picture Frame/Straight/freestanding-2lvl": {
+   "subtotal": 118934.76,
+   "total": 134396.28,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3334.5,
+    "Structural Framing (2x10 Joists)": 10692,
+    "Decking": 10246.5,
+    "Hardware & Fasteners": 1936.55,
+    "Railing System": 19118.53,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 72119.43,
+    "HST (13%)": 15461.52
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.025
+  },
+  "parity:big/Rectangle/Picture Frame/Landing/freestanding-2lvl": {
+   "subtotal": 126808.47,
+   "total": 143293.58,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 4360.5,
+    "Structural Framing (2x10 Joists)": 10886.4,
+    "Decking": 10246.5,
+    "Hardware & Fasteners": 2212.65,
+    "Railing System": 20367.28,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 77247.89,
+    "HST (13%)": 16485.1
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 146.652
+  },
+  "parity:big/Rectangle/Picture Frame/Winder/freestanding-2lvl": {
+   "subtotal": 130492.63,
+   "total": 147456.67,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 5386.5,
+    "Structural Framing (2x10 Joists)": 10692,
+    "Decking": 10246.5,
+    "Hardware & Fasteners": 2405,
+    "Railing System": 20752.7,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 79522.69,
+    "HST (13%)": 16964.04
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 144.466
+  },
+  "parity:big/Rectangle/Herringbone/Straight/freestanding-2lvl": {
+   "subtotal": 122284.51,
+   "total": 138181.5,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 3334.5,
+    "Structural Framing (2x10 Joists)": 15066,
+    "Decking": 9088.2,
+    "Hardware & Fasteners": 3079.89,
+    "Railing System": 18146.53,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 72082.14,
+    "HST (13%)": 15896.99
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.025
+  },
+  "parity:big/Rectangle/Herringbone/Landing/freestanding-2lvl": {
+   "subtotal": 130557.65,
+   "total": 147530.14,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 4360.5,
+    "Structural Framing (2x10 Joists)": 15552,
+    "Decking": 9355.5,
+    "Hardware & Fasteners": 3315.38,
+    "Railing System": 19071.28,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 77415.73,
+    "HST (13%)": 16972.49
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 146.652
+  },
+  "parity:big/Rectangle/Herringbone/Winder/freestanding-2lvl": {
+   "subtotal": 134430.11,
+   "total": 151906.02,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 5386.5,
+    "Structural Framing (2x10 Joists)": 15357.6,
+    "Decking": 9088.2,
+    "Hardware & Fasteners": 3548.34,
+    "Railing System": 19780.7,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 79781.52,
+    "HST (13%)": 17475.91
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 144.466
+  },
+  "parity:big/L-Shape/Straight/Straight/freestanding-2lvl": {
+   "subtotal": 106029.87,
+   "total": 119813.75,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 4360.5,
+    "Structural Framing (2x10 Joists)": 8164.8,
+    "Decking": 8197.2,
+    "Hardware & Fasteners": 1712.5,
+    "Railing System": 18354.43,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 63753.18,
+    "HST (13%)": 13783.88
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.025
+  },
+  "parity:big/L-Shape/Straight/Landing/freestanding-2lvl": {
+   "subtotal": 112691.3,
+   "total": 127341.17,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 5386.5,
+    "Structural Framing (2x10 Joists)": 8164.8,
+    "Decking": 8197.2,
+    "Hardware & Fasteners": 1910.14,
+    "Railing System": 19279.18,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 68266.23,
+    "HST (13%)": 14649.87
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 146.652
+  },
+  "parity:big/L-Shape/Straight/Winder/freestanding-2lvl": {
+   "subtotal": 116699.34,
+   "total": 131870.26,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 6412.5,
+    "Structural Framing (2x10 Joists)": 8164.8,
+    "Decking": 8197.2,
+    "Hardware & Fasteners": 2180.95,
+    "Railing System": 19988.6,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 70268.04,
+    "HST (13%)": 15170.91
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 144.466
+  },
+  "parity:big/L-Shape/Diagonal/Straight/freestanding-2lvl": {
+   "subtotal": 116402.51,
+   "total": 131534.83,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 4360.5,
+    "Structural Framing (2x10 Joists)": 8845.2,
+    "Decking": 7751.7,
+    "Hardware & Fasteners": 2066.63,
+    "Railing System": 18354.43,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 73536.79,
+    "HST (13%)": 15132.33
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.025
+  },
+  "parity:big/L-Shape/Diagonal/Landing/freestanding-2lvl": {
+   "subtotal": 124239.95,
+   "total": 140391.14,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 5386.5,
+    "Structural Framing (2x10 Joists)": 8845.2,
+    "Decking": 8019,
+    "Hardware & Fasteners": 2270.38,
+    "Railing System": 19279.18,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 78952.44,
+    "HST (13%)": 16151.19
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 146.652
+  },
+  "parity:big/L-Shape/Diagonal/Winder/freestanding-2lvl": {
+   "subtotal": 128472.15,
+   "total": 145173.53,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 6412.5,
+    "Structural Framing (2x10 Joists)": 8942.4,
+    "Decking": 7751.7,
+    "Hardware & Fasteners": 2535.08,
+    "Railing System": 19988.6,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 81354.62,
+    "HST (13%)": 16701.38
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 144.466
+  },
+  "parity:big/L-Shape/Picture Frame/Straight/freestanding-2lvl": {
+   "subtotal": 124903.6,
+   "total": 141141.07,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 4360.5,
+    "Structural Framing (2x10 Joists)": 9136.8,
+    "Decking": 8910,
+    "Hardware & Fasteners": 1991.14,
+    "Railing System": 19326.43,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 79691.48,
+    "HST (13%)": 16237.47
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.025
+  },
+  "parity:big/L-Shape/Picture Frame/Landing/freestanding-2lvl": {
+   "subtotal": 133095.38,
+   "total": 150397.78,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 5386.5,
+    "Structural Framing (2x10 Joists)": 9136.8,
+    "Decking": 8910,
+    "Hardware & Fasteners": 2266.87,
+    "Railing System": 20575.18,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 85332.78,
+    "HST (13%)": 17302.4
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 146.652
+  },
+  "parity:big/L-Shape/Picture Frame/Winder/freestanding-2lvl": {
+   "subtotal": 137201.8,
+   "total": 155038.03,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 6412.5,
+    "Structural Framing (2x10 Joists)": 9136.8,
+    "Decking": 8910,
+    "Hardware & Fasteners": 2459.59,
+    "Railing System": 20960.6,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 87835.06,
+    "HST (13%)": 17836.23
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 144.466
+  },
+  "parity:big/L-Shape/Herringbone/Straight/freestanding-2lvl": {
+   "subtotal": 128074.59,
+   "total": 144724.29,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 4360.5,
+    "Structural Framing (2x10 Joists)": 13024.8,
+    "Decking": 8197.2,
+    "Hardware & Fasteners": 2985.55,
+    "Railing System": 18354.43,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 79664.86,
+    "HST (13%)": 16649.7
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.025
+  },
+  "parity:big/L-Shape/Herringbone/Landing/freestanding-2lvl": {
+   "subtotal": 136783.51,
+   "total": 154565.37,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 5386.5,
+    "Structural Framing (2x10 Joists)": 13413.6,
+    "Decking": 8464.5,
+    "Hardware & Fasteners": 3220.67,
+    "Railing System": 19279.18,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 85531.81,
+    "HST (13%)": 17781.86
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 146.652
+  },
+  "parity:big/L-Shape/Herringbone/Winder/freestanding-2lvl": {
+   "subtotal": 141087.32,
+   "total": 159428.68,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 6412.5,
+    "Structural Framing (2x10 Joists)": 13413.6,
+    "Decking": 8197.2,
+    "Hardware & Fasteners": 3454,
+    "Railing System": 19988.6,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 88134.18,
+    "HST (13%)": 18341.35
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 144.466
+  },
+  "parity:big/Multi-corner/Straight/Straight/freestanding-2lvl": {
+   "subtotal": 115916.17,
+   "total": 130985.27,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 5130,
+    "Structural Framing (2x10 Joists)": 8262,
+    "Decking": 7395.3,
+    "Hardware & Fasteners": 1813.75,
+    "Railing System": 18146.53,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 73681.33,
+    "HST (13%)": 15069.1
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.025
+  },
+  "parity:big/Multi-corner/Straight/Landing/freestanding-2lvl": {
+   "subtotal": 123387.41,
+   "total": 139427.78,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 6156,
+    "Structural Framing (2x10 Joists)": 8456.4,
+    "Decking": 7395.3,
+    "Hardware & Fasteners": 2011.39,
+    "Railing System": 19071.28,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 78809.79,
+    "HST (13%)": 16040.36
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 146.652
+  },
+  "parity:big/Multi-corner/Straight/Winder/freestanding-2lvl": {
+   "subtotal": 127474.03,
+   "total": 144045.66,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 7182,
+    "Structural Framing (2x10 Joists)": 8262,
+    "Decking": 7395.3,
+    "Hardware & Fasteners": 2282.2,
+    "Railing System": 19780.7,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 81084.58,
+    "HST (13%)": 16571.62
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 144.466
+  },
+  "parity:big/Multi-corner/Diagonal/Straight/freestanding-2lvl": {
+   "subtotal": 126331.04,
+   "total": 142754.07,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 4617,
+    "Structural Framing (2x10 Joists)": 8748,
+    "Decking": 7573.5,
+    "Hardware & Fasteners": 2096.01,
+    "Railing System": 18146.53,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 83662.74,
+    "HST (13%)": 16423.03
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.025
+  },
+  "parity:big/Multi-corner/Diagonal/Landing/freestanding-2lvl": {
+   "subtotal": 135295.78,
+   "total": 152884.23,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 5643,
+    "Structural Framing (2x10 Joists)": 9136.8,
+    "Decking": 7840.8,
+    "Hardware & Fasteners": 2299.75,
+    "Railing System": 19071.28,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 89816.89,
+    "HST (13%)": 17588.45
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 146.652
+  },
+  "parity:big/Multi-corner/Diagonal/Winder/freestanding-2lvl": {
+   "subtotal": 139758.35,
+   "total": 157926.94,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 6669,
+    "Structural Framing (2x10 Joists)": 9136.8,
+    "Decking": 7573.5,
+    "Hardware & Fasteners": 2564.46,
+    "Railing System": 19780.7,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 92546.64,
+    "HST (13%)": 18168.59
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 144.466
+  },
+  "parity:big/Multi-corner/Picture Frame/Straight/freestanding-2lvl": {
+   "subtotal": 137080.94,
+   "total": 154901.46,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 5130,
+    "Structural Framing (2x10 Joists)": 9039.6,
+    "Decking": 8108.1,
+    "Hardware & Fasteners": 2095.79,
+    "Railing System": 19118.53,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 92101.67,
+    "HST (13%)": 17820.52
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.025
+  },
+  "parity:big/Multi-corner/Picture Frame/Landing/freestanding-2lvl": {
+   "subtotal": 146414.59,
+   "total": 165448.48,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 6156,
+    "Structural Framing (2x10 Joists)": 9234,
+    "Decking": 8286.3,
+    "Hardware & Fasteners": 2371.52,
+    "Railing System": 20367.28,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 98512.24,
+    "HST (13%)": 19033.9
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 146.652
+  },
+  "parity:big/Multi-corner/Picture Frame/Winder/freestanding-2lvl": {
+   "subtotal": 150489.62,
+   "total": 170053.27,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 7182,
+    "Structural Framing (2x10 Joists)": 9039.6,
+    "Decking": 8108.1,
+    "Hardware & Fasteners": 2564.24,
+    "Railing System": 20752.7,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 101355.73,
+    "HST (13%)": 19563.65
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 144.466
+  },
+  "parity:big/Multi-corner/Herringbone/Straight/freestanding-2lvl": {
+   "subtotal": 138826.7,
+   "total": 156874.17,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 4617,
+    "Structural Framing (2x10 Joists)": 13024.8,
+    "Decking": 7929.9,
+    "Hardware & Fasteners": 2986.58,
+    "Railing System": 18146.53,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 90634.64,
+    "HST (13%)": 18047.47
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.025
+  },
+  "parity:big/Multi-corner/Herringbone/Landing/freestanding-2lvl": {
+   "subtotal": 148530.44,
+   "total": 167839.4,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 5643,
+    "Structural Framing (2x10 Joists)": 13608,
+    "Decking": 8197.2,
+    "Hardware & Fasteners": 3222.07,
+    "Railing System": 19071.28,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 97301.63,
+    "HST (13%)": 19308.96
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 146.652
+  },
+  "parity:big/Multi-corner/Herringbone/Winder/freestanding-2lvl": {
+   "subtotal": 152994.34,
+   "total": 172883.61,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 6669,
+    "Structural Framing (2x10 Joists)": 13413.6,
+    "Decking": 7929.9,
+    "Hardware & Fasteners": 3455.03,
+    "Railing System": 19780.7,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 100258.87,
+    "HST (13%)": 19889.26
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 144.466
+  },
+  "parity:big/Curved/Straight/Straight/freestanding-2lvl": {
+   "subtotal": 147607.91,
+   "total": 166796.94,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 6412.5,
+    "Structural Framing (2x10 Joists)": 9428.4,
+    "Decking": 10246.5,
+    "Hardware & Fasteners": 2316.6,
+    "Railing System": 20505.65,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 97211.01,
+    "HST (13%)": 19189.03
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.917
+  },
+  "parity:big/Curved/Straight/Landing/freestanding-2lvl": {
+   "subtotal": 156104.47,
+   "total": 176398.05,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 7438.5,
+    "Structural Framing (2x10 Joists)": 9622.8,
+    "Decking": 10246.5,
+    "Hardware & Fasteners": 2513.86,
+    "Railing System": 21430.4,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 103365.16,
+    "HST (13%)": 20293.58
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 147.543
+  },
+  "parity:big/Curved/Straight/Winder/freestanding-2lvl": {
+   "subtotal": 160646.43,
+   "total": 181530.46,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 8464.5,
+    "Structural Framing (2x10 Joists)": 9428.4,
+    "Decking": 10246.5,
+    "Hardware & Fasteners": 2785.05,
+    "Railing System": 22139.81,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 106094.91,
+    "HST (13%)": 20884.04
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 145.358
+  },
+  "parity:big/Curved/Diagonal/Straight/freestanding-2lvl": {
+   "subtotal": 162355.26,
+   "total": 183461.44,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 6412.5,
+    "Structural Framing (2x10 Joists)": 10108.8,
+    "Decking": 9266.4,
+    "Hardware & Fasteners": 2574.29,
+    "Railing System": 20505.65,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 112000.37,
+    "HST (13%)": 21106.18
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.917
+  },
+  "parity:big/Curved/Diagonal/Landing/freestanding-2lvl": {
+   "subtotal": 172356.43,
+   "total": 194762.77,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 7438.5,
+    "Structural Framing (2x10 Joists)": 10303.2,
+    "Decking": 9533.7,
+    "Hardware & Fasteners": 2778.03,
+    "Railing System": 21430.4,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 119385.35,
+    "HST (13%)": 22406.34
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 147.543
+  },
+  "parity:big/Curved/Diagonal/Winder/freestanding-2lvl": {
+   "subtotal": 177170.56,
+   "total": 200202.73,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 8464.5,
+    "Structural Framing (2x10 Joists)": 10108.8,
+    "Decking": 9266.4,
+    "Hardware & Fasteners": 3042.74,
+    "Railing System": 22139.81,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 122661.05,
+    "HST (13%)": 23032.17
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 145.358
+  },
+  "parity:big/Curved/Picture Frame/Straight/freestanding-2lvl": {
+   "subtotal": 174732.11,
+   "total": 197447.29,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 6412.5,
+    "Structural Framing (2x10 Joists)": 10594.8,
+    "Decking": 10602.9,
+    "Hardware & Fasteners": 2643.25,
+    "Railing System": 21477.65,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 121513.77,
+    "HST (13%)": 22715.17
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.917
+  },
+  "parity:big/Curved/Picture Frame/Landing/freestanding-2lvl": {
+   "subtotal": 185170.05,
+   "total": 209242.16,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 7438.5,
+    "Structural Framing (2x10 Joists)": 10789.2,
+    "Decking": 10602.9,
+    "Hardware & Fasteners": 2919.35,
+    "Railing System": 22726.4,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 129206.45,
+    "HST (13%)": 24072.11
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 147.543
+  },
+  "parity:big/Curved/Picture Frame/Winder/freestanding-2lvl": {
+   "subtotal": 189991.6,
+   "total": 214690.51,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 8464.5,
+    "Structural Framing (2x10 Joists)": 10594.8,
+    "Decking": 10602.9,
+    "Hardware & Fasteners": 3111.7,
+    "Railing System": 23111.81,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 132618.64,
+    "HST (13%)": 24698.91
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 145.358
+  },
+  "parity:big/Curved/Herringbone/Straight/freestanding-2lvl": {
+   "subtotal": 178141.25,
+   "total": 201299.61,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 6412.5,
+    "Structural Framing (2x10 Joists)": 14968.8,
+    "Decking": 9801,
+    "Hardware & Fasteners": 3632.31,
+    "Railing System": 20505.65,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 121333.74,
+    "HST (13%)": 23158.36
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 140.917
+  },
+  "parity:big/Curved/Herringbone/Landing/freestanding-2lvl": {
+   "subtotal": 189178.01,
+   "total": 213771.15,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 7438.5,
+    "Structural Framing (2x10 Joists)": 15552,
+    "Decking": 10068.3,
+    "Hardware & Fasteners": 3867.43,
+    "Railing System": 21430.4,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 129334.13,
+    "HST (13%)": 24593.14
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 147.543
+  },
+  "parity:big/Curved/Herringbone/Winder/freestanding-2lvl": {
+   "subtotal": 194233.73,
+   "total": 219484.12,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 8464.5,
+    "Structural Framing (2x10 Joists)": 15357.6,
+    "Decking": 9801,
+    "Hardware & Fasteners": 4100.76,
+    "Railing System": 22139.81,
+    "Stairs": 1262.25,
+    "Labour (Construction & Build)": 132882.81,
+    "HST (13%)": 25250.39
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 145.358
+  },
+  "showcase:Kempenfelt": {
+   "subtotal": 93171.69,
+   "total": 105284.01,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 5771.25,
+    "Structural Framing (2x10 Joists)": 8748,
+    "Decking": 19404,
+    "Hardware & Fasteners": 1654.83,
+    "Railing System": 9953.96,
+    "Stairs": 573.75,
+    "Labour (Construction & Build)": 41997.15,
+    "in-lite® Lighting System": 2467.75,
+    "Deck-part finishes": 2376,
+    "Deck skirting": 0,
+    "HST (13%)": 12112.32
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Deck skirting (builder quote)",
+    "Fascia boards (supplier quote)",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 68.657
+  },
+  "showcase:Cascade": {
+   "subtotal": 354254.91,
+   "total": 400308.05,
+   "sections": {
+    "Permits & Professional Fees": 1725,
+    "Foundation & Footings": 11542.5,
+    "Structural Framing (2x10 Joists)": 12733.2,
+    "Decking": 20203.33,
+    "Hardware & Fasteners": 1620,
+    "Railing System": 0,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 175258.39,
+    "in-lite® Lighting System": 5691.5,
+    "Add-ons & Extras": 15714,
+    "Accent colours & inlays": 3868.72,
+    "Manufacturer deck accessories": 0,
+    "Deck-part finishes": 7307.59,
+    "Deck skirting": 0,
+    "Yard · Shared excavation and base installation": 4680.6,
+    "Yard · Paving materials, wall allowances and shared delivery": 10671.11,
+    "Yard · Installation labour": 8668.48,
+    "Yard · Shared excavation disposal": 1650,
+    "Yard · Shared site restoration": 1150,
+    "Yard · Fire pit, natural gas or propane, with its gas line (estimator allowance)": 7380,
+    "Yard · Outdoor kitchen, full build: services, appliances and finishes (estimator allowance)": 54432,
+    "Yard · Landscape lighting for the yard (estimator allowance)": 9270,
+    "Yard · Seat wall: engineering and selected system confirmation": 0,
+    "Yard · Pondless waterfall: Water feature, basin, pump and filtration": 0,
+    "Yard · Pondless waterfall: Liner and underlay": 0,
+    "Yard · Pondless waterfall: Selected rock and finishing": 0,
+    "HST (13%)": 46053.14
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Deck skirting (builder quote)",
+    "HIDEAWAY standard privacy screen: Horizon, 2 panels, Textured Black supply and installation",
+    "Joist-to-beam ties",
+    "Medallion inlay labour (builder quote)",
+    "Pondless waterfall: Liner and underlay",
+    "Pondless waterfall: Selected rock and finishing",
+    "Pondless waterfall: Water feature, basin, pump and filtration",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "SWAY PENDANT supply and installation",
+    "Seat wall: engineering and selected system confirmation",
+    "Skewed joist and hip hangers",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber",
+    "TimberTech CONCEALoc hidden clips",
+    "TimberTech Impression Rail Express · glass",
+    "TimberTech fascia boards"
+   ],
+   "railingLf": 91.539
+  },
+  "showcase:Painswick": {
+   "subtotal": 152855.89,
+   "total": 172727.16,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 6412.5,
+    "Structural Framing (2x10 Joists)": 9622.8,
+    "Decking": 17463.6,
+    "Hardware & Fasteners": 1923.75,
+    "Railing System": 25230.29,
+    "Stairs": 573.75,
+    "Labour (Construction & Build)": 86478.8,
+    "in-lite® Lighting System": 2787,
+    "Deck-part finishes": 2138.4,
+    "Deck skirting": 0,
+    "HST (13%)": 19871.27
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Deck skirting (builder quote)",
+    "Fascia boards (supplier quote)",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Splice fasteners",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 72.936
+  },
+  "default two levels (36 → 12 in, 48 in stair)": {
+   "subtotal": 49722.12,
+   "total": 56185.99,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 1795.5,
+    "Structural Framing (2x10 Joists)": 4082.4,
+    "Decking": 4276.8,
+    "Hardware & Fasteners": 1009.37,
+    "Railing System": 10845.21,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 26799.34,
+    "HST (13%)": 6463.88
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 81.353
+  },
+  "split level (one full-width riser)": {
+   "subtotal": 47753.09,
+   "total": 53960.99,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2308.5,
+    "Structural Framing (2x10 Joists)": 4179.6,
+    "Decking": 4722.3,
+    "Hardware & Fasteners": 1162.67,
+    "Railing System": 8408.34,
+    "Stairs": 573.75,
+    "Labour (Construction & Build)": 26172.93,
+    "HST (13%)": 6207.9
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 63.205
+  },
+  "one riser, 48 in stair": {
+   "subtotal": 48775.82,
+   "total": 55116.67,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 1795.5,
+    "Structural Framing (2x10 Joists)": 4082.4,
+    "Decking": 4276.8,
+    "Hardware & Fasteners": 1009.37,
+    "Railing System": 10745.86,
+    "Stairs": 573.75,
+    "Labour (Construction & Build)": 26067.13,
+    "HST (13%)": 6340.86
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 80.372
+  },
+  "full-width step, 2 risers": {
+   "subtotal": 48380.24,
+   "total": 54669.67,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2308.5,
+    "Structural Framing (2x10 Joists)": 4179.6,
+    "Decking": 4722.3,
+    "Hardware & Fasteners": 1162.67,
+    "Railing System": 8354.64,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 26739.02,
+    "HST (13%)": 6289.43
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 62.675
+  },
+  "full-width step, 3 risers": {
+   "subtotal": 47338.47,
+   "total": 53492.47,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2308.5,
+    "Structural Framing (2x10 Joists)": 4082.4,
+    "Decking": 4455,
+    "Hardware & Fasteners": 1151.28,
+    "Railing System": 8545.16,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 25882.63,
+    "HST (13%)": 6154
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 60.45
+  },
+  "full-width step, 5 risers (guards on)": {
+   "subtotal": 47548.57,
+   "total": 53729.88,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 1795.5,
+    "Structural Framing (2x10 Joists)": 4082.4,
+    "Decking": 4276.8,
+    "Hardware & Fasteners": 1009.37,
+    "Railing System": 9400.69,
+    "Stairs": 803.25,
+    "Labour (Construction & Build)": 25955.56,
+    "HST (13%)": 6181.31
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 67.993
+  },
+  "flush join (same height)": {
+   "subtotal": 45089.04,
+   "total": 50950.62,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 1795.5,
+    "Structural Framing (2x10 Joists)": 4082.4,
+    "Decking": 4276.8,
+    "Hardware & Fasteners": 1009.37,
+    "Railing System": 8713.72,
+    "Stairs": 573.75,
+    "Labour (Construction & Build)": 24412.5,
+    "HST (13%)": 5861.58
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 65.315
+  },
+  "raised second level (12 → 36 in)": {
+   "subtotal": 49722.12,
+   "total": 56185.99,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 1795.5,
+    "Structural Framing (2x10 Joists)": 4082.4,
+    "Decking": 4276.8,
+    "Hardware & Fasteners": 1009.37,
+    "Railing System": 10845.21,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 26799.34,
+    "HST (13%)": 6463.88
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 81.353
+  },
+  "right side, 24 in drop": {
+   "subtotal": 49930.02,
+   "total": 56420.92,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 1795.5,
+    "Structural Framing (2x10 Joists)": 4082.4,
+    "Decking": 4276.8,
+    "Hardware & Fasteners": 1009.37,
+    "Railing System": 11053.11,
+    "Stairs": 688.5,
+    "Labour (Construction & Build)": 26799.34,
+    "HST (13%)": 6490.9
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 81.353
+  },
+  "over 14 risers (140 → 24 in)": {
+   "subtotal": 88893.71,
+   "total": 100449.89,
+   "sections": {
+    "Permits & Professional Fees": 225,
+    "Foundation & Footings": 2821.5,
+    "Structural Framing (2x10 Joists)": 4568.4,
+    "Decking": 4989.6,
+    "Hardware & Fasteners": 1270.13,
+    "Railing System": 17003.39,
+    "Stairs": 2180.25,
+    "Labour (Construction & Build)": 55835.43,
+    "HST (13%)": 11556.18
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 124.841
+  },
+  "three levels (default third)": {
+   "subtotal": 77466.59,
+   "total": 87537.25,
+   "sections": {
+    "Permits & Professional Fees": 1725,
+    "Foundation & Footings": 2821.5,
+    "Structural Framing (2x10 Joists)": 6220.8,
+    "Decking": 5791.5,
+    "Hardware & Fasteners": 1384.61,
+    "Railing System": 15516.21,
+    "Stairs": 803.25,
+    "Labour (Construction & Build)": 43203.71,
+    "HST (13%)": 10070.66
+   },
+   "quoteRequired": [
+    "Blocking connections",
+    "Connector fastener sets",
+    "Joist-to-beam ties",
+    "Post-to-beam caps",
+    "Railing post anchors/bolts",
+    "Stringer connectors",
+    "Support post timber"
+   ],
+   "railingLf": 113.353
+  }
+ }
+}

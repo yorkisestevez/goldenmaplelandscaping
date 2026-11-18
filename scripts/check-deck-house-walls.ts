@@ -8,7 +8,7 @@ import {calculateEstimate} from '../src/features/deckcraft/calculations';
 import {getHouseConfig,HOUSE_CLADDINGS} from '../src/features/deckcraft/houseSettings';
 import {getHouseWalls,MAX_HOUSE_BLOCKS} from '../src/features/deckcraft/houseFootprint';
 import {buildHouseGeometry,houseWallSpecs,type HouseWallSpec} from '../src/features/deckcraft/components/viewer3d/houseGeometry';
-import {houseWallParts} from '../src/features/deckcraft/components/viewer3d/houseWallParts';
+import {HOUSE_FOUNDATION_REVEAL_IN,houseWallParts} from '../src/features/deckcraft/components/viewer3d/houseWallParts';
 import {SKIN_PIECE_CAP,facadeSkins,gableCourses,openingShapes,wallSkin} from '../src/features/deckcraft/components/viewer3d/houseCladdingSkins';
 import {WAINSCOT_CAP,splitAtBand,wainscotBand,wainscotCap} from '../src/features/deckcraft/components/viewer3d/houseWainscot';
 import {resolveWallFinish} from '../src/features/deckcraft/houseFinishes';
@@ -19,15 +19,17 @@ import {deckExportMeshes} from '../src/features/deckcraft/designExports';
 import {WAINSCOT_HEIGHT_IN,parseDesign,pruneEdgeNames,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {decodeDesignLink,designLinkFromHash,encodeDesignLink} from '../src/features/deckcraft/designLink';
 import {deckReleaseData,serializeDeckReleaseDesign} from '../src/features/deckcraft/deckRelease';
-import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import {ProposalSheet} from '../src/features/deckcraft/ProposalSheet';
 import {HOUSE_CASES,ORIGINAL_CLADDINGS,SKIN_WALLS,exactDigest,shapesFor} from './deck-house-finishes-cases';
 import type {Box} from '../src/features/deckcraft/deckTakeoff';
+import {MASONRY_CLADDINGS,ledgerBlocked} from '../src/features/deckcraft/structure/structuralReview';
+import {estimateKeyOf} from '../src/features/deckcraft/designer/useDeckEstimate';
 import type {DeckData,HouseBlock,HouseCladding,HouseConfig,HouseFinish,HouseOpening} from '../src/features/deckcraft/types';
 
 /**
  * Finishes track F5: per-wall and per-block finishes, wainscots, gable accents and exterior looks (appearance
- * only, never priced).
+ * only, except brick or stone on a wall the deck fastens to, which blocks its ledger in a new design).
  * 1. Absent means unchanged: every wall resolves to the whole house, the facade and the export draw exactly as
  *    before (the F4 golden), and saves and links gain nothing.
  * 2. A wall takes its own finish, else its block's, else the whole house's, taken whole.
@@ -74,10 +76,11 @@ const NEW_KEYS=/"(wallFinishes|wainscot|gableAccent|finish)"/;
     eq(parseDesign(saved),validateDesign(d),`${name}: saves and loads unchanged`);
     ok(pruneEdgeNames(d)===d||!!d.stairEdgeId,`${name}: an edit leaves the house untouched`);
   }
-  // Without a wainscot the facade's pieces are exactly the F4 skins, for every cladding and wall.
+  // Without a wainscot the facade's pieces are exactly the F4 skins, laid from the foundation reveal up, for every
+  // cladding and wall.
   for(const cladding of HOUSE_CLADDINGS)for(const [wall,w] of Object.entries(SKIN_WALLS)){
-    const shapes=shapesFor(w.span,w.openings);
-    eq(facadeSkins(cladding,w.span,w.height,shapes,w.hidden),{skin:wallSkin(cladding,w.span,w.height,shapes,w.hidden)},`${cladding}/${wall}: no wainscot, the same pieces as before`);
+    const shapes=shapesFor(w.span,w.openings),r=HOUSE_FOUNDATION_REVEAL_IN,f4=wallSkin(cladding,w.span,w.height-r,shapes.map(o=>({...o,y:o.y-r,bottomIn:o.bottomIn-r})),w.hidden);
+    eq(facadeSkins(cladding,w.span,w.height,shapes,w.hidden),{skin:{pieces:f4.pieces.map(b=>({...b,y:b.y+r})),simplified:f4.simplified}},`${cladding}/${wall}: no wainscot, the F4 pieces on the foundation reveal`);
   }
   const link=await encodeDesignLink(HOUSE_CASES['blocks/bump-wing-garage'],'https://example.test');
   ok(!NEW_KEYS.test(serializeDeckReleaseDesign(await decodeDesignLink(designLinkFromHash(new URL(link).hash)!))),'A share link gains no finish fields');
@@ -215,24 +218,37 @@ const NEW_KEYS=/"(wallFinishes|wainscot|gableAccent|finish)"/;
       ok(wearsLook(next,look)&&JSON.stringify(applyLook(next,look))===JSON.stringify(next),`${look.name}: applied, and applying it again changes nothing`);
       const after:DeckData={...d,houseConfig:next};
       eq(validateDesign(after).houseConfig,parseDesign(serializeDesign(after)).houseConfig,`${look.name}: saves and loads`);
-      eq(buildDeckTakeoff(after).quantities,buildDeckTakeoff(d).quantities,`${look.name}: no quantity moves`);
       const [a,b]=[calculateEstimate(after),calculateEstimate(d)];
-      eq(a.sections.map(s=>[s.title,s.total]),b.sections.map(s=>[s.title,s.total]),`${look.name}: no price moves`);
-      ok(a.total===b.total,`${look.name}: the same total`);
+      // A look prices only when it changes whether the ledger is blocked (a deck wall with its own finish keeps it).
+      if(ledgerBlocked(after)!==ledgerBlocked(d)){
+        ok(look.set.cladding&&(MASONRY_CLADDINGS as readonly string[]).includes(look.set.cladding),`${look.name}: only a masonry cladding blocks the ledger`);
+        ok(a.total!==b.total&&a.flags.some(flag=>flag.includes('Ledger blocked')),`${look.name}: masonry cladding blocks the ledger and changes the price`);
+      }else{
+        eq(buildDeckTakeoff(after).quantities,buildDeckTakeoff(d).quantities,`${look.name}: no quantity moves`);
+        eq(a.sections.map(s=>[s.title,s.total]),b.sections.map(s=>[s.title,s.total]),`${look.name}: no price moves`);
+        ok(a.total===b.total,`${look.name}: the same total`);
+      }
       ok(JSON.stringify(next.wallFinishes)===JSON.stringify(house.wallFinishes)&&JSON.stringify(next.openings)===JSON.stringify(house.openings)&&JSON.stringify(next.footprint)===JSON.stringify(house.footprint),`${look.name}: walls, blocks, doors and windows keep their own finishes`);
     }
   }
   ok(ownFinishes(dressed.houseConfig!)===3&&ownFinishes(withoutOwnFinishes(dressed.houseConfig!))===0,'Own finishes are counted and can be reset');
   const reset=withoutOwnFinishes(dressed.houseConfig!),changed=Object.keys(dressed.houseConfig!).filter(k=>JSON.stringify(dressed.houseConfig![k as keyof HouseConfig])!==JSON.stringify(reset[k as keyof HouseConfig]));
   eq(changed.sort(),['footprint','wallFinishes'],'Resetting own finishes touches only the wall and block finishes (and opening colours)');
-  // Every finish is appearance only.
+  // A finish prices only as brick or stone on a wall the deck fastens to (main-front in `dressed`), and only in a new
+  // design: it blocks the ledger. Every other finish, and every finish in a save from before, is appearance only.
   const plain=deck({footprint:blocks,openings:[...base.openings,garageDoor]}),total=calculateEstimate(plain).total,quantities=buildDeckTakeoff(plain).quantities;
-  for(const d of [dressed,{...plain,houseConfig:{...plain.houseConfig!,wainscot:{...W36,heightIn:72}}},{...plain,houseConfig:{...plain.houseConfig!,footprint:{rects:blocks.rects.map(b=>({...b,finish:SHAKES}))}}}]){
+  const sidedDeckWall=deck({...dressed.houseConfig!,wallFinishes:{...dressed.houseConfig!.wallFinishes,'main-front':{...SHAKES,gable:{cladding:'Siding',color:'#e8e1d2'}}}});
+  ok(calculateEstimate(dressed).total!==total&&calculateEstimate(dressed).flags.some(f=>f.includes('Ledger blocked: the wall the deck meets is Fieldstone')),'Fieldstone on the deck wall blocks the ledger in a new design');
+  const old=(d:DeckData):DeckData=>({...d,buildRules:'2026-10-piers'});
+  ok(calculateEstimate(old(dressed)).total===calculateEstimate(old(plain)).total,'A save from before keeps its price with Fieldstone on the deck wall');
+  for(const d of [sidedDeckWall,{...plain,houseConfig:{...plain.houseConfig!,wainscot:{...W36,heightIn:72}}},{...plain,houseConfig:{...plain.houseConfig!,footprint:{rects:blocks.rects.map(b=>({...b,finish:SHAKES}))}}}]){
     eq(buildDeckTakeoff(d).quantities,quantities,'A wall finish moves no quantity');ok(calculateEstimate(d).total===total,'A wall finish moves no price');
   }
   // The estimate key leaves the house's looks out: all of houseConfig, and a block's finish in the house fit.
   const estimateHook=read('features/deckcraft/designer/useDeckEstimate.ts'),fit=/houseFit:[^\n]*?rects\.map\(b=>\[([^\]]*)\]\)/.exec(estimateHook);
-  ok(/houseConfig:undefined/.test(estimateHook)&&fit&&!/finish|wainscot|gable|wallFinishes/.test(fit[1])&&!/wallFinishes|wainscot|gableAccent/.test(estimateHook),'The estimate key never sees a wall finish, wainscot, gable accent or look');
+  const recoloured=deck({...dressed.houseConfig!,wallFinishes:{...dressed.houseConfig!.wallFinishes,'main-front':{...STONE,color:'#5a5853'}}}),reclad=deck({...dressed.houseConfig!,wallFinishes:{...dressed.houseConfig!.wallFinishes,'main-front':{...BRICK}}});
+  ok(estimateKeyOf(recoloured)===estimateKeyOf(dressed)&&estimateKeyOf(reclad)!==estimateKeyOf(dressed),'A wall colour never re-prices; its cladding does');
+  ok(/houseConfig:undefined/.test(estimateHook)&&/houseCladding:data\.houseConfig\?\.cladding/.test(estimateHook)&&fit&&!/finish|wainscot|gable|wallFinishes/.test(fit[1])&&!/wainscot|gableAccent/.test(estimateHook),'The estimate key sees claddings, which can block a ledger, and never a wainscot, a gable accent or a block finish in the house fit');
   ok(designFeatures(dressed).includes('deck_house_exterior')&&designFeatures(deck({wainscot:W36})).includes('deck_house_exterior'),'The funnel counts dressed houses');
 }
 
@@ -256,7 +272,7 @@ const NEW_KEYS=/"(wallFinishes|wainscot|gableAccent|finish)"/;
 {
   const facade=read('features/deckcraft/components/viewer3d/HouseFacade.tsx'),house=read('features/deckcraft/components/viewer3d/House3D.tsx'),panel=read('features/deckcraft/designer/PreviewPanel.tsx'),viewer=read('features/deckcraft/components/viewer3d/Deck3DViewer.tsx');
   ok(/onSelectHouseWall&&\(\(e:ThreeEvent<MouseEvent>\)=>\{if\(e\.delta>4\)return;e\.stopPropagation\(\);onSelectHouseWall\(wallId\)/.test(facade),'A click on a wall (not an orbit drag) picks it');
-  ok(/onSelectHouseWall=\{exteriorOpen\?setHouseWall:undefined\}/.test(panel)&&/selectedHouseWallId=\{exteriorOpen\?houseWall:undefined\}/.test(panel),'Walls can be picked in 3D only while the exterior studio is open');
+  ok(/onSelectHouseWall=\{!picking&&exteriorOpen\?setHouseWall:undefined\}/.test(panel)&&/selectedHouseWallId=\{exteriorOpen\?houseWall:undefined\}/.test(panel),'Exterior wall finishing picks remain scoped to the open studio and yield to explicit object selection');
   ok(/picked&&<PickedWall/.test(facade)&&/raycast=\{\(\)=>null\}/.test(facade)&&/selectedHouseWallId===blockId/.test(facade),'The picked wall (or every wall of a picked block) is outlined, never in the way of a click');
   ok(/picked-wall-outline/.test(viewer)&&/o\.visible=false/.test(viewer),'The proposal snapshot leaves the outline out');
   ok(/finish=\{facadeFinish\(config,f\.wall\.id\)\}/.test(house)&&/accents=\{accents\.filter/.test(house)&&/walls\.filter\(isGableEnd\)/.test(house),'Each wall and gable end, main house and blocks, draws its own resolved finish');
@@ -270,11 +286,11 @@ const NEW_KEYS=/"(wallFinishes|wainscot|gableAccent|finish)"/;
   ok(/aria-label="Walls to finish"/.test(studio)&&/The whole house/.test(studio)&&/A whole block/.test(studio)&&/One wall/.test(studio),'The walls tab picks the whole house, a block or a wall');
   ok(/aria-label="Wainscot height"/.test(studio)&&/WAINSCOT_HEIGHT_IN/.test(studio)&&/Gable accent/.test(studio),'Wainscot (cladding, colour, height within the limits) and gable accent controls');
   ok(/Apply to the whole house/.test(studio)&&/applyToBlock/.test(studio)&&/Reset this wall/.test(studio)&&/resetBlock/.test(studio),'Apply to a block or the whole house, and reset');
-  ok(/appearance only|never priced/i.test(studio)&&/never changes a size, a shape or the price/.test(studio),'The studio says looks and finishes are appearance only');
+  ok(/appearance only|never priced/i.test(studio)&&/never changes a size or a shape/.test(studio)&&/Brick or stone cladding can change the ledger/.test(studio),'The studio says looks keep size and shape, and that brick or stone can change the ledger price');
   // Walls a customer can see and pick are exactly the houseWallSpecs walls with an exposed stretch.
   const d=HOUSE_CASES['blocks/bump-wing-garage'],specs:HouseWallSpec[]=houseWallSpecs(d,getHouseConfig(d));
   eq(specs.map(s=>s.wall.id),getHouseWalls(d).map(w=>w.id),'Wall ids come from houseWallSpecs');
   ok(ORIGINAL_CLADDINGS.length===6,'The original claddings are unchanged');
 }
 
-console.log(`HOUSE WALLS OK — per-wall, per-block and whole-house finishes resolve wall > block > house; walls of removed blocks drop (at most 28 kept); wainscots stay in the wall and clear of openings; ${EXTERIOR_LOOKS.length} looks touch appearance only; no price, quantity or estimate-key change; absent fields change nothing; ${checks} checks.`);
+console.log(`HOUSE WALLS OK — per-wall, per-block and whole-house finishes resolve wall > block > house; walls of removed blocks drop (at most 28 kept); wainscots stay in the wall and clear of openings; ${EXTERIOR_LOOKS.length} looks touch appearance only; only brick or stone on a wall the deck fastens to prices (new designs); absent fields change nothing; ${checks} checks.`);

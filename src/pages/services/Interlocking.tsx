@@ -1,58 +1,63 @@
-import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Grid, Check, ArrowRight, Shield, Award, CheckCircle } from 'lucide-react';
 import SEO from '../../components/SEO';
+import { breadcrumb, faqPage, graph, howToNode, serviceNode } from '../../utils/schema';
+import { engineFactRange } from '../../data/publishedPrices';
+import { ServicePageFreshness, ServiceReviewer, pageUpdateNode } from '../../components/PageFreshness';
 import Testimonials from '../../components/Testimonials';
+import PlanningQuote from '../../components/PlanningQuote';
 
 const FAQ = [
   { q: 'What should be reviewed before an interlocking project?', a: 'Site conditions, drainage, intended use, materials, and written workmanship terms should be confirmed for the specific project.' },
   { q: 'How are base details determined?', a: 'Excavation and base details are project-specific. They are reviewed from site conditions and the written scope rather than offered as a universal standard.' },
-  { q: 'What product and workmanship terms apply?', a: 'Ask for the current written workmanship terms and applicable manufacturer information for the product selected.' },
 ];
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQ.map((item) => ({
-    "@type": "Question",
-    name: item.q,
-    acceptedAnswer: { "@type": "Answer", text: item.a },
-  })),
-};
+const PATH = '/services/interlocking-barrie/';
+const NAME = 'Interlocking patios, walkways & driveways in Barrie';
+
+// One list drives the visible process cards and the HowTo schema.
+const PROCESS_STEPS = [
+  { title: "Excavation", desc: "We review excavation depth, drainage, and subgrade conditions as part of the project-specific written scope." },
+  { title: "Base Preparation", desc: "Multiple layers of crushed aggregate, each meticulously compacted to engineering standards." },
+  { title: "Laying & Patterning", desc: "Precision placement of premium pavers with laser-guided grading." },
+  { title: "Polymeric Sanding", desc: "Jointing materials and maintenance expectations confirmed for the project scope." }
+];
+
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({
+    path: PATH,
+    name: NAME,
+    serviceType: 'Interlocking paver installation',
+    areaServed: 'Barrie',
+    price: engineFactRange('patio.rate', 'per square foot'),
+    priceDescription: 'Planning range for most 300–1,000 sq ft interlocking patios with mid-tier pavers, before HST. Not a quote for a specific property.',
+  }),
+  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: NAME, path: PATH }]),
+  faqPage(PATH, FAQ),
+  howToNode({ path: PATH, name: 'How Golden Maple builds an interlocking patio', steps: PROCESS_STEPS }),
+  pageUpdateNode(PATH, PATH, NAME),
+);
 
 export default function Interlocking() {
-  const processSteps = [
-    { title: "Excavation", desc: "We review excavation depth, drainage, and subgrade conditions as part of the project-specific written scope." },
-    { title: "Base Preparation", desc: "Multiple layers of crushed aggregate, each meticulously compacted to engineering standards." },
-    { title: "Laying & Patterning", desc: "Precision placement of premium pavers with laser-guided grading." },
-    { title: "Polymeric Sanding", desc: "Jointing materials and maintenance expectations confirmed for the project scope." }
-  ];
-
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Interlocking Stone Installation Barrie"
+        title="Interlock Contractor Barrie | Interlocking Patios & Walkways"
         description="Interlocking stone patios, driveways, and walkways for Barrie-area properties. Discuss materials, site conditions, and project scope with our team."
         canonical="https://goldenmaplelandscaping.ca/services/interlocking-barrie"
-        schema={faqSchema}
+        schema={pageSchema}
       />
       
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-40">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-                Hardscape Construction
-              </span>
-              <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
+            <div>
+              <h1 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">Interlock Contractor in Barrie</h1>
+              <p className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 A patio that's <br />
                 <span className="italic text-brand-gold-dark">planned for your property.</span>
-              </h1>
+              </p>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 You've seen what happens when an interlocking patio is built wrong. Sunken corners. Joints full of weeds. The whole thing pitching toward the foundation by year three. We're here to make sure that's not the story you tell about yours. We can discuss materials, drainage, access, and a written project scope for your property.
               </p>
@@ -61,24 +66,38 @@ export default function Interlocking() {
                 <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
                   View Portfolio <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
+                <Link to="/services/interlocking-driveways-barrie" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
+                  Interlock driveways <ArrowRight size={16} strokeWidth={1.5} />
+                </Link>
               </div>
-            </motion.div>
+              <ServicePageFreshness updateKey={PATH} className="mt-12" />
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
-            >
+            <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
               <img
-                src="/images/projects/paver-driveway.JPG"
+                src="/images/projects/paver-driveway-640.webp"
+                srcSet="/images/projects/paver-driveway-640.webp 640w, /images/projects/paver-driveway-1200.webp 1200w"
+                sizes="(min-width: 1024px) 42vw, 100vw"
+                width={1200}
+                height={1500}
                 alt="Interlocking Stone Patio in Barrie ON"
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
-            </motion.div>
+            </div>
           </div>
+
+          <PlanningQuote
+            source="interlocking-barrie"
+            rate="$40–$45"
+            rateDetail="per square foot before HST for most 300–1,000 sq ft interlocking patios with mid-tier pavers. A planning range, not a quote for your property."
+            categories={['Patios & interlocking', 'Driveways']}
+            defaultService="Interlocking patio"
+            repairHref="/premium-patio-rebuild-barrie/"
+          />
 
           <div className="mb-40">
             <div className="text-center max-w-3xl mx-auto mb-24">
@@ -90,7 +109,7 @@ export default function Interlocking() {
               </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-              {processSteps.map((step, idx) => (
+              {PROCESS_STEPS.map((step, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
                   <span className="font-display text-6xl font-light text-brand-gold-dark/10 block mb-10">0{idx + 1}</span>
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{step.title}</h3>
@@ -151,6 +170,8 @@ export default function Interlocking() {
               ))}
             </div>
           </div>
+
+          <ServiceReviewer updateKey={PATH} />
         </div>
       </section>
 

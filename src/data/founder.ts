@@ -42,6 +42,9 @@ const ROLE = BUSINESS.founder.value.role;
 export const FOUNDER = {
   name: NAME,
   role: ROLE,
+  /** Author/profile page — the Person entity's url (schema.ts) and the bylines link here. */
+  slug: 'yorkis-estevez',
+  profilePath: '/about/yorkis-estevez',
 
   /** Home Manifesto + /about — bordered 3:4 portrait. */
   portrait: {

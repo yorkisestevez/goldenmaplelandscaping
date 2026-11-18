@@ -1,0 +1,46 @@
+import assert from 'node:assert/strict';
+import {pathToFileURL,fileURLToPath} from 'node:url';
+import {resolve} from 'node:path';
+const root=process.argv[2]??fileURLToPath(new URL('..',import.meta.url));
+const mod=(p:string)=>import(pathToFileURL(resolve(root,'src/features/deckcraft',p)).href);
+const {DEFAULT_DECK}=await mod('defaults.ts'),{newLandscapeObject}=await mod('landscapeCatalogue.ts'),{ensureDesignExtensions}=await mod('designExtensions.ts');
+const {assertLandscapePlacements,applyLandscapeEdit}=await mod('landscapeEdits.ts'),{landscapeBedAreas,landscapeTakeoff,landscapePlacement}=await mod('landscapeModelRuntime.ts');
+const {editObjects}=await mod('professionalEdits.ts'),{landscapeClip,landscapeConnected}=await mod('landscapeFill.ts'),{landscapeSignedArea}=await mod('landscapeOutline.ts');
+const {createDeckAgentController}=await mod('designer/deckAgentController.ts');
+let passed=0,failed=0;
+async function test(name:string,fn:()=>unknown){try{await fn();passed++;console.log('PASS '+name);}catch(e){failed++;console.log('FAIL '+name+': '+(e as Error).message);}}
+const green={...newLandscapeObject('putting-green','green',1200,1200),widthIn:240,depthIn:240,groundCoverOnly:true,puttingCups:[{x:-40,z:0},{x:40,z:0}]};
+const stone={...newLandscapeObject('white-stone-bed','stone',1160,1200),widthIn:20,depthIn:20,groundCoverOnly:true};
+const base={...structuredClone(DEFAULT_DECK),houseVisible:false,landscapeObjects:[green]};await ensureDesignExtensions(base);
+await test('explicit removal of a valid cup is permitted',()=>assert.doesNotThrow(()=>assertLandscapePlacements(base,{...base,landscapeObjects:[{...green,puttingCups:green.puttingCups.slice(1)}]})));
+await test('equal-count swap of conflicting cups is rejected',()=>assert.throws(()=>assertLandscapePlacements({...base,landscapeObjects:[green,stone]},{...base,landscapeObjects:[green,{...stone,xIn:1240}]}),/cup/));
+await test('unrelated existing cup conflict stays pending',()=>assert.doesNotThrow(()=>assertLandscapePlacements({...base,landscapeObjects:[green,stone]},{...base,landscapeObjects:[green,stone],deckingColor:'unchanged geometry'})));
+await test('new obstacle over a cup is rejected',()=>assert.throws(()=>assertLandscapePlacements(base,{...base,landscapeObjects:[green,stone]}),/cup/));
+await test('moving an obstacle away restores cover',()=>{const covered=landscapeTakeoff([green,stone],{...base,landscapeObjects:[green,stone]}),clear=landscapeTakeoff([green,{...stone,xIn:1600}],{...base,landscapeObjects:[green,{...stone,xIn:1600}]});assert.equal(covered.cupCount,1);assert.equal(clear.cupCount,2);});
+const rect=(x:number,z:number,w:number,d:number)=>[{x,z},{x:x+w,z},{x:x+w,z:z+d},{x,z:z+d}];
+const area=(paths:any[])=>paths.reduce((n,p)=>n+landscapeSignedArea(p),0);
+await test('concave container analytic area and holes',()=>{const outer=[{x:0,z:0},{x:100,z:0},{x:100,z:40},{x:40,z:40},{x:40,z:100},{x:0,z:100}],paths=landscapeClip([outer],[rect(10,10,10,10)],'difference');assert.ok(Math.abs(area(paths)-6300)<6.3);assert.equal(landscapeConnected(paths,{x:15,z:15}).length,0);assert.equal(landscapeConnected(paths,{x:5,z:5}).length,2);});
+await test('disconnected fill selects only seed component',()=>{const paths=landscapeClip([rect(0,0,100,100)],[rect(45,-10,10,120)],'difference');assert.equal(area(landscapeConnected(paths,{x:10,z:10})),4500);});
+await test('narrow connected passage remains fillable',()=>{const paths=landscapeClip([rect(0,0,100,100)],[rect(45,0,10,99)],'difference');assert.equal(area(landscapeConnected(paths,{x:10,z:10})),9010);});
+await test('overlapping and touching exclusions are counted once',()=>{const paths=landscapeClip([rect(0,0,100,100)],[rect(0,0,20,20),rect(10,0,20,20),rect(30,0,10,20)],'difference');assert.equal(area(paths),9200);});
+await test('fill without boundary requires explicit container',()=>assert.throws(()=>applyLandscapeEdit(base,'green',{action:'fill',point:{x:1200,z:1200}}),/closed container/));
+const locked={...base,landscapeObjects:[green,{...stone,xIn:1600}],editorOrganization:{layers:[{id:'main',name:'Main',visible:true,locked:false}],groups:[],objects:[{id:'stone',layerId:'main',locked:true}]}};
+await ensureDesignExtensions(locked);
+await test('mixed lock selection refuses atomic transform',()=>{const before=JSON.stringify(locked);assert.throws(()=>editObjects(locked,['green','stone'],{action:'move',dxIn:12,dzIn:0}),/locked/i);assert.equal(JSON.stringify(locked),before);});
+await test('layer lock blocks rotation',()=>assert.throws(()=>editObjects({...locked,editorOrganization:{...locked.editorOrganization,layers:[{id:'main',name:'Main',visible:true,locked:true}]}},['stone'],{action:'rotate',angleDeg:30,pivotXIn:1600,pivotZIn:1200}),/locked/i));
+// Exercise the real asynchronous controller, rather than only its geometry helper.
+await test('controller rejects cup swap with no history write',async()=>{let current={...base,landscapeObjects:[green,stone]},commits=0;const controller=createDeckAgentController({getState:()=>({data:current,view:'3d',openSections:[],canUndo:false,canRedo:false,ready:true}),commitDesign:(next:any)=>{commits++;current=next;},undo(){},redo(){},setView(){},openSection(){},waitForRender:async()=>{}});try{const answer=await controller.preview({id:'cup-swap',expectedRevision:controller.read().revision,commands:[{type:'objects.edit',ids:['stone'],edit:{action:'move',dxIn:80,dzIn:0}}]});assert.equal(answer.ok,false);assert.equal(commits,0);}finally{controller.dispose();}});
+
+const {newYardFeature}=await mod('yardSettings.ts');
+const patio={...newYardFeature('patio',base),id:'support',xFt:100,zFt:100,widthFt:20,depthFt:20,finishedElevationIn:12,patioSlope:{xPct:1,zPct:0}};
+const chair={...newLandscapeObject('outdoor-chair','chair',1200,1200),supportFeatureId:'support'};
+const attached={...base,landscapeObjects:[chair],yardFeatures:[patio]};await ensureDesignExtensions(attached);
+await test('supported furniture has valid sloping support',()=>assert.equal(landscapePlacement(attached,chair).pendingReason,undefined));
+await test('owner and furniture translate exactly once',()=>{const patch=editObjects(attached,['support','chair'],{action:'move',dxIn:24,dzIn:12}),next={...attached,...patch};assert.equal(next.landscapeObjects[0].xIn,1224);assert.equal(next.yardFeatures[0].xFt,102);assert.equal(next.landscapeObjects[0].supportFeatureId,'support');assert.equal(next.yardFeatures[0].finishedElevationIn,12);assert.deepEqual(next.yardFeatures[0].patioSlope,patio.patioSlope);assert.equal(landscapePlacement(next,next.landscapeObjects[0]).pendingReason,undefined);assert.equal(next.landscapeObjects[0].widthIn,chair.widthIn);});
+await test('group rotation preserves support and fixed elevation',()=>{const patch=editObjects(attached,['support','chair'],{action:'rotate',angleDeg:90,pivotXIn:1100,pivotZIn:1100}),next={...attached,...patch};assert.equal(next.landscapeObjects[0].xIn,1000);assert.equal(next.landscapeObjects[0].zIn,1200);assert.equal(next.landscapeObjects[0].supportFeatureId,'support');assert.equal(next.yardFeatures[0].finishedElevationIn,12);assert.equal(landscapePlacement(next,next.landscapeObjects[0]).pendingReason,undefined);});
+await test('furniture cannot leave its attached support',()=>assert.throws(()=>editObjects(attached,['chair'],{action:'move',dxIn:1000,dzIn:0}),/support/i));
+await test('moving support away is rejected by whole-design validation',()=>{const next={...attached,...editObjects(attached,['support'],{action:'move',dxIn:400,dzIn:0})};assert.throws(()=>assertLandscapePlacements(attached,next),/support/i);});
+const THREE=await import(pathToFileURL(resolve(root,'node_modules/three/build/three.module.js')).href),{objectPick}=await mod('components/viewer3d/SelectionBridge.tsx');
+await test('instanced parts preserve exact owners',()=>{const mesh=new THREE.InstancedMesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial(),2);mesh.userData.pickPartIds=['landscape/green','landscape/chair'];assert.equal(objectPick(mesh,1).hardscape.id,'chair');mesh.geometry.dispose();mesh.material.dispose();});
+await test('merged ranges preserve stair flight and row',()=>{const mesh=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial());mesh.geometry.userData.hardscapeRanges=[{start:0,end:4,pick:{kind:'yard',id:'stairs',part:'tread',flightId:'f1',row:0}},{start:4,end:8,pick:{kind:'yard',id:'stairs',part:'support-step',flightId:'f2',row:3}}];assert.deepEqual(objectPick(mesh,undefined,4).hardscape,{kind:'yard',id:'stairs',part:'support-step',flightId:'f2',row:3});mesh.geometry.dispose();mesh.material.dispose();});
+console.log(JSON.stringify({passed,failed}));process.exitCode=failed?1:0;

@@ -1,0 +1,2 @@
+/** Immutable host renders can clone records without changing their values. */
+export function poolDraftKey(value:unknown):string{if(Array.isArray(value))return '['+value.map(poolDraftKey).join(',')+']';if(value&&typeof value==='object')return '{'+Object.entries(value).filter(([,v])=>v!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>JSON.stringify(k)+':'+poolDraftKey(v)).join(',')+'}';return JSON.stringify(value)??'undefined';}

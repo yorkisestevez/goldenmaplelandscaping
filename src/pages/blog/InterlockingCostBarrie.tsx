@@ -35,9 +35,9 @@ export default function InterlockingCostBarrie() {
             </tr>
           </thead>
           <tbody className="font-sans text-sm text-brand-muted font-light">
-            <tr className="border-b border-brand-dim/10"><td className="py-3 pr-6">Backyard patio</td><td className="py-3 pr-6">150–300 sq ft</td><td className="py-3">$9,000 – $18,000</td></tr>
-            <tr className="border-b border-brand-dim/10"><td className="py-3 pr-6">Large patio with features</td><td className="py-3 pr-6">300–600 sq ft</td><td className="py-3">$18,000 – $40,000</td></tr>
-            <tr className="border-b border-brand-dim/10"><td className="py-3 pr-6">Front walkway</td><td className="py-3 pr-6">50–120 sq ft</td><td className="py-3">$4,000 – $9,000</td></tr>
+            <tr className="border-b border-brand-dim/10"><td className="py-3 pr-6">Backyard patio</td><td className="py-3 pr-6">150–300 sq ft</td><td className="py-3">$9,000 – $19,500</td></tr>
+            <tr className="border-b border-brand-dim/10"><td className="py-3 pr-6">Large patio</td><td className="py-3 pr-6">300–600 sq ft</td><td className="py-3">$12,000 – $32,000</td></tr>
+            <tr className="border-b border-brand-dim/10"><td className="py-3 pr-6">Front walkway</td><td className="py-3 pr-6">50–120 sq ft</td><td className="py-3">$7,000 – $14,000</td></tr>
             <tr className="border-b border-brand-dim/10"><td className="py-3 pr-6">Single driveway</td><td className="py-3 pr-6">400–600 sq ft</td><td className="py-3">$20,000 – $35,000</td></tr>
             <tr className="border-b border-brand-dim/10"><td className="py-3 pr-6">Double driveway</td><td className="py-3 pr-6">600–900 sq ft</td><td className="py-3">$30,000 – $50,000</td></tr>
             <tr className="border-b border-brand-dim/10"><td className="py-3 pr-6">Pool surround</td><td className="py-3 pr-6">200–500 sq ft</td><td className="py-3">$15,000 – $35,000</td></tr>
@@ -45,7 +45,9 @@ export default function InterlockingCostBarrie() {
         </table>
       </div>
 
-      <p><strong>Per square foot:</strong> Most Barrie interlocking projects fall between <strong>$55 and $85 per square foot</strong> installed, including base preparation, materials, and finishing.</p>
+      <p>Patio and walkway figures in the table are our cost estimator's planning bands for mid-tier pavers on an accessible site, before HST. Driveway and pool-surround ranges are general guides confirmed at a site visit.</p>
+
+      <p><strong>Per square foot:</strong> Most Barrie interlocking patios between 300 and 1,000 sq ft come out <strong>around $40–$45 per square foot before HST</strong> (typically $38–$64), including base preparation, materials, and finishing. Smaller patios cost more per foot: about $53 at 200 sq ft.</p>
 
       <p>These prices reflect premium installation standards — proper excavation depth, granular base, compacted bedding, and polymeric sand. Cut-rate pricing usually means corners cut on base prep, which leads to sinking and shifting within 2-3 winters.</p>
 
@@ -65,8 +67,8 @@ export default function InterlockingCostBarrie() {
             </tr>
           </thead>
           <tbody className="font-sans text-sm text-brand-muted font-light">
-            <tr className="border-b border-brand-dim/10"><td className="py-3 pr-6">Standard concrete pavers</td><td className="py-3 pr-6">$45 – $60</td><td className="py-3">Budget-friendly patios, walkways</td></tr>
-            <tr className="border-b border-brand-dim/10"><td className="py-3 pr-6">Techo-Bloc premium pavers</td><td className="py-3 pr-6">$60 – $80</td><td className="py-3">Mid to high-end patios, driveways</td></tr>
+            <tr className="border-b border-brand-dim/10"><td className="py-3 pr-6">Standard concrete pavers</td><td className="py-3 pr-6">around $40–$45</td><td className="py-3">Budget-friendly patios, walkways</td></tr>
+            <tr className="border-b border-brand-dim/10"><td className="py-3 pr-6">Premium concrete paver lines</td><td className="py-3 pr-6">about $5 more</td><td className="py-3">Mid to high-end patios, driveways</td></tr>
             <tr className="border-b border-brand-dim/10"><td className="py-3 pr-6">Porcelain pavers</td><td className="py-3 pr-6">$75 – $100</td><td className="py-3">Modern outdoor living, pool areas</td></tr>
             <tr className="border-b border-brand-dim/10"><td className="py-3 pr-6">Natural stone</td><td className="py-3 pr-6">$80 – $120</td><td className="py-3">High-end feature areas, steps</td></tr>
           </tbody>
@@ -133,7 +135,7 @@ export default function InterlockingCostBarrie() {
             </tr>
           </thead>
           <tbody className="font-sans text-sm text-brand-muted font-light">
-            <tr className="border-b border-brand-dim/10"><td className="py-3 pr-4">Interlocking stone</td><td className="py-3 pr-4">$55 – $85</td><td className="py-3 pr-4">25-30 years</td><td className="py-3 pr-4">Low</td><td className="py-3">Premium</td></tr>
+            <tr className="border-b border-brand-dim/10"><td className="py-3 pr-4">Interlocking stone</td><td className="py-3 pr-4">$40 – $45</td><td className="py-3 pr-4">25-30 years</td><td className="py-3 pr-4">Low</td><td className="py-3">Premium</td></tr>
             <tr className="border-b border-brand-dim/10"><td className="py-3 pr-4">Stamped concrete</td><td className="py-3 pr-4">$20 – $35</td><td className="py-3 pr-4">10-15 years</td><td className="py-3 pr-4">Medium</td><td className="py-3">Good initially</td></tr>
             <tr className="border-b border-brand-dim/10"><td className="py-3 pr-4">Poured concrete</td><td className="py-3 pr-4">$15 – $25</td><td className="py-3 pr-4">15-20 years</td><td className="py-3 pr-4">Low</td><td className="py-3">Basic</td></tr>
             <tr className="border-b border-brand-dim/10"><td className="py-3 pr-4">Natural flagstone</td><td className="py-3 pr-4">$40 – $70</td><td className="py-3 pr-4">30+ years</td><td className="py-3 pr-4">Low</td><td className="py-3">Rustic</td></tr>
@@ -150,17 +152,17 @@ export default function InterlockingCostBarrie() {
 
       <ol>
         <li><strong>Measure your area</strong> — length x width in feet gives you square footage</li>
-        <li><strong>Multiply by $55-$85</strong> depending on material tier</li>
-        <li><strong>Add 15-20%</strong> if your yard is sloped, has poor access, or needs drainage</li>
-        <li><strong>Add feature costs</strong> — lighting ($2,000-$5,000), steps ($1,500-$4,000 per set), seat walls ($3,000-$8,000)</li>
+        <li><strong>Multiply by about $40–$45</strong> per sq ft (smaller patios cost more per foot; premium paver lines add about $5)</li>
+        <li><strong>Add for site conditions</strong>: tight access about 5–10%, a slope 5–13%, drainage work 5–12%; together roughly 20–35%</li>
+        <li><strong>Add feature costs</strong> — lighting (about $6,000–$7,500 with mid-tier pavers), steps (about $4,000 for 3 steps), seat walls ($3,000-$8,000)</li>
       </ol>
 
-      <p><strong>Example:</strong> A 350 sq ft patio with Techo-Bloc pavers, 3 steps down, and landscape lighting:</p>
+      <p><strong>Example:</strong> A 350 sq ft patio with mid-tier pavers, 3 steps down, and landscape lighting:</p>
       <ul>
-        <li>Patio: 350 × $70 = $24,500</li>
-        <li>Steps: $2,500</li>
-        <li>Lighting: $3,000</li>
-        <li><strong>Total estimate: ~$30,000</strong></li>
+        <li>Patio: 350 sq ft ≈ $14,800</li>
+        <li>Steps: ≈ $3,800</li>
+        <li>Lighting: ≈ $7,200</li>
+        <li><strong>Total estimate: ~$25,700 before HST</strong> (items are rounded)</li>
       </ul>
 
       <p>Want a quick number? Use the <Link to="/cost-estimator?type=patio" className="text-brand-gold-dark hover:underline">Cost Estimator</Link> for an instant ballpark based on your project details.</p>
@@ -172,7 +174,7 @@ export default function InterlockingCostBarrie() {
       <p>Watch out for these when comparing contractors:</p>
 
       <ul>
-        <li><strong>Per-square-foot quotes under $40</strong> — base prep is being cut somewhere</li>
+        <li><strong>Per-square-foot quotes under $35</strong> — base prep is being cut somewhere</li>
         <li><strong>No mention of base depth</strong> — the most important part of the job</li>
         <li><strong>"A contractor will figure it out on site"</strong> — no design or plan before starting</li>
         <li><strong>No written warranty</strong> — verbal promises mean nothing after year two</li>

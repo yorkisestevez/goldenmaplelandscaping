@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
-import { motion } from 'motion/react';
-import { Pickaxe, Package, Hammer, Trash2, Sparkles, Check, X } from 'lucide-react';
+import { Pickaxe, Package, Hammer, Trash2, Sparkles, Check, X, Layout } from 'lucide-react';
 import AnimatedPrice, { AnimatedMoney } from './ui/AnimatedPrice';
 import type { PreciseResult } from '../utils/estimateEngine';
 import { BUSINESS, publicClaimCopy } from '../data/business';
@@ -24,6 +23,9 @@ export interface BreakdownProps {
    *  invoice-style: exact category figures, subtotal, HST, grand total — with
    *  the widened range demoted to secondary context. */
   precise?: PreciseResult | null;
+  /** A full backyard's deck, as the deck estimator priced it. Its cents are
+   *  already inside `precise` (subtotal, HST and total); this is its own line. */
+  deck?: { cents: number; label: string; drawn: boolean; quoteItems: number } | null;
   brandName?: string;
   sqft?: number;
   city?: string;
@@ -37,7 +39,7 @@ const fmt = (n: number) =>
   n >= 10000 ? `$${(n / 1000).toFixed(1)}k` : `$${n.toLocaleString()}`;
 
 const money = (cents: number) =>
-  `$${(cents / 100).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  `$${(Math.round(cents / 10000) * 100).toLocaleString('en-CA')}`;
 
 const LINES = [
   { key: 'excavation', label: 'Excavation & Site Prep', icon: Pickaxe },
@@ -52,9 +54,9 @@ const INCLUDES = [
   'Polymeric sand joints',
   'Edge restraint + spikes',
   'Geotextile fabric',
-  publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available.'),
+  publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, ''),
   'Site protection & clean-up',
-];
+].filter(Boolean);
 
 const EXCLUDES = [
   'Building permits',
@@ -108,12 +110,7 @@ export default function EstimateBreakdown(props: BreakdownProps) {
   return (
     <div className="space-y-6">
       {/* Headline total — Apple-style hero card */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 120, damping: 18 }}
-        className="relative bg-gradient-to-b from-brand-gold/[0.12] via-brand-gold/[0.04] to-transparent border border-brand-gold/30 rounded-3xl p-10 md:p-14 text-center overflow-hidden shadow-[0_30px_80px_-30px_rgba(212,175,99,0.25)]"
-      >
+      <div className="relative bg-gradient-to-b from-brand-gold/[0.12] via-brand-gold/[0.04] to-transparent border border-brand-gold/30 rounded-3xl p-10 md:p-14 text-center overflow-hidden shadow-[0_30px_80px_-30px_rgba(217,150,106,0.25)]">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-gold/40 to-transparent" />
         <div className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-5">
           {p ? 'Your Estimate' : 'Your Estimated Investment'}
@@ -155,7 +152,7 @@ export default function EstimateBreakdown(props: BreakdownProps) {
             {props.city ? <> in <span className="text-brand-bone">{props.city}</span></> : null}.
           </p>
         ) : null}
-      </motion.div>
+      </div>
 
       {props.belowHero}
 
@@ -176,13 +173,7 @@ export default function EstimateBreakdown(props: BreakdownProps) {
             const preciseCents = p ? p.perCategoryCents[key] : null;
             const detail = detailFor(key, line.detail, p);
             return (
-              <motion.div
-                key={key}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.07, type: 'spring', stiffness: 120, damping: 18 }}
-                className="py-5 flex items-start gap-4"
-              >
+              <div key={key} className="py-5 flex items-start gap-4">
                 <div className="w-9 h-9 rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold-dark shrink-0">
                   <Icon size={16} strokeWidth={1.75} />
                 </div>
@@ -199,9 +190,28 @@ export default function EstimateBreakdown(props: BreakdownProps) {
                     </p>
                   ) : null}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
+          {props.deck && props.deck.cents > 0 ? (
+            <div className="py-5 flex items-start gap-4" data-breakdown-line="deck">
+              <div className="w-9 h-9 rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold-dark shrink-0">
+                <Layout size={16} strokeWidth={1.75} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-baseline gap-4">
+                  <span className="font-sans text-[14px] text-brand-bone">{props.deck.drawn ? 'Composite Deck · as you set it' : 'Composite Deck · starter deck'}</span>
+                  <span className="font-display text-lg md:text-xl text-brand-gold-dark tabular-nums whitespace-nowrap tracking-tight">
+                    {money(props.deck.cents)}
+                  </span>
+                </div>
+                <p className="font-sans text-[12px] font-light text-brand-muted mt-1.5 leading-relaxed">
+                  {props.deck.label}. Priced by our deck estimator
+                  {props.deck.quoteItems > 0 ? `, the priced portion: ${props.deck.quoteItems} item${props.deck.quoteItems === 1 ? ' is' : 's are'} still to quote` : ''}.
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {/* Invoice footer — subtotal / HST / total, to the cent. */}

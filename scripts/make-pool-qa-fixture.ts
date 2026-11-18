@@ -1,0 +1,11 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+import type {DeckData,YardFeature} from '../src/features/deckcraft/types';
+import {createPlanningPool} from '../src/features/deckcraft/poolAssembly';
+import {ensureLiveDesignExtensions} from '../src/features/deckcraft/designExtensions';
+import {calculateEstimate} from '../src/features/deckcraft/calculations';
+const data:DeckData=JSON.parse(readFileSync('../../outputs/elevation-phase/terraced-fixed-slopes.json','utf8'));
+const pool=createPlanningPool({id:'terrace-pool',name:'Upper courtyard pool',type:'concrete',xIn:360,zIn:900,copingTopElevationIn:64.2755905511811,shape:'rounded-rectangle'});pool.rotationDeg=90;pool.depthProfile=[{stationIn:0,depthIn:48},{stationIn:144,depthIn:48},{stationIn:384,depthIn:72}];
+const patio:YardFeature={id:'pool-patio',kind:'patio',name:'Pool courtyard paving',enabled:true,color:'#a9a99f',productId:'permacon-melville',xFt:30,zFt:75,widthFt:44,depthFt:32,heightIn:0,rotationDeg:0,finishedElevationIn:pool.copingTopElevationIn};
+data.pools=[pool];data.yardFeatures=[...(data.yardFeatures??[]),patio];data.yardEarthwork={soilReusePct:0,spoilSwellPct:25,looseSpoilTonnesPerYd3:1.3,binVolumeYd3:15,binPayloadTonnes:12};
+data.landscapeObjects=data.landscapeObjects?.filter(o=>!(o.xIn>120&&o.xIn<610&&o.zIn>700));
+await ensureLiveDesignExtensions(data);const estimate=calculateEstimate(data);writeFileSync('../../outputs/pool-phase/terraced-pool.json',JSON.stringify(data,null,2));writeFileSync('../../outputs/pool-phase/fixture-quantities.json',JSON.stringify({paverPieces:estimate.yardModel.quantities.paverPieces,pools:(estimate.yardModel as any).pools.map((p:any)=>({name:p.config.name,quantities:p.quantities,pending:p.pending})),excavation:estimate.yardModel.quantities.sharedExcavationYd3,features:estimate.yardModel.features.map(f=>({id:f.config.id,excluded:f.excluded,warnings:f.warnings}))},null,2));console.log('Terraced pool fixture generated; pavers:',estimate.yardModel.quantities.paverPieces);

@@ -1,6 +1,5 @@
 import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowRight,
   ArrowLeft,
@@ -182,11 +181,7 @@ export default function BookingScheduler() {
   // ---------- SUCCESS STATE ----------
   if (step === 'success') {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-brand-surface border border-brand-gold/30 rounded-[2px] p-12 text-center"
-      >
+      <div className="bg-brand-surface border border-brand-gold/30 rounded-[2px] p-12 text-center">
         <div className="mx-auto w-16 h-16 rounded-full border border-brand-gold flex items-center justify-center mb-8">
           <CheckCircle size={28} className="text-brand-gold-dark" strokeWidth={1.5} />
         </div>
@@ -213,18 +208,14 @@ export default function BookingScheduler() {
           <Phone size={12} strokeWidth={1.5} />
           Need to reschedule? {publicContact.phoneDisplay}
         </a>
-      </motion.div>
+      </div>
     );
   }
 
   // ---------- CONFIRM / FORM STATE ----------
   if (step === 'confirm' || step === 'submitting' || step === 'error') {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-brand-surface border border-brand-dim/10 rounded-[2px] p-10 md:p-12"
-      >
+      <div className="bg-brand-surface border border-brand-dim/10 rounded-[2px] p-10 md:p-12">
         <button
           onClick={() => {
             setStep('pick');
@@ -349,7 +340,7 @@ export default function BookingScheduler() {
             )}
           </button>
         </form>
-      </motion.div>
+      </div>
     );
   }
 
@@ -457,15 +448,9 @@ export default function BookingScheduler() {
       </div>
 
       {/* Time picker */}
-      <AnimatePresence mode="wait">
+      
         {selectedDate && (
-          <motion.div
-            key={selectedDate}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25 }}
-          >
+          <div key={selectedDate}>
             <div className="border-t border-brand-dim/10 pt-8">
               <div className="flex items-center gap-3 mb-6">
                 <Clock size={14} className="text-brand-gold-dark" strokeWidth={1.5} />
@@ -485,9 +470,9 @@ export default function BookingScheduler() {
                 ))}
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      
 
       {!selectedDate && (
         <p className="text-center font-sans text-xs text-brand-muted font-light italic mt-4">

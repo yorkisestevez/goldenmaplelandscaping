@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { Target, ArrowRight, Check } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { suggestGapLevers, minimumAchievable, type RangeFor } from '../utils/budgetLevers';
@@ -66,12 +65,7 @@ export default function BudgetGapCoach({
   const unreachable = floor > target;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 130, damping: 20 }}
-      className="px-6 py-5 rounded-2xl bg-brand-gold/[0.07] border border-brand-gold/25"
-    >
+    <div className="px-6 py-5 rounded-2xl bg-brand-gold/[0.07] border border-brand-gold/25">
       <div className="flex items-center gap-2.5 mb-1.5">
         <Target size={15} className="text-brand-gold-dark shrink-0" strokeWidth={1.75} />
         <span className="font-sans text-[13px] text-brand-bone">
@@ -146,6 +140,6 @@ export default function BudgetGapCoach({
         Or keep the build as it is — plenty of projects get phased across two seasons.{' '}
         <Link to="/book" className="text-brand-gold-dark hover:underline">Talk it through with Yorkis</Link>.
       </p>
-    </motion.div>
+    </div>
   );
 }

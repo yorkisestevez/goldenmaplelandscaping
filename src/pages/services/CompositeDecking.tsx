@@ -1,8 +1,10 @@
-import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
+import { breadcrumb, faqPage, graph, howToNode, serviceNode } from '../../utils/schema';
+import { ServicePageFreshness, ServiceReviewer, pageUpdateNode } from '../../components/PageFreshness';
 import Testimonials from '../../components/Testimonials';
+import PlanningQuote from '../../components/PlanningQuote';
 import { publicContact } from '../../data/business';
 import { trackCall, trackEngagement } from '../../utils/analytics';
 
@@ -12,49 +14,50 @@ const FAQ = [
   { q: 'How is timing determined?', a: 'Timing depends on design, approvals, access, materials, weather, and the project scope. We can discuss a current schedule after reviewing your project.' },
 ];
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQ.map((item) => ({
-    "@type": "Question",
-    name: item.q,
-    acceptedAnswer: { "@type": "Answer", text: item.a },
-  })),
-};
+const PATH = '/services/composite-decking-barrie/';
+const NAME = 'Composite deck building in Barrie';
+
+// One list drives the visible process cards and the HowTo schema.
+const PROCESS_STEPS = [
+  { title: "Structural Framing", desc: "Structural framing, materials, and applicable code requirements are confirmed for the specific project scope." },
+  { title: "TimberTech Selection", desc: "Choose from the Advanced PVC or Composite collections, featuring realistic wood grains and multi-width options." },
+  { title: "Precision Installation", desc: "Using hidden fastener systems for a clean, screw-free surface that highlights the architectural lines of your deck." },
+  { title: "Finishing Details", desc: "Custom fascia wrapping, integrated LED lighting, and high-end railing systems to complete the luxury look." }
+];
+
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({
+    path: PATH,
+    name: NAME,
+    serviceType: 'Composite deck construction',
+    areaServed: 'Barrie',
+  }),
+  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: NAME, path: PATH }]),
+  faqPage(PATH, FAQ),
+  howToNode({ path: PATH, name: 'How Golden Maple builds a composite deck', steps: PROCESS_STEPS }),
+  pageUpdateNode(PATH, PATH, NAME),
+);
 
 export default function CompositeDecking() {
-  const processSteps = [
-    { title: "Structural Framing", desc: "Structural framing, materials, and applicable code requirements are confirmed for the specific project scope." },
-    { title: "TimberTech Selection", desc: "Choose from the Advanced PVC or Composite collections, featuring realistic wood grains and multi-width options." },
-    { title: "Precision Installation", desc: "Using hidden fastener systems for a clean, screw-free surface that highlights the architectural lines of your deck." },
-    { title: "Finishing Details", desc: "Custom fascia wrapping, integrated LED lighting, and high-end railing systems to complete the luxury look." }
-  ];
-
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Composite Decking Installation Barrie"
+        title="Composite Deck Builder Barrie | Composite Decking Installation"
         description="Composite deck planning and installation for Barrie-area properties. Discuss materials, design options, and project-specific scope with our team."
         canonical="https://goldenmaplelandscaping.ca/services/composite-decking-barrie"
-        schema={faqSchema}
+        schema={pageSchema}
       />
       
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-40">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-                Outdoor Living Construction
-              </span>
-              <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
-                A deck you'll <br />
-                <span className="italic text-brand-gold-dark">made for your outdoor routine.</span>
-              </h1>
+            <div>
+              <h1 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">Composite Deck Builder in Barrie</h1>
+              <p className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
+                A deck built <br />
+                <span className="italic text-brand-gold-dark">for your outdoor routine.</span>
+              </p>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 Compare composite product styles, maintenance guidance, framing, railings, lighting, and access needs. We can discuss current options and a project-specific written scope.
               </p>
@@ -74,18 +77,20 @@ export default function CompositeDecking() {
                   <Phone size={14} strokeWidth={1.5} /> Call {publicContact.phoneDisplay}
                 </a>
               </div>
-            </motion.div>
+              <ServicePageFreshness updateKey={PATH} className="mt-12" />
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
-            >
+            <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
               <img
-                src="/images/projects/Silver Maple Radiance Rail 0101.jpg"
+                src="/images/projects/silver-maple-radiance-rail-640.webp"
+                srcSet="/images/projects/silver-maple-radiance-rail-640.webp 640w, /images/projects/silver-maple-radiance-rail-1200.webp 1200w"
+                sizes="(min-width: 1024px) 42vw, 100vw"
+                width={1200}
+                height={1500}
                 alt="Luxury Composite Decking in Barrie ON"
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
@@ -93,7 +98,7 @@ export default function CompositeDecking() {
                 <p className="font-sans text-[10px] uppercase tracking-widest text-brand-gold mb-2">Product planning</p>
                 <p className="font-display text-xl text-brand-porcelain italic font-light">Confirm current options</p>
               </div>
-            </motion.div>
+            </div>
           </div>
 
           <div className="mb-40">
@@ -105,8 +110,15 @@ export default function CompositeDecking() {
                 Planned for your project.
               </h2>
             </div>
+            <PlanningQuote
+              source="composite-decking-barrie"
+              rate="Priced online"
+              rateDetail="Decks are priced in our deck estimator, the one deck price on this site. A planning figure, not a quote for your property."
+              categories={['Decks']}
+              defaultService="Composite deck"
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-              {processSteps.map((step, idx) => (
+              {PROCESS_STEPS.map((step, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
                   <span className="font-display text-6xl font-light text-brand-gold-dark/10 block mb-10">0{idx + 1}</span>
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{step.title}</h3>
@@ -167,6 +179,8 @@ export default function CompositeDecking() {
               ))}
             </div>
           </div>
+
+          <ServiceReviewer updateKey={PATH} />
         </div>
       </section>
 

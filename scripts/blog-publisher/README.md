@@ -10,9 +10,11 @@ Automated weekly SEO blog posts for goldenmaplelandscaping.ca.
 2. Picks the next unused topic from `topics.json`.
 3. Calls the local `claude` CLI (via `claude-provider.cjs`) → structured 1500-2200 word post (title, sections, FAQs, internal links, FAQPage schema).
 4. Validates word count / banned phrases / hero allowlist / internal link count.
-5. Writes the new `.tsx`, updates `routes.ts`, `Resources.tsx`, `sitemap.xml`, updates `state.json`, archives the draft.
-6. Commits directly (auto-merge is on — see `state.json` history; no PR-approval step in the current flow).
-7. Telegrams the operator with a summary.
+5. Writes the new `.tsx`, updates `routes.ts` and `src/data/blogPosts.ts`, updates `state.json`, archives the draft. A phone number or email in the draft's HTML (intro, sections, FAQ answers, CTA, table, author bio, including `tel:`/`mailto:` links) is rendered from `publicContact` in `src/data/business.ts`. `injectDraft` then runs `scripts/check-contact-centralization.py` on the files it wrote (`contact-gate.cjs`) and, if any still hardcodes a contact, e.g. in a title or heading, rolls the post back and throws. `cli.cjs` alerts that as stage `contact-gate:<slug>`. 2026-09-28: auto-023 hardcoded the number in its CTA, failed postbuild, and blocked every production deploy after it.
+6. Pushes an `auto/blog-*` branch and opens a PR, then **stops**. Nothing is live until Yorkis merges it (owner decision 2026-09-27: every post is reviewed). `cli.cjs` only auto-merges with `BLOG_AUTOMERGE=1`, and then only after `npm run lint` + `npm run build` (the postbuild claim gate) pass.
+7. Telegrams the operator with a summary ("New blog draft - PR open").
+
+**Where it actually runs (verified 2026-09-27):** the claude.ai cloud routine `gm-blog-publisher` (`trig_01Ry9dqusb6DmMXHayWuDa3P`, Mondays 13:00 UTC). It does **not** call `cli.cjs` — it follows the steps written into its own routine prompt (validate → `injectDraft` → `tsc` + `npm run build` → open PR → Telegram). So a change to the flow here must also be made in that routine's prompt (claude.ai/code/routines). Both were switched to review-first on 2026-09-27, and both keep the unverified-claim list (`scripts/claim-rules.json`) out of the writer's instructions; `__tests__/prompt-claims.test.cjs` pins `generate.cjs`'s prompt. Since 2026-10-17 the writer may quote only the engine's price facts (see `docs/pricing/README.md`). `npm run build` runs the price ledger, so the routine's build step fails on an unapproved price, but the facts-only prompt and the one-retry rejection live in `generate.cjs` and reach the routine only if its prompt uses `buildPrompt` / `validateDraft`.
 
 ## Generation model
 
@@ -47,7 +49,8 @@ scripts/blog-publisher/
 ├── cli.cjs              entry — workflow-run / generate-only
 ├── generate.cjs         claude-provider.cjs call + validation
 ├── claude-provider.cjs  local `claude` CLI generation (replaced the dead Gemini call)
-├── inject.cjs           writes the 4 user-facing files
+├── inject.cjs           writes the 3 user-facing files
+├── contact-gate.cjs     refuses a post that hardcodes a phone number or email
 ├── telegram.cjs         env-driven Telegram sender
 ├── topics.json          the topic backlog (45 entries)
 ├── state.json           used topic ids + history (generatedBy tag records how each post was made)

@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Compass, Shield, Heart, Ruler, Hammer, CheckCircle, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
@@ -80,14 +79,7 @@ export default function ProcessPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {PROCESS_STEPS.map((step, idx) => (
-              <motion.div
-                key={step.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: idx * 0.1 }}
-                className="group bg-brand-surface border border-brand-dim/10 rounded-[2px] overflow-hidden hover:border-brand-gold/30 transition-all duration-500 flex flex-col h-full"
-              >
+              <div key={step.id} className="group bg-brand-surface border border-brand-dim/10 rounded-[2px] overflow-hidden hover:border-brand-gold/30 transition-all duration-500 flex flex-col h-full">
                 <div className="aspect-video relative overflow-hidden">
                   <img
                     src={step.img}
@@ -112,7 +104,7 @@ export default function ProcessPage() {
                     <ArrowRight size={16} strokeWidth={1.5} />
                   </Link>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

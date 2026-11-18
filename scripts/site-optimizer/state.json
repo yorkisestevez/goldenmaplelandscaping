@@ -1,5 +1,5 @@
 {
-  "lastRunAt": "2026-09-04T11:33:04.423Z",
+  "lastRunAt": "2026-11-16T13:38:49.822Z",
   "history": [
     {
       "at": "2026-09-02T11:41:20.325Z",
@@ -746,6 +746,63 @@
         "chat_open fired once on 09-03 — first lead-family event in several days. Watch whether it repeats.",
         "Sitemap drift stayed at 8 through a new blog post — confirm again next week before assuming inject.cjs was fixed upstream.",
         "BuyersGuide.tsx option-selected + /contact/ hydration mismatch: dev-only, still queued for an optimize run."
+      ]
+    },
+    {
+      "at": "2026-11-16T13:38:49.822Z",
+      "mode": "optimize",
+      "outcome": "error",
+      "findings": [
+        {
+          "pri": "P0",
+          "what": "Live: /, /cost-estimator/, /contact/, /book/, /sitemap.xml all 200 (0.27-0.74s). Prod sweep (1440 viewport, innerWidth 1440) on /, /cost-estimator/, /contact/, /resources/winter-damage-prevention-interlocking/, /locations/innisfil/, /book/: 0 console/page errors, 26 images all 200 via in-page fetch. Tracking: analytics-BOMvxibU.js carries all 4 IDs. Sitemap 158 URLs, 0 without trailing slash.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "estimator-e2e 42/42 on dev :3011 (ROUTINE text says 43; suite currently has 42); contrast audit 0 critical across 6 states.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P1",
+          "what": "GA4 week 11-09..11-15 vs prior: sessions 31 vs 51, page_view 50 vs 64, estimator_step 18 vs 4, estimator 7_result 2, generate_lead 2 vs 0, chat_open 1 vs 2. Netlify ham: contact 1 this week (11-09, real browser signature, gclid). No funnel cliff.",
+          "decision": "no change: traffic down but conversion events up; no cliff per rubric"
+        },
+        {
+          "pri": "P2",
+          "what": "/book: 21 Facebook-referral sessions, 17 views, 0 booking_step this week and the week before. Scheduler works in prod (date tap fires booking_step), but at iPhone 13 size it started at 586px of 664px, under the cookie banner and sticky bar.",
+          "decision": "shipped mobile-only spacing (scheduler at 366px; desktop unchanged) as PR #241. NOT MERGED: gh pr merge --admin was refused by the session permission classifier"
+        },
+        {
+          "pri": "P2",
+          "what": "Backlog items 1, 2 and 5 already done (sticky CTA #68, proof strip in EstimateBookingCTA, generated sitemap); 3 retired; item 4 (result-page length) declined, because there were only 2 result-step views this week and the estimator was reworked 11-12, so there is no evidence to act on",
+          "decision": "no change"
+        },
+        {
+          "pri": "INFO",
+          "what": "CRM leads table read-only: 15 rows lifetime, newest 2026-08-13, 0 in 90d, while Netlify contact got a real submission 2026-11-09. Either the Netlify-to-CRM ingest is dead or the CRM moved off this local DB.",
+          "decision": "outside authority; reported for Yorkis"
+        },
+        {
+          "pri": "3b",
+          "what": "Homepage evolution dry run (week ending 2026-11-15; 1 dry run left): all 5 segments idle; default/a had 7 views, 1 act, 0 leads (measurement live since 11-12, so a partial week).",
+          "decision": "state file committed with this heartbeat"
+        }
+      ],
+      "changes": [
+        {
+          "pr": "https://github.com/yorkisestevez/goldenmaplelandscaping/pull/241",
+          "what": "/book mobile spacing: scheduler onto the first phone screen",
+          "marker": "pt-28 md:pt-48",
+          "liveVerified": false,
+          "merged": false
+        }
+      ],
+      "watch": [
+        "Merge state of PR #241; after merge, check for the marker pt-28 md:pt-48 in /book/ HTML",
+        "booking_step from /book Facebook traffic",
+        "CRM ingest vs Netlify ham",
+        "home_view_* counts for the first full measured week"
       ]
     }
   ]

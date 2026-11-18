@@ -1,4 +1,4 @@
-import {DECKING_CATALOGUE,type CatalogueDecking} from './manufacturerCatalog';
+import {DECKING_CATALOGUE,type CatalogueDecking} from './manufacturerRuntimeCatalogue';
 import type {DeckTakeoff} from './deckTakeoff';
 import {modelAddresses,type BoardAddress} from './lib/boardAddress';
 import type {BoardColour,BoardPattern,ColourRef,DeckData,DeckInlay,MaterialColor} from './types';
@@ -59,7 +59,7 @@ export interface AccentGroup{ref:ColourRef;material:CatalogueDecking;color:Mater
  * (deckFinishes.border, at the deck's allowance), or one colour of one part of the inlays at the allowance of what it
  * is: a frame is picture-frame work, an inside its own pattern, a band straight boards, and a medallion (cut to its
  * wedges and 16 sides) the herringbone allowance. */
-export interface StockGroup extends AccentGroup{kind:'accent'|'inlay'|'border';wasteKey?:BoardPattern;part?:InlayPart}
+export interface StockGroup extends AccentGroup{kind:'accent'|'inlay'|'border'|'layout';wasteKey?:BoardPattern;part?:InlayPart}
 export type InlayPart='frame'|'inside'|'band'|'medallion';
 /** Which part of its inlay an inlay board is, and the waste allowance it is ordered at. */
 export function inlayPart(inlay:DeckInlay|undefined,role:string|undefined):{part:InlayPart;wasteKey:BoardPattern}{
@@ -101,7 +101,9 @@ export function boardFinishPlan(data:DeckData,model:DeckTakeoff):BoardFinishPlan
   // (A band has no frame; a compass medallion's alternate wedges are 'inlay-frame' boards, in the frame colour.)
   const inlayColour=(role:string|undefined,id:string)=>{const i=inlays.get(id),ref=role==='inlay-frame'?(i&&i.kind!=='band'?i.frame:undefined):i?.fill;return ref&&ref!==main&&accentAllowed(data,ref)?ref:null;};
   const colours=addresses.map((level,l)=>level.map((a,bi)=>{
-    const board=model.levels[l].boards[bi];if(board.inlay)return inlayColour(board.role,board.inlay);
+    const board=model.levels[l].boards[bi] as typeof model.levels[number]['boards'][number]&{layoutColour?:ColourRef};
+    if(board.layoutColour&&partAllowed(data,board.layoutColour))return board.layoutColour===main?null:board.layoutColour;
+    if(board.inlay)return inlayColour(board.role,board.inlay);
     if(!a)return null;
     let piece=-1,course=-1;
     overrides.forEach((o,i)=>{
@@ -123,13 +125,13 @@ export function boardFinishPlan(data:DeckData,model:DeckTakeoff):BoardFinishPlan
   const groups=[...byRef.values()],stock=new Map<string,StockGroup>();
   let pieces=0,inlayPieces=0,borderPieces=0;
   colours.forEach((level,l)=>level.forEach((ref,index)=>{
-    const board=model.levels[l].boards[index];
+    const board=model.levels[l].boards[index] as typeof model.levels[number]['boards'][number]&{layoutId?:string;layoutKind?:string};
     if(!board.inlay&&!ref)return;
-    const part=board.inlay?inlayPart(inlays.get(board.inlay),board.role):undefined;
-    const kind=board.inlay?'inlay' as const:bordered.has(`${l}:${index}`)?'border' as const:'accent' as const;
+    const part=board.inlay&&!board.layoutId?inlayPart(inlays.get(board.inlay),board.role):undefined;
+    const kind=board.layoutId?'layout' as const:board.inlay?'inlay' as const:bordered.has(`${l}:${index}`)?'border' as const:'accent' as const;
     const colour=ref??main,key=`${part?`${part.part}|${part.wasteKey}`:kind}|${colour}`,group=stock.get(key)??{ref:colour,...parseColourRef(colour)!,boards:[],kind,...(part?{wasteKey:part.wasteKey,part:part.part}:{})};
     group.boards.push({level:l,index});stock.set(key,group);
-    if(board.inlay)inlayPieces++;else if(kind==='border')borderPieces++;else pieces++;
+    if(board.inlay&&!board.layoutId)inlayPieces++;else if(kind==='border')borderPieces++;else if(kind==='accent')pieces++;
   }));
   return {addresses,colours,groups,stock:[...stock.values()],matched:overrides.filter((_,i)=>hit[i]),unmatched:overrides.filter((_,i)=>!hit[i]),pieces,inlayPieces,borderPieces};
 }

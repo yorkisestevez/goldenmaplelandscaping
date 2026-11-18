@@ -6,7 +6,7 @@ import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {encodeDesignLink,MAX_DESIGN_LINK_CHARS} from '../src/features/deckcraft/designLink';
 import {describeDesign} from '../src/features/deckcraft/designFacts';
-import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import {buildDeckDesignSubmission,type SendDesignFields} from '../src/features/deckcraft/sendDesign';
 import {DECKING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
 import {accentCollections,boardFinishPlan,colourRef,deckColourRef,MAX_BOARD_COLOURS,parseColourRef} from '../src/features/deckcraft/boardFinishes';
@@ -19,7 +19,7 @@ import {designerSource} from './deck-designer-source';
  * saves and prices exactly as before. Boards are found by where they sit (lib/boardAddress.ts), so a choice
  * survives resizing, a collection change and stair or railing edits, and a change that moves the boards leaves
  * it unmatched, never on another board. Each accent colour is ordered as its own boards at its own collection's
- * rate, a collection without a rate is a supplier quote, and fitting the boards is a builder-quote labour line.
+ * rate, a collection without a rate is a supplier quote, and fitting the boards defaults to man-hours labour.
  */
 let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);checks++;};
 const read=(p:string)=>readFileSync(new URL(`../${p}`,import.meta.url),'utf8');
@@ -71,12 +71,12 @@ for(const shape of shapes)for(const pattern of patterns){
 }
 
 // 3. A choice survives resizing, a collection change and stair or railing edits.
-const d0=base(),m0=buildDeckTakeoff(d0),target=m0.levels[0].boards.findIndex(b=>(b.role??'field')==='field'&&b.cy>30&&b.cy<50);
+const d0=base(),m0=buildDeckTakeoff(d0),target=boardFinishPlan(d0,m0).addresses[0].findIndex(a=>a?.role==='field'&&a.course==='r5');
 const piece=paintBoard(d0,m0,{level:0,index:target},COCOA,'piece');
 ok('boardColours' in piece&&piece.boardColours?.length===1&&piece.boardColours[0].scope==='piece'&&piece.boardColours[0].at!==undefined,'Painting one board saves one choice with its place along the row');
 const painted={...d0,boardColours:(piece as {boardColours:BoardColour[]}).boardColours};
 ok(describeBoardPlace(painted.boardColours[0])==='One board in row 6 from the house','The choice is named in plain words');
-for(const [label,patch] of [['wider and deeper',{width:24,length:14}],['another collection',{deckingMaterial:'tt_reserve',deckingColor:'Antique Leather'}],['another stair',{stairFlights:2,stairPosition:'Left' as const}],['a new railing',{railingType:'Glass Panels' as const}]] as const){
+for(const [label,patch] of [['wider and deeper',{width:24,length:14}],['another stair',{stairFlights:2,stairPosition:'Left' as const}],['a new railing',{railingType:'Glass Panels' as const}]] as const){
   const d={...painted,...patch},plan=boardFinishPlan(d,buildDeckTakeoff(d));
   ok(plan.pieces===1&&plan.unmatched.length===0,`One painted board stays painted after ${label}`);
 }
@@ -85,6 +85,13 @@ for(const [label,patch] of [['wider and deeper',{width:24,length:14}],['another 
   const rowPieces=plan.addresses[0].filter(a=>a?.course==='r5').length;
   ok(plan.pieces===rowPieces&&rowPieces>0,'Painting a row colours every piece in it');
   const narrow={...rowed,width:12};ok(boardFinishPlan(narrow,buildDeckTakeoff(narrow)).pieces>0,'A painted row stays painted when the deck narrows');
+}
+
+// Changing to shorter stock inserts a breaker through the saved marker; never silently repaint another piece.
+{
+ // TimberTech Prime has no manufacturer listing on file, so it keeps the 16 ft planning allowance (deckingStock.ts).
+ const shorter={...painted,deckingMaterial:'tt_prime',deckingColor:'Maritime Gray'},plan=boardFinishPlan(shorter,buildDeckTakeoff(shorter));
+ ok(plan.pieces===0&&plan.unmatched.length===1&&price(shorter).flags.some(f=>f.includes('no longer lines up with a board')),'An accent displaced by a new stock-length breaker is reported unmatched, never moved');
 }
 
 // 4. Never moved: when the boards move, the choice is unmatched, not drawn or priced, and says so.
@@ -125,7 +132,7 @@ for(const [label,patch] of [['wider and deeper',{width:24,length:14}],['another 
   const d={...base(),boardColours:[row('r3',colourRef(unpriced.id,unpriced.colors[0].name))]};ok(boardFinishPlan(d,buildDeckTakeoff(d)).unmatched.length===1,'A saved colour this deck cannot take is not applied');
 }
 
-// 7. Pricing: each colour is ordered as its own boards at its collection's rate; labour is a builder quote.
+// 7. Pricing: each colour is ordered as its own boards at its collection's rate; labour defaults to man-hours.
 {
   const plain=price(base()),plainDeck=plain.sections.find(s=>s.title==='Decking')!;
   const own={...base(),boardColours:[row('r3')]},e=price(own),acc=accentSection(e)!,deck=e.sections.find(s=>s.title==='Decking')!;
@@ -133,14 +140,14 @@ for(const [label,patch] of [['wider and deeper',{width:24,length:14}],['another 
   ok(acc&&acc.items.length===1&&stock.length===1&&Number(deck.items[0].qty)<Number(plainDeck.items[0].qty),'An accent colour gets its own stock row and the main order drops');
   const rate=9.00*(5.5/12)*1.35;
   ok(Math.abs((acc.items[0].cost as number)-stock[0].orderedLf*rate)<.01,'An accent colour is priced at its collection\'s rate, ordered length × $/sq ft × board width, with the markup');
-  const perBoard=16*rate;
-  ok(e.subtotal>=plain.subtotal-.005&&e.subtotal-plain.subtotal<=perBoard+.01,'The same collection in a second colour costs the same, give or take one board it cannot share offcuts with');
+  const mainStock=e.stockSchedule[0],installedLf=e.model.levels.flatMap(l=>l.boards).reduce((n,b)=>n+b.length/12,0);
+  ok(Math.abs(mainStock.installedLf+stock[0].installedLf-installedLf)<.01&&Math.abs(Number(deck.items[0].cost)-mainStock.orderedLf*rate)<.01,'Main and accent orders partition every modeled board exactly once and each uses its actual ordered-length collection rate');
   const other={...base(),boardColours:[row('r3'),row('r5',colourRef('tt_reserve','Antique Leather'))]},eo=price(other),acc2=accentSection(eo)!;
   const reserveRow=eo.stockSchedule.find(r=>r.name.startsWith('TimberTech PRO Reserve · Antique Leather'))!;
-  ok(acc2.items.length===2&&Math.abs((acc2.items[1].cost as number)-reserveRow.orderedLf*12.15*(5.5/12)*1.35)<.01,'Another collection is priced at its own rate');
+  const reserveRate=DECKING_CATALOGUE.find(m=>m.id==='tt_reserve')!.costPerSqft!;
+  ok(acc2.items.length===2&&Math.abs((acc2.items[1].cost as number)-reserveRow.orderedLf*reserveRate*(5.5/12)*1.35)<.01,'Another collection is priced at its current sourced rate');
   const lab=labourItem(e)!;
-  ok(lab&&lab.cost===null&&lab.qty===boardFinishPlan(own,e.model).pieces&&e.quoteRequired.includes('Accent-colour board labour (builder quote)'),'Fitting accent boards is a builder-quote labour line, never $0');
-  ok(describeDesign(own,e).priceLabel==='Priced portion only','With a builder-quote line the price reads as the priced portion only');
+  ok(lab&&lab.cost!==null&&lab.cost>0&&lab.qty===boardFinishPlan(own,e.model).pieces&&!e.quoteRequired.includes('Accent-colour board labour (builder quote)'),'Fitting accent boards defaults to priced man-hours labour, not a builder quote');
   ok(eo.sections.flatMap(s=>s.items).every(i=>i.cost!==0||!/ccent/.test(i.name)),'No accent line is priced at $0');
   // A deck in a collection without a rate: its own colours as accents are a supplier quote too.
   const q=DECKING_CATALOGUE.find(m=>m.costPerSqft===null&&m.isComposite&&m.colors.length>1)!;

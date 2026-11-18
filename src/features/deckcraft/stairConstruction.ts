@@ -1,5 +1,6 @@
 import type {DeckData} from './types';
 import type {Box,V3} from './deckTakeoff';
+import {LIGHTING_MOUNTING_SPACE_IN,lightingTreadNosing} from './lib/finishedFootprint';
 
 const pvc='https://assets.timbertech.com/content/dam/wp-content/TimberTech-Advanced-PVC-Decking-Installation-Guide_ENG.pdf';
 const composite='https://assets.timbertech.com/content/dam/wp-content/TimberTech-Composite-Installation-Guide-ENG.pdf';
@@ -17,7 +18,8 @@ export interface StairSupport {
  * tightened only by a verified applicable tread rule, never by deck-joist spans. */
 export function getStairSupport(data:DeckData,gap:number):StairSupport {
   const id=data.deckingMaterial;
-  const result:StairSupport={requestedSpacingIn:12,spacingIn:12,minimumStringers:3,runIn:Math.max(10.5,2*data.boardWidth+gap-.5),treadNosingIn:.5,boardGapIn:gap,rearGapIn:0,status:'wood-design-review',sourceUrl:'',sourcePages:'',notes:['Stringer centers start one inch from the tread end. Nominal bays remain fixed; the final bay is shorter.','Wood species, grade, stringer throat, connection design and local stair requirements need project review.'],issues:[],riserThicknessIn:.75,riserStockWidthIn:7.25,riserStockLengthIn:144};
+  const nose=lightingTreadNosing(data);
+  const result:StairSupport={requestedSpacingIn:12,spacingIn:12,minimumStringers:3,runIn:Math.max(10.5,2*data.boardWidth+gap-.5),treadNosingIn:nose,boardGapIn:gap,rearGapIn:0,status:'wood-design-review',sourceUrl:'',sourcePages:'',notes:['Stringer centers start one inch from the tread end. Nominal bays remain fixed; the final bay is shorter.','Wood species, grade, stringer throat, connection design and local stair requirements need project review.'],issues:[],riserThicknessIn:.75,riserStockWidthIn:7.25,riserStockLengthIn:144};
   if(id.startsWith('tt_')){
     result.status='spacing-verified';result.notes=['Square-shoulder stair boards require top-down fastening. Use the manufacturer instructions for fastening, gapping and riser installation.'];
     if(['tt_harvest','tt_harvest_plus','tt_vintage','tt_landmark'].includes(id)){
@@ -42,7 +44,9 @@ export function getStairSupport(data:DeckData,gap:number):StairSupport {
     Object.assign(result,{spacingIn:8,status:'spacing-verified',sourceUrl:id==='deck_vista'?vista:id==='deck_altitude'?altitude:venture,sourcePages:'Stair installation',riserThicknessIn:.5,riserStockWidthIn:11.25,boardGapIn:.25,rearGapIn:.25,runIn:Math.max(11,2*data.boardWidth)});
     result.notes=['The 8-inch unsupported-tread rule is used. Decorative closed riser boards do not establish the alternative supported-tread assembly. Provide the specified board/riser gaps and face fasteners.'];
   }
-  result.notes.push('Riser cuts use 12-foot stock; confirm the selected colour/profile and fastening system with the supplier. Stair board thickness is represented as one inch; final rise deductions must use supplied board thickness.','Straight treads have a ½-inch nose. The requested 1½-inch deck border at the top step and flush winder edges need a project-specific nosing/uniformity review.');
+  result.notes.push('Riser cuts use 12-foot stock; confirm the selected colour/profile and fastening system with the supplier. Stair board thickness is represented as one inch; final rise deductions must use supplied board thickness.');
+  if(nose>=LIGHTING_MOUNTING_SPACE_IN)result.notes.push(`Lit steps use a ${LIGHTING_MOUNTING_SPACE_IN} in custom supported/recessed nose so under-step fixtures match the picture-frame lighting border. Extra support, fasteners and weather detailing need a builder quote; this is not an approved ${LIGHTING_MOUNTING_SPACE_IN} in board cantilever.`);
+  else result.notes.push('Straight treads have a ½-inch nose. The requested 1½-inch deck border at the top step and flush winder edges need a project-specific nosing/uniformity review.');
   return result;
 }
 
@@ -58,6 +62,14 @@ export function getStringerOffsets(width:number,spacing:number,minimum=3):number
   while(points.length<minimum){let index=0;for(let i=1;i<points.length-1;i++)if(points[i+1]-points[i]>points[index+1]-points[index])index=i;points.splice(index+1,0,(points[index]+points[index+1])/2);}
   return points;
 }
+
+/** Open stringer stairs (DeckData.stairSides 'Open', owner 2026-11-02): a fascia board on each outer stringer's face, cut
+ * to the stringer's profile, and treads that overhang that fascia by 1 in. The outer stringers are centred 1 in inside the
+ * stair width (getStringerOffsets), so their faces are 0.25 in inside it and each tread runs 1.5 in past it on both sides.
+ * A drawn stair path keeps boxed sides: its mitred treads are shared between segments. */
+export const OPEN_STAIR={fasciaIn:.75,overhangIn:1,stringerFaceIn:.25} as const;
+export const OPEN_TREAD_EXTENSION_IN=OPEN_STAIR.fasciaIn+OPEN_STAIR.overhangIn-OPEN_STAIR.stringerFaceIn;
+export const openStairs=(data:DeckData)=>data.stairSides==='Open'&&!data.stairPath;
 
 export type RiserBoard=Box&{kind:'riser';flightId:string;riserIndex:number;stockLength:number;stockWidth:number;materialId:string};
 /** A closed riser spans lower walking surface to the underside of the upper

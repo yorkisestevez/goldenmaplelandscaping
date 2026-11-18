@@ -83,7 +83,7 @@ async function gatherExisting() {
 }
 
 function buildPrompt(existingTitles) {
-  return `You are designing a long-tail SEO content backlog for Golden Maple Landscaping, a premium hardscape contractor in Barrie, Ontario. Service area: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood. The contractor installs Permacon/Unilock/Techo-Bloc pavers, TimberTech composite decking, builds retaining walls and outdoor living spaces, sources from Carr Landscape Depot, uses 12-16" clear stone bases (not granular A).
+  return `You are designing a long-tail SEO content backlog for Golden Maple Landscaping, a premium hardscape contractor in Barrie, Ontario. Service area: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood. The contractor installs Permacon/Unilock/Techo-Bloc pavers, TimberTech composite decking, builds retaining walls and outdoor living spaces, sources from Carr Landscape Depot, uses compacted clear stone bases (not granular A) sized per project.
 
 EXISTING / ALREADY PUBLISHED TITLES (don't duplicate these or near-duplicates):
 ${existingTitles.map((t, i) => `${i + 1}. ${t}`).join('\n')}

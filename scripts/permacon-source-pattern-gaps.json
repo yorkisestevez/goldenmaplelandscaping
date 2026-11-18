@@ -1,0 +1,29 @@
+[
+  {
+    "productId": "permacon-patio-brick-embossed-slab",
+    "reason": "Official2026Ontario PDF26 publishes40Ã—600Ã—600 mm in its stock table, but both original pattern captions explicitly say400Ã—400. These conflicting dimensions cannot be resolved by scaling or inventing400 mm stock.",
+    "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=26"
+  },
+  {
+    "productId": "permacon-patio-sidewalk-slab",
+    "patternId": "modified-running-bond-40-600-750-and-60-600-600",
+    "reason": "PDF27 modified mixed illustration has full face spans approximately150:113 pixels (4:3), but its caption and current stocks require750:600 (5:4). The two verified600-square diagrams are recovered separately; the mixed illustration cannot retain all full750/600 stocks under the pictured phase without an additional dimensioned module.",
+    "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=27"
+  },
+  {
+    "productId": "permacon-boulevard-drain-paver",
+    "patternId": "parquet",
+    "reason": "PDF100 documents150Ã—300 mm bodies and12 mm joints. The depicted two-to-one parquet module does not close with uniform162/312 mm pitches (2Ã—162â‰ 312). A documented spacer/pattern setting-out is needed; no body is shrunk to force closure.",
+    "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=100"
+  },
+  {
+    "productId": "permacon-mondrian-plus-60-slab",
+    "reason": "Official PDF24 shows mixedABC linear/modular examples with full165/330/495 mm stocks. Clipping-aware source extraction and rendered-face inspection do not establish two consistent translations defining a complete repeat; the illustrated rows vary. Exact fixed-background reconstruction needs a complete source motif/setting-out. Single165Ã—330 small-rectangle bonds have separate verified bindings.",
+    "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=24"
+  },
+  {
+    "productId": "permacon-mondrian-plus-80-paver",
+    "reason": "Official PDF44 shows mixedABC linear/modular examples with full165/330/495 mm stocks. Clipping-aware source extraction and rendered-face inspection do not establish two consistent translations defining a complete repeat; the illustrated rows vary. Exact fixed-background reconstruction needs a complete source motif/setting-out. Single165Ã—330 small-rectangle bonds have separate verified bindings.",
+    "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=44"
+  }
+]

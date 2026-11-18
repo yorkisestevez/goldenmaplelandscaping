@@ -2,6 +2,23 @@ import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
 import { BUSINESS } from '../../data/business';
 
+// Summary of the brand sections below. Every cell restates this page's own prose.
+const BRAND_COLUMNS = ['Best for', 'Known for', 'Also notable', 'Price position'] as const;
+const BRAND_ROWS = [
+  {
+    brand: 'Unilock',
+    cells: ['A modern, architectural look', 'EnduraColor™ colour that runs through the paver; the widest range of contemporary styles', 'Tight manufacturing tolerances; a comprehensive lifecycle warranty program', 'Tends to be the most expensive of the three'],
+  },
+  {
+    brand: 'Techo-Bloc',
+    cells: ['Design flexibility and unique textures', 'New textures, shapes and patterns; the Blu Grande large-format slab', 'Hydra Pressed manufacturing; Mini-Creta and Para wall systems', 'Premium tier, above Permacon'],
+  },
+  {
+    brand: 'Permacon',
+    cells: ['Proven quality at a more accessible price point', 'Value; wide availability, so fewer specialty-order delays', 'Solid quality in Ontario conditions; competitive warranties', 'Generally 15–25% less than Unilock and Techo-Bloc for comparable products'],
+  },
+];
+
 export default function PaverComparison() {
   return (
     <BlogPostLayout
@@ -10,12 +27,39 @@ export default function PaverComparison() {
       seoDescription="Honest comparison of Unilock, Techo-Bloc, and Permacon pavers from a contractor who installs all three. Covers durability, aesthetics, warranty, and price in Ontario."
       category="Materials"
       date="February 12, 2026"
+      dateModified="November 7, 2026"
       readTime="8 min read"
       heroImage="/images/projects/IHPX8926.JPEG"
     >
       <p>Contractors install pavers from all three major manufacturers — Unilock, Techo-Bloc, and Permacon — and contractors get asked this question constantly: <strong>"Which one is the best?"</strong></p>
 
       <p>The honest answer? There isn't a single "best." Each brand has strengths that make it ideal for certain projects and certain homeowners. Here's a straightforward comparison from someone who works with these products every day.</p>
+
+      <h2>The Three Brands at a Glance</h2>
+
+      <div className="not-prose overflow-x-auto my-10">
+        <table className="w-full min-w-[640px] text-left font-sans text-sm border-collapse">
+          <caption className="sr-only">Unilock, Techo-Bloc and Permacon compared, summarised from the sections below</caption>
+          <thead>
+            <tr className="border-b border-brand-gold/30">
+              <th scope="col" className="py-3 pr-4 text-brand-gold-dark font-normal uppercase tracking-[0.15em] text-[11px]">Brand</th>
+              {BRAND_COLUMNS.map((c) => (
+                <th key={c} scope="col" className="py-3 pr-4 text-brand-gold-dark font-normal uppercase tracking-[0.15em] text-[11px]">{c}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {BRAND_ROWS.map((row) => (
+              <tr key={row.brand} className="border-b border-brand-dim/30 align-top">
+                <th scope="row" className="py-4 pr-4 text-brand-bonewhite font-normal">{row.brand}</th>
+                {row.cells.map((cell, i) => (
+                  <td key={BRAND_COLUMNS[i]} className="py-4 pr-4 text-brand-muted font-light">{cell}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <h2>Unilock: The Premium Standard</h2>
 

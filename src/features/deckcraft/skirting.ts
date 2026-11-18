@@ -3,7 +3,11 @@ import type {ColourRef,DeckData,SkirtingConfig,SkirtingStyle} from './types';
 import {getHouseContact} from './houseContact';
 import {getTerrainConfig} from './yardSettings';
 import {edgeFacing,type EdgeName,type PlanPoint} from './lib/deckGeometry';
-import {accentAllowed,colourName,deckColourRef} from './boardFinishes';
+import {insidePolygon as inside} from './lib/polygonCuts';
+import {accentAllowed,colourName,deckColourRef,parseColourRef} from './boardFinishes';
+import {mitredRunCaps,type SlabCap} from './lib/mitredSlabs';
+import {createSiteSurface,designSiteModel,siteGroundProfile} from './siteSurface';
+import {openStairs} from './stairConstruction';
 
 /**
  * Skirting under the deck: boards or lattice closing in the space between each deck edge's rim and the ground.
@@ -11,8 +15,11 @@ import {accentAllowed,colourName,deckColourRef} from './boardFinishes';
  * - The edges are the levels' rim pieces. On the main deck, the edges the house covers are left alone, and
  *   houseContact.ts (onContact) is the only judge of which those are: nothing here finds the house by its position.
  * - Where two levels meet or overlap, and across every stair and level-connection opening (its width plus 1 in each
- *   side), the skirting stops. Winder treads belong to the stair and are not skirted.
- * - The face runs from the underside of the rim down to the ground (getTerrainConfig, so it follows a slope) plus
+ *   side), the skirting stops. Winder treads belong to the stair and are not skirted. An open stringer stair
+ *   (stairConstruction.ts) hangs in front of the rim instead, so the skirting carries on behind it, as a run of its own
+ *   that never takes an access panel.
+ * - The face runs from the underside of the rim down to the ground (the measured survey where there is one, otherwise
+ *   getTerrainConfig, so it follows a slope) plus
  *   the chosen clearance. A stretch with less than 3 in of face is left open.
  * - Styles: horizontal boards on studs at 16 in, vertical boards on rails no more than 24 in apart, or lattice in
  *   4 × 8 ft panels with a rail at each 4 ft joint. Access panels are framed into the longest runs.
@@ -26,6 +33,11 @@ export const SKIRTING_LIMITS={clearanceIn:[1,12] as const,accessPanels:[0,6] as 
 /** A deck side the design can leave open: 'deck1'…'deck3' or 'landing1'…, then the side it faces. */
 export const SKIRTING_EDGE=/^(deck[1-3]|landing[1-9]\d?)-(front|back|left|right)$/;
 export const newSkirting=():SkirtingConfig=>({style:'Horizontal boards',clearanceIn:2,accessPanels:1});
+/** Solid edge means an ungrooved edge, not necessarily a solid core: these known scalloped boards are excluded.
+ * Other composite/PVC collections remain custom fabrication candidates, subject to exact stock confirmation. */
+export function foldedBoardCandidate(colour:ColourRef){
+  const m=parseColourRef(colour)?.material;return !!m?.isComposite&&!['tt_prime_plus','tt_prime','tt_terrain','tt_terrain_plus'].includes(m.id);
+}
 
 const STYLE_WORDS:Record<SkirtingStyle,string>={'Horizontal boards':'horizontal boards','Vertical boards':'vertical boards','Lattice':'lattice'};
 const LEVEL_NAMES=['Main deck','Second level','Third level'];
@@ -46,17 +58,20 @@ const FRAMING:Record<SkirtingStyle,{studIn:number;railIn?:number;words:string}>=
 
 /** A flat piece of skirting (face, backing or trim) in world plan inches (y is the 3D z, toward the yard). Its middle
  * plane runs a→b, `out` points away from the deck, and its bottom and top are given at each end: a trapezoid on a slope. */
-export interface SkirtingSlab{a:PlanPoint;b:PlanPoint;out:PlanPoint;thick:number;bottomA:number;topA:number;bottomB:number;topB:number}
+export interface SkirtingSlab{a:PlanPoint;b:PlanPoint;out:PlanPoint;thick:number;bottomA:number;topA:number;bottomB:number;topB:number;capA?:SlabCap;capB?:SlabCap;grainAnchor?:PlanPoint;grainOffset?:number}
 /** One straight stretch of skirting along a rim. Its face runs from `top` (the rim's underside) down to the ground plus
  * the clearance, `bottomA` and `bottomB` at its ends. */
-export interface SkirtingRun{edge:string;level:number;a:PlanPoint;b:PlanPoint;lengthIn:number;out:PlanPoint;top:number;bottomA:number;bottomB:number;faceSqft:number}
+export interface SkirtingRun{edge:string;level:number;a:PlanPoint;b:PlanPoint;lengthIn:number;out:PlanPoint;top:number;bottomA:number;bottomB:number;faceSqft:number;behindStair?:boolean}
 /** A deck side the skirting can close in, for the editor's list: `open` when the design leaves it open. */
 export interface SkirtingEdge{id:string;label:string;lengthFt:number;open:boolean}
 export interface SkirtingPlan{
   style:SkirtingStyle;colour:ColourRef;clearanceIn:number;
+  foldedCorners:boolean;
   edges:SkirtingEdge[];runs:SkirtingRun[];
   /** Face boards or lattice panels; the 2×4 backing (studs and rails); the trim round each access panel. */
   faces:SkirtingSlab[];backing:SkirtingSlab[];frames:SkirtingSlab[];
+  /** Corner trim for lattice; board skirting meets in actual mitres instead (drawn only, quantities unchanged). */
+  corners:SkirtingSlab[];
   lengthFt:number;faceSqft:number;backingLf:number;latticePanels:number;
   accessPanels:{requested:number;placed:number;widthIn:number;heightsIn:number[]};
   /** Ventilation, access and drainage, and anything left open: confirm-before-construction notes. */
@@ -65,11 +80,6 @@ export interface SkirtingPlan{
 
 type Span=[number,number];
 const cut=(spans:Span[],lo:number,hi:number):Span[]=>spans.flatMap(([s,e]):Span[]=>hi<=s||lo>=e?[[s,e]]:[...(lo>s?[[s,lo] as Span]:[]),...(hi<e?[[hi,e] as Span]:[])]);
-function inside(p:PlanPoint,poly:PlanPoint[]){
-  let odd=false;
-  for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)odd=!odd;}
-  return odd;
-}
 /** Stretches of the segment a + u·t (0 ≤ t ≤ len) inside a polygon (more than half an inch in from its edges). */
 function insideSpans(a:PlanPoint,u:PlanPoint,len:number,poly:PlanPoint[]):Span[]{
   const ts=[0,len];
@@ -93,16 +103,31 @@ function below(bottomA:number,k:number,L:number,level:number):Span|null{
   const t=(level-bottomA)/k,s=k>0?0:Math.max(0,t),e=k>0?Math.min(L,t):L;
   return e-s>.01?[s,e]:null;
 }
+/** Thinning tolerance for the measured ground under a rim: a run is not cut into slivers where the ground runs
+ * within this of straight. */
+const GROUND_TOLERANCE=.25;
 const round1=(n:number)=>Math.round(n*10)/10;
 const inches=(n:number)=>`${round1(n)}`;
 
+/** Geometry only. The option-pricing worker uses this so the ventilation notes stay off that bundle. */
+export function skirtingGeometry(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
+  return layoutSkirting(data,model)?.plan??null;
+}
 /** The skirting a design asks for, laid out on its finished takeoff; null when the design has none. */
 export function skirtingPlan(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
+  const laid=layoutSkirting(data,model);if(!laid)return null;
+  laid.plan.notes=skirtingNoteLines(data,laid);
+  return laid.plan;
+}
+function layoutSkirting(data:DeckData,model:DeckTakeoff){
   const config=data.skirting;if(!config)return null;
   const style=SKIRTING_STYLES.includes(config.style)?config.style:'Horizontal boards';
   const [cmin,cmax]=SKIRTING_LIMITS.clearanceIn,clearanceIn=Math.min(cmax,Math.max(cmin,Number(config.clearanceIn)||2));
   const colour=config.colour&&accentAllowed(data,config.colour)?config.colour:deckColourRef(data);
+  const foldedCorners=config.cornerTreatment==='Folded solid boards'&&style==='Horizontal boards'&&foldedBoardCandidate(colour);
   const terrain=getTerrainConfig(data),ground=(y:number)=>terrain.elevationIn+y*terrain.slopePct/100;
+  // On a measured site the skirting runs down to the survey's (proposed) ground, not the terrain setting's plane.
+  const surface=data.siteModel?createSiteSurface(designSiteModel(data),terrain):undefined;let estimatedGround=false;
   const contact=getHouseContact(data,model.levels[0].footprint),open=new Set(config.openEdges??[]);
   const outlines=model.levels.map(l=>l.kind==='winder'?null:l.footprint.outline.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z})));
   const edges=new Map<string,SkirtingEdge>(),runs:SkirtingRun[]=[];
@@ -128,32 +153,45 @@ export function skirtingPlan(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
         for(const [s,e] of insideSpans(a,u,len,poly))spans=cut(spans,s,e);
       });
       // Stairs and level connections: a flight leaving or landing on this level at this edge opens it, 1 in past each side.
+      const behind:Span[]=[];
       for(const f of model.flights)for(const p of [f.start,f.end]){
         const q={x:p.x,y:p.z};if(Math.abs(p.y-level.top)>.6||across(q)>3)continue;
         const t=along(q),half=f.width/2+PAD;spans=cut(spans,t-half,t+half);
+        if(p===f.start&&f.kind==='grade'&&f.type==='Straight'&&openStairs(data))behind.push([Math.max(0,t-half),Math.min(len,t+half)]);
       }
       const facing=edgeFacing(out),id=`${key}-${facing.toLowerCase()}`;
       const edge=edges.get(id)??{id,label:`${name}, ${SIDE_WORDS[facing]??'back'}`,lengthFt:0,open:open.has(id)};edges.set(id,edge);
-      const top=m.a.y-m.depth/2,bottom=(t:number)=>ground(a.y+u.y*t)+clearanceIn,at=(t:number)=>({x:a.x+u.x*t,y:a.y+u.y*t});
-      for(const [s0,e0] of spans){
-        // Keep what has room for a face: the ground can rise under the deck on a slope.
-        const h0=top-bottom(s0),h1=top-bottom(e0),where=(h:number)=>s0+(h-h0)/(h1-h0)*(e0-s0);
-        const s=h0>=MIN_FACE?s0:h1>=MIN_FACE?where(MIN_FACE):e0,e=h1>=MIN_FACE?e0:h0>=MIN_FACE?where(MIN_FACE):s0,kept=Math.max(0,e-s);
-        if(!edge.open)lowIn+=e0-s0-kept;
-        if(kept<MIN_RUN)continue;
-        edge.lengthFt+=kept/12;
-        if(edge.open)continue;
-        const bA=bottom(s),bB=bottom(e);
-        runs.push({edge:id,level:li,a:at(s),b:at(e),lengthIn:kept,out,top,bottomA:bA,bottomB:bB,faceSqft:kept*(2*top-bA-bB)/2/144});
+      // The ground under the rim as straight pieces: the plane's one, or the survey's own breaks.
+      const profile=surface&&siteGroundProfile(surface,a,b,GROUND_TOLERANCE);estimatedGround||=!!profile&&profile.estimated;
+      const top=m.a.y-m.depth/2,bottom=(t:number)=>(profile?profile.at(t):ground(a.y+u.y*t))+clearanceIn,at=(t:number)=>({x:a.x+u.x*t,y:a.y+u.y*t});
+      for(const [S0,E0,behindStair] of [...spans.map(([s,e])=>[s,e,false] as const),...behind.map(([s,e])=>[s,e,true] as const)]){
+        // A stretch that keeps its face carries on across the ground's breaks; one under MIN_RUN in all is left open.
+        let group:[number,number][]=[],sum=0;
+        const flush=()=>{if(sum>=MIN_RUN){edge.lengthFt+=sum/12;if(!edge.open)for(const [s,e] of group){const bA=bottom(s),bB=bottom(e);runs.push({edge:id,level:li,a:at(s),b:at(e),lengthIn:e-s,out,top,bottomA:bA,bottomB:bB,faceSqft:(e-s)*(2*top-bA-bB)/2/144,...(behindStair?{behindStair}:{})});}}group=[];sum=0;};
+        const stops=profile?profile.stops(S0,E0):[S0,E0];
+        for(let i=1;i<stops.length;i++){
+          const s0=stops[i-1],e0=stops[i];
+          // Keep what has room for a face: the ground can rise under the deck on a slope.
+          const h0=top-bottom(s0),h1=top-bottom(e0),where=(h:number)=>s0+(h-h0)/(h1-h0)*(e0-s0);
+          const s=h0>=MIN_FACE?s0:h1>=MIN_FACE?where(MIN_FACE):e0,e=h1>=MIN_FACE?e0:h0>=MIN_FACE?where(MIN_FACE):s0,kept=Math.max(0,e-s);
+          if(!edge.open)lowIn+=e0-s0-kept;
+          if(kept<=.01||group.length&&s-group.at(-1)![1]>.01)flush();
+          if(kept>.01){group.push([s,e]);sum+=kept;}
+        }
+        flush();
       }
     }
   });
 
   const faces:SkirtingSlab[]=[],backing:SkirtingSlab[]=[],frames:SkirtingSlab[]=[],frame=FRAMING[style],bw=data.boardWidth;
+  const caps=style==='Lattice'?[]:mitredRunCaps(runs.map(r=>({...r,inner:RIM_FACE,outer:RIM_FACE+FACE,group:r.level})));
   let backingIn=0,latticePanels=0;
   const piece=(r:SkirtingRun,t0:number,t1:number,shift:number,thick:number,bottomA:number,topA:number,bottomB:number,topB:number):SkirtingSlab=>{
     const u={x:(r.b.x-r.a.x)/r.lengthIn,y:(r.b.y-r.a.y)/r.lengthIn},at=(t:number)=>({x:r.a.x+u.x*t+r.out.x*shift,y:r.a.y+u.y*t+r.out.y*shift});
-    return {a:at(t0),b:at(t1),out:r.out,thick,bottomA,topA,bottomB,topB};
+    const joined=style!=='Lattice'&&thick===FACE&&shift===RIM_FACE+FACE/2,c=caps[runs.indexOf(r)];
+    return {a:at(t0),b:at(t1),out:r.out,thick,bottomA,topA,bottomB,topB,
+      ...(joined&&c?.a&&t0<.01?{capA:c.a}:{}),
+      ...(joined&&c?.b&&r.lengthIn-t1<=GAP+.01?{capB:c.b}:{})};
   };
   for(const r of runs){
     const L=r.lengthIn,k=(r.bottomB-r.bottomA)/L,bot=(t:number)=>r.bottomA+k*t,low=Math.min(r.bottomA,r.bottomB),faceAt=RIM_FACE+FACE/2;
@@ -191,6 +229,34 @@ export function skirtingPlan(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
     }
   }
 
+  // A folded solid-board corner is a custom-fabricated return, not a thin fascia panel. Split the visual course
+  // into short corner returns and field pieces so the two legs of a fold share one grain strip and phase.
+  // The return length is a preview convention, not a fabrication dimension or a change to the takeoff.
+  if(foldedCorners){
+    const outside=new Set<SlabCap>();
+    runs.forEach((r,i)=>runs.forEach((s,j)=>{
+      if(i===j)return;const cap=caps[i]?.b;
+      if(cap&&cap===caps[j]?.a&&Math.abs(r.out.x*s.out.x+r.out.y*s.out.y)<1e-5&&s.out.x*(r.b.x-r.a.x)+s.out.y*(r.b.y-r.a.y)>.01)outside.add(cap);
+    }));
+    const joined:SkirtingSlab[]=[];
+    for(const s of faces){
+      const L=Math.hypot(s.b.x-s.a.x,s.b.y-s.a.y),u={x:(s.b.x-s.a.x)/L,y:(s.b.y-s.a.y)/L};
+      const a=s.capA&&outside.has(s.capA)?s.capA:undefined,b=s.capB&&outside.has(s.capB)?s.capB:undefined;
+      if(!a&&!b){joined.push(s);continue;}
+      const returnIn=Math.min(12,L/3),stops=[0,...(a?[returnIn]:[]),...(b?[L-returnIn]:[]),L];
+      const at=(t:number)=>({x:s.a.x+u.x*t,y:s.a.y+u.y*t}),height=(p:number,q:number,t:number)=>p+(q-p)*t/L;
+      for(let k=0;k+1<stops.length;k++){
+        const from=stops[k],to=stops[k+1],anchor=k===0?a:k===stops.length-2?b:undefined;
+        const p=at(from),q=at(to),grainAnchor=anchor?{x:anchor.outer.x+s.topA*.01,y:anchor.outer.y}:undefined;
+        joined.push({...s,a:p,b:q,bottomA:height(s.bottomA,s.bottomB,from),bottomB:height(s.bottomA,s.bottomB,to),
+          topA:height(s.topA,s.topB,from),topB:height(s.topA,s.topB,to),
+          capA:k===0?s.capA:undefined,capB:k===stops.length-2?s.capB:undefined,
+          ...(grainAnchor?{grainAnchor,grainOffset:-((anchor!.outer.x-p.x)*u.x+(anchor!.outer.y-p.y)*u.y)}:{})});
+      }
+    }
+    faces.splice(0,faces.length,...joined);
+  }
+
   // Access panels: framed openings on the longest runs, where there is room for at least 12 in of opening between the
   // bottom rail and the nailer.
   const [pmin,pmax]=SKIRTING_LIMITS.accessPanels,requested=Math.round(Math.min(pmax,Math.max(pmin,Number(config.accessPanels)||0)));
@@ -205,7 +271,7 @@ export function skirtingPlan(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
   };
   const perRun=runs.map(()=>0),heightsIn:number[]=[];
   for(let i=0;i<requested;i++){
-    const best=runs.map((r,ri)=>({ri,room:r.lengthIn/(perRun[ri]+1)})).filter(c=>panelsOn(runs[c.ri],perRun[c.ri]+1)).sort((p,q)=>q.room-p.room)[0];
+    const best=runs.map((r,ri)=>({ri,room:r.lengthIn/(perRun[ri]+1)})).filter(c=>!runs[c.ri].behindStair&&panelsOn(runs[c.ri],perRun[c.ri]+1)).sort((p,q)=>q.room-p.room)[0];
     if(!best)break;perRun[best.ri]++;
   }
   runs.forEach((r,ri)=>{
@@ -217,24 +283,56 @@ export function skirtingPlan(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
     }
   });
   const placed=heightsIn.length;
+  // Outside corners: the faces stand off the rim, so two runs meeting at a corner leave a slot between their ends. A
+  // corner trim board a little proud of both faces closes it, as a built skirting's corner trim does.
+  const corners:SkirtingSlab[]=[],seen=new Set<string>(),proud=RIM_FACE+FACE+.1;
+  // Lattice retains solid trim; board courses now wrap the corner themselves without a vertical cover block.
+  if(style==='Lattice')
+  runs.forEach((r1,i)=>runs.forEach((r2,j)=>{
+    if(i===j)return;
+    const u1={x:(r1.b.x-r1.a.x)/r1.lengthIn,y:(r1.b.y-r1.a.y)/r1.lengthIn};
+    for(const [end1,end2] of [['b','a'],['b','b'],['a','a'],['a','b']] as const){
+      const c=r1[end1],d=r2[end2];if(Math.hypot(c.x-d.x,c.y-d.y)>1)continue;
+      const key=`${Math.round(c.x)}:${Math.round(c.y)}`;if(seen.has(key))continue;
+      const past=end1==='b'?u1:{x:-u1.x,y:-u1.y},u2={x:(r2.b.x-r2.a.x)/r2.lengthIn,y:(r2.b.y-r2.a.y)/r2.lengthIn},away2=end2==='a'?u2:{x:-u2.x,y:-u2.y};
+      // Outside corner: the next run's face looks along the way this run was going.
+      const turnsOut=r2.out.x*past.x+r2.out.y*past.y;if(turnsOut<=.01)continue;
+      seen.add(key);
+      const turn=Math.acos(Math.max(-1,Math.min(1,past.x*away2.x+past.y*away2.y))),ext=proud*Math.tan(turn/2);
+      const at=(t:number)=>({x:c.x+past.x*t+r1.out.x*(RIM_FACE+proud)/2,y:c.y+past.y*t+r1.out.y*(RIM_FACE+proud)/2});
+      const bottom=Math.min(end1==='b'?r1.bottomB:r1.bottomA,end2==='a'?r2.bottomA:r2.bottomB),top=Math.min(r1.top,r2.top);
+      // Slab geometry wants `out` on the right of a→b, as the faces have it.
+      const [p,q]=end1==='b'?[at(0),at(ext)]:[at(ext),at(0)];
+      if(top-bottom>=MIN_FACE)corners.push({a:p,b:q,out:r1.out,thick:proud-RIM_FACE,bottomA:bottom,topA:top,bottomB:bottom,topB:top});
+    }
+  }));
 
-  const listed=[...edges.values()].filter(e=>e.lengthFt>=.5),notes:string[]=[];
+  const listed=[...edges.values()].filter(e=>e.lengthFt>=.5);
+  const plan:SkirtingPlan={style,colour,clearanceIn,foldedCorners,edges:listed,runs,faces,backing,frames,corners,
+    lengthFt:runs.reduce((n,r)=>n+r.lengthIn,0)/12,faceSqft:runs.reduce((n,r)=>n+r.faceSqft,0),backingLf:backingIn/12,latticePanels,
+    accessPanels:{requested,placed,widthIn:ACCESS.w,heightsIn},notes:[]};
+  return {plan,data,listed,foldedCorners,config,style,clearanceIn,placed,requested,terrain,estimatedGround,lowIn,colour};
+}
+function skirtingNoteLines(data:DeckData,laid:NonNullable<ReturnType<typeof layoutSkirting>>):string[]{
+  const {listed,foldedCorners,config,style,clearanceIn,placed,requested,terrain,estimatedGround,lowIn,colour}=laid;
+  const runs=laid.plan.runs,notes:string[]=[];
   if(!runs.length)notes.push(listed.length&&listed.every(e=>e.open)?'Skirting: every side is left open, so none is listed.':'Skirting: no deck edge has room for it: the framing sits too close to the ground.');
   else{
+    if(foldedCorners)notes.push('Skirting corners: folded solid deck-board returns at square outside corners are shown as custom fabrication; inside and angled corners retain mitred joins. Solid-profile stock is required; the builder must confirm the selected product, backing, movement allowances and fabrication method. Heat-folding approval and warranty coverage are not assumed. Corner fabrication stays in the priced skirting total; it is not a separate quote.');
+    else if(config.cornerTreatment)notes.push('Folded corners require horizontal composite or PVC solid-board skirting; wood, lattice, vertical boards and known scalloped profiles are excluded. This design uses standard corner joins instead.');
     notes.push(`Skirting ventilation: the skirting stops ${inches(clearanceIn)} in above the ground${style==='Lattice'?' and the lattice is open':', with 1/4 in gaps between its boards'}, so air moves under the deck. Confirm the airflow the decking manufacturer requires under its boards before the deck is closed in.`);
     notes.push(placed?`Skirting access: ${placed} framed access panel${placed===1?'':'s'}, ${ACCESS.w} in wide, to reach the footings and framing under the deck${placed<requested?` (${requested} asked for; the rest do not fit where the skirting is tall enough)`:''}.`
       :requested?'Skirting access: no access panel fits (one needs about 20 in of skirting height). Plan another way to reach the space under the deck.'
       :'Skirting access: no access panel is included, so the space under the deck is reached only by taking skirting off. One is recommended.');
     notes.push(`Skirting drainage: grade the ground under the deck so water runs out from under it; the ${inches(clearanceIn)} in gap at the bottom lets it out${terrain.slopePct?', and on this sloped yard the skirting follows the ground':''}.${data.hasDrainage?' Keep the under-deck drainage outlet clear of the skirting.':''}`);
     if(style==='Lattice'&&runs.some(r=>r.top-Math.min(r.bottomA,r.bottomB)>LATTICE.h+.5))notes.push('Skirting: lattice comes in 4 ft panels, so skirting taller than 4 ft is two panels high, with a rail at the joint.');
+    if(estimatedGround)notes.push('Skirting past the survey follows the nearest shot; extend the survey before ordering.');
     if(lowIn>=6)notes.push(`Skirting: ${round1(lowIn/12)} ft of deck edge sits too close to the ground for skirting (under ${MIN_FACE} in of face above the ${inches(clearanceIn)} in clearance) and is left open.`);
   }
   const opened=listed.filter(e=>e.open);
   if(opened.length&&runs.length)notes.push(`Skirting left open by choice: ${opened.map(e=>e.label.toLowerCase()).join('; ')}.`);
   if(config.colour&&colour!==config.colour)notes.push('The chosen skirting colour does not suit this decking, so the skirting is shown and listed in the deck colour.');
-  return {style,colour,clearanceIn,edges:listed,runs,faces,backing,frames,
-    lengthFt:runs.reduce((n,r)=>n+r.lengthIn,0)/12,faceSqft:runs.reduce((n,r)=>n+r.faceSqft,0),backingLf:backingIn/12,latticePanels,
-    accessPanels:{requested,placed,widthIn:ACCESS.w,heightsIn},notes};
+  return notes;
 }
 
 /** The estimate's "Deck skirting" rows: every one a quote (cost null), never $0, and none when nothing is skirted. */
@@ -242,7 +340,7 @@ export function skirtingRows(plan:SkirtingPlan):{name:string;spec:string;qty:num
   if(!plan.runs.length)return [];
   const lf=round1(plan.lengthFt),n=plan.accessPanels.placed;
   return [
-    {name:'Skirting face',spec:`${SKIRTING_STYLE_NAMES[plan.style]} in ${colourName(plan.colour)}${plan.style==='Lattice'?`, about ${plan.latticePanels} panels of 4 × 8 ft, colour matched as closely as the supplier's lattice allows`:''}, from the rim to ${inches(plan.clearanceIn)} in above the ground. Supplier quote required.`,qty:round1(plan.faceSqft),unit:'sq ft',cost:null},
+    {name:'Skirting face',spec:`${SKIRTING_STYLE_NAMES[plan.style]} in ${colourName(plan.colour)}${plan.style==='Lattice'?`, about ${plan.latticePanels} panels of 4 × 8 ft, colour matched as closely as the supplier's lattice allows`:''}, from the rim to ${inches(plan.clearanceIn)} in above the ground.${plan.foldedCorners?' Folded solid-board corner returns: custom fabrication, selected solid-profile product and method to be confirmed.':''} Supplier quote required.`,qty:round1(plan.faceSqft),unit:'sq ft',cost:null},
     {name:'Skirting backing',spec:`Pressure-treated 2×4: ${FRAMING[plan.style].words}. Builder quote required.`,qty:round1(plan.backingLf),unit:'lf',cost:null},
     ...(n?[{name:'Skirting access panels',spec:`Framed, removable panels ${ACCESS.w} in wide, trimmed to match the skirting. Builder quote required.`,qty:n,unit:n===1?'panel':'panels',cost:null}]:[]),
     {name:'Skirting labour',spec:`Builder quote required: framing and fitting ${lf} ft of skirting has no rate in the price book yet.`,qty:lf,unit:'lf',cost:null},
@@ -253,5 +351,5 @@ export function skirtingRows(plan:SkirtingPlan):{name:string;spec:string;qty:num
 export function skirtingWords(plan:SkirtingPlan):string{
   if(!plan.runs.length)return 'Skirting: asked for, but no deck edge is skirted (see the notes)';
   const sides=new Set(plan.runs.map(r=>r.edge)).size,n=plan.accessPanels.placed,opened=plan.edges.filter(e=>e.open);
-  return `Skirting: ${STYLE_WORDS[plan.style]} in ${colourName(plan.colour)}, ${plan.lengthFt.toFixed(1)} ft on ${sides} side${sides===1?'':'s'}, ${inches(plan.clearanceIn)} in above the ground${n?`, ${n} access panel${n===1?'':'s'}`:''}${opened.length?`; left open: ${opened.map(e=>e.label.toLowerCase()).join('; ')}`:''}`;
+  return `Skirting: ${STYLE_WORDS[plan.style]} in ${colourName(plan.colour)}, ${plan.lengthFt.toFixed(1)} ft on ${sides} side${sides===1?'':'s'}, ${inches(plan.clearanceIn)} in above the ground${n?`, ${n} access panel${n===1?'':'s'}`:''}${plan.foldedCorners?'; folded solid-board corners (custom fabrication)':''}${opened.length?`; left open: ${opened.map(e=>e.label.toLowerCase()).join('; ')}`:''}`;
 }

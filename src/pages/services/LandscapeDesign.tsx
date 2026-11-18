@@ -1,7 +1,8 @@
-import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
+import { breadcrumb, faqPage, graph, howToNode, serviceNode } from '../../utils/schema';
+import { ServicePageFreshness, ServiceReviewer, pageUpdateNode } from '../../components/PageFreshness';
 import Testimonials from '../../components/Testimonials';
 import { publicContact } from '../../data/business';
 import { trackCall, trackEngagement } from '../../utils/analytics';
@@ -25,49 +26,55 @@ const FAQ = [
   }
 ];
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQ.map((item) => ({
-    "@type": "Question",
-    name: item.q,
-    acceptedAnswer: { "@type": "Answer", text: item.a },
-  })),
-};
+const PATH = '/services/landscape-design-barrie/';
+const NAME = 'Landscape design in Barrie';
+
+// The design-only starting price the FAQ below publishes (price ledger: approved 2026-11-07).
+const DESIGN_ONLY_FROM = { minPrice: 5000 };
+
+// One list drives the visible process cards and the HowTo schema.
+const PROCESS_STEPS = [
+  { title: "Consultation", desc: "We meet on-site to understand your vision, lifestyle needs, and the unique characteristics of your property." },
+  { title: "Conceptual Design", desc: "The landscape designer we keep on retainer creates a 3D model that allows you to walk through your new backyard before a single stone is laid." },
+  { title: "Material Selection", desc: "We guide you through choosing the perfect pavers, natural stone, and plantings to match your aesthetic." },
+  { title: "Final Presentation", desc: "A comprehensive plan including 3D renders, technical drawings, and a detailed construction quote." }
+];
+
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({
+    path: PATH,
+    name: NAME,
+    serviceType: 'Landscape design',
+    areaServed: 'Barrie',
+    price: DESIGN_ONLY_FROM,
+    priceDescription: 'Design-only packages (no construction) typically start at this amount, before HST: 3D rendering, two design revisions and one final render revision.',
+  }),
+  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: NAME, path: PATH }]),
+  faqPage(PATH, FAQ),
+  howToNode({ path: PATH, name: 'How Golden Maple runs a landscape design project', steps: PROCESS_STEPS }),
+  pageUpdateNode(PATH, PATH, NAME),
+);
 
 export default function LandscapeDesign() {
-  const designSteps = [
-    { title: "Consultation", desc: "We meet on-site to understand your vision, lifestyle needs, and the unique characteristics of your property." },
-    { title: "Conceptual Design", desc: "The landscape designer we keep on retainer creates a 3D model that allows you to walk through your new backyard before a single stone is laid." },
-    { title: "Material Selection", desc: "We guide you through choosing the perfect pavers, natural stone, and plantings to match your aesthetic." },
-    { title: "Final Presentation", desc: "A comprehensive plan including 3D renders, technical drawings, and a detailed construction quote." }
-  ];
-
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Landscape Design Barrie"
+        title="Landscape Designer Barrie | Landscape Design & 3D Plans"
         description="Landscape design planning for Barrie-area properties. Discuss current design scope, deliverables, and project options with our team."
         canonical="https://goldenmaplelandscaping.ca/services/landscape-design-barrie"
-        schema={faqSchema}
+        schema={pageSchema}
       />
       
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-40">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-                Architectural Planning
-              </span>
-              <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
+            <div>
+              <h1 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">Landscape Designer in Barrie</h1>
+              <p className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 See it first. <br />
                 <span className="italic text-brand-gold-dark">Then we build it.</span>
-              </h1>
+              </p>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 The most expensive mistake in landscaping is finding out, halfway through construction, that what's being built doesn't match what you imagined. We've solved that. Before a single stone moves, you walk your finished backyard in 3D. The colours. The light. The way the space flows on a Sunday morning. You sign off on the picture, then we build the picture. Surprises are for birthdays — not your backyard.
               </p>
@@ -92,22 +99,24 @@ export default function LandscapeDesign() {
                   <Phone size={14} strokeWidth={1.5} /> Call {publicContact.phoneDisplay}
                 </a>
               </div>
-            </motion.div>
+              <ServicePageFreshness updateKey={PATH} className="mt-12" />
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
-            >
+            <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
               <img
-                src="/images/projects/Golden Maple deck and walkway.jpg"
+                src="/images/projects/golden-maple-deck-walkway-640.webp"
+                srcSet="/images/projects/golden-maple-deck-walkway-640.webp 640w, /images/projects/golden-maple-deck-walkway-1078.webp 1078w"
+                sizes="(min-width: 1024px) 42vw, 100vw"
+                width={1078}
+                height={1348}
                 alt="Aerial photograph of a backyard deck and walkway layout"
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
-            </motion.div>
+            </div>
           </div>
 
           <div className="mb-40">
@@ -120,7 +129,7 @@ export default function LandscapeDesign() {
               </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-              {designSteps.map((step, idx) => (
+              {PROCESS_STEPS.map((step, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
                   <span className="font-display text-6xl font-light text-brand-gold-dark/10 block mb-10">0{idx + 1}</span>
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{step.title}</h3>
@@ -180,6 +189,8 @@ export default function LandscapeDesign() {
               ))}
             </div>
           </div>
+
+          <ServiceReviewer updateKey={PATH} />
         </div>
       </section>
 

@@ -1,0 +1,113 @@
+/* The customer workspace: task rail, generous drawing surface and one focused inspector. */
+.deck-designer{--dc-table:#eeece7;--dc-sheet:#fcfaf6;--dc-field:#fff;--dc-ink:#242729;--dc-ink-2:#515657;--dc-muted:#666b6d;--dc-rule:#242729;--dc-rule-soft:#e2ded6;--dc-gold:#bb744b;--dc-gold-deep:#a55e38;--dc-gold-ink:#8f4c29;--dc-cream:#fbf1e8;--dc-head:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--dc-body:var(--dc-head);--dc-mono:var(--dc-head);font-family:var(--dc-body);padding-bottom:0}
+.deck-designer :is(h1,h2,h3,h4,legend){font-stretch:normal;letter-spacing:-.025em}
+.deck-designer :is(button,input,select,textarea){font-family:var(--dc-body)}
+.deck-designer .dd-primary,.deck-designer .dd-secondary{border-radius:8px;min-height:44px;padding:10px 14px;font-weight:600;font-size:13px}
+.deck-designer .dd-secondary{border-color:#d6d2cb;background:#fff}.deck-designer .dd-secondary:hover{background:#f2eee8;border-color:#bab4aa}.deck-designer .dd-secondary:where([aria-pressed=true]),.deck-designer .dd-secondary:where([aria-pressed=true]):hover{background:var(--dc-ink);border-color:var(--dc-ink)}
+.deck-designer .dd-primary{background:#262a2c;border-color:#262a2c;color:#fff}.deck-designer .dd-primary:hover{background:#414749}
+.deck-designer .dd-field :is(input:not([type=checkbox],[type=radio],[type=range],[type=color]),select,textarea),.deck-designer select,.deck-designer .dd-share-link input{border:1px solid #d7d4cd;border-radius:8px;background:#fff;font-size:14px}
+.deck-designer .dd-field .dd-number input{font-size:17px;font-variant-numeric:tabular-nums}
+.deck-designer .dd-field :is(input,select,textarea):focus{border-color:var(--dc-gold-deep);box-shadow:0 0 0 3px #bb744b18}
+.deck-designer .dd-fields{gap:14px;margin:18px 0}.deck-designer .dd-check{font-size:13px;line-height:1.5}
+
+.dd-workspace-tools{display:flex;align-items:center;gap:10px;flex:none;position:relative}
+.dd-undo-actions{display:flex;gap:2px}.dd-undo-actions button{width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:8px;background:none;color:#e9e9e3}.dd-undo-actions button:hover{background:#ffffff12}.dd-undo-actions button:disabled{opacity:.35;cursor:default}
+.dd-workspace-files{position:relative}.dd-workspace-files>summary{display:flex;align-items:center;justify-content:center;gap:12px;min-width:72px;min-height:44px;padding:0 12px;border:1px solid #ffffff28;border-radius:8px;font-size:13px;cursor:pointer;list-style:none}.dd-workspace-files>summary::-webkit-details-marker{display:none}.dd-workspace-files>summary:hover,.dd-workspace-files[open]>summary{background:#ffffff0d}
+.dd-files-popover{position:absolute;top:52px;right:0;width:340px;max-width:calc(100vw - 24px);padding:20px;background:#fff;color:var(--dc-ink);border:1px solid #e6e1d9;border-radius:12px;box-shadow:0 16px 48px #16191926;font-size:13px;z-index:100}.dd-files-popover>strong{font-size:16px}.dd-files-popover>.dd-note{margin:8px 0 16px}.dd-files-actions{display:flex;flex-wrap:wrap;gap:8px}.dd-files-popover .dd-share-link{margin:10px 0}.dd-files-popover .dd-share-link input{font-size:12px}.dd-files-popover .dd-share>p{margin:8px 0}.dd-files-popover .dd-reset{margin-top:12px;border-top:1px solid var(--dc-rule-soft)}.dd-files-popover .dd-reset summary{padding:0;font-size:12px}.dd-files-popover>.dd-secondary{margin-top:12px}.dd-files-popover>p{font-size:12px;line-height:1.5}
+.dd-workspace-error{position:absolute;top:54px;right:0;width:320px;max-width:calc(100vw - 24px);padding:12px;border:1px solid #dbb0a3;border-radius:8px;background:#fff5f0;color:#8a2e1d;font-size:12px}
+
+.deck-designer .dd-workspace{height:calc(100dvh - 72px);min-height:560px;display:grid;grid-template-columns:174px minmax(0,1fr) 344px;grid-template-rows:minmax(0,1fr) auto;gap:0;padding:0;overflow:hidden;align-items:stretch}
+.deck-designer .dd-controls{display:contents}
+.deck-designer .dd-preview{grid-column:2;grid-row:1;position:relative;top:auto;width:100%;max-height:none;min-height:0;padding:24px 26px 12px;overflow:auto;background:#eeece7;border:0;outline:0;border-radius:0}
+.deck-designer .dd-preview-head{gap:14px;margin-bottom:14px}.deck-designer .dd-preview h2{font-size:17px;font-weight:600}.deck-designer .dd-preview h2 small{font-size:11px;color:#767973}
+.deck-designer .dd-sheet-tabs{width:fit-content;border:1px solid #ddd8cf;border-radius:9px;background:#f9f7f2;padding:3px;gap:2px}
+.deck-designer .dd-sheet-tabs button{min-height:40px;margin:0;padding:0 16px;border:0;border-radius:6px;font-size:12px;font-family:var(--dc-body);font-stretch:normal;color:#757870}.deck-designer .dd-sheet-tabs button span{display:none}.deck-designer .dd-sheet-tabs [aria-selected=true]{background:#fff;border:0;color:#242729;box-shadow:0 1px 3px #373b3620}.deck-designer .dd-sheet-tabs button:hover{text-decoration:none;background:#fff9}
+.deck-designer .dd-canvas{border:1px solid #ded8ce;border-radius:12px;background:#fcfaf6;box-shadow:0 2px 6px #4b473605}
+.deck-designer .dd-canvas>.dd-site-plan{max-height:none;height:clamp(350px,calc(100dvh - 290px),580px)!important;width:100%}
+.deck-designer .dd-canvas>.dd-plan-viewport{height:clamp(350px,calc(100dvh - 290px),580px)!important;aspect-ratio:auto!important}
+.deck-designer .dd-canvas>[aria-label="Interactive deck construction model"]{height:clamp(350px,calc(100dvh - 290px),580px)!important;aspect-ratio:auto!important}
+.deck-designer .dd-plan-tools{padding:3px;border:1px solid #ded8cf;border-radius:8px;background:#f9f7f2;gap:2px;margin-bottom:12px}.deck-designer .dd-plan-tools button{min-height:44px;padding:0 12px;border:0!important;border-radius:5px;font-size:11px;color:#6a706b}.deck-designer .dd-plan-tools [aria-checked=true]{background:#fff;color:#282e29;box-shadow:0 1px 3px #0002}
+.deck-designer .dd-view-toggle,.deck-designer .dd-day-night{padding:3px;border:1px solid #ded8cf;border-radius:8px;background:#f9f7f2;gap:2px}.deck-designer .dd-view-toggle button,.deck-designer .dd-day-night button{border:0!important;border-radius:5px;min-height:38px;padding:0 10px;font-size:11px}.deck-designer .dd-view-toggle [aria-pressed=true],.deck-designer .dd-day-night [aria-pressed=true]{background:#fff;color:#282e29;box-shadow:0 1px 3px #0002}
+.deck-designer .dd-plan-coach{font-size:11px;color:#70756e;margin-bottom:12px}.deck-designer .dd-plan-shortcuts{gap:6px}.deck-designer .dd-plan-shortcuts button{border-radius:7px}
+.deck-designer .dd-title-block{border-radius:8px;border-color:#ddd7cc;background:#f8f5ef}.deck-designer .dd-title-block>div{border-color:#ddd7cc}.deck-designer .dd-title-block strong{font-family:var(--dc-body);font-size:12px}.deck-designer .dd-title-block span{font-family:var(--dc-body)}
+.dd-workspace-inspector{grid-column:3;grid-row:1/3;min-width:0;height:100%;overflow:auto;overscroll-behavior:contain;background:#fff;border-left:1px solid #e0ddd5;scroll-margin-top:72px}
+.dd-inspector-top{padding:26px 22px 18px;border-bottom:1px solid #eeeae3}.dd-inspector-top>span{display:block;color:#9a9d98;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase}.dd-inspector-top h2{margin:8px 0 6px;font-size:21px;font-weight:600;line-height:1.2}.dd-inspector-back{display:none}
+.dd-workspace-inspector .dd-section-body{padding:22px}.dd-workspace-inspector .dd-section-body>p:first-child{margin-top:0;color:#6d726c;font-size:12px}.dd-workspace-inspector .dd-panel h3{font-size:15px;margin-top:26px}.dd-workspace-inspector .dd-panel h4{font-size:13px}
+.dd-workspace-inspector :is(.dd-wrap,.dd-simple-lighting,.dd-screen,.dd-lighting-zones,.dd-skirting-sides,.dd-house-block,.dd-inlay-card,.dd-colour-pick,.dd-colour-one,.dd-legacy-stripe){padding:12px;border-radius:8px;border-color:#e2ded6}.dd-workspace-inspector .dd-quote-notice{border-radius:8px;background:#fcf3ec;color:#8e522f}.dd-workspace-inspector .dd-materials button,.dd-workspace-inspector .dd-colours button{border-radius:8px;border-color:#e3ded5}.dd-workspace-inspector .dd-materials button[aria-pressed=true],.dd-workspace-inspector .dd-colours button[aria-pressed=true]{border-color:#a76a43}.dd-workspace-inspector .dd-materials img{height:72px}.dd-workspace-inspector .dd-materials button>span{padding:9px}.dd-workspace-inspector .dd-materials strong{font-size:11px}.dd-workspace-inspector .dd-materials small{font-size:10px}.dd-workspace-inspector .dd-materials .dd-delta{font-size:11px}.dd-workspace-inspector .dd-summary{border-radius:8px;background:#f9f7f2}.dd-workspace-inspector .dd-lighting{grid-template-columns:1fr}.dd-workspace-inspector .dd-lighting article{border-radius:8px}
+
+.deck-designer .dd-tag{border-radius:4px}
+@media(max-width:1200px){.deck-designer .dd-workspace{grid-template-columns:144px minmax(0,1fr) 320px}.deck-designer .dd-preview{padding:20px 18px 10px}.dd-inspector-top{padding:24px 18px 18px}.dd-workspace-inspector .dd-section-body{padding:18px}}
+@media(max-width:1000px){.deck-designer .dd-workspace{grid-template-columns:92px minmax(0,1fr) 292px}.dd-inspector-top{padding:22px 16px 16px}.dd-workspace-inspector .dd-section-body{padding:16px}.deck-designer .dd-preview{padding:18px 14px 10px}.deck-designer .dd-fields.three{grid-template-columns:1fr 1fr}}
+@media(max-width:800px){
+  .dd-workspace-tools{gap:4px}.dd-undo-actions{gap:0}.dd-undo-actions button{width:38px;min-width:38px}.dd-workspace-files>summary{min-width:58px;padding:0 8px;font-size:12px;gap:5px}.dd-files-popover{position:fixed;top:70px;right:12px;width:340px;max-height:calc(100dvh - 100px);overflow:auto}.dd-workspace-error{position:fixed;top:70px;right:12px}.deck-designer .dd-workspace{height:auto;min-height:calc(100dvh - 64px);display:flex;flex-direction:column;overflow:visible;padding:0 0 calc(var(--dd-price-height,96px) + 12px);gap:0}.deck-designer .dd-controls{display:contents}
+  .deck-designer .dd-preview{order:1;position:relative;top:0;width:100%;max-height:none;padding:18px 12px 12px;overflow:visible}.deck-designer .dd-preview h2{font-size:16px}.deck-designer .dd-preview h2 small{font-size:10px}.deck-designer .dd-sheet-tabs button{padding:0 16px}.deck-designer .dd-plan-tools{width:100%;justify-content:stretch;grid-template-columns:repeat(5,minmax(0,1fr))}.deck-designer .dd-plan-tools button{min-height:44px;padding:0 5px;line-height:1.25;font-size:11px}.deck-designer .dd-canvas>.dd-site-plan,.deck-designer .dd-canvas>.dd-plan-viewport,.deck-designer .dd-canvas>[aria-label="Interactive deck construction model"]{height:clamp(330px,calc(100dvh - 345px),520px)!important;aspect-ratio:auto!important}.deck-designer .dd-plan-coach{font-size:11px;line-height:1.5}
+  .dd-workspace-inspector{display:none;order:1;width:100%;height:auto;overflow:visible;border:0;background:#fff}.deck-designer[data-workspace-view=inspector] .dd-workspace-inspector{display:block}.deck-designer[data-workspace-view=inspector] .dd-preview{display:none}.dd-inspector-top{padding:16px 20px 20px}.dd-inspector-back{display:inline-flex;align-items:center;min-height:44px;margin:0 0 12px;padding:0;border:0;background:none;color:#935a37;font-size:12px;font-weight:600}.dd-inspector-top h2{font-size:23px}.dd-workspace-inspector .dd-section-body{padding:22px 20px}.dd-workspace-inspector .dd-materials{grid-template-columns:repeat(2,minmax(0,1fr))}.dd-workspace-inspector .dd-materials img{height:110px}.dd-workspace-inspector .dd-materials strong{font-size:13px}.deck-designer .dd-fields,.deck-designer .dd-fields.three{grid-template-columns:repeat(2,minmax(0,1fr))!important}.deck-designer .dd-field :is(input,select,textarea),.deck-designer select{font-size:16px}.deck-designer .dd-lighting{grid-template-columns:1fr}
+  /* The price bar is fixed over the page: anything scrolled into view stops above its measured height. */
+  html{scroll-padding-bottom:calc(var(--dd-price-height,96px) + 12px)}
+}
+@media(max-width:360px){.dd-undo-actions button{width:34px;min-width:34px}}
+/* Keep editing actions and the viewport controls inside the first screen. */
+.deck-designer .dd-canvas>.dd-plan-viewport,.deck-designer .dd-canvas>.dd-site-plan,.deck-designer .dd-canvas>[aria-label="Interactive deck construction model"]{height:clamp(300px,calc(100dvh - 490px),540px)!important}
+@media(max-width:800px){.dd-undo-actions button{width:44px;min-width:44px}.deck-designer .dd-plan-coach{display:none}.deck-designer .dd-canvas>.dd-plan-viewport,.deck-designer .dd-canvas>.dd-site-plan,.deck-designer .dd-canvas>[aria-label="Interactive deck construction model"]{height:clamp(280px,calc(100dvh - 430px),440px)!important}.deck-designer .dd-sheet-tabs button{min-height:44px}.deck-designer .dd-view-toggle button,.deck-designer .dd-day-night button{min-height:44px}}
+
+.deck-designer{font-weight:400}.deck-designer :is(h1,h2,h3,h4,legend),.deck-designer .dd-workspace-inspector :is(h2,h3,h4,legend){font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;font-stretch:normal}
+.dd-inspector-top>span{color:#6c7269}.dd-workspace-inspector .dd-panel>p,.dd-workspace-inspector .dd-note,.dd-workspace-inspector .dd-field small{font-size:12px;color:#596256;line-height:1.55}.dd-workspace-inspector .dd-section-body>p:first-child{color:#596256;font-size:12px}
+@media(max-width:800px){.dd-inspector-back{scroll-margin-top:136px}.dd-workspace-inspector{scroll-margin-top:136px}}
+.dd-current-collection{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding:12px;border:1px solid #e4ded4;border-radius:10px;background:#faf8f3}.dd-current-collection img,.dd-current-collection .dd-swatch-unavailable{width:64px;height:64px;flex:none;object-fit:cover;border-radius:7px}.dd-current-collection small{display:block;font-size:10px;color:#6c7469}.dd-current-collection strong{display:block;margin:3px 0;font-size:13px;line-height:1.4}.dd-collection-options{margin:18px 0;padding:0;border:1px solid #e4ded4;border-radius:8px}.dd-collection-options>summary{display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:10px 12px;cursor:pointer;font-size:12px;font-weight:600;color:#915b37}.dd-collection-options>summary::after{content:'＋';font-size:16px;font-weight:400}.dd-collection-options[open]>summary::after{content:'−'}.dd-collection-options>.dd-materials,.dd-collection-options>.dd-delta-toggle{margin:12px}.dd-collection-options>.dd-note{margin:10px 12px}
+.dd-sketch-launch{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 16px;padding:12px 14px;background:#f0ebe1;border-radius:12px;color:#424c40;font-size:12px}.dd-sketch-launch small{display:block;margin-top:3px;font-size:10px;color:#66715f}.dd-sketch-launch button{flex:none;min-height:44px!important;background:#fff!important;font-size:12px!important}@media(max-width:800px){.dd-sketch-launch{padding:8px 10px;margin:8px 0 12px;font-size:11px}.dd-sketch-launch small{font-size:10px;max-width:160px}.dd-sketch-launch button{padding:8px 10px!important;font-size:11px!important}}
+.deck-designer .dd-preview:has(.dd-sketch-launch) .dd-canvas>.dd-plan-viewport{height:clamp(260px,calc(100dvh - 550px),480px)!important}@media(max-width:800px){.deck-designer .dd-preview:has(.dd-sketch-launch) .dd-canvas>.dd-plan-viewport{height:clamp(240px,calc(100dvh - 490px),400px)!important}}
+
+/* Plan tools stay on one row however many there are: equal columns share the width, and the row scrolls sideways
+   where 54 px columns no longer fit (phones and the narrowest three-column widths). */
+.deck-designer .dd-plan-tools{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(54px,1fr);width:100%;overflow-x:auto;scrollbar-width:thin}.deck-designer .dd-plan-tools button{padding:0 4px}
+@media(max-width:500px){.dd-workspace-files>summary{min-width:50px;padding:0 6px}}
+
+/* Selected-object controls stay in one place while the canvas remains visible. */
+.dd-selection-workspace{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
+.dd-selection-workspace>.dd-canvas{min-width:0}
+.dd-selection-inspector{min-width:0;padding:14px;background:#fff;border:1px solid #ded8ce;border-radius:12px}
+.dd-selection-inspector>h3{margin:0 0 8px;font-size:15px}
+.dd-selection-inspector .dd-fields{grid-template-columns:1fr}
+.dd-selection-inspector .dd-easy-footer{position:sticky;bottom:0;background:#fff}
+@media(min-width:1280px){.dd-selection-workspace{grid-template-columns:minmax(280px,1fr) 280px}.dd-selection-inspector{position:sticky;top:0;max-height:calc(100dvh - 260px);overflow:auto;overscroll-behavior:contain}}
+
+/* Drawing owns the workspace; exact settings open only when requested. */
+@media(min-width:801px){.deck-designer .dd-workspace{grid-template-columns:144px minmax(0,1fr)}}
+.deck-designer .dd-selection-workspace{grid-template-columns:minmax(0,1fr)}
+.deck-designer .dd-selection-inspector{position:static;max-height:none;overflow:visible;padding:0 14px}
+.dd-selection-inspector>summary{min-height:48px;display:list-item;align-content:center;cursor:pointer;font-size:13px;font-weight:600}
+.dd-selection-inspector[open]{padding-bottom:14px}
+.deck-designer .dd-properties-sheet{position:fixed;inset:auto 0 0;grid-column:auto;grid-row:auto;width:min(760px,100%);max-width:100%;height:auto;max-height:72dvh;margin:0 auto;padding:0;border:1px solid #ded8ce;border-radius:18px 18px 0 0;box-shadow:0 -8px 40px #24272922;overflow:auto;z-index:100}
+.deck-designer .dd-properties-sheet:not([open]){display:none}
+.deck-designer .dd-properties-sheet[open]{display:block}
+.dd-properties-sheet::backdrop{background:#24272935}
+.dd-properties-sheet .dd-inspector-top{position:sticky;top:0;z-index:2;background:#fff;padding:12px 22px;border-bottom:1px solid #ded8ce}
+.dd-properties-sheet .dd-inspector-top>span{display:none}
+.dd-properties-sheet .dd-inspector-top h2{font-size:18px;margin:0}
+.dd-properties-sheet .dd-inspector-back{display:inline-flex;align-items:center;min-height:44px;margin:0 0 6px;color:#81472b}
+.deck-designer[data-workspace-view=inspector] .dd-preview{display:block}
+.dd-drawing-join{fill:#52a87822;stroke:#28734a;stroke-width:2px;stroke-dasharray:4 3;vector-effect:non-scaling-stroke;pointer-events:none}
+.dd-drawing-join[data-closing]{fill:#52a87855;stroke-width:3px;stroke-dasharray:none}
+
+@media(max-width:800px){html{scroll-padding-top:72px}}
+
+/* first paint: architectWorkspace.css (check-deck-first-paint.ts keeps these equal to it). The Project controls button
+   sits over the drawing's corner; without these it stands in the flow above the tools ribbon until the shortcuts' chunk
+   loads, and the ribbon and plan drop 44 px. */
+.deck-designer .dd-drawing-focus-toggle{margin-right:6px!important}
+
+/* first paint: planViewport.css (the drawing's frame, the plan's size and colours and the zoom bar's place; what matters
+   only once the plan can be dragged stays there). Without them the plan draws at full size until the drawing's chunk
+   loads, and on a phone the zoom bar jumps 110 px. */
+.dd-canvas>.dd-plan-viewport{position:relative;isolation:isolate;overflow:hidden;overflow-anchor:none;background:#f5f3ed}
+.dd-plan-stage{position:absolute;inset:0 0 70px;transform-origin:center}
+.dd-plan-stage>.dd-site-plan{display:block;width:100%;height:100%;background:transparent!important}
+.dd-plan-stage>.dd-site-plan .dd-plan-grid{opacity:.35}
+.dd-plan-stage>.dd-site-plan g[aria-label="House"]>rect,.dd-plan-stage>.dd-site-plan g[aria-label="House"]>polygon{fill:#e8e5dd;stroke:#70766b;stroke-width:.7}
+.dd-plan-stage>.dd-site-plan .dd-break{opacity:.45}
+.dd-plan-stage>.dd-site-plan .dd-dim,.dd-plan-stage>.dd-site-plan .dd-dim-tick{stroke:#aa7556;opacity:.7}
+.dd-plan-navigation{position:absolute;bottom:16px;right:16px;display:flex;align-items:center;gap:2px;padding:4px;border:1px solid #dedbd4;border-radius:12px;background:#fffffff2;box-shadow:0 4px 18px #2725220d;z-index:8;color:#292a27}
+.dd-plan-navigation button{display:grid;place-items:center;min-width:44px;min-height:44px;padding:0;border:0;border-radius:8px;background:transparent;color:inherit}
+.dd-plan-navigation output{min-width:42px;text-align:center;font:500 12px/1.2 var(--dc-body,Arial,sans-serif);font-variant-numeric:tabular-nums}
+.dd-plan-navigation-divider{height:22px;border-left:1px solid #dedbd4;margin:0 4px}
+@media(max-width:600px){.dd-plan-navigation{bottom:10px;right:10px}}

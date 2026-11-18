@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'motion/react';
 
 interface BeforeAfterSliderProps {
   beforeImage: string;

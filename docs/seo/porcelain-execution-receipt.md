@@ -33,3 +33,7 @@ These prove the local branch build only; they are not production deployment evid
 - The porcelain page is **absent from `HEAD`** (`git cat-file -e HEAD:src/pages/services/PorcelainPatiosBarrie.tsx` failed); it exists only as an untracked local source file on this branch. A public-host search result / prior live check showing a similarly named canonical page does **not** prove this branch is deployed or equivalent. Do not deploy the whole potentially stale branch on that basis.
 - The working tree contains unrelated dirty blog-publisher automation changes and other DeckCraft artifacts; they were preserved and not modified by this verification. Blog automation validation belongs to its owner.
 - No broad site suite, blog-pipeline test, production host equivalence check, deploy, or push was performed. Parent should reconcile source/live provenance and require both site and automation gates before any deployment.
+
+## Superseded on merge with main (2026-11-18)
+
+- Merging `main` into PR 227 kept main's live porcelain page (`src/pages/services/barrie/PorcelainPatios.tsx`, data in `src/data/barrieServices.ts`) at `/services/porcelain-patios-barrie`. The duplicate `src/pages/services/PorcelainPatiosBarrie.tsx` and its `scripts/check-porcelain-page.mjs` were removed, so the checks above no longer apply.

@@ -19,14 +19,16 @@ export interface SwatchMaps{
   /** Mean sRGB colour (0–255) of the photo's strips, and of the atlas. */
   sourceMean:[number,number,number];atlasMean:[number,number,number];
 }
-export const ATLAS_WIDTH=512,STRIP_ROWS=128,STRIP_GUTTER=8,STRIP_BODY=STRIP_ROWS-2*STRIP_GUTTER;
+import {ATLAS_WIDTH} from './atlasWidth';
+export {ATLAS_WIDTH};
+export const STRIP_ROWS=128,STRIP_GUTTER=8,STRIP_BODY=STRIP_ROWS-2*STRIP_GUTTER;
 /** Roughness of a composite's capped surface and of real wood; raised grain is a little smoother than its grooves. */
-export const BOARD_ROUGHNESS={composite:.62,wood:.75,relief:.12};
+export const BOARD_ROUGHNESS={composite:.48,wood:.75,relief:.08,detail:.22};
 /** How much of the photo's board-to-board tone difference each strip keeps. Multi-tone lines (Tigerwood) differ a lot
  * between the photo's four boards; at their full spread short pieces between butt joints read as a patchwork. */
-export const BOARD_TONE_SPREAD=.6;
+export const BOARD_TONE_SPREAD=.8;
 /** The steepest tilt the grain's relief gives the surface, in degrees. */
-export const GRAIN_TILT_DEG=30;
+export const GRAIN_TILT_DEG=14;
 
 const lumaAt=(d:SwatchImage['data'],i:number)=>(.2126*d[i]+.7152*d[i+1]+.0722*d[i+2])/255;
 
@@ -50,8 +52,8 @@ const median=(v:number[])=>{const s=[...v].sort((a,b)=>a-b);return s[Math.floor(
  * Where the boards are. Gaps between boards are near-black rows (under 0.6 of the photo's median brightness, across the
  * left half, which is boards in every photo); a dark grain streak never gets that dark. Along those gap rows the gap
  * stays dark until it meets the board that runs across the others on the right: the strips stop short of that seam.
- * The boards between gaps (a tenth trimmed off each edge, where the photo shows the eased edge) are the strips. A photo
- * with fewer than two boards is a close-up of one surface, cut into three bands.
+ * The whole boards between gaps (a tenth trimmed off each edge, where the photo shows the eased edge) are the strips. A
+ * photo with fewer than two whole boards is a close-up of one surface, cut into three bands.
  */
 export function detectLayout(input:SwatchImage):SwatchLayout{
   const rotated=grainIsVertical(input),img=rotated?rotate90(input):input,{width:w,height:h,data}=img,L=(x:number,y:number)=>lumaAt(data,(y*w+x)*4);
@@ -66,7 +68,9 @@ export function detectLayout(input:SwatchImage):SwatchLayout{
     const run=Math.max(2,Math.round(w*.02));
     for(let x=Math.floor(w*.5);x<w*.95;x++){let m=0;for(let k=0;k<run;k++)m+=dark[x+k];if(m/run<.4){x1=Math.max(x0+8,Math.floor(x-w*.015));break;}}
   }
-  if(between.length>=2)return {rotated,kind:'boards',strips:between.map(([top,bottom])=>{const trim=Math.round((bottom-top)*.1);return {x0,x1,y0:top+trim,y1:bottom-trim};})};
+  // Boards the photo's edge cuts short would be stretched across a whole board: keep the whole ones when two remain.
+  const tallest=Math.max(0,...between.map(([top,bottom])=>bottom-top)),whole=between.filter(([top,bottom])=>bottom-top>=tallest*.8);
+  if(whole.length>=2)return {rotated,kind:'boards',strips:whole.map(([top,bottom])=>{const trim=Math.round((bottom-top)*.1);return {x0,x1,y0:top+trim,y1:bottom-trim};})};
   const y0=Math.floor(h*.03),band=(h*.94)/3;
   return {rotated,kind:'surface',strips:[0,1,2].map(k=>({x0,x1,y0:Math.round(y0+band*k+band*.03),y1:Math.round(y0+band*(k+1)-band*.03)}))};
 }
@@ -103,9 +107,21 @@ const toLab=([r,g,b]:number[])=>{
 /** CIE76 colour difference between two sRGB colours (0–255). */
 export function deltaE(a:number[],b:number[]){const [p,q]=[toLab(a),toLab(b)];return Math.hypot(p[0]-q[0],p[1]-q[1],p[2]-q[2]);}
 
-/** Builds the atlas and its maps. Yields between strips (`await pause()`), so a large photo never blocks the page. */
-export async function buildSwatchMaps(input:SwatchImage,kind:'composite'|'wood',pause:()=>Promise<void>=async()=>{}):Promise<SwatchMaps>{
-  const layout=detectLayout(input),img=layout.rotated?rotate90(input):input,n=layout.strips.length,W=ATLAS_WIDTH,B=STRIP_BODY;
+/** Zero-mean grain with a whole number of cycles, so a wider atlas stays seamless and keeps the photo's mean. */
+function addPeriodicGrain(ch:Float32Array[],W:number,B:number){
+  const cycles=64;
+  for(let c=0;c<3;c++){
+    let before=0;for(let i=0;i<ch[c].length;i++)before+=ch[c][i];before/=ch[c].length;
+    for(let y=0;y<B;y++)for(let x=0;x<W;x++){const g=Math.sin((x*cycles*Math.PI*2)/W)*Math.cos((y*6*Math.PI*2)/B)*5,i=y*W+x;ch[c][i]=Math.min(255,Math.max(0,ch[c][i]+g));}
+    let after=0;for(let i=0;i<ch[c].length;i++)after+=ch[c][i];after/=ch[c].length;
+    const delta=after-before;if(delta)for(let i=0;i<ch[c].length;i++)ch[c][i]=Math.min(255,Math.max(0,ch[c][i]-delta));
+  }
+}
+
+/** Builds the atlas and its maps. Yields between strips (`await pause()`), so a large photo never blocks the page.
+ * `width` defaults to the 1K atlas. A wider atlas (showcase / high tier) adds periodic grain and packs height into the normal alpha. */
+export async function buildSwatchMaps(input:SwatchImage,kind:'composite'|'wood',pause:()=>Promise<void>=async()=>{},width=ATLAS_WIDTH):Promise<SwatchMaps>{
+  const layout=detectLayout(input),img=layout.rotated?rotate90(input):input,n=layout.strips.length,W=width,B=STRIP_BODY;
   const height=n*STRIP_ROWS,albedo=new Uint8Array(W*height*4),normal=new Uint8Array(W*height*4),roughness=new Uint8Array(W*height*4);
   // The photo's own mean over the strips it gives, the colour the atlas must keep.
   const sum=[0,0,0];let count=0;
@@ -122,10 +138,12 @@ export async function buildSwatchMaps(input:SwatchImage,kind:'composite'|'wood',
   }
   // Every channel scaled so the atlas's mean is the photo's.
   const gain=[0,1,2].map(c=>{let m=0;for(const b of bodies)for(const v of b[c])m+=v;m/=n*W*B;return m>0?sourceMean[c]/m:1;});
-  const rough=kind==='wood'?BOARD_ROUGHNESS.wood:BOARD_ROUGHNESS.composite,tilt=Math.tan(GRAIN_TILT_DEG*Math.PI/180);
+  const rough=kind==='wood'?BOARD_ROUGHNESS.wood:W===ATLAS_WIDTH?BOARD_ROUGHNESS.composite:.4,tilt=Math.tan(GRAIN_TILT_DEG*Math.PI/180),reliefAmp=W===ATLAS_WIDTH?BOARD_ROUGHNESS.relief:BOARD_ROUGHNESS.detail;
   bodies.forEach((ch,k)=>{
     const luma=new Float32Array(W*B);
-    for(let i=0;i<W*B;i++){for(let c=0;c<3;c++)ch[c][i]=Math.min(255,Math.max(0,ch[c][i]*gain[c]));luma[i]=(.2126*ch[0][i]+.7152*ch[1][i]+.0722*ch[2][i])/255;}
+    for(let i=0;i<W*B;i++)for(let c=0;c<3;c++)ch[c][i]=Math.min(255,Math.max(0,ch[c][i]*gain[c]));
+    if(W!==ATLAS_WIDTH)addPeriodicGrain(ch,W,B);
+    for(let i=0;i<W*B;i++)luma[i]=(.2126*ch[0][i]+.7152*ch[1][i]+.0722*ch[2][i])/255;
     // Relief: the grain's fine detail (lighter is higher), and its slope, scaled so the steepest 1% tilts GRAIN_TILT_DEG.
     const soft=boxBlur(luma,W,B,8,3),height2=new Float32Array(W*B);for(let i=0;i<W*B;i++)height2[i]=luma[i]-soft[i];
     const at=(x:number,y:number)=>height2[Math.min(B-1,Math.max(0,y))*W+((x%W)+W)%W];
@@ -143,8 +161,9 @@ export async function buildSwatchMaps(input:SwatchImage,kind:'composite'|'wood',
       for(let x=0;x<W;x++){
         const i=y*W+x,t=o+x*4,nx=-dx[i]*scale,ny=-dy[i]*scale,nz=1/Math.hypot(nx,ny,1);
         albedo[t]=ch[0][i];albedo[t+1]=ch[1][i];albedo[t+2]=ch[2][i];albedo[t+3]=255;
-        normal[t]=Math.round((nx*nz*.5+.5)*255);normal[t+1]=Math.round((ny*nz*.5+.5)*255);normal[t+2]=Math.round((nz*.5+.5)*255);normal[t+3]=255;
-        const r=Math.round(255*Math.min(1,Math.max(0,rough-BOARD_ROUGHNESS.relief*height2[i]/(hi||1))));roughness[t]=roughness[t+1]=roughness[t+2]=r;roughness[t+3]=255;
+        normal[t]=Math.round((nx*nz*.5+.5)*255);normal[t+1]=Math.round((ny*nz*.5+.5)*255);normal[t+2]=Math.round((nz*.5+.5)*255);normal[t+3]=W===ATLAS_WIDTH?255:Math.round((height2[i]/(hi||1)*.5+.5)*255);
+        const sheen=W===ATLAS_WIDTH?0:Math.sin((x*6*Math.PI*2)/W+k*1.7)*.07+Math.sin((x*2*Math.PI*2)/W)*.04;
+        const r=Math.round(255*Math.min(1,Math.max(0,rough-reliefAmp*height2[i]/(hi||1)+sheen)));roughness[t]=roughness[t+1]=roughness[t+2]=r;roughness[t+3]=255;
       }
     }
   });

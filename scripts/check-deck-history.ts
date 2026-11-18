@@ -40,6 +40,11 @@ const step=(h:DesignHistory<D>,before:D,key:string,at:number)=>recordChange(h,be
   const u=undoChange(h,{w:8})!;const again=step(u.history,u.design,editKey({length:1}),10*GROUP_MS+3);
   ok(again.past.length===u.history.past.length+1,'An edit right after an undo is a new step');
   ok(editKey({b:1,a:2})===editKey({a:3,b:4})&&editKey({a:1})!==editKey({b:1}),'The key names the fields, in any order');
+  for(const key of ['boardLayout','boardColours']){
+    let discrete=emptyHistory<D>();discrete=step(discrete,{w:1},editKey({[key]:[]}),0);discrete=step(discrete,{w:2},editKey({[key]:[]}),1);
+    const one=undoChange(discrete,{w:3})!;
+    ok(discrete.past.length===2&&one.design.w===2&&undoChange(one.history,one.design)?.design.w===1,'Two rapid board-layout applications keep separate undo steps');
+  }
 }
 // 3. The history is capped, keeping the most recent steps.
 {
@@ -51,13 +56,14 @@ const step=(h:DesignHistory<D>,before:D,key:string,at:number)=>recordChange(h,be
 {
   const read=(p:string)=>readFileSync(new URL(`../src/${p}`,import.meta.url),'utf8');
   const hook=read('features/deckcraft/designer/useDeckDesign.ts'),estimateHook=read('features/deckcraft/designer/useDeckEstimate.ts'),page=read('pages/DeckDesigner.tsx'),tools=read('features/deckcraft/designer/DesignTools.tsx');
-  ok(/const update=\(patch:Partial<DeckData>\)=>\{[^}]*source\.current\?\?=editKey\(patch\)/.test(hook),'Every edit names itself for the history');
-  ok(/const replace=\(next:DeckData\)=>\{source\.current=`replace:/.test(hook)&&hook.includes('replace(shared)')&&hook.includes('replace(parseDesign(own))'),'Opened links and going back to your own design are replaceable steps');
-  ok(/if\(kind&&lastData\.current!==data/.test(hook)&&/source\.current=null;setData\(result\.design\)/.test(hook),'Only a named change is recorded; undo and redo record nothing');
-  ok(/setData\(restored\)/.test(hook)&&/setData\(deck\);setEarlierYard/.test(hook),'Restoring the saved design on load is not a step');
+  ok(/source\.current\?\?=editKey\(\w+\)/.test(hook)&&hook.includes('const next=prepareDesignUpdate('),'Every edit names itself for the history');
+  ok(hook.includes('source.current=`replace:')&&hook.includes('applyReplacement(shared)')&&hook.includes('if(restored)applyReplacement(restored)'),'Opened links and going back to your own design are replaceable steps');
+  ok(/if\(kind&&lastData\.current!==data/.test(hook)&&/source\.current=null;dataRef\.current=result\.design;setData\(result\.design\)/.test(hook),'Only a named change is recorded; undo and redo record nothing');
+  ok(/setData\(restored\)/.test(hook)&&/setData\(deck\);dataRef\.current=deck;setEarlierYard/.test(hook),'Restoring the saved design on load is not a step');
   ok(/JSON\.stringify\(lastData\.current\)!==JSON\.stringify\(data\)/.test(hook),'A change that leaves the design as it was is not a step');
   ok(/setData\(prev=>deckReleaseData\(\{\.\.\.prev,lightingSystem:/.test(estimateHook)&&!/\b(update|replace)\(/.test(estimateHook),'The automatic lighting sync never becomes a step');
-  ok(page.includes('replace(restored)')&&page.includes('replace(deckReleaseData(structuredClone(DEFAULT_DECK)))')&&!/\bsetData\(/.test(page.replace(/useDeckEstimate\(data,setData\)/,'')),'Import and Start over are undoable; the page never sets the design around the history');
+  // Start over builds the default, then applies saved inlay/feature labour defaults, then replace() so the step stays undoable.
+  ok(page.includes('await replaceDesign(restored)')&&/const next=deckReleaseData\(structuredClone\(NEW_DECK\)\);[\s\S]*?replace\(next\)/.test(page)&&!/\bsetData\(/.test(page.replace(/useDeckEstimate\(data,setData\)/,'')),'Import and Start over are undoable; the page never sets the design around the history');
   ok(/isContentEditable\|\|\/\^\(input\|textarea\|select\)\$\/i/.test(page)&&/key==='z'&&!e\.shiftKey\)\{e\.preventDefault\(\);undo\(\);\}/.test(page),'Ctrl/Cmd+Z undoes, except while typing in a field');
   ok(/onClick=\{onUndo\} disabled=\{!canUndo\}/.test(tools)&&/onClick=\{onRedo\} disabled=\{!canRedo\}/.test(tools),'The design tools offer Undo and Redo, disabled when there is nothing to do');
 }

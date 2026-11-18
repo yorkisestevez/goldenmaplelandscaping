@@ -1,10 +1,11 @@
+import '../src/features/deckcraft/hardscapeCatalogue';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {DEFAULT_DECK,NEW_DECK} from '../src/features/deckcraft/defaults';
 import {DESIGN_STORAGE_KEY,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {DECK_RELEASE_STORAGE_KEY,deckReleaseData,parseDeckReleaseDesign,serializeDeckReleaseDesign,calculateDeckReleaseEstimate} from '../src/features/deckcraft/deckRelease';
 import {exportDeckReleaseDXF,exportDeckReleaseOBJ} from '../src/features/deckcraft/deckReleaseExports';
-import {BACKYARD_SECTION_PREFIX,backyardElements,describeBackyard,hasBackyard,hasBackyardLayout,hasYardAllowances,splitSubtotal} from '../src/features/deckcraft/backyard';
+import {BACKYARD_SECTION_PREFIX,backyardElements,describeBackyard,hasBackyard,hasBackyardLayout,hasYardAllowances,splitSubtotal,yardAllowancesPatch} from '../src/features/deckcraft/backyard';
 import {computeEstimate,deltaFor,type EstimateInput} from '../src/utils/estimateEngine';
 import {PAVER_BRANDS} from '../src/data/carrPrices';
 import {normalizeWrap} from '../src/features/deckcraft/lib/wrapGeometry';
@@ -92,7 +93,7 @@ const pond={id:'pond-1',kind:'water-feature' as const,name:'Pond',enabled:true,x
   ok(allowanceRows(four)[0].description!.includes("one-time site work")&&allowanceRows(four).slice(1).every(s=>!s.description!.includes('one-time site work')),'Without a patio or wall, the first allowance carries the one-time site work, and says so');
   ok(JSON.stringify(deckSections(four))===JSON.stringify(deckSections(base))&&Math.abs(splitSubtotal(four).deck-base.subtotal)<1e-6,'Allowances leave every deck section as it was');
   ok(Math.abs(splitSubtotal(four).backyard-four.yardTakeoff.knownSubtotalCents/100)<1e-6&&Math.abs(four.hst-four.subtotal*.13)<1e-6,'The allowances are the backyard subtotal, with HST once');
-  ok(four.flags.some(f=>f.includes('not drawn in the 3D view')),'The estimate says allowances are not drawn in 3D and are placed at the site visit');
+  ok(four.flags.some(f=>/not drawn in (?:the )?3D(?: view)?/i.test(f)&&/site visit/i.test(f)),'The estimate says allowances are not drawn in 3D and are placed at the site visit');
   // Choices move the allowance the way the estimator's do.
   ok(amount(withAllowances({firePit:'gas'}),/Fire pit/)>amount(four,/Fire pit/)&&amount(withAllowances({kitchen:'full'}),/kitchen/)>amount(four,/kitchen/),'A gas fire pit and a full-build kitchen cost more');
   const tiers=(['budget','mid','premium'] as const).map(finish=>withAllowances({finish}));
@@ -126,12 +127,16 @@ const pond={id:'pond-1',kind:'water-feature' as const,name:'Pond',enabled:true,x
 {
   const page=designerSource(),registry=readFileSync(new URL('../src/features/deckcraft/designer/sections.ts',import.meta.url),'utf8');
   ok(SECTIONS.map(s=>s.id).join().endsWith('backyard,proposal')&&SECTION_BY_ID.backyard.load===loadBackyardStep&&SECTION_BY_ID.backyard.legacyStep===STEPS.indexOf('Backyard')&&page.includes("'Backyard','Your estimate'"),'The Backyard section comes just before the proposal and counts as the old Backyard step');
-  ok(registry.includes("export const loadBackyardStep=()=>import('./steps/BackyardStep');")&&page.includes('BackyardStep=lazy(loadBackyardStep)')&&page.includes("case 'backyard':return <BackyardStep ")&&/\{isOpen&&<Suspense fallback=\{<p className="dd-note" role="status">Loading \{section\.name\}…<\/p>\}>\s*\{renderBody\(id\)\}/.test(page),'The Backyard body loads lazily through the registry, and only while its section is open');
-  ok(page.includes('<YardEditor data={data} onChange={update}/>'),'The backyard is edited through the undoable update');
-  ok(page.includes('<Viewer deckOnly={!hasBackyardLayout(data)} yardModel={estimate.yardModel}'),'The 3D view shows the backyard only when the design has patios, walls, water or terrain (allowances are not drawn)');
-  ok(page.includes('update({yardAllowances:hasYardAllowances(next)?next:undefined})')&&page.includes('<select aria-label="Fire pit"')&&page.includes('<select aria-label="Outdoor kitchen"')&&page.includes('Artificial turf')&&page.includes('Landscape lighting for the yard')&&page.includes('<select aria-label="Finish level"'),'The Backyard step offers the four allowances and drops them when the last is switched off');
+  ok(registry.includes("export const loadBackyardStep=()=>import('./steps/BackyardStep');")&&page.includes('BackyardStep=lazy(loadBackyardStep)')&&page.includes("case 'backyard':return <BackyardStep ")&&page.includes('open=expanded===id')&&page.includes('{open&&<div id={`dd-section-${id}-body`}')&&page.includes('{renderBody(id)}'),'The Backyard body loads lazily through the registry, and only while it is the open section of its tab panel');
+  ok(/<YardEditor\b(?=[^>]*\bdata=\{data\})(?=[^>]*\bonChange=\{update\})/.test(page),'The backyard is edited through the undoable update');
+  ok(page.includes('deckOnly={!hasBackyardLayout(data)} yardModel={displayEstimate.yardModel}')&&page.includes('onUpdate={update}'),'The 3D view shows the backyard only when the design has patios, walls, water or terrain (allowances are not drawn)');
+  // The Backyard step and the new look's quick picks share one allowance patch: the last one switched off removes them.
+  const gas=yardAllowancesPatch({},{firePit:'gas'}).yardAllowances;
+  ok(gas?.firePit==='gas'&&gas.finish==='mid'&&yardAllowancesPatch({yardAllowances:gas},{firePit:'none'}).yardAllowances===undefined&&yardAllowancesPatch({yardAllowances:gas},{lighting:true}).yardAllowances?.firePit==='gas','A change to the allowances keeps the others, and switching the last one off removes them');
+  const backyardStep=readFileSync(new URL('../src/features/deckcraft/designer/steps/BackyardStep.tsx',import.meta.url),'utf8');
+  ok(backyardStep.includes('const setAllowance=(patch:Partial<YardAllowances>)=>update(yardAllowancesPatch(data,patch));')&&['<select aria-label="Fire pit"','<select aria-label="Outdoor kitchen"','Artificial turf','Landscape lighting for the yard','<select aria-label="Finish level"'].every(control=>backyardStep.includes(control)),'The Backyard step offers the four allowances and drops them when the last is switched off');
   ok(!page.includes('yardAllowances:undefined,'),'The live estimate re-prices when an allowance changes');
-  ok(/if\(!current&&restored\.yardFeatures\?\.length\)\{\s*const \{yardFeatures,terrainConfig,\.\.\.deck\}=restored;setData\(deck\);setEarlierYard/.test(page)&&page.includes('Add {earlierYard===1?\'it\':\'them\'} back'),'An older autosave\'s backyard is offered back, never restored silently');
+  ok(page.includes('hydrated.legacyKey===DESIGN_STORAGE_KEY&&restored.yardFeatures?.length')&&page.includes('const {yardFeatures,terrainConfig,...deck}=restored;setData(deck);dataRef.current=deck;setEarlierYard')&&page.includes('Add {earlierYard===1?\'it\':\'them\'} back'),'An older autosave\'s backyard is offered back, never restored silently');
   ok(page.includes('Deck subtotal')&&page.includes('Backyard subtotal'),'The estimate shows deck and backyard subtotals');
   ok(page.includes('yardFeatures:data.yardFeatures?.map(({color:_color,...feature})=>feature)')&&!page.includes('terrainConfig:undefined'),'The live estimate re-prices when the backyard or terrain changes (only a concept colour does not)');
 }
@@ -183,7 +188,7 @@ for(const privacySqft of [24,25,137,500]){
     ok(SECTIONS.every(s=>sectionSummary(s,d).length>0),`${label}: every row has a current choice`);
   }
   // The "changed" mark compares a section's fields with the default design; an edit belongs to its fields' sections.
-  const plain=deckReleaseData(structuredClone(DEFAULT_DECK));
+  const plain=deckReleaseData(structuredClone(NEW_DECK));
   ok(SECTIONS.every(s=>!sectionChanged(s,plain)),'On the default design no section is marked changed');
   const changed=(patch:Partial<DeckData>)=>SECTIONS.filter(s=>sectionChanged(s,deckReleaseData({...plain,...patch}))).map(s=>s.id).join();
   ok(changed({width:20})==='deck'&&changed({stairFlights:2})==='stairs'&&changed({deckFinishes:{railingColor:'Matte Black'}})==='stairs'&&changed({deckFinishes:{border:'tt_legacy:Espresso'}})==='boards'&&changed({boardColours:[]})===''&&changed({sceneLighting:'Evening'})==='','Each change marks only its own section (an empty list is no change)');

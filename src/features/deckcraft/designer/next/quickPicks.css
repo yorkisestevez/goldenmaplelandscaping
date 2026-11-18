@@ -1,0 +1,63 @@
+/* The new look's quick picks (QuickPicks.tsx), above a rail group's sections under More. Scoped like nextShell.css, which
+   holds the box and the More heading so they are styled before this chunk arrives. */
+html .deck-designer[data-ui=next] .dd-next-pick{display:grid;gap:8px;min-width:0}
+html .deck-designer[data-ui=next] .dd-next-pick-label{margin:0;font:700 13px/1.2 var(--nx-font);color:var(--nx-ink)}
+html .deck-designer[data-ui=next] .dd-next-note{margin:0;font:500 13px/1.45 var(--nx-font);color:var(--nx-ink-2)}
+html .deck-designer[data-ui=next] .dd-next-quick button{font-family:var(--nx-font);cursor:pointer}
+html .deck-designer[data-ui=next] .dd-next-quick :is(button:disabled,[aria-disabled=true]){cursor:not-allowed}
+/* The gold ring is too faint on the stone tracks; the deep gold keeps it at 3:1 or more. */
+html .deck-designer[data-ui=next] .dd-next-quick :focus-visible{outline-color:var(--nx-gold-deep)}
+
+/* Tiles and photos: a picture over its name, three to a row; the chosen one carries a forest ring. */
+html .deck-designer[data-ui=next] :is(.dd-next-tiles,.dd-next-photos){display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+html .deck-designer[data-ui=next] :is(.dd-next-tiles,.dd-next-photos) button{display:grid;justify-items:center;align-content:start;gap:6px;min-width:0;min-height:76px;margin:0;padding:10px 6px 9px;border:1px solid var(--nx-line);border-radius:14px;background:#fff;color:var(--nx-ink);font:600 12px/1.25 var(--nx-font);text-align:center;transition:border-color .15s,background .15s,box-shadow .15s}
+html .deck-designer[data-ui=next] :is(.dd-next-tiles,.dd-next-photos) button:hover:not(:disabled){border-color:rgb(20 38 28/.34);background:var(--nx-stone)}
+html .deck-designer[data-ui=next] :is(.dd-next-tiles,.dd-next-photos) button[aria-pressed=true]{border-color:var(--nx-forest);box-shadow:inset 0 0 0 1.5px var(--nx-forest);background:#fff}
+html .deck-designer[data-ui=next] :is(.dd-next-tiles,.dd-next-photos) button:disabled{color:rgb(20 38 28/.5);background:var(--nx-stone)}
+html .deck-designer[data-ui=next] .dd-next-tiles svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+html .deck-designer[data-ui=next] .dd-next-photos button{padding:5px 5px 8px;border-radius:14px}
+html .deck-designer[data-ui=next] .dd-next-photos :is(img,.dd-swatch-unavailable){display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;background:var(--nx-stone)}
+html .deck-designer[data-ui=next] .dd-next-photos .dd-swatch-unavailable{display:grid;place-items:center;padding:4px;font-size:10px;color:var(--nx-ink-2)}
+html .deck-designer[data-ui=next] :is(.dd-next-tiles,.dd-next-photos) span{overflow-wrap:anywhere}
+
+/* Segments: the choices side by side on a stone track; the chosen one is forest. */
+html .deck-designer[data-ui=next] .dd-next-segments{display:flex;flex-wrap:wrap;gap:4px;padding:4px;border-radius:14px;background:var(--nx-stone)}
+html .deck-designer[data-ui=next] .dd-next-segments button{display:grid;place-content:center;flex:1 1 auto;min-width:64px;min-height:40px;margin:0;padding:4px 10px;border:0;border-radius:10px;background:transparent;color:var(--nx-ink);font:600 13px/1.2 var(--nx-font);text-align:center;transition:background .15s,color .15s}
+html .deck-designer[data-ui=next] .dd-next-segments button:hover:not(:disabled):not([aria-pressed=true]){background:#fff}
+html .deck-designer[data-ui=next] .dd-next-segments button[aria-pressed=true]{background:var(--nx-forest);color:#fff}
+html .deck-designer[data-ui=next] .dd-next-segments button:disabled{color:rgb(20 38 28/.5)}
+/* A choice that is both current and locked (Levels on a custom outline) keeps a readable label. */
+html .deck-designer[data-ui=next] .dd-next-segments button[aria-pressed=true]:disabled{background:#56655c;color:#fff}
+html .deck-designer[data-ui=next] .dd-next-segments small{font:500 11px/1.2 var(--nx-font);opacity:.82}
+
+/* Actions: plain buttons that open a plan tool. */
+html .deck-designer[data-ui=next] .dd-next-actions{display:flex;flex-wrap:wrap;gap:8px}
+html .deck-designer[data-ui=next] .dd-next-actions button{flex:1 1 0;min-width:120px;min-height:40px;margin:0;padding:4px 14px;border:1px solid var(--nx-line);border-radius:12px;background:#fff;color:var(--nx-ink);font:600 13px/1.2 var(--nx-font)}
+html .deck-designer[data-ui=next] .dd-next-actions button:hover{background:var(--nx-stone)}
+
+/* Steppers: the name, then − number +. */
+html .deck-designer[data-ui=next] .dd-next-steppers{display:grid;gap:8px}
+html .deck-designer[data-ui=next] .dd-next-stepper{display:grid;grid-template-columns:minmax(0,1fr) 40px 86px 40px;align-items:center;gap:6px}
+html .deck-designer[data-ui=next] .dd-next-stepper label{display:grid;gap:2px;font:600 13px/1.2 var(--nx-font);color:var(--nx-ink)}
+html .deck-designer[data-ui=next] .dd-next-stepper label small{font:500 11.5px/1.2 var(--nx-font);color:var(--nx-ink-2)}
+html .deck-designer[data-ui=next] .dd-next-stepper>button{display:grid;place-items:center;width:40px;height:40px;margin:0;padding:0;border:1px solid var(--nx-line);border-radius:12px;background:#fff;color:var(--nx-ink);font:600 20px/1 var(--nx-font)}
+html .deck-designer[data-ui=next] .dd-next-stepper>button:hover:not([aria-disabled=true]){background:var(--nx-stone)}
+html .deck-designer[data-ui=next] .dd-next-stepper>button[aria-disabled=true]{color:rgb(20 38 28/.4)}
+html .deck-designer[data-ui=next] .dd-next-number{display:flex;align-items:center;gap:4px;height:40px;padding:0 10px;border:1px solid var(--nx-line);border-radius:12px;background:#fff}
+html .deck-designer[data-ui=next] .dd-next-number:focus-within{outline:2px solid var(--nx-gold);outline-offset:2px}
+html .deck-designer[data-ui=next] .dd-next-number input{width:100%;min-width:0;height:auto;margin:0;padding:0;border:0;outline:0;background:transparent;box-shadow:none;color:var(--nx-ink);font:700 16px/1 var(--nx-font);font-variant-numeric:tabular-nums;text-align:right}
+html .deck-designer[data-ui=next] .dd-next-number input:disabled{color:rgb(20 38 28/.55)}
+html .deck-designer[data-ui=next] .dd-next-number span{font:600 12px/1 var(--nx-font);color:var(--nx-ink-2)}
+
+/* The stair side: the deck from above, the house behind it when it is fastened there, and a button on each open side. */
+html .deck-designer[data-ui=next] .dd-next-sides{display:grid;grid-template:". house ." auto ". back ." auto "left deck right" 64px ". front ." auto/76px minmax(0,1fr) 76px;gap:6px;align-items:center;justify-items:center}
+html .deck-designer[data-ui=next] .dd-next-sides-house{grid-area:house;display:grid;place-items:center;width:100%;height:26px;border-radius:7px;background:#5b6b62;color:#fff;font:700 11px/1 var(--nx-font)}
+html .deck-designer[data-ui=next] .dd-next-sides-deck{grid-area:deck;width:100%;height:100%;border-radius:8px;border:1px solid rgb(20 38 28/.28);background:repeating-linear-gradient(90deg,#d8c3a0 0 10px,#cdb48d 10px 11px)}
+html .deck-designer[data-ui=next] .dd-next-sides button{min-width:64px;min-height:36px;margin:0;padding:0 12px;border:1px solid var(--nx-line);border-radius:10px;background:#fff;color:var(--nx-ink);font:600 13px/1 var(--nx-font)}
+html .deck-designer[data-ui=next] .dd-next-sides button:hover:not([aria-pressed=true]){background:var(--nx-stone)}
+html .deck-designer[data-ui=next] .dd-next-sides button[aria-pressed=true]{border-color:var(--nx-forest);background:var(--nx-forest);color:#fff}
+html .deck-designer[data-ui=next] .dd-next-sides [data-side=Back]{grid-area:back}
+html .deck-designer[data-ui=next] .dd-next-sides [data-side=Left]{grid-area:left}
+html .deck-designer[data-ui=next] .dd-next-sides [data-side=Right]{grid-area:right}
+html .deck-designer[data-ui=next] .dd-next-sides [data-side=Front]{grid-area:front}
+

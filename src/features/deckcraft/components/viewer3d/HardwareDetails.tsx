@@ -27,7 +27,7 @@ export default function HardwareDetails({data,model,inspection=false}:{data:Deck
     return boxes;
   },[hardware,model,depth]);
   const exposedPlates=useMemo(()=>model.railing.posts.flatMap(p=>[{x:p.x,y:p.y+.15,z:p.z,w:5,h:.3,d:5},{x:p.x,y:p.y+model.railing.height+.15,z:p.z,w:3.8,h:.3,d:3.8}]),[model]);
-  const postCaps=useMemo(()=>hardware.postCaps.flatMap(p=>{const level=model.levels.find(l=>l.supports.some(s=>Math.hypot(s.x-p.x,s.z-p.z)<.01)),beam=level?.beams.find(b=>b.role!=='hip'&&distanceToSegment({x:p.x,y:p.z},{x:b.a.x,y:b.a.z},{x:b.b.x,y:b.b.z})<6)??level?.beams.find(b=>Math.abs((b.a.z+b.b.z)/2-p.z)<6),yaw=beam?Math.atan2(beam.b.x-beam.a.x,beam.b.z-beam.a.z):Math.PI/2,base={...p,yaw},beamWidth=(level?.reference.bPly??3)*1.5;return [{...at(base,0,0,0),w:6,h:.15,d:6},...[-1,1].flatMap(side=>[{...at(base,side*(beamWidth/2+.07),2.5,0),w:.12,h:5,d:5},{...at(base,side*2.82,-2,0),w:.12,h:4,d:5}])];}),[hardware,model]);
+  const postCaps=useMemo(()=>hardware.postCaps.flatMap(p=>{const level=model.levels.find(l=>l.supports.some(s=>Math.hypot(s.x-p.x,s.z-p.z)<.01)),beam=level?.beams.find(b=>b.role!=='hip'&&distanceToSegment({x:p.x,y:p.z},{x:b.a.x,y:b.a.z},{x:b.b.x,y:b.b.z})<6)??level?.beams.find(b=>Math.abs((b.a.z+b.b.z)/2-p.z)<6),yaw=beam?Math.atan2(beam.b.x-beam.a.x,beam.b.z-beam.a.z):Math.PI/2,base={...p,yaw},beamWidth=(level?.reference.beam.plies??3)*1.5;return [{...at(base,0,0,0),w:6,h:.15,d:6},...[-1,1].flatMap(side=>[{...at(base,side*(beamWidth/2+.07),2.5,0),w:.12,h:5,d:5},{...at(base,side*2.82,-2,0),w:.12,h:4,d:5}])];}),[hardware,model]);
   return <group name="construction-hardware">
     <Plates items={exposedPlates} name="exposed-railing-bases-and-caps"/>
     <Plates items={postCaps} name="exposed-beam-post-caps"/>

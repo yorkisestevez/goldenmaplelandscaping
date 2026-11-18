@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { FOUNDER } from '../data/founder';
 
 /**
@@ -26,8 +27,13 @@ export default function AuthorBio({ bio }: { bio: string }) {
           className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0"
         />
         <div>
-          <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
-          <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">{bio}</p>
+          {/* Neutral label: most posts are robot drafts, so authorship is shown only by
+              BlogPostLayout's byline, from src/data/editorialReviews.ts. */}
+          <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About {FOUNDER.name}</div>
+          <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-3">{bio}</p>
+          <Link to={FOUNDER.profilePath} className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark hover:text-brand-bonewhite transition-colors">
+            More about {FOUNDER.name.split(' ')[0]} →
+          </Link>
         </div>
       </div>
     </div>

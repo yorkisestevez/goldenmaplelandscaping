@@ -14,6 +14,7 @@ import {scoreGoldenMapleLead} from '../src/utils/leadScoring';
 import {SendDesignForm} from '../src/features/deckcraft/SendDesignDialog';
 import type {DeckData} from '../src/features/deckcraft/types';
 import {designerSource} from './deck-designer-source';
+import {withProposalLink} from '../netlify/functions/submission-created';
 
 /**
  * "Send my design": every field reaches Netlify (and so the CRM), the consent record is honest, the
@@ -141,13 +142,28 @@ ok(!read('src/features/deckcraft/SendDesignDialog.tsx').includes('data-netlify')
 // 6. The designer offers it everywhere it matters, and the booking page picks up the design link.
 {
   const page=designerSource(),booking=read('src/components/BookingScheduler.tsx'),privacy=read('src/pages/Privacy.tsx');
-  ok(/<header className="dd-header">[\s\S]*?className="dd-send-top"[\s\S]*?Send my design[\s\S]*?<\/header>/.test(page),'The header offers "Send my design"');
-  ok(page.includes('className="dd-send-card"')&&page.includes('<SendDesignDialog '),'The estimate step has the send card and the page mounts the dialog');
+  // The CAD workspace (Pro under the new look) keeps the same header, restyled, so its class may depend on that flag.
+  ok(/<header className=(?:"dd-header"|\{cad\?'dd-header dd-cad-title':'dd-header'\})>[\s\S]*?className="dd-send-top"[\s\S]*?Send my design[\s\S]*?<\/header>/.test(page),'The header offers "Send my design"');
+  // The close pack (options → share → proposal → send) replaced the standalone dd-send-card.
+  // The Send step is still that named region, with the same button, and the page still mounts the dialog.
+  ok(/<section className="dd-close-pack"[\s\S]*?<section aria-label="Send your design to Golden Maple">[\s\S]*?onClick=\{onSend\}>Send my design<\/button>[\s\S]*?<\/section>[\s\S]*?<\/section>/.test(page)&&page.includes('<SendDesignDialog '),'The estimate step’s close pack has the send step and the page mounts the dialog');
   ok(page.includes('trackLead(DECK_DESIGN_FORM')&&page.includes("fetch('/'")&&page.includes('getAttributionFields()'),'The page posts to Netlify with attribution and records the lead');
   ok(!page.includes('Talk through your design')&&!page.includes('Discuss this deck'),'The old contact-only links are gone');
   ok(/useLocation\(\)\.state/.test(booking)&&booking.includes('bookingNotes')&&!/searchParams/.test(booking),'The booking form reads the design link from router state, not the URL');
   ok(bookingNotesFor('https://example.test/x').includes('https://example.test/x'),'Booking notes carry the link');
   ok(/deck designer/.test(privacy),'The privacy policy names the deck designer');
+}
+
+// The relay puts the branded proposal PDF's link first in the CRM lead's details (2026-09-28), because
+// the CRM keeps only a few fields. Netlify hands a file field over as a link (or an object carrying one).
+{
+  const url='https://example.netlify.app/.netlify/forms/file/abc/golden-maple-deck-proposal.pdf';
+  const fromObject=withProposalLink('deck-design',{details:'Open the exact design: x',proposal_pdf:{url,filename:'p.pdf'}});
+  ok(String(fromObject.details).startsWith(`Branded proposal PDF: ${url}\n\nOpen the exact design: x`)&&fromObject.proposal_pdf===url,'A sent design\'s proposal PDF link leads the CRM details');
+  ok(String(withProposalLink('deck-design',{details:'d',proposal_pdf:url}).details).startsWith(`Branded proposal PDF: ${url}`),'A plain file link is carried the same way');
+  ok(withProposalLink('deck-design',{details:'d'}).details==='d','Without a file the details are unchanged (the no-attachment fallback)');
+  ok(withProposalLink('deck-design',{details:'d',proposal_pdf:'javascript:alert(1)'}).details==='d','Only an https file link is ever written into the lead');
+  ok(withProposalLink('contact',{details:'d',proposal_pdf:url}).details==='d','Other forms pass through untouched');
 }
 
 console.log(`DECK SEND OK — ${declared.size} declared fields, lead content, honest consent, CRM intake rules and wiring; ${checks} checks.`);

@@ -1,3 +1,4 @@
+import '../src/features/deckcraft/lib/inlayGeometryRuntime';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {DEFAULT_DECK,DECK_SETTINGS} from '../src/features/deckcraft/defaults';
@@ -5,11 +6,11 @@ import {calculateDeckReleaseEstimate,deckReleaseData} from '../src/features/deck
 import {buildDeckTakeoff,type DeckLevel,type Member} from '../src/features/deckcraft/deckTakeoff';
 import {serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {describeDesign} from '../src/features/deckcraft/designFacts';
-import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import {boardFinishPlan} from '../src/features/deckcraft/boardFinishes';
 import {inSolidInlay} from '../src/features/deckcraft/inlayFraming';
 import {deckBoardStock} from '../src/features/deckcraft/stockPlan';
-import {unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
+import {CONFIRMED_RATES} from '../src/features/deckcraft/rateConfidence';
 import {boardOutline,polygonCut,signedArea} from '../src/features/deckcraft/lib/polygonCuts';
 import {bandBuildUps,fieldAngles,fillAngles,fitInlay,inlayCrewDays,INLAY_LIMITS,levelInlayContext,planInlays,stripeToBand,type InlayPlan} from '../src/features/deckcraft/lib/inlayGeometry';
 import type {PlanPoint} from '../src/features/deckcraft/lib/deckGeometry';
@@ -22,7 +23,7 @@ import {designerSource} from './deck-designer-source';
  * every joint where boards end at an inlay, every frame board that runs with the joists and every inside that needs
  * it has framing under it; a band running front to back sits on a breaker's build-up joists and takes a breaker's
  * place; a medallion sits on solid blocking; the placement rules hold; labour is the breaker rate on fitted edges plus
- * the inside's pattern factor, exactly, and a medallion's is a builder quote; the inlay boards are their own stock;
+ * the inside's pattern factor, exactly, and a medallion's defaults to man-hours labour; the inlay boards are their own stock;
  * the legacy centre stripe becomes a band only when asked; and a design without inlays is unchanged.
  */
 let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);checks++;};
@@ -199,9 +200,9 @@ for(const [kindName,wanted] of f3)for(const pattern of patterns)for(const [shape
 }
 {
   // A one-board band running front to back gets exactly a breaker's four build-up joists; one on a breaker takes its place.
-  const d=base({inlays:[band({atFt:-4})]}),m=buildDeckTakeoff(d),p=m.levels[0].inlays![0],mid=p.band!.to-d.boardWidth/2+m.levels[0].offset.x;
+  const d=base({width:24,inlays:[band({atFt:-4})]}),m=buildDeckTakeoff(d),p=m.levels[0].inlays![0],mid=p.band!.to-d.boardWidth/2+m.levels[0].offset.x;
   ok([-2.8125,-.9375,.9375,2.8125].every(k=>m.levels[0].joists.some(j=>Math.abs(j.a.x-(mid+k))<.001)),'A one-board band sits on a breaker\'s four build-up joists (±0.94 and ±2.81 in)');
-  const plain=buildDeckTakeoff(base()),centred=buildDeckTakeoff(base({inlays:[band()]}));
+  const plain=buildDeckTakeoff(base({width:24})),centred=buildDeckTakeoff(base({width:24,inlays:[band()]}));
   ok(plain.levels[0].breakers.length===1&&centred.levels[0].breakers.length===0&&m.levels[0].breakers.length===1,'A band on the breaker takes its place; one clear of it leaves it');
   const fieldPieces=(t:typeof m)=>t.levels[0].boards.filter(b=>b.role==='field').length;
   ok(fieldPieces(centred)===fieldPieces(plain)&&centred.levels[0].boards.filter(b=>b.role==='field').every(b=>b.length<=m.stockLength+.01),'With the band in the breaker’s place, the field boards run to it as they ran to the breaker: no extra joints');
@@ -238,7 +239,7 @@ for(const [label,patch,status] of [
 }
 {
   const d=base({wrap:{left:{widthFt:8,runFt:12}},inlays:[rug()]}),m=buildDeckTakeoff(d);
-  ok(!m.levels[0].inlays&&m.levels[0].boards.every(b=>!b.inlay)&&m.issues.some(s=>s.includes('not built on a wrap-around deck')),'Inlays are not built on a wrap-around deck, and it says so');
+  ok(m.levels[0].inlays?.[0]?.status==='ok'&&m.levels[0].boards.some(b=>!!b.inlay)&&m.issues.some(s=>/inlays on a wrap-around sit on the main field/i.test(s)),'Inlays build on a wrap-around main field, with a hip review note');
 }
 
 // 5. Fit to deck: moved toward the middle, then made smaller, until it fits; never moved onto another inlay.
@@ -266,7 +267,7 @@ for(const [label,patch,status] of [
 }
 
 // 7. Labour: the breaker rate on each frame's fitted edge (and each cut-in band) plus the inside's pattern factor,
-// exactly; a band of recoloured rows adds none; a medallion's is a builder quote.
+// exactly; a band of recoloured rows adds none; a medallion's defaults to man-hours labour.
 {
   // The default deck has no labour multipliers (rectangle, straight, low, standard site, spring, aluminum).
   const plain=price(base()),labourItem=(e:typeof plain)=>e.sections.find(s=>s.title.startsWith('Labour'))!,labour=(e:typeof plain)=>labourItem(e).items[0].cost as number;
@@ -282,27 +283,27 @@ for(const [label,patch,status] of [
   // A band cut in off the breaker: its length at the breaker rate. One on the breaker: the breaker's labour goes.
   const off=price(base({inlays:[band({atFt:-4})]})),offPlan=off.model.levels[0].inlays![0];
   ok(Math.abs(labour(off)-labour(plain)-offPlan.edgeFt/10*1.5/8*3700)<.01&&Math.abs(offPlan.edgeFt-(box(offPlan.pieces[0]).y1-box(offPlan.pieces[0]).y0)/12)<1e-9,'A band running front to back: its length at the breaker rate, 1.5 crew-hours per 10 ft');
-  const on=price(base({inlays:[band()]})),onPlan=on.model.levels[0].inlays![0],breakerDays=plain.model.levels[0].footprint.bounds.h/120*1.5/8;
-  ok(Math.abs(labour(on)-labour(plain)-(onPlan.edgeFt/10*1.5/8-breakerDays)*3700)<.01,'A band in a breaker\'s place is charged instead of that breaker');
+  const breakerPlain=price(base({width:24})),on=price(base({width:24,inlays:[band()]})),onPlan=on.model.levels[0].inlays![0],breakerDays=breakerPlain.model.levels[0].footprint.bounds.h/120*1.5/8;
+  ok(Math.abs(labour(on)-labour(breakerPlain)-(onPlan.edgeFt/10*1.5/8-breakerDays)*3700)<.01,'A band in a breaker\'s place is charged instead of that breaker');
   const rows=price(base({inlays:[band({direction:'across',boards:2})]}));
   ok(labour(rows)===labour(plain)&&!labourItem(rows).items[0].spec.includes('for inlays'),'A band of recoloured rows adds no labour');
   const across=price(base({pattern:'Diagonal',inlays:[band({direction:'across',boards:2})]})),acrossPlan=across.model.levels[0].inlays![0];
   ok(Math.abs(labour(across)-labour(price(diag))-acrossPlan.edgeFt/10*1.5/8*1.2*3700)<.01&&acrossPlan.edgeFt>0,'A band cut in across a diagonal deck: its length at the breaker rate, under the deck\'s multipliers');
   const med=price(base({inlays:[medallion()]})),row=labourItem(med).items.find(i=>i.name==='Medallion inlay labour');
-  ok(labour(med)===labour(plain)&&row&&row.cost===null&&row.qty===1&&labourItem(med).quoteRequired&&med.quoteRequired.includes('Medallion inlay labour (builder quote)'),'A medallion adds a builder-quote labour line, never $0, and no crew-days');
-  ok(unconfirmedRates().some(r=>r.id==='medallion-labour'&&r.status==='owner-decision')&&unconfirmedRates().some(r=>r.id==='inlay-labour'&&r.value.includes('band')),'The rate register lists the medallion labour decision, and bands under the reused rate');
+  ok(labour(med)===labour(plain)&&row&&row.cost!==null&&row.cost>0&&row.qty===1&&!med.quoteRequired.includes('Medallion inlay labour (builder quote)'),'A medallion adds priced man-hours labour by default, not crew-days on Installation Labour');
+  ok(CONFIRMED_RATES.some(r=>r.id==='medallion-labour')&&CONFIRMED_RATES.some(r=>r.id==='inlay-labour'),'The rate register confirms medallion and inlay labour decisions');
 }
 
 // 8. Stock: inlay boards are their own order, at the allowance of what they are.
 {
-  const d=base({inlays:[rug({pattern:'Herringbone',frame:'tt_prime_plus:Dark Cocoa'})]}),e=price(d),s=e.sections.find(x=>x.title==='Accent colours & inlays')!;
+  const d=base({deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk',inlays:[rug({pattern:'Herringbone',frame:'tt_prime_plus:Dark Cocoa'})]}),e=price(d),s=e.sections.find(x=>x.title==='Accent colours & inlays')!;
   ok(s&&s.items.some(i=>i.name==='Inlay frame · TimberTech EDGE Prime+ · Dark Cocoa')&&s.items.some(i=>i.name==='Inlay inside, herringbone · TimberTech EDGE Prime+ · Coconut Husk'),'The frame and the inside are ordered as their own boards, in their colours');
   const frameRow=e.stockSchedule.find(r=>r.name.startsWith('Inlay frame'))!,cuts=frameRow.cutsIn.flat().reduce((n,c)=>n+c,0)/12;
   ok(frameRow.orderedPieces>=Math.ceil(cuts*1.22/16),'The frame carries the picture-frame waste allowance (×1.22)');
   const inlayPieces=e.model.levels[0].boards.filter(b=>b.inlay).length,main=e.stockSchedule[0].cutsIn.flat().length;
   ok(main+e.stockSchedule.filter(r=>r.name.startsWith('Inlay')).reduce((n,r)=>n+r.cutsIn.flat().length,0)===e.model.levels[0].boards.length&&inlayPieces>0,'Every deck board is ordered once: the main order or an inlay order');
   ok(s.items.every(i=>i.cost!==0),'No inlay line is priced at $0');
-  const fd=base({inlays:[band({atFt:-4,fill:'tt_prime_plus:Dark Cocoa'}),medallion({dxFt:4,fill:'tt_prime_plus:Dark Cocoa'})]}),f=price(fd),fs=f.sections.find(x=>x.title==='Accent colours & inlays')!;
+  const fd=base({deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk',inlays:[band({atFt:-4,fill:'tt_prime_plus:Dark Cocoa'}),medallion({dxFt:4,fill:'tt_prime_plus:Dark Cocoa'})]}),f=price(fd),fs=f.sections.find(x=>x.title==='Accent colours & inlays')!;
   ok(fs.items.some(i=>i.name==='Inlay band · TimberTech EDGE Prime+ · Dark Cocoa')&&fs.items.some(i=>i.name==='Medallion inlay · TimberTech EDGE Prime+ · Dark Cocoa')&&fs.items.some(i=>i.name==='Medallion inlay · TimberTech EDGE Prime+ · Coconut Husk'),'A band and a medallion are ordered as their own boards, the medallion in both its colours');
   const allowance=(name:string,factor:number)=>{const r=f.stockSchedule.find(x=>x.name.startsWith(name))!,lf=r.cutsIn.flat().reduce((n,c)=>n+c,0)/12;return r.orderedPieces>=Math.ceil(lf*factor/16);};
   ok(allowance('Inlay band',WASTE_FACTORS.Straight)&&allowance('Medallion inlay · TimberTech EDGE Prime+ · Dark Cocoa',WASTE_FACTORS.Herringbone),'A band carries the straight allowance and a medallion the herringbone allowance');
@@ -343,7 +344,7 @@ for(const [label,patch,status] of [
   ok(viewer.includes('name="inlay-blocking"'),'The 3D framing view draws inlay framing in its own colour');
   ok(plan.includes('Amber: inlay blocking')&&plan.includes('`Inlay ${k+1}`')&&plan.includes('p.pieces.map('),'The plan draws and names each inlay, every piece of a band, and the framing');
   ok(/lazy\(loadInlayEditor\)/.test(designer)&&read('scripts/check-deck-bundle.ts').includes('/^InlayEditor-/'),'The inlay editor loads on demand, off the page\'s first load');
-  ok(['Add a framed rectangle','Add a diamond','Add a band','Add a medallion'].every(t=>editor.includes(`>${t}</button>`)),'The editor adds each kind of inlay');
+  ok(editor.includes('INLAY_PRESETS.map(')&&editor.includes('onPlaceInlay(createInlayPreset(')&&read('src/features/deckcraft/designer/InlayPlanEditor.tsx').includes('placeInlayPatch('),'The preset library arms the plan placement editor; valid clicks use the shared geometry action');
   ok(read('src/features/deckcraft/constructionDetails.ts').includes('if(onInlaySupport((face?')&&read('src/features/deckcraft/constructionDetails.ts').includes('||inSolidInlay(level,fx,fz))continue;'),'Board ends on inlay framing or a medallion\'s solid blocking get no second block');
 }
 

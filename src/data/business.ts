@@ -6,6 +6,8 @@
  * intentionally unknown. Do not turn `published_unverified` values into new
  * guarantees, review schema, or external-directory submissions.
  */
+import { OWNER_FACTS, googleReviewBadge, ownerFact, type OwnerFactSlot } from './ownerFacts';
+
 export type FactStatus = 'confirmed' | 'owner_reported' | 'published_unverified' | 'conflicting' | 'unknown';
 
 export interface BusinessFact<T> {
@@ -40,20 +42,90 @@ const unknown = <T>(source: string, notes?: string): BusinessFact<T | null> => (
   notes,
 });
 
+/**
+ * A BUSINESS fact driven by src/data/ownerFacts.ts.
+ * Empty slot → unknown, nothing renders. Completed slot → confirmed, and it publishes.
+ */
+function slotFact(slot: OwnerFactSlot): BusinessFact<string | null> {
+  const value = ownerFact(slot);
+  if (!value || !slot.lastVerified) {
+    return {
+      value: null,
+      status: 'unknown',
+      lastVerified: null,
+      source: 'src/data/ownerFacts.ts',
+      notes: slot.fill,
+    };
+  }
+  return {
+    value,
+    status: 'confirmed',
+    lastVerified: slot.lastVerified,
+    source: slot.source,
+    notes: slot.fill,
+  };
+}
+
+function reviewAggregateFact(): BusinessFact<{ ratingValue: string; reviewCount: string } | null> {
+  const rating = ownerFact(OWNER_FACTS.googleRating);
+  const count = ownerFact(OWNER_FACTS.googleReviewCount);
+  if (!rating || !count || !OWNER_FACTS.googleRating.lastVerified) {
+    return {
+      value: null,
+      status: 'unknown',
+      lastVerified: null,
+      source: 'src/data/ownerFacts.ts',
+      notes: 'Set googleRating and googleReviewCount together. Until then no rating or review count is published.',
+    };
+  }
+  return {
+    value: { ratingValue: rating, reviewCount: count },
+    status: 'confirmed',
+    lastVerified: OWNER_FACTS.googleRating.lastVerified,
+    source: OWNER_FACTS.googleRating.source,
+  };
+}
+
+/** Owner answered on 2026-09-27 that Golden Maple sells this service and wants a Barrie page for it. */
+const offeredPerOwner = (value: string): BusinessFact<string> => ({
+  value,
+  status: 'confirmed',
+  lastVerified: '2026-09-27',
+  source: 'Owner answer 2026-09-27 (Claude Code session, SEO authority plan): Golden Maple offers this service and wants a dedicated Barrie page',
+  notes: 'Confirms the service is offered. Pricing, timelines and specs on the page stay project-specific unless separately confirmed.',
+});
+
+export const LANDSCAPE_MAINTENANCE = {
+  value: 'Landscape maintenance (2027)',
+  status: 'confirmed' as const,
+  lastVerified: '2026-11-07',
+  source: 'Owner confirmed the 2027 landscape maintenance offering, including regular mowing and lawn care for residential and commercial properties.',
+  notes: 'Scope and timing are confirmed for each property. The spring and fall clean-up service remains a separate offering.',
+  summary: 'Starting in 2027, we offer regular mowing and lawn care as part of full property maintenance for homes and commercial properties.',
+  path: '/services/landscape-maintenance-barrie/',
+  enquiryPath: '/contact/?service=maintenance',
+} as const;
+
 export const BUSINESS = {
   canonicalUrl: 'https://goldenmaplelandscaping.ca',
   publicName: published('Golden Maple Landscaping', 'Existing site-wide public copy'),
   legalName: ownerReported('Golden Maple Landscaping Inc.', 'Owner-provided context; not independently verified', 'Do not represent this as independently verified legal registry information.'),
-  founder: published({ name: 'Yorkis Estevez', role: 'Founder & Lead Builder' }, 'src/data/founder.ts and existing site copy'),
-  foundingYear: published('2020', 'Existing root schema and llms.txt'),
+  founder: {
+    value: { name: 'Yorkis Estevez', role: 'Founder & Lead Builder' },
+    status: 'confirmed' as const,
+    lastVerified: '2026-09-27',
+    source: 'Owner attestation 2026-09-27 (Claude Code session approving the SEO authority plan): name spelling, role, and consent to be named as author or reviewer where that is true',
+    notes: 'Confirms identity and role only. Credentials, memberships, years of experience and project counts are separate facts with their own status.',
+  },
+  foundingYear: slotFact(OWNER_FACTS.foundingYear),
 
   contact: {
     primaryPhone: {
-      value: { display: '(705) 300-8015', tel: '+17053008015' },
+      value: { display: '(705) 500-3581', tel: '+17055003581' },
       status: 'confirmed' as const,
-      lastVerified: '2026-09-05',
-      source: 'Owner instruction in Telegram: publish Sophie voice agent number instead of the owner’s personal number.',
-      notes: 'Approved public contact for Sophie, the voice agent. Ownership and call routing were not independently tested; no telephony changes authorized or performed.',
+      lastVerified: '2026-10-25',
+      source: 'Owner instruction 2026-10-25: changed the public number back to (705) 500-3581.',
+      notes: 'Public Golden Maple number is (705) 500-3581. Sophie Telnyx number 705-300-8015 is retained for texts/AI only, not public.',
     },
     legacyPhone: {
       value: { display: '(705) 790-3838', tel: '+17057903838' },
@@ -69,15 +141,20 @@ export const BUSINESS = {
     ),
   },
 
-  addressPolicy: published(
-    { kind: 'service_area_business' as const, publicStreetAddress: false, publicLocality: 'Barrie', region: 'ON', country: 'CA', postalCodePrefix: 'L4N' },
-    'Existing schema publishes Barrie/ON/L4N only; no street address is present',
-    'Whether a residential street address should be public remains unresolved.',
-  ),
-  hours: published(
-    [{ days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '08:00', closes: '18:00' }],
-    'Existing root and SEO schema',
-  ),
+  addressPolicy: {
+    value: { kind: 'service_area_business' as const, publicStreetAddress: true, streetAddress: '8 Milne Court', publicLocality: 'Barrie', region: 'ON', country: 'CA', postalCode: 'L4N 7J1', postalCodePrefix: 'L4N' },
+    status: 'confirmed' as const,
+    lastVerified: '2026-10-12',
+    source: 'Google Business Profile read live 2026-10-12 (8 Milne Ct, Barrie, ON L4N 7J1); owner locked this as the canonical name/address/phone on 2026-09-06.',
+    notes: 'Must match the Google Business Profile character for character. If the profile ever hides the street address, set publicStreetAddress to false here in the same change.',
+  },
+  hours: {
+    value: [{ days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], opens: '08:00', closes: '18:00' }],
+    status: 'confirmed' as const,
+    lastVerified: '2026-10-12',
+    source: 'Google Business Profile read live 2026-10-12: 8 a.m.–6 p.m. every day.',
+    notes: 'Mirrors the owner-set Google Business Profile hours. Change both together.',
+  },
   urls: {
     facebook: published('https://www.facebook.com/GoldenMaplegroup', 'Existing root and SEO schema'),
     instagram: {
@@ -95,32 +172,60 @@ export const BUSINESS = {
   },
 
   credentials: {
-    wsib: published('WSIB Certified', 'Existing llms.txt and trust-bar copy'),
-    liabilityInsurance: published('$5,000,000 liability coverage', 'Existing llms.txt and trust-bar copy'),
-    workmanshipWarranty: published('5-year sink and settlement warranty', 'Existing service copy and llms.txt', 'Exact coverage, exclusions, remedy, and contract wording require confirmation.'),
-    cmhaPaverInstaller: {
-      value: 'CMHA Certified Concrete Paver Installer',
-      status: 'conflicting' as const,
-      lastVerified: null,
-      source: 'Owner confirmation required; current site instead refers to ICPI',
-      notes: 'Do not claim either credential until current certification is documented.',
-    },
+    wsib: slotFact(OWNER_FACTS.wsibStatus),
+    liabilityInsurance: slotFact(OWNER_FACTS.liabilityCoverage),
+    workmanshipWarranty: slotFact(OWNER_FACTS.warrantyTerm),
+    cmhaPaverInstaller: ownerReported(
+      'CMHA Certified Concrete Paver Installer',
+      'Owner stated on 2026-09-27 (Claude Code planning session) that he holds this credential; certificate or directory listing not yet supplied',
+      'Not listed in the public CMHA directory PDF dated 2023-12-29 (may predate certification). Confirm by recording the certificate number or a current CMHA directory URL here with lastVerified; scripts/claim-rules.json then allows the claim.',
+    ),
     icpi: published('ICPI specifications / installation references', 'Existing service copy and llms.txt', 'ICPI terminology may be obsolete or superseded; certification status is not verified.'),
-    techoPro: unknown<string>('No current Techo-Pro credential record in tracked source'),
+    techoPro: ownerReported(
+      'Techo-Pro (Techo-Bloc contractor program)',
+      'Owner stated on 2026-09-27 (Claude Code planning session) that Golden Maple is enrolled; proof not yet supplied',
+      'The only public mention found is goldenmaplegroup.com (self-published), which is not independent proof. Confirm with a Techo-Bloc contractor-locator URL or program document.',
+    ),
     permaconCertification: unknown<string>('No Permacon authorization/certification record in tracked source'),
+  },
+
+  memberships: {
+    landscapeOntario: ownerReported(
+      'Landscape Ontario member',
+      'Owner stated on 2026-09-27 (Claude Code planning session); member number or directory listing not yet supplied',
+      'Confirm with a member-directory URL or membership number before any membership claim or memberOf schema is published.',
+    ),
   },
 
   serviceArea: {
     primary: published(['Barrie', 'Innisfil', 'Oro-Medonte', 'Springwater'], 'Existing dedicated location routes'),
-    secondary: published(['Orillia', 'Wasaga Beach', 'Midland', 'Collingwood'], 'Existing service-location matrix and root schema', 'Active service coverage needs owner confirmation.'),
+    secondary: published(['Orillia', 'Wasaga Beach', 'Midland', 'Collingwood', 'Bradford West Gwillimbury', 'Newmarket'], 'Existing service-location matrix and root schema; Bradford West Gwillimbury + Newmarket added per owner direction 2026-09-25', 'Active service coverage needs owner confirmation.'),
   },
   services: published(
-    ['Interlocking stone', 'Composite decking', 'Retaining walls', 'Landscape design', 'Outdoor living / backyard transformations'],
+    ['Interlocking stone', 'Composite decking', 'Retaining walls', 'Landscape design', 'Outdoor living / backyard transformations', LANDSCAPE_MAINTENANCE.value],
     'Existing services and navigation',
   ),
+  /**
+   * Services with a dedicated Barrie money page (src/data/barrieServices.ts). A page is
+   * routed only while its offering passes canPublish() — scripts/check-barrie-services.ts.
+   */
+  serviceOfferings: {
+    interlockDriveways: offeredPerOwner('Interlock driveways'),
+    porcelainPatios: offeredPerOwner('Porcelain patios'),
+    outdoorKitchens: offeredPerOwner('Outdoor kitchens'),
+    frontEntrances: offeredPerOwner('Front entrance landscaping (steps, landings, walkways)'),
+    landscapeMaintenance: LANDSCAPE_MAINTENANCE,
+    seasonalCleanups: {
+      value: 'Seasonal clean-ups (spring and fall)',
+      status: 'confirmed' as const,
+      lastVerified: '2026-09-28',
+      source: 'Owner instruction 2026-09-28 (Claude Code session): "we now offer seasonal clean up, make sure thats part of our website"; scope, seasons, pricing and area answered in the same session',
+      notes: 'Spring and fall. Scope: leaves and debris (hauled away), garden beds and shrubs (weeding, cutting back, pruning, edging, mulch), patio and interlock care (sweep or wash, polymeric sand top-up, flag heaving or settlement). This standalone service covers the clean-up scope listed here. Area: Barrie, Innisfil, Oro-Medonte, Springwater. Quoted per property; no published prices.',
+    },
+  },
 
   commercialPolicies: {
-    minimumInvestment: unknown<string>('Existing site has inconsistent general and service-specific price claims', 'Confirm universal minimum and any service-specific exceptions before publishing as a policy.'),
+    minimumInvestment: slotFact(OWNER_FACTS.projectMinimum),
     consultation: published('Free 15-minute discovery call; first in-person visit policy requires confirmation', 'Existing /book and llms.txt copy'),
     design: {
       value: '$99 paid design session, credited toward a project',
@@ -150,14 +255,14 @@ export const BUSINESS = {
 
   reviews: {
     projectCounts: published({ barrie: 47, innisfil: 22, 'oro-medonte': 14, springwater: 9, orillia: 11, 'wasaga-beach': 7, midland: 5, collingwood: 4 }, 'Legacy estimator location records labelled 2025; no job ledger supplied', 'Do not display as completed-project proof without traceable project records and approval.'),
-    aggregate: published({ ratingValue: '5.0', reviewCount: '8' }, 'Existing root schema comment and llms.txt', 'Publication is not verification. Do not emit AggregateRating or Review schema until a traceable source and owner approval exist.'),
+    aggregate: reviewAggregateFact(),
     testimonials: unknown<string>('No approved, traceable testimonial consent register in tracked source'),
     portfolio: {
       value: 'scripts/portfolio-sources.mjs (owner-attested allowlist) -> src/data/projects.ts',
       status: 'confirmed' as const,
       lastVerified: '2026-09-13',
       source: 'Owner attestation 2026-09-13 (Claude Code session, contact sheet docs/portfolio/contact-sheet-2026-09-13.jpg): every entry in scripts/portfolio-sources.mjs is a Golden Maple job photographed by the owner or crew. Manufacturer, AI, render and unconfirmed files are listed in EXCLUDED and are never emitted.',
-      notes: 'Publication is gated per image: build-portfolio-images.mjs refuses unattested sources and --check (npm run lint) fails on drift. Project records carry title, town, category and a descriptive summary only, with no investment figures, durations or testimonials. Revert to unknown if the register is bypassed.',
+      notes: 'Publication is gated per image: build-portfolio-images.mjs refuses unattested sources and --check (npm run lint) fails on drift. Project records carry title, town, category and a descriptive summary; figures, durations and build specs appear only via individually attested caseStudy fields (scripts/check-case-studies.ts). No testimonials. Revert to unknown if the register is bypassed.',
     },
     photoRights: {
       value: 'Owner-photographed job photos under /images/portfolio and the company Instagram bake under /images/instagram',
@@ -175,15 +280,29 @@ export const publicContact = {
   email: BUSINESS.contact.email.value,
 } as const;
 
-export const publicServiceAreas = [
+/** Google Business Profile service areas, in GBP order. Names only. */ export const publicGbpServiceAreas = ['Barrie', 'Orillia', 'Innisfil', 'Newmarket', 'Angus', 'Oro-Medonte', 'Essa', 'Wasaga Beach', 'Thornton', 'Simcoe', 'Keswick', 'Midhurst', 'Alliston', 'Shanty Bay', 'Bradford West Gwillimbury', 'Coldwater', 'Stayner', 'Cookstown', 'Elmvale', 'Tottenham'] as const; export const publicServiceAreas = [
   ...BUSINESS.serviceArea.primary.value,
   ...BUSINESS.serviceArea.secondary.value,
 ] as const;
 
+/** Hours as one readable line, e.g. "Monday–Sunday, 8:00 AM–6:00 PM". */
+export function publicHoursLine(): string {
+  const clock = (t: string) => { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; };
+  return BUSINESS.hours.value.map((h) => `${h.days.length > 1 ? `${h.days[0]}–${h.days[h.days.length - 1]}` : h.days[0]}, ${clock(h.opens)}–${clock(h.closes)}`).join('; ');
+}
+
 /** Service landing-page arguments are kept compatible, never used as branch addresses. */
+/** The public address as one line, e.g. for prose and llms.txt. Locality only when no street address is published. */
+export function publicAddressLine(): string {
+  const a = publicPostalAddress();
+  return 'streetAddress' in a ? `${a.streetAddress}, ${a.addressLocality}, ${a.addressRegion} ${a.postalCode}` : `${a.addressLocality}, ${a.addressRegion}`;
+}
+
 export function publicPostalAddress(_serviceLocality?: string, _servicePostalCode?: string) {
+  const policy = BUSINESS.addressPolicy;
   return {
     '@type': 'PostalAddress',
+    ...(policy.value.publicStreetAddress && canPublish(policy) ? { streetAddress: policy.value.streetAddress, postalCode: policy.value.postalCode } : {}),
     addressLocality: BUSINESS.addressPolicy.value.publicLocality,
     addressRegion: BUSINESS.addressPolicy.value.region,
     addressCountry: BUSINESS.addressPolicy.value.country,
@@ -199,20 +318,26 @@ export function canPublish<T>(fact: BusinessFact<T>): boolean {
     && fact.source.trim().length > 0;
 }
 
-/** Conservative shared wording that cannot promote unresolved facts to proof. */
+/**
+ * Confirmed facts publish as the owner's sentence (or verifiedCopy when that
+ * fact is confirmed outside ownerFacts). Unconfirmed insurance, warranty,
+ * review, consultation and design claims publish nothing — no "ask us" hedge.
+ */
 export function publicClaimCopy<T>(fact: BusinessFact<T>, verifiedCopy: string): string {
+  if (fact === BUSINESS.reviews.aggregate) return googleReviewBadge() ?? '';
+  if (fact === BUSINESS.credentials.wsib) return ownerFact(OWNER_FACTS.wsibStatus) ?? '';
+  if (fact === BUSINESS.credentials.liabilityInsurance) return ownerFact(OWNER_FACTS.liabilityCoverage) ?? '';
+  if (fact === BUSINESS.credentials.workmanshipWarranty) return ownerFact(OWNER_FACTS.warrantyTerm) ?? '';
+  if (fact === BUSINESS.commercialPolicies.minimumInvestment) return ownerFact(OWNER_FACTS.projectMinimum) ?? '';
+  if (fact === BUSINESS.commercialPolicies.consultation || fact === BUSINESS.commercialPolicies.design) return '';
   if (canPublish(fact)) return verifiedCopy;
-  if (fact === BUSINESS.reviews.aggregate) return 'Discuss your project with our team.';
-  if (fact === BUSINESS.credentials.wsib || fact === BUSINESS.credentials.liabilityInsurance) return 'Ask us for current coverage documentation.';
-  if (fact === BUSINESS.credentials.workmanshipWarranty) return 'Ask for the current written workmanship terms for your project.';
-  if (fact === BUSINESS.commercialPolicies.consultation || fact === BUSINESS.commercialPolicies.design) return 'Contact us to confirm the current consultation and design scope.';
   if (fact === BUSINESS.commercialPolicies.permits) return 'Permit needs and responsibilities are confirmed for each project.';
-  return 'Please contact us to confirm current project details.';
+  return '';
 }
 
 export const conservativeTrustItems = [
-  publicClaimCopy(BUSINESS.reviews.aggregate, 'Verified Google reviews.'),
-  publicClaimCopy(BUSINESS.credentials.wsib, 'WSIB coverage is documented.'),
-  publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage is documented.'),
-  publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available.'),
-] as const;
+  publicClaimCopy(BUSINESS.reviews.aggregate, ''),
+  publicClaimCopy(BUSINESS.credentials.wsib, ''),
+  publicClaimCopy(BUSINESS.credentials.liabilityInsurance, ''),
+  publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, ''),
+].filter((item) => item.length > 0);

@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect } from 'react';
+import { ConsentBanner } from './components/ConsentBanner';
 import { HelmetProvider } from 'react-helmet-async';
 import {
   Links,
@@ -15,47 +16,16 @@ import {
 import './index.css';
 import SiteChrome from './components/Layout';
 import { initAnalytics, trackPageView } from './utils/analytics';
+import { onInteractOrIdle } from './utils/defer';
+import { refreshIntent } from './components/home/intentStore';
 import { initAttributionCapture } from './utils/utmCapture';
 import { initBehaviorCapture } from './utils/behavior';
-import { BUSINESS, canPublish, publicContact, publicPostalAddress, publicServiceAreas } from './data/business';
+import { siteGraph } from './utils/schema';
 
-// Canonical business entity for all routes. Publication status lives in
-// src/data/business.ts; unverified review data intentionally never enters schema.
-const businessGraph = {
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': ['LocalBusiness', 'HomeAndConstructionBusiness', 'GeneralContractor'],
-      '@id': `${BUSINESS.canonicalUrl}/#business`,
-      name: BUSINESS.publicName.value,
-      description: `${BUSINESS.publicName.value}: discuss ${BUSINESS.services.value.join(', ')}. Confirm project scope and availability for your address.`,
-      url: `${BUSINESS.canonicalUrl}/`,
-      image: `${BUSINESS.canonicalUrl}/logo-mark.png`,
-      logo: `${BUSINESS.canonicalUrl}/logo-mark.png`,
-      ...(canPublish(BUSINESS.founder) ? { founder: { '@type': 'Person', name: BUSINESS.founder.value.name } } : {}),
-      ...(canPublish(BUSINESS.foundingYear) ? { foundingDate: BUSINESS.foundingYear.value } : {}),
-      telephone: publicContact.phoneTel,
-      email: publicContact.email,
-      priceRange: '$$$',
-      currenciesAccepted: 'CAD',
-      address: publicPostalAddress(),
-      ...(canPublish(BUSINESS.serviceArea.primary) && canPublish(BUSINESS.serviceArea.secondary) ? { areaServed: publicServiceAreas.map((name) => ({ '@type': 'City', name })) } : {}),
-      ...(canPublish(BUSINESS.hours) ? { openingHoursSpecification: BUSINESS.hours.value.map((hours) => ({
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: hours.days,
-        opens: hours.opens,
-        closes: hours.closes,
-      })) } : {}),
-      sameAs: [
-        BUSINESS.urls.facebook.value,
-        BUSINESS.urls.instagram.value,
-        BUSINESS.urls.homeStars.value,
-        BUSINESS.urls.yelp.value,
-        BUSINESS.urls.yellowPages.value,
-      ],
-    },
-  ],
-};
+// Canonical entity graph for all routes: #website, the ONE typed #business node
+// and (when publishable) the #yorkis-estevez Person. Pages reference these ids
+// instead of re-declaring the business — see src/utils/schema.ts.
+const businessGraph = siteGraph();
 
 const gscToken = import.meta.env.VITE_SEARCH_CONSOLE_TOKEN as string | undefined;
 
@@ -65,7 +35,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="theme-color" content="#F7F5F0" />
+        <meta name="theme-color" content="#F2EEE5" />
         <meta name="msvalidate.01" content="F7FE7E3677ED01FC13ECAF1154E928B8" />
         {gscToken ? <meta name="google-site-verification" content={gscToken} /> : null}
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
@@ -73,14 +43,27 @@ export function Layout({ children }: { children: ReactNode }) {
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/favicon-180.png" />
         <link rel="manifest" href="/site.webmanifest" />
+        {/* The webfont CSS is not in this head. A media=print stylesheet is
+            still fetched at low priority, and Lighthouse then treats that
+            Google response as part of the LCP graph. The hero copy uses the
+            sized local fallback until App injects this after input or idle.
+            display=swap applies the face when it arrives. No-JS gets the
+            noscript link. */}
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=DM+Sans:wght@300..600&display=swap"
+          />
+        </noscript>
         <Meta />
         <Links />
-        {/* Static Google tag so Ads Goals scanners see AW-10839158941 without waiting for JS hydrate. send_page_view stays false. */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-1BRTV91W3Z" />
+        {/* Consent Mode before any Google tag. gtag.js for G-1BRTV91W3Z and
+            AW-10839158941 is not in this head: it loads on the first input or
+            browser idle, within about 2.5s. The ids stay in this HTML for tag scanners. */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1BRTV91W3Z',{send_page_view:false});gtag('config','AW-10839158941');",
+              "window.dataLayer=window.dataLayer||[];window.gtag=function gtag(){dataLayer.push(arguments);};gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});try{if(localStorage.getItem('gm-consent')==='granted'){gtag('consent','update',{ad_storage:'granted',analytics_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});}}catch(e){}window.__gmGoogleTags={ga4:'G-1BRTV91W3Z',ads:'AW-10839158941'};",
           }}
         />
         <script
@@ -102,22 +85,45 @@ export default function App() {
 
   // Client-only analytics + attribution init (was in App.tsx).
   useEffect(() => {
-    initAttributionCapture();
-    initBehaviorCapture();
-    initAnalytics();
+    try {
+      initAttributionCapture();
+      initBehaviorCapture();
+      initAnalytics();
+    } catch {
+      /* A tracker must not take the page down. */
+    }
+    return onInteractOrIdle(() => {
+      if (document.getElementById('gm-fonts')) return;
+      const link = document.createElement('link');
+      link.id = 'gm-fonts';
+      link.rel = 'stylesheet';
+      link.href =
+        'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=DM+Sans:wght@300..600&display=swap';
+      document.head.appendChild(link);
+    }, 8000);
   }, []);
 
   // GA4 + Meta Pixel page_view + scroll-to-top on route change.
   useEffect(() => {
     if (typeof window !== 'undefined') window.scrollTo(0, 0);
-    trackPageView(location.pathname + location.search);
+    try {
+      trackPageView(location.pathname + location.search);
+    } catch {
+      /* A tracker must not take the page down. */
+    }
+    // After the page view is on the session trail, so the homepage knows the visitor's interest next time it opens.
+    refreshIntent();
   }, [location.pathname, location.search]);
 
-  // The cost estimator runs as a full-screen app: its page ships its own
-  // minimal top bar, and the global navbar/footer/chat would fight the
-  // wizard's sticky bars for attention (Layout already hid the mobile dock
-  // there — this completes that thought).
-  const bareApp = location.pathname.startsWith('/cost-estimator') || location.pathname.startsWith('/deck-designer');
+  // The deck designer stays chrome-less. The cost estimator uses the site
+  // header so a visitor can reach services, reviews, and contact without
+  // leaving the estimate. Its own sticky bars still sit above the page footer.
+  // A regex, not a quoted path: the trailing-slash rewrite would turn
+  // startsWith('/deck-designer') into startsWith('/deck-designer/'), which
+  // misses the prerender path and hydrates a different tree. The cookie
+  // banner stays off this page: it is role=dialog, and the designer ignores
+  // keyboard shortcuts while a dialog is open.
+  const bareApp = /^\/deck-designer(?:\/|$)/.test(location.pathname);
 
   return (
     <HelmetProvider>
@@ -126,9 +132,12 @@ export default function App() {
           <Outlet />
         </main>
       ) : (
-        <SiteChrome>
-          <Outlet />
-        </SiteChrome>
+        <>
+          <ConsentBanner />
+          <SiteChrome>
+            <Outlet />
+          </SiteChrome>
+        </>
       )}
     </HelmetProvider>
   );

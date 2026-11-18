@@ -7,55 +7,116 @@
 import { useEffect, useMemo } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { buildSwatchMaps, type SwatchImage, type SwatchMaps } from './swatchMaps';
+import type { SwatchImage, SwatchMaps } from './swatchMaps';
+import { ATLAS_WIDTH } from './atlasWidth';
+import { showcaseDetail } from '../../showcaseMode';
+import { useRenderQuality } from './SceneRenderQuality';
 import type { SwatchResult } from './swatchMaps.worker';
 import { clearSurfaceMaps, disposeSurface, setSurfaceMaps, surfaceMaterial } from './surfaceShaders';
+import { useFixtureLit } from './fixtureLighting';
 
-/** The photo is read at up to this many pixels on its longer side (one swatch is 2000 px square). */
-const READ_EDGE = 900;
+/** The photo is read at up to this many pixels on its longer side (one swatch is 2000 px square); the high tier's
+ * 2048 atlas reads up to 2048, so a sharp photo keeps its detail. */
+const READ_EDGE = 900, HIGH_READ_EDGE = 2048;
 /** Processed swatches kept for re-use (a colour picked again, or the same colour on a part): newest last. */
 const cache = new Map<string, Promise<SwatchMaps | null>>();
 const CACHE_SIZE = 6;
+
+/** Renderer-local material jobs, not the shared URL/atlas cache. Two hooks using one cached swatch still have
+ * two applications to acknowledge. A failed active material prevents a proposal capture from reporting ready. */
+export function createSwatchReadinessTracker() {
+  type Job = {state:'pending'|'applied'|'failed';done:Promise<void>;resolve:()=>void};
+  const jobs = new Set<Job>();
+  let generation = 0;
+  return {
+    begin() {
+      let resolve!:()=>void;
+      const job:Job = {state:'pending',done:new Promise<void>(done=>{resolve=done;}),resolve:()=>resolve()};
+      jobs.add(job);generation++;
+      return {
+        applied(success:boolean) {if(!jobs.has(job)||job.state!=='pending')return;job.state=success?'applied':'failed';generation++;job.resolve();},
+        cancel() {if(!jobs.delete(job))return;generation++;job.resolve();},
+      };
+    },
+    async ready(timeoutMs=15000):Promise<boolean> {
+      // One deadline for the whole call, including replacement effects that start while it is waiting.
+      if(!Number.isFinite(timeoutMs)||timeoutMs<=0)return false;
+      const bounded=Math.min(15000,timeoutMs);
+      let timer:ReturnType<typeof setTimeout>|undefined;
+      const timeout=new Promise<false>(resolve=>{timer=setTimeout(()=>resolve(false),bounded);});
+      try {
+        for(;;) {
+          const current=[...jobs],observed=generation;
+          if(current.some(job=>job.state==='failed'))return false;
+          if(current.every(job=>job.state==='applied')) {
+            // Let already queued effect completions/cleanup run before accepting a stable applied set.
+            await Promise.resolve();
+            if(observed===generation)return true;
+            continue;
+          }
+          const completed=await Promise.race([Promise.all(current.map(job=>job.done)).then(()=>true),timeout]);
+          if(!completed)return false;
+          // Do not trust the old promise list: it may include cleaned-up hooks or omit a new colour/part.
+        }
+      } finally {if(timer!==undefined)clearTimeout(timer);}
+    },
+  };
+}
+const rendererReadiness = new WeakMap<THREE.WebGLRenderer,ReturnType<typeof createSwatchReadinessTracker>>();
+function readinessFor(gl:THREE.WebGLRenderer) {
+  let tracker=rendererReadiness.get(gl);
+  if(!tracker){tracker=createSwatchReadinessTracker();rendererReadiness.set(gl,tracker);}
+  return tracker;
+}
+/** Waits for maps to be applied on all active swatch hooks in this renderer, at most 15 seconds. */
+export const waitForSwatchTextures=(gl:THREE.WebGLRenderer,timeoutMs=15000):Promise<boolean>=>readinessFor(gl).ready(timeoutMs);
 
 /** Real wood (cedar, pressure-treated) is rougher than a composite's capped surface. */
 const isWood = (url: string) => /(^|\/)wood-[^/]*$/.test(url.split('?')[0]);
 
 type Kind = 'composite' | 'wood';
-const pending = new Map<number, { resolve: (maps: SwatchMaps | null) => void; image: SwatchImage; kind: Kind }>();
+const pending = new Map<number, { resolve: (maps: SwatchMaps | null) => void; image: SwatchImage; kind: Kind; width: number }>();
 let worker: Worker | null | undefined, nextId = 0;
-const onMainThread = (image: SwatchImage, kind: Kind) => buildSwatchMaps(image, kind, () => new Promise(resolve => setTimeout(resolve, 0)));
+// The builder loads here only when no worker can start, so it stays out of the viewer's own chunk.
+const onMainThread = (image: SwatchImage, kind: Kind, width = ATLAS_WIDTH) => import('./swatchMaps').then(m => m.buildSwatchMaps(image, kind, () => new Promise(resolve => setTimeout(resolve, 0)), width));
+// The worker lives for the page, so its listeners are module functions: written inline, the build folds this code into
+// the hook's effect and the listener kept the first 3D view's renderer, canvas and context alive.
+function onWorkerMessage(event: MessageEvent<SwatchResult>) { pending.get(event.data.id)?.resolve(event.data.maps); pending.delete(event.data.id); }
+/** A worker that fails to load hands its jobs back to the main thread, and no more are sent to it. */
+function onWorkerError() { worker = null; for (const job of pending.values()) onMainThread(job.image, job.kind, job.width).then(job.resolve, () => job.resolve(null)); pending.clear(); }
 /** Atlases are built in a worker (swatchMaps.worker.ts); where none can start, on the main thread a strip at a time. */
-function buildAtlas(image: SwatchImage, kind: Kind): Promise<SwatchMaps | null> {
+function buildAtlas(image: SwatchImage, kind: Kind, width = ATLAS_WIDTH): Promise<SwatchMaps | null> {
   if (worker === undefined) {
     try { worker = typeof Worker === 'function' ? new Worker(new URL('./swatchMaps.worker.ts', import.meta.url), { type: 'module' }) : null; } catch { worker = null; }
-    worker?.addEventListener('message', (event: MessageEvent<SwatchResult>) => { pending.get(event.data.id)?.resolve(event.data.maps); pending.delete(event.data.id); });
-    // A worker that fails to load hands its jobs back to the main thread, and no more are sent to it.
-    worker?.addEventListener('error', () => { worker = null; for (const job of pending.values()) onMainThread(job.image, job.kind).then(job.resolve, () => job.resolve(null)); pending.clear(); });
+    worker?.addEventListener('message', onWorkerMessage);
+    worker?.addEventListener('error', onWorkerError);
   }
-  if (!worker) return onMainThread(image, kind);
+  if (!worker) return onMainThread(image, kind, width);
   const id = nextId++, job = worker;
-  return new Promise(resolve => { pending.set(id, { resolve, image, kind }); job.postMessage({ id, image, kind }); });
+  return new Promise(resolve => { pending.set(id, { resolve, image, kind, width }); job.postMessage({ id, image, kind, width }); });
 }
 
-function swatchMaps(url: string): Promise<SwatchMaps | null> {
-  const hit = cache.get(url);
-  if (hit) { cache.delete(url); cache.set(url, hit); return hit; }
+function swatchMaps(url: string, width = ATLAS_WIDTH): Promise<SwatchMaps | null> {
+  const key = width === ATLAS_WIDTH ? url : `${url}@${width}`;
+  const hit = cache.get(key);
+  if (hit) { cache.delete(key); cache.set(key, hit); return hit; }
   const job = (async () => {
     const img = new Image();
     img.decoding = 'async';
     img.src = url;
     await img.decode();
-    const scale = Math.min(1, READ_EDGE / Math.max(img.naturalWidth, img.naturalHeight));
-    const width = Math.round(img.naturalWidth * scale), height = Math.round(img.naturalHeight * scale);
+    const edge = width > ATLAS_WIDTH ? HIGH_READ_EDGE : READ_EDGE;
+    const scale = Math.min(1, edge / Math.max(img.naturalWidth, img.naturalHeight));
+    const readW = Math.round(img.naturalWidth * scale), readH = Math.round(img.naturalHeight * scale);
     const canvas = document.createElement('canvas');
-    canvas.width = width; canvas.height = height;
+    canvas.width = readW; canvas.height = readH;
     const context = canvas.getContext('2d', { willReadFrequently: true });
     if (!context) return null;
-    context.drawImage(img, 0, 0, width, height);
-    const { data } = context.getImageData(0, 0, width, height);
-    return buildAtlas({ width, height, data }, isWood(url) ? 'wood' : 'composite');
+    context.drawImage(img, 0, 0, readW, readH);
+    const { data } = context.getImageData(0, 0, readW, readH);
+    return buildAtlas({ width: readW, height: readH, data }, isWood(url) ? 'wood' : 'composite', width);
   })().catch(() => null);
-  cache.set(url, job);
+  cache.set(key, job);
   if (cache.size > CACHE_SIZE) cache.delete(cache.keys().next().value!);
   return job;
 }
@@ -75,15 +136,19 @@ function atlasTexture(pixels: Uint8Array, maps: SwatchMaps, colorSpace: THREE.Co
 export function useSwatchTexture(url: string, fallbackColor: string): THREE.MeshStandardMaterial {
   const gl = useThree(s => s.gl);
   const invalidate = useThree(s => s.invalidate);
+  const quality = useRenderQuality();
+  const atlasWidth = showcaseDetail(quality.tier) ? 2048 : ATLAS_WIDTH;
 
   // A new material per colour choice is intentional — disposal handled below.
-  const material = useMemo(() => surfaceMaterial(fallbackColor), [fallbackColor]);
+  const material = useMemo(() => surfaceMaterial(fallbackColor, atlasWidth > ATLAS_WIDTH), [fallbackColor, atlasWidth]);
 
   useEffect(() => {
     if (!url) return;
     let cancelled = false;
-    swatchMaps(url).then(maps => {
-      if (cancelled || !maps) return;
+    const application = readinessFor(gl).begin();
+    swatchMaps(url, atlasWidth).then(maps => {
+      if (cancelled) return;
+      if (!maps) { application.applied(false); return; }
       const anisotropy = Math.min(16, gl.capabilities.getMaxAnisotropy());
       setSurfaceMaps(material, {
         map: atlasTexture(maps.albedo, maps, THREE.SRGBColorSpace, anisotropy),
@@ -91,9 +156,14 @@ export function useSwatchTexture(url: string, fallbackColor: string): THREE.Mesh
         roughnessMap: atlasTexture(maps.roughness, maps, THREE.NoColorSpace, anisotropy),
       }, maps.strips);
       invalidate();
-    });
-    return () => { cancelled = true; clearSurfaceMaps(material); };
-  }, [url, material, gl, invalidate]);
+      // Decode/worker completion alone is insufficient: all three maps and box variants must be swapped first.
+      application.applied(true);
+    }).catch(() => { if(!cancelled)application.applied(false); });
+    return () => { cancelled = true; application.cancel(); clearSurfaceMaps(material); };
+  }, [url, material, gl, invalidate, atlasWidth]);
+
+  // Boards, treads, risers, fascia and skirting take the night's step and post lights.
+  useFixtureLit(material);
 
   // Acceptance gate: dispose on unmount path.
   useEffect(() => () => disposeSurface(material), [material]);

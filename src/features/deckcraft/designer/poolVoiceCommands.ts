@@ -1,0 +1,17 @@
+import type {AgentCommand,AgentSnapshot} from './deckAgentController';
+import type {AssistedSelection} from './naturalLanguageCommands';
+/** Whole clauses only. Selection/names are resolved against current public pool records. */
+export function parsePoolInstruction(raw:string,snapshot:AgentSnapshot,selection:AssistedSelection):{command:AgentCommand;summary:string[]}|{clarification:string}|undefined{
+ if(!/\bpool\b/.test(raw))return;
+ const pools=snapshot.design.pools??[];let m:RegExpMatchArray|null;
+ const chosen=()=>{if(selection.poolId){const hit=pools.find(p=>p.id===selection.poolId);if(hit)return hit;}const hits=pools.filter(p=>raw.includes(p.name.toLowerCase()));return hits.length===1?hits[0]:pools.length===1?pools[0]:undefined;};
+ const p=chosen();const no=()=>({clarification:'Select one current pool or name it exactly before changing its dimensions or levels.'});
+ const yes=(command:AgentCommand,line:string)=>({command,summary:[line,'Preview paving removed, shared excavation and unresolved installation prices before applying.']});
+ if((m=raw.match(/^(?:add|create|draw) (?:a )?(fiberglass|vinyl(?:-liner)?|concrete) (?:rectangular |rounded )?pool$/))){const type=m[1]==='vinyl'?'vinyl-liner':m[1];return yes({type:'pool.create',id:`pool-voice-r${snapshot.revision}`,poolType:type as 'fiberglass'|'vinyl-liner'|'concrete',shape:raw.includes('rounded')?'rounded-rectangle':'rectangle'},'Create editable 16 × 32 ft planning pool, 48 in water depth and 6 in water offset.');}
+ if((m=raw.match(/^move (?:this |selected |the )?pool (-?\d+(?:\.\d+)?) (feet|foot|ft|inches|inch|in) (left|right|toward house|into yard)$/))){if(!p)return no();const d=Number(m[1])*(m[2].startsWith('f')?12:1),direction=m[3];return yes({type:'pool.move',id:p.id,dxIn:direction==='left'?-d:direction==='right'?d:0,dzIn:direction==='toward house'?-d:direction==='into yard'?d:0},`${p.name}: move ${d} inches ${direction}; fixed coping retained.`);}
+ if((m=raw.match(/^rotate (?:this |selected |the )?pool(?: to)? (-?\d+(?:\.\d+)?) (degrees|degree|deg)$/))){if(!p)return no();return yes({type:'pool.rotate',id:p.id,rotationDeg:Number(m[1])},`${p.name}: rotation ${m[1]} degrees; depth axis rotates with pool.`);}
+ if((m=raw.match(/^(?:set|change) (?:this |selected |the )?pool coping(?: elevation| top)?(?: to)? (-?\d+(?:\.\d+)?) (feet|foot|ft|inches|inch|in)$/))){if(!p)return no();return yes({type:'pool.edit',id:p.id,patch:{copingTopElevationIn:Number(m[1])*(m[2].startsWith('f')?12:1)}},`${p.name}: fixed coping top on project datum.`);}
+ if((m=raw.match(/^(?:set|change) (?:this |selected |the )?pool (?:water )?depth(?: to)? (\d+(?:\.\d+)?) (feet|foot|ft|inches|inch|in)$/))){if(!p)return no();const depthIn=Number(m[1])*(m[2].startsWith('f')?12:1);return yes({type:'pool.depth',id:p.id,profile:p.depthProfile.map(s=>({stationIn:s.stationIn,depthIn}))},`${p.name}: flat ${depthIn} inch water depth; manufacturer match invalidated if dimensions differ.`);}
+ if(/^(?:delete|remove) (?:this |selected |the )?pool$/.test(raw)){if(!p)return no();return yes({type:'pool.delete',id:p.id},`${p.name}: remove pool and restore original patio paving.`);}
+ if(/\bpool\b/.test(raw)&&/^(?:move|rotate|set|change|add|create|draw|delete|remove) /.test(raw))return {clarification:'Use an exact pool type, selected pool movement, rotation, coping elevation or water depth. Outline changes are available in the pool drawing controls.'};
+}

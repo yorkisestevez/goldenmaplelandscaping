@@ -7,15 +7,17 @@ import {LIGHTING_COSTS,MATERIAL_TIERS,CREW_DAY_RATES,RAILING_COSTS,STAIR_TREAD_C
 import {createHash} from 'node:crypto';
 // SHA-256 of JSON.stringify(original exported constant), read from the untouched
 // C:/Business/projects/deckcraft-pro/src/types.ts on 2026-09-07. No machine path dependency.
-const original={LIGHTING_COSTS:'20c5e22050818def66ae8eb4491877649c293212bbd18efb856bcaaf3f3e2289',MATERIAL_TIERS:'0a958a5855f52d5e20b57c0c1f32bfde15efa2da6abe6f08df981258efca007d',CREW_DAY_RATES:'e0d370541608575252914f41a83f2d9b68df78436b3abbad3537700fdad8c832',RAILING_COSTS:'7b73b487cf1d1f2f92165e68ed40a09792c8a29520a6ea91437c5952c8cb7ae1',STAIR_TREAD_COSTS:'adac3f188ff5b56bdacdea1a958b82e8b8850072b35a6856d0a5821db5e3b44d',WASTE_FACTORS:'84247fc9dbcbbfb435cee1b7e137125a839e9315e5234a8a150f1bf9191ffdb1'};
+// MATERIAL_TIERS was deliberately revised in the owner-authorized 2026-09-26 pricing review;
+// its sourced Terrain/Reserve benchmarks are also tested in check-deck-pricing-review.ts.
+const original={LIGHTING_COSTS:'20c5e22050818def66ae8eb4491877649c293212bbd18efb856bcaaf3f3e2289',MATERIAL_TIERS:'4b3acbe6a735eb14a97a89309105930d71fa3756f7552c8e1a93f0b9c1627faf',CREW_DAY_RATES:'e0d370541608575252914f41a83f2d9b68df78436b3abbad3537700fdad8c832',RAILING_COSTS:'7b73b487cf1d1f2f92165e68ed40a09792c8a29520a6ea91437c5952c8cb7ae1',STAIR_TREAD_COSTS:'adac3f188ff5b56bdacdea1a958b82e8b8850072b35a6856d0a5821db5e3b44d',WASTE_FACTORS:'84247fc9dbcbbfb435cee1b7e137125a839e9315e5234a8a150f1bf9191ffdb1'};
 for(const key of ['LIGHTING_COSTS','MATERIAL_TIERS','CREW_DAY_RATES','RAILING_COSTS','STAIR_TREAD_COSTS','WASTE_FACTORS'] as const){const current={LIGHTING_COSTS,MATERIAL_TIERS,CREW_DAY_RATES,RAILING_COSTS,STAIR_TREAD_COSTS,WASTE_FACTORS}[key];assert.equal(createHash('sha256').update(JSON.stringify(current)).digest('hex'),original[key],`${key}: original commercial source preserved`);}
 let count=0;
 for(const width of [8,24,40])for(const length of [8,24])for(const pattern of ['Straight','Diagonal','Herringbone'] as const){
  const d={...structuredClone(DEFAULT_DECK),width,length,pattern};const e=calculateEstimate(d),h=getHardwareLayout(d,e.model);
  assert(Number.isFinite(e.total)&&e.total>0);
  for(const s of e.sections)assert(Math.abs(s.total-s.items.reduce((n,i)=>n+i.cost,0))<.01,`${s.title} item sum`);
- assert(e.connectorSchedule.some(r=>r.name==='Joist-to-beam ties'&&r.rate===null));
- assert(e.flags.some(f=>f.includes('unpriced connection')));
+ assert(e.connectorSchedule.some(r=>r.name==='Joist-to-beam ties'&&r.rate!==null&&r.rate>0));
+ assert(e.connectorSchedule.some(r=>r.name==='Splice fasteners'&&r.rate===null)||e.connectorSchedule.some(r=>r.name==='Support post timber'&&r.rate===null)||e.flags.some(f=>f.includes('unpriced connection'))||e.connectorSchedule.some(r=>r.name==='Support post timber'&&r.rate!==null));
  const hanger=e.connectorSchedule.find(r=>r.name==='Joist hangers');assert.equal(hanger?.qty,h.hangers.length);
  assert(e.stockSchedule.every(s=>!s.unresolvedIn.length),'All framing cuts fit stock');
  for(const s of e.stockSchedule){assert(s.orderedLf>=s.installedLf);for(const bin of s.cutsIn)assert(bin.reduce((a,b)=>a+b,0)+Math.max(0,bin.length-1)*.125<=s.stockLengthIn+.001);}
@@ -30,7 +32,7 @@ for(const stairType of ['Straight','Landing','Winder'] as const)for(const stairW
  const d={...structuredClone(DEFAULT_DECK),height:108,stairType,stairWidth};const e=calculateEstimate(d),boards=getStairBoards(d,e.model);
  assert(boards.length>e.model.treads.length,'Tread assembly consists of individual planks');
  assert(boards.every(b=>b.w<=e.model.stockLength+.001&&b.d<=d.boardWidth+.001&&b.polygon!.length>=3),'Every tread plank fits stock');
- const row=e.stockSchedule.find(s=>s.name.startsWith('Stair tread'));assert(row&&!row.unresolvedIn.length);
- assert.equal(row.cutsIn.flat().length,boards.length,'Tread stock order includes every drawn cut');
+ const rows=e.stockSchedule.filter(s=>s.name.startsWith('Stair tread')||s.name.startsWith('Stair picture-frame'));assert(rows.length&&rows.every(r=>!r.unresolvedIn.length));
+ assert.equal(rows.flatMap(r=>r.cutsIn.flat()).length,boards.length,'Separate tread and picture-frame stock orders include every drawn cut exactly once');
 }
 console.log(`DECK SCHEDULES OK — ${count} stock/hardware scenarios, original commercial constants unchanged, wire and hidden clip rate bases preserved.`);

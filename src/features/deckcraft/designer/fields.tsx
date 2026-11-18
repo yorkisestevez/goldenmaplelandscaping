@@ -10,6 +10,15 @@ export class ViewerBoundary extends Component<{children:ReactNode;fallback:React
   static getDerivedStateFromError(){return {failed:true};}
   render(){return this.state.failed ? this.props.fallback : this.props.children;}
 }
+/** Catches a failed lazy plan editor chunk (stale deploy hash) and offers a reload without blanking the drawing. */
+export class PlanEditorBoundary extends Component<{children:ReactNode;onRetry?:()=>void},{failed:boolean;nonce:number}> {
+  state={failed:false,nonce:0};
+  static getDerivedStateFromError(){return {failed:true};}
+  render(){
+    if(!this.state.failed)return <div key={this.state.nonce}>{this.props.children}</div>;
+    return <div className="dd-quote-notice" role="alert"><strong>The outline editor could not load.</strong><p>A newer drawing update may still be downloading. Try again, or refresh the page.</p><button type="button" className="dd-secondary" onClick={()=>{this.props.onRetry?.();this.setState(s=>({failed:false,nonce:s.nonce+1}));}}>Try again</button></div>;
+  }
+}
 export function Field({label,children,hint,after}:{label:string;children:ReactNode;hint?:string;after?:ReactNode}){
   return <label className="dd-field"><span>{label}</span>{children}{hint && <small>{hint}</small>}{after}</label>;
 }
@@ -19,16 +28,14 @@ export function MaterialSwatch({file,alt}:{file?:string;alt:string}){
   const url=swatchUrl(file);const [failedUrl,setFailedUrl]=useState('');
   return url&&failedUrl!==url?<img src={url} alt={alt} onError={()=>setFailedUrl(url)}/>:<span className="dd-swatch-unavailable" role="img" aria-label={`${alt}: manufacturer sample unavailable`}>Manufacturer sample unavailable</span>;
 }
-export function NumberField({label,value,min,max,unit,increment,hint,onValue,disabled}:{label:string;value:number;min:number;max:number;unit:string;increment:number;hint?:string;onValue:(n:number)=>void;disabled?:boolean}){
-  const [draft,setDraft]=useState(String(value));
+export function NumberField({label,value,min,max,unit,increment,hint,onValue,disabled,displayDecimals}:{label:string;value:number;min:number;max:number;unit:string;increment:number;hint?:string;onValue:(n:number)=>void;disabled?:boolean;displayDecimals?:number}){
+  const display=(n:number)=>displayDecimals===undefined?String(n):String(Number(n.toFixed(displayDecimals)));
+  const [draft,setDraft]=useState(()=>display(value));
   const pending=useRef<ReturnType<typeof setTimeout>|undefined>(undefined);
   useEffect(()=>()=>clearTimeout(pending.current),[]);
-  useEffect(()=>setDraft(String(value)),[value]);
-  const commit=()=>{clearTimeout(pending.current);const n=Number(draft);if(draft.trim()===''||!Number.isFinite(n)){setDraft(String(value));return;}const next=Math.min(max,Math.max(min,n));setDraft(String(next));onValue(next);};
+  useEffect(()=>setDraft(display(value)),[value,displayDecimals]);
+  const commit=()=>{clearTimeout(pending.current);if(displayDecimals!==undefined&&draft===display(value))return;const n=Number(draft);if(draft.trim()===''||!Number.isFinite(n)){setDraft(display(value));return;}const next=Math.min(max,Math.max(min,n));setDraft(display(next));onValue(next);};
   return <Field label={label} hint={hint}><span className="dd-number"><input aria-label={label} type="number" inputMode="decimal" min={min} max={max} step={increment} value={draft} disabled={disabled} onChange={e=>{clearTimeout(pending.current);setDraft(e.target.value);const n=Number(e.target.value);if(e.target.value!==''&&Number.isFinite(n)&&n>=min&&n<=max)pending.current=setTimeout(()=>onValue(n),150);}} onBlur={commit} onKeyDown={e=>{if(e.key==='Enter')e.currentTarget.blur();}}/><span>{unit}</span></span></Field>;
-}
-export function downloadFile(body:BlobPart,type:string,name:string){
-  const url=URL.createObjectURL(new Blob([body],{type}));const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
 /** The number, select and checkbox controls bound to one design field, with the same markup on every step. */

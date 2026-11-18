@@ -1,3 +1,4 @@
+import {ensureLiveDesignExtensions} from "../src/features/deckcraft/designExtensions";
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {existsSync,readFileSync,writeFileSync} from 'node:fs';
@@ -18,7 +19,7 @@ import {activeWrap,edgeNameOf} from '../src/features/deckcraft/lib/wrapGeometry'
 import {activeCornerChamfers,angledStairAllowed,angledStairFits,isChamferEdgeId} from '../src/features/deckcraft/lib/cornerChamfers';
 import {PLAN_TOOLS} from '../src/features/deckcraft/designer/constants';
 import {beginEdgeDrag,edgeLimit,edgeMove,edgeName,edgeSliders,endEdgeDrag,listKeyDelta,moveEdgeDrag,presetPatch,REFUSED,sliderKey} from '../src/features/deckcraft/designer/outlineEditMath';
-import {chooseShape,setWingSize,splitLevel} from '../src/features/deckcraft/designer/deckShapeActions';
+import {chooseShape,drawOwnOutline,setWingSize,splitLevel} from '../src/features/deckcraft/designer/deckShapeActions';
 import {beginGesture,clampFt,describeSlide,endGesture,ghostShift,handlePatch,houseHandles,keyValue,moveGesture,planGhost,planHandles,planShortcut,primaryStair,shapeHandles,stairHandle,stairTargets,type PlanHandleId} from '../src/features/deckcraft/designer/planEditMath';
 import {HOUSE_CASES} from './deck-house-finishes-cases';
 import type {DeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
@@ -74,6 +75,7 @@ export function planSheetCases():Record<string,{data:DeckData;withData:boolean;w
 }
 
 type Built={name:string;data:DeckData;model:DeckTakeoff;yard?:YardModel;withData:boolean};
+for(const c of Object.values(planSheetCases()))await ensureLiveDesignExtensions(c.data);
 const built:Built[]=Object.entries(planSheetCases()).map(([name,c])=>{
   const data=deckReleaseData(c.data),estimate=calculateDeckReleaseEstimate(data);
   return {name,data,model:estimate.model as DeckTakeoff,yard:c.withYard?estimate.yardModel as YardModel:undefined,withData:c.withData};
@@ -84,12 +86,23 @@ const site=(c:Built)=>renderToStaticMarkup(createElement(ConstructionPlan,{model
 const count=(text:string,part:string)=>text.split(part).length-1;
 const viewBoxOf=(svg:string)=>/^<svg viewBox="([^"]+)"/.exec(svg)?.[1];
 
+// Independent semantic guards stay active even when an approved visual baseline changes.
+for(const c of built){
+ const svg=contractor(c);ok(svg.indexOf("aria-label=\"Deck and stair elevations\"")>svg.lastIndexOf("fill=\"#ddccb1\""),c.name+": elevation labels render above all stair tread fills");const bounds=viewBoxOf(svg)?.split(' ').map(Number)??[];
+ ok(!/NaN|Infinity|undefined/.test(svg),c.name+': exported SVG contains no invalid values');
+ ok(bounds.length===4&&bounds.every(Number.isFinite)&&bounds[2]>0&&bounds[3]>0,c.name+': positive finite export frame');
+ ok(c.model.quantities.area>0,c.name+': positive measured area');
+ ok(c.model.quantities.stairTreads===c.model.treads.length,c.name+': stair quantity agrees with drawn tread count');
+ ok(c.model.quantities.railingPosts===c.model.railing.posts.length,c.name+': rail post schedule agrees with modeled posts');
+ ok(c.model.levels.every(l=>l.kind!=='deck'||l.boards.length>0),c.name+': every deck level retains boards');
+}
+
 // 1. The contractor plan, byte for byte.
 {
   const current=Object.fromEntries(built.map(c=>{const markup=contractor(c);return [c.name,{sha256:digest(markup),bytes:Buffer.byteLength(markup)}];}));
   if(update||!existsSync(GOLDEN)){
     assert(update,'deck-plan-sheet-golden.json is missing: it was captured from the contractor plan before R4 and must not be regenerated silently.');
-    const note='ConstructionPlan default (contractor) markup, captured from bd5fd89 before R4 added the site variant. Regenerate only for an owner-approved change to the contractor plan.';
+    const note='ConstructionPlan default (contractor) markup. Reviewed 2026-10-04 after the owner-requested picture-frame default, stock-length seam policy and railing termination, 2026-10-06 after the owner-approved inside-corner fix (new designs seat railing posts on the boards; designs saved before the 2026-10 rules keep their drawings), 2026-10-07 after wrap-around boards were set to keep one direction across the front and turn beside the house (legacy saves keep the corner-to-corner hip), 2026-10-08 after new designs anchor wrap field rows on the outer edge and drop hairline rips, and 2026-10-09 after new designs (2026-10-struct) size beams apart from the joist depth, size concrete piers for tributary load, and price ledger flashing on an attached ledger. Designs saved before those rules keep their drawings. Regenerate only for an owner-approved change to the contractor plan.';
     writeFileSync(GOLDEN,JSON.stringify({note,cases:current},null,1)+'\n');console.log('Plan sheet golden written.');
   }
   const golden=JSON.parse(readFileSync(GOLDEN,'utf8')) as {cases:typeof current};
@@ -192,7 +205,10 @@ for(const c of built){
   // The shape shortcuts are the Deck section's actions.
   ok(JSON.stringify(planShortcut(d0,'L-Shape').patch)===JSON.stringify(chooseShape(d0,'L-Shape'))&&planShortcut(d0,'L-Shape').status.startsWith('Now an L-shape.'),'L-shape is chooseShape');
   ok(planShortcut(d0,'Rectangle').patch===null,'The shape already chosen changes nothing');
-  const custom=planShortcut(d0,'Custom');ok(JSON.stringify(custom.patch)===JSON.stringify(chooseShape(d0,'Custom'))&&custom.tool==='outline',"Draw my own starts an outline and takes the plan's Draw outline tool");
+  const custom=planShortcut(d0,'Custom');ok(JSON.stringify(custom.patch)===JSON.stringify(drawOwnOutline(d0))&&custom.tool==='outline'&&!!custom.patch?.deckOutlines?.main&&custom.patch.customFront===undefined,"Draw my own seeds free points from the deck and takes the plan's Draw outline tool");
+  const lOwn=planShortcut(deckReleaseData({...base(),shape:'L-Shape',width:24,length:16,cutoutWidth:8,cutoutLength:6}),'Custom');
+  ok(!!lOwn.patch?.deckOutlines?.main&&lOwn.patch.deckOutlines.main.length>=6&&lOwn.patch.customFront===undefined&&!lOwn.patch.wrap,'Draw my own keeps an L-shape as editable free points');
+  ok(!!chooseShape(d0,'Custom').customFront&&!chooseShape(d0,'Custom').deckOutlines?.main,'The Deck shape menu Custom outline stays a constrained front');
   ok(JSON.stringify(planShortcut(d0,'split').patch)===JSON.stringify(splitLevel(d0))&&JSON.stringify(planShortcut({...d0,levels:2},'split').patch)==='{"levels":1}','Split level is splitLevel, and pressed again goes back to one level');
   const wl=planShortcut(d0,'wrap-left');ok(!!wl.patch?.wrap?.left&&!wl.patch.wrap.right&&wl.status==='Wrapped round the left house corner.',`Wrap left adds the left wing (${wl.status})`);
   const fixedUp=planShortcut(deckReleaseData({...base(),pattern:'Diagonal',shape:'L-Shape'}),'wrap-both');
@@ -209,8 +225,9 @@ for(const c of built){
   const panel=read('src/features/deckcraft/designer/PreviewPanel.tsx'),page=read('src/pages/DeckDesigner.tsx'),editor=read('src/features/deckcraft/designer/PlanEditor.tsx'),css=read('src/pages/DeckDesigner.css');
   ok(page.includes("useState<PreviewMode>('plan')"),'The page opens on the site plan');
   ok(panel.includes("export const loadPlanEditor=()=>import('./PlanEditor');")&&panel.includes('const PlanEditor=lazy(loadPlanEditor);')&&![panel,page].some(t=>/from '[./]*(designer\/)?PlanEditor'/.test(t)),'The plan editor is loaded on demand, never with the page');
-  ok(panel.includes(`<ConstructionPlan model={estimate.model} data={data} variant="site" wholeHouse={tool==='house'}/>`)&&panel.includes('framingPlan=<ConstructionPlan model={estimate.model} data={data}/>'),'The Plan tab draws the site plan and the Framing tab the contractor plan');
-  ok(panel.includes("const show3d=mounted&&hasWebGL&&mode!=='plan'&&mode!=='drawing';")&&page.includes("desktopOnly=window.matchMedia?.('(min-width: 761px) and (pointer: fine)').matches?[loadViewer]:[];")&&page.includes(',...desktopOnly])load()'),'The 3D viewer loads for a 3D view, and ahead of time on a desktop only');
+  ok(panel.includes(`<ConstructionPlan model={displayEstimate.model} data={displayData} yard={displayEstimate.yardModel} variant="site" wholeHouse={tool==='house'}/>`)&&panel.includes('framingPlan=<ConstructionPlan model={estimate.model} data={data}/>'),'The Plan tab draws the site plan and the Framing tab the contractor plan');
+  const prefetch=/export function prefetchViewer\(\)\{[\s\S]*?\n\}/.exec(read('src/features/deckcraft/designer/previewLoaders.ts'))?.[0]??'';
+  ok(panel.includes("const show3d=mounted&&hasWebGL&&mode!=='plan'&&mode!=='drawing';")&&read('src/features/deckcraft/designer/previewLoaders.ts').includes("export const desktopViewer=()=>typeof window!=='undefined'&&!(navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData&&!!window.matchMedia?.('(min-width: 761px) and (pointer: fine)').matches;")&&prefetch.includes('if(desktopViewer())void loadViewer()')&&/export const partsReady=[^\n]*\.then\(\(\)=>prefetchViewer\(\)\);/.test(panel)&&page.split('loadViewer()').length===2&&page.includes("phoneLayout()||!desktopViewer())return;"),'The 3D viewer loads for a 3D view, and ahead of time on a desktop only (which opens in 3D once it has)');
   ok(read('src/features/deckcraft/pdfAssets.ts').includes('createElement(ConstructionPlan,{model,data})')&&read('src/features/deckcraft/ProposalSheet.tsx').includes('<ConstructionPlan model={estimate.model} data={data}/>'),'The PDF and the printable proposal draw the contractor plan');
   // One commit per gesture: a pointer move only moves the ghost; the design changes when the drag ends.
   const move=/const onPointerMove=[\s\S]*?\n {2}\};/.exec(editor)?.[0]??'';
@@ -275,7 +292,7 @@ const r5={outline:0,stairs:0,house:0,shape:0};
   const rect=deckReleaseData(base()),T=deckReleaseData({...base(),width:20,length:14,shape:'Custom',customFront:outlinePreset('t',20,14)!});
   for(const p of OUTLINE_PRESETS){
     ok(same(presetPatch(T,p.id),outlinePreset(p.id,20,14)?{customFront:outlinePreset(p.id,20,14)}:null),`${p.name}: on an outline, the preset sized to it`);
-    const want=outlinePreset(p.id,16,12);ok(same(presetPatch(rect,p.id),want?{...chooseShape(rect,'Custom'),customFront:want}:null),`${p.name}: on a rectangle, the outline shape and the preset`);
+    const want=outlinePreset(p.id,16,12);ok(same(presetPatch(rect,p.id),want?{shape:'Custom',levels:1,customFront:want}:null),`${p.name}: on a rectangle, the outline shape and the preset`);
   }
   const read=(p:string)=>readFileSync(new URL(`../${p}`,import.meta.url),'utf8');
   const hook=read('src/features/deckcraft/designer/useOutlineEdit.ts'),outlineUi=read('src/features/deckcraft/designer/OutlineEditor.tsx'),editor=read('src/features/deckcraft/designer/PlanEditor.tsx');
@@ -337,7 +354,7 @@ const r5={outline:0,stairs:0,house:0,shape:0};
     slid++;
   }
   ok(checkedTargets>=40&&slid>=10,`Stair marks checked against the model (${checkedTargets}) and handles slid (${slid})`);
-  ok(pageSource.includes('tool={planTool} setTool={setPlanTool} stairEdges={stairEdges}')&&read('src/features/deckcraft/designer/PreviewPanel.tsx').includes('tool={tool} stairEdges={stairEdges}')&&editor.includes('stairTargets(data,model,stairEdges)'),'The Stairs tool is handed the page\'s own stair edges');
+  ok(/tool=\{planTool\} setTool=\{setPlanTool\}[^\n]*stairEdges=\{stairEdges\}/.test(pageSource)&&read('src/features/deckcraft/designer/PreviewPanel.tsx').includes('tool={tool} stairEdges={stairEdges}')&&editor.includes('stairTargets(data,model,stairEdges)'),'The Stairs tool is handed the page\'s own stair edges');
 
   // 6c. House: the wall ends, 12–100 ft, the House field's own change with its openings clamped, the other end kept.
   const houseCases:Record<string,DeckData>={
@@ -404,10 +421,10 @@ const r5={outline:0,stairs:0,house:0,shape:0};
 {
   const read=(p:string)=>readFileSync(new URL(`../${p}`,import.meta.url),'utf8');
   const panel=read('src/features/deckcraft/designer/PreviewPanel.tsx'),page=read('src/pages/DeckDesigner.tsx'),editor=read('src/features/deckcraft/designer/PlanEditor.tsx'),css=read('src/pages/DeckDesigner.css');
-  ok(PLAN_TOOLS.map(t=>t[1]).join('|')==='Size & place|Draw outline|Stairs|House'&&panel.includes('role="radiogroup" aria-label="Plan tools"')&&panel.includes('role="radio" aria-checked={tool===id}'),'The plan has one tool at a time: Size & place, Draw outline, Stairs, House');
-  ok(page.includes("const [planTool,setPlanTool]=useState<PlanTool>('size');"),'The plan opens with Size & place');
-  const custom=planShortcut(deckReleaseData(base()),'Custom');ok(custom.tool==='outline'&&panel.includes('if(r.tool)setTool(r.tool);')&&!panel.includes('onOpenDeck'),'Draw my own switches to the Draw outline tool');
-  ok(panel.includes(`variant="site" wholeHouse={tool==='house'}/>`)&&editor.includes("planFrame(model,{data,variant:'site',wholeHouse:tool==='house'})"),'The House tool draws the whole house, on the plan and under its editor alike');
+  ok(PLAN_TOOLS.map(t=>t[1]).join('|')==='Select parts|Shape & points|Board layout|Inlays|Rails & screens|Patios & walls|Landscape areas|Size & place|Stairs|House'&&read('src/features/deckcraft/designer/PlanToolPicker.tsx').includes('role="radiogroup" aria-label="Plan tools"')&&read('src/features/deckcraft/designer/PlanToolPicker.tsx').includes('role="radio" aria-checked={tool===id}'),'The plan has one tool at a time, including independently placed inlays and rail and screen sections');
+  ok(page.includes("const [planTool,setPlanTool]=useState<PlanTool>('size');")&&page.includes("if(data.shape==='Custom')setPlanTool(t=>t==='size'?'outline':t)"),'The plan opens with size controls and switches custom shapes to point editing');
+  const custom=planShortcut(deckReleaseData(base()),'Custom');ok(custom.tool==='outline'&&panel.includes('setTool(r.tool)')&&panel.includes('loadPlanBoundaryEditor')&&!panel.includes('onOpenDeck'),'Draw my own switches to the Draw outline tool and preloads its editor');
+  ok(panel.includes(`variant="site" wholeHouse={tool==='house'}/>`)&&editor.includes("planFrame(model,{data,yard,variant:'site',wholeHouse:tool==='house'})"),'The House tool draws the whole house, on the plan and under its editor alike');
   for(const c of built.filter(b=>b.withData&&b.data.houseVisible!==false)){
     const whole=renderToStaticMarkup(createElement(ConstructionPlan,{model:c.model,data:c.data,variant:'site',wholeHouse:true})),f=planFrame(c.model,{data:c.data,variant:'site',wholeHouse:true}),hp=getHousePlacement(c.data);
     ok(viewBoxOf(whole)===f.viewBox&&f.left<=hp.x0+.001&&f.right>=hp.x1-.001&&!/M-?[\d.]+ -?[\d.]+V-?[\d.]+l-7 3l14 6l-7 3V0/.test(whole),`${c.name}: the House tool shows both house wall ends, with no side break lines`);
@@ -420,6 +437,9 @@ const r5={outline:0,stairs:0,house:0,shape:0};
   ok(!/===\s*'Back'|Math\.abs\([\w.]*\.y\)\s*<|\.y\s*<\s*\.5|isContactEdge|exposedSides\(/.test(overlay),'The plan tools never test the house line or a Back edge themselves (houseContact.ts decides)');
   ok(css.split('touch-action:none').length===2&&/\.dd-plan-handle\{[^}]*touch-action:none/.test(css)&&!/\.dd-outline-plan[^{]*\{[^}]*touch-action:none/.test(css),'Only the handles keep the pointer; the outline lines and the rest of the plan let a phone scroll');
   ok(/\.dd-plan-tools button\{min-height:44px/.test(css)&&/\.dd-plan-target\{[^}]*width:44px;height:44px/.test(css),'The tools and the stair marks are 44 px targets');
+  // The workspace's last word on the strip: columns made as needed, never a fixed count that a new tool wraps past.
+  const strip=[...read('src/features/deckcraft/designer/workspace.css').matchAll(/\.deck-designer \.dd-plan-tools\{([^}]*)\}/g)].pop()?.[1]??'';
+  ok(/grid-template-columns:none/.test(strip)&&/grid-auto-flow:column/.test(strip)&&/grid-auto-columns:minmax\((4[4-9]|[5-9]\d)px,1fr\)/.test(strip)&&/overflow-x:auto/.test(strip),`The ${PLAN_TOOLS.length} plan tools take one row whatever their number, at least 44 px each, scrolling sideways where they cannot fit`);
 }
 console.log(`R5 plan tools: ${r5.outline} outline moves, ${r5.stairs} stair marks, ${r5.house} house widths, ${r5.shape} wing and corner handles checked.`);
 

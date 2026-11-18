@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {calculateDeckReleaseEstimate as calculate} from '../src/features/deckcraft/deckRelease';
+import {CustomerOptionSheet} from '../src/features/deckcraft/designer/CustomerOptionPresentation';
+import {customerComparisonDocument} from '../src/features/deckcraft/designer/customerComparisonDocument';
+const data={...structuredClone(DEFAULT_DECK),customerName:'PRIVATE_CUSTOMER',projectAddress:'PRIVATE_ADDRESS',materialMarkup:47},estimate=calculate(data);
+const html=customerComparisonDocument(renderToStaticMarkup(createElement(CustomerOptionSheet,{left:{name:'Essential <script>alert(1)</script>',data,estimate},right:{name:'Premium',data,estimate}})));
+assert(html.includes('<svg'));assert(html.includes('Planning allowances'));assert(html.includes('CAD including HST'));assert(html.includes('Additional scope to confirm'));assert(html.includes('&lt;script&gt;'));assert(!html.includes('<script>'));
+for(const privateValue of ['PRIVATE_CUSTOMER','PRIVATE_ADDRESS','materialMarkup','quoteResolutions','47%'])assert(!html.includes(privateValue));
+assert(html.includes('Content-Security-Policy'));assert(html.includes('print'));assert(html.includes('default-src'));console.log('Customer comparison: real plans, scope, price basis, escaped labels and private-field exclusion passed.');

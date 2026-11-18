@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {existsSync,readFileSync,readdirSync} from 'node:fs';
 import {gzipSync} from 'node:zlib';
+import {initSync,parse} from 'es-module-lexer';
+import {basename} from 'node:path';
 
 /**
  * Deck designer bundle budget, checked against the production build (runs in postbuild).
@@ -30,14 +32,97 @@ import {gzipSync} from 'node:zlib';
  * - The board atlases (Real Life G2, 2026-09-25) are built in a worker of their own, about 2.4 KB gzip, fetched with
  *   the 3D view.
  */
-const BUDGET_KB={routeInitial:185,routeCss:12,viewer:340,pdf:150,deltaWorker:140,swatchWorker:5};
+// September 26 local review: user-requested drainage/ceiling/ground/mesh costing,
+// edge-light takeoff and house-opening clash checks run with the first estimate.
+// Measured route 195.0 KB and pricing worker 141.4 KB; retain about 10 KB headroom.
+// UnderDeckEditor remains an on-demand chunk (1.7 KB), as do proposal and viewer.
+// September 26 board editing: the requested physical polygon layout, strict import validation
+// and full-stock costing add about 7 KB to the first estimate (208.5 KB measured).
+// Restored/shared layouts need this synchronous model path. The 4 KB BoardLayoutEditor,
+// its styles and agent command controls remain lazy; retain a bounded 215 KB route budget.
+// September 26 section editing: saved rail ranges and exact-edge screens must be
+// priced and drawn by the synchronous model on load. Measured overhead is 2.62 KB
+// route JS and 1.78 KB worker gzip (about 1.2% each). Bound that added model path
+// at 218/153 KB; keep the entire new interaction, action and CSS pack lazy and
+// independently bounded to 12 KB. Existing CSS/viewer/PDF/tool caps stay intact.
+// September 27 landscape editing: restored/shared supplier selections must validate
+// against the same documented units in the page and pricing worker. The compact
+// 193-family engineering index and polygon/open-path earthworks add ~28 KB gzip.
+// Full product prose, photos and pattern references stay in a fetched JSON library;
+// the picker and yard/sketch interactions remain independently lazy and bounded.
+// Bound route/worker at250/185 KB including source swatch references and recipes;
+// two additional sketch kinds raise the optional sketch pack from25 to27 KB.
+// September 27 stock/elevation correction adds ~1 KB to the shared geometry
+// path (full wall courses, separate joint pitch and strict wall datum). The
+// elevation UI stays lazy. Bound this measured change at 252/186 KB; other caps stay.
+// September 27 original stock outlines: restored shaped-unit selections need
+// the same contours and compatible bonds in the synchronous model/validator.
+// Drawing-derived profiles and layouts add ~3 KB gzip. Product photos, guide
+// lists and the shape preview remain lazy.
+// September 27: source-backed multi-size recipes and physical patio inlays participate
+// in saved-design validation and the initial takeoff. Keep their controls, photos and
+// library lazy; bound the shared route/pricing model at270/205 KB for this feature set.
+// September 28 (A2): the permit set adds the elevations (hidden-line removal over the export solids) and the typical
+// section, 18.0 KB gzip with its PDF renderer, still loaded only when the dialog opens. Bound it at 20 KB.
+// September 28 (A2, S-5): six typical details drawn from the design add 4.7 KB (22.7 KB), still lazy. Bound it at 25 KB.
+// September 28 (A2, A-0): the site plan and the lot editor add 5.4 KB (28.1 KB), still lazy. Bound it at 30 KB.
+// September 28 (A2, S-6): the schedules add 3.1 KB (31.2 KB), still lazy. Bound it at 35 KB.
+// October 4 (Pro workspace, Phase 1): the route reads the Designer Mode flag and hands its own functions to the lazy Pro
+// menu bar and ribbon, 0.44 KB (269.7 → 270.1 KB); every Pro component and stylesheet stays lazy. The owner approved
+// raising the route budget to 271 KB.
+// October 5 (Ground fit G1-G2): skirting runs to the measured ground, patios take a ground fit, and graded banks are
+// priced (bank geometry stays in the lazy site engine): route 270.2 -> 271.0 KB, option-deltas worker 204.8 -> 205.8 KB.
+// Raised to 272/207 KB on the owner's go-ahead for the Ground fit round (confirm at review).
+// October 8 (HD hardware + G-Tape + 6×6 posts): connector schedule and post stock notes pull more into the
+// eager estimate graph — route 272 → 274.5 KB gzip. Raised to 276 KB for that hardware-rates round.
+// Same round: option-deltas worker graph 207 → 210.1 KB gzip. Raised to 212 KB.
+// October 8 (stair cladding / picture-frame / fascia finish): priced finish helpers ride with the estimate
+// graph into the option-deltas worker — 210.1 → 210.9 KB gzip; stays within 212 KB.
+// October 13: the structural review (#141: guard, beam, footing, snow, post and ledger checks, with their messages)
+// rides with the first estimate: route 273.8 → 278.0 KB and option-deltas worker graph 209.7 → 212.7 KB, both over.
+// Budgets unchanged. Three things left the eager graphs instead: the section field controls and every swatch image
+// (the page imported one download helper from designer/fields.tsx), the house-opening presets (saved-design
+// validation needs only the two style lists) and, in the worker, the business register (the estimate engine needs
+// only a location's delivery zone). Measured route 274.3 KB, worker 211.0 KB.
+// October 15 (showcase estate, PR 146): path lights kept off paving, pergola posts outside the beams and the
+// freestanding-deck framing price inside the estimate graph — option-deltas worker 211.0 → 212.2 KB gzip.
+// Raised to 213 KB with the owner's approval; the showcase scene itself stays out of the worker.
+// October 20 (guillotined armour stone walls): the product entry, its saved-design validation, course height and
+// priced stone row ride with the first estimate — route 275.7 → 276.2 KB, worker 212.4 → 212.6 KB. Raised to 277 KB
+// with the owner's approval; the editor, the random-length laying and the stone pricing stay lazy.
+// October 21 (guillotined stones look real): the split-stone geometry is a chunk of its own, fetched by the 3D view only
+// for a design with a guillotined wall, so the viewer stays within its budget (338.9 KB). The chunk measured 5.8 KB with its
+// joints, crease normals and per-stone cache; bound it at 6.5 KB.
+// October 31 (picture-frame overhang follows the board, PR 209): the board's overhang limit and the finished-fascia
+// offset ride with the first estimate — option-deltas worker 213.0 KB gzip, 15 bytes over. Raised to 213.5 KB with the
+// owner's approval.
+// November 2 (open stringer stairs, skirting behind them and the paver pad at the stair foot): the stair cladding,
+// skirting run and pad price ride with the first estimate — option-deltas worker 214.1 KB gzip. Raised to 214.5 KB with
+// the owner's approval; the pad's pavers and their renderer are a chunk of their own, so the viewer stays within 340 KB.
+// October 20: the supplier hardscape catalogue (hardscapeCatalogue.ts: the September 27 engineering index and the wall
+// caps, about 39 KB gzip) loads with a design's yard features (designExtensions.ts), before they are validated or
+// priced, instead of with the page: a plain deck, the first paint, never reads it (hardscapeLookup.ts). Route
+// 275.7 -> 237.0 KB, option-deltas worker graph 212.4 -> 173.6 KB; budgets unchanged.
+const BUDGET_KB={routeInitial:277,routeCss:12,viewer:340,pdf:150,deltaWorker:214.5,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35,splitStone:6.5};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);
 const gz=(file:string)=>gzipSync(readFileSync(new URL(file,assets))).length/1024;
+initSync();
+// Module workers may share their engine across chunks. Count the entire eager graph, not just the tiny entry.
+const workerGraph=(entry:string)=>{const seen=new Set<string>();const visit=(file:string)=>{if(seen.has(file))return;seen.add(file);for(const i of parse(readFileSync(new URL(file,assets),'utf8'))[0])if(i.d===-1&&i.n){assert(i.n.startsWith('.')||i.n.startsWith('/assets/'),'Worker imports must stay in the local build');visit(basename(i.n));}};visit(entry);return [...seen];};
 const manifestFile=files.find(f=>/^manifest-.*\.js$/.test(f));
 assert(manifestFile,'The React Router manifest is missing from the build.');
 const manifest=JSON.parse(readFileSync(new URL(manifestFile,assets),'utf8').replace(/^window\.__reactRouterManifest=/,'').replace(/;\s*$/,'')) as {entry:{module:string;imports:string[]};routes:Record<string,{module:string;imports?:string[];css?:string[]}>};
+// The live site is built without the designer (GM_DECKCRAFT_ROUTE=off in netlify.toml, src/routes.ts; owner decision
+// 2026-11-11: the 3D designer is the owner's private tool). That build has no designer budget to check, only that none of
+// the designer shipped.
+if(process.env.GM_DECKCRAFT_ROUTE==='off'){
+  const leaked=[...Object.values(manifest.routes).map(r=>r.module).filter(m=>/\/DeckDesigner-[^/]+\.js$/.test(m)),...files.filter(f=>/^(DeckDesigner|Deck3DViewer)-/.test(f))];
+  assert.deepEqual(leaked,[],'The deck designer is left out of this build (GM_DECKCRAFT_ROUTE=off), yet some of it shipped');
+  console.log('DECK BUNDLE OK — the deck designer is not in this build (GM_DECKCRAFT_ROUTE=off).');
+  process.exit(0);
+}
 const route=Object.values(manifest.routes).find(r=>/\/DeckDesigner-[^/]+\.js$/.test(r.module));
 assert(route,'The deck designer route is in the manifest.');
 const shared=new Set([manifest.entry.module,...manifest.entry.imports,manifest.routes.root.module,...(manifest.routes.root.imports??[])]);
@@ -51,20 +136,80 @@ const css=(route.css??[]).filter(f=>!sharedCss.has(f)).map(f=>f.replace(/^\/asse
 const cssKB=css.reduce((n,f)=>n+gz(f),0);
 ok(css.length>0,'The deck designer route has a stylesheet of its own');
 ok(cssKB<=BUDGET_KB.routeCss,`Deck designer route CSS is ${cssKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.routeCss} KB): ${css.join(', ')}`);
-for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^ProposalDialog-/,/^proposalPdf-/,/^pdfAssets-/,/^proposalModel-/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/,/^optionDeltas-/,/^useOptionDeltas-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
+// October 16 (first paint): the prerendered drawing is placed and sized by the route's own stylesheet (the tools ribbon,
+// the Project controls button, the plan's frame and zoom bar) and each lazy piece of it is preloaded before hydration
+// (designer/hydrationLazy.ts). React streams those pieces as Suspense boundaries; a new one must join the preload list
+// (DeckDesigner.tsx piecesReady, PreviewPanel.tsx partsReady) or it is thrown away and redrawn on a slow load.
+// October 21 (P1, four tabs): the homeowner's tab strip took the Project controls button's place, which only Designer Mode
+// shows now; the tab panel is its own chunk, loaded when a tab first opens it.
+// November 2 (S5c): the page is prerendered in the new look, whose top bar, rail and price pill are three more preloaded
+// pieces; its file menu's project tools (closed until opened) mount once the page is running.
+{
+  const routeCss=css.map(f=>readFileSync(new URL(f,assets),'utf8')).join('\n');
+  ok(routeCss.includes('.dd-ribbon-tabs{')&&routeCss.includes('.dd-simple-tools{')&&routeCss.includes('.dd-plan-navigation{'),"The four tabs, the tools ribbon and the plan's zoom bar are styled by the route's stylesheet");
+  ok(!files.some(f=>/^PlanToolPicker-.*\.css$/.test(f)),'The tools ribbon has no stylesheet of its own to land after the first paint');
+  const streamed=readFileSync(new URL('../deck-designer/index.html',assets),'utf8').match(/\$RC\("B:\d+"/g)?.length??0;
+  ok(streamed===9,`The prerendered designer streams ${streamed} Suspense boundaries; 9 expected (the new look's top bar, rail and price pill, the drawing, the Project controls, the tools, the plan, and React Router's two data handoffs; the group panel opens after the page). Preload any new one before hydration, then update this count.`);
+}
+for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^ProposalDialog-/,/^proposalPdf-/,/^pdfAssets-/,/^proposalModel-/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/,/^optionDeltas-/,/^useOptionDeltas-/,/^splitFaceStone-/,/^HomePanel-/,/^hardscapeCatalogue-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
 // Each section body, and the site plan's editor, is a chunk of its own (one merged into the route would pass the test
 // above unseen).
-for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep','SiteExtrasStep','BackyardStep','EstimateStep','PlanEditor','optionDeltas','useOptionDeltas','ProposalDialog','proposalPdf'])ok(files.some(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')),`${body} is its own chunk`);
+for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep','SiteExtrasStep','BackyardStep','EstimateStep','PlanEditor','BoardLayoutEditor','HardscapePicker','YardShapeEditor','optionDeltas','useOptionDeltas','ProposalDialog','proposalPdf','HomePanel','hardscapeCatalogue']){
+  ok(files.some(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')),`${body} is its own chunk`);
+  if(body==='BoardLayoutEditor')ok(!initial.some(f=>f.startsWith(`${body}-`)),'Board-layout interaction controls stay outside the first estimate');
+  if(body==='HardscapePicker'||body==='YardShapeEditor'){ok(!initial.some(f=>f.startsWith(`${body}-`)),`${body} stays outside the first estimate`);ok(files.filter(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')).reduce((n,f)=>n+gz(f),0)<=BUDGET_KB.contractorTool,`${body} stays within the optional-tool budget`);}
+}
+// The tools that add a design's first patio or wall apply and price it at once, so each brings the supplier hardscape
+// catalogue with it (hardscapeLookup.ts): the Backyard section, the yard shape editor, sketch mode, the shape tools and
+// the Pro wizards.
+for(const tool of ['BackyardStep','YardShapeEditor','SketchDesigner','DesignerShapePanel','ProWizards']){
+  const chunk=files.find(f=>f.startsWith(`${tool}-`)&&f.endsWith('.js'));
+  ok(chunk&&workerGraph(chunk).some(f=>f.startsWith('hardscapeCatalogue-')),`${tool} brings the supplier hardscape catalogue with it`);
+}
+// The permit drawing set (drawings/) loads only when it is opened, with its PDF renderer loading only for a PDF.
+{
+  const permit=files.filter(f=>/^(PermitSetDialog|renderPdf)-.*\.js$/.test(f)),permitKB=permit.reduce((n,f)=>n+gz(f),0);
+  ok(permit.some(f=>f.startsWith('PermitSetDialog-'))&&permit.some(f=>f.startsWith('renderPdf-')),`The permit set and its PDF renderer are chunks of their own: ${permit.join(', ')}`);
+  ok(!initial.some(f=>/^(PermitSetDialog|renderPdf)-/.test(f)),'The permit set stays outside the first estimate');
+  ok(permitKB<=BUDGET_KB.permitSet,`The permit set is ${permitKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.permitSet} KB): ${permit.join(', ')}`);
+}
 const viewer=files.find(f=>/^Deck3DViewer-.*\.js$/.test(f)),pdf=files.find(f=>/^jspdf.*\.js$/.test(f)),deltaWorker=files.find(f=>/^optionDeltas\.worker-.*\.js$/.test(f));
 ok(viewer&&gz(viewer)<=BUDGET_KB.viewer,`3D viewer chunk is ${viewer?gz(viewer).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.viewer} KB)`);
+const splitStone=files.find(f=>/^splitFaceStone-.*\.js$/.test(f));
+ok(splitStone&&gz(splitStone)<=BUDGET_KB.splitStone,`The guillotined wall's split stones are a chunk of their own, ${splitStone?gz(splitStone).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.splitStone} KB)`);
 // The PDF: jsPDF plus the proposal's builder, its pictures and the model it shares with the dialog, all loaded on demand.
 const builder=files.filter(f=>/^(proposalPdf|pdfAssets|proposalModel)-.*\.js$/.test(f)),pdfKB=(pdf?gz(pdf):Infinity)+builder.reduce((n,f)=>n+gz(f),0);
 ok(builder.some(f=>f.startsWith('proposalPdf-'))&&pdfKB<=BUDGET_KB.pdf,`PDF engine (jsPDF and the proposal builder) is ${pdfKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.pdf} KB): ${[pdf,...builder].join(', ')}`);
 // The proposal's styles come with its dialog, never in the route's stylesheet.
 const proposalCss=files.find(f=>/^ProposalDialog-.*\.css$/.test(f));
 ok(proposalCss&&readFileSync(new URL(proposalCss,assets),'utf8').includes('.dd-proposal-page')&&!css.some(f=>readFileSync(new URL(f,assets),'utf8').includes('.dd-proposal-page')),'The proposal stylesheet loads with its dialog, not with the page');
-ok(deltaWorker&&!initial.includes(deltaWorker)&&gz(deltaWorker)<=BUDGET_KB.deltaWorker,`Option deltas' worker is ${deltaWorker?gz(deltaWorker).toFixed(1):'missing'} KB gzip (budget ${BUDGET_KB.deltaWorker} KB), loaded on demand`);
+const workerFiles=deltaWorker?workerGraph(deltaWorker):[],workerKB=workerFiles.reduce((n,f)=>n+gz(f),0);
+ok(deltaWorker&&!initial.includes(deltaWorker)&&workerKB<=BUDGET_KB.deltaWorker,`Option deltas' full initial worker graph is ${workerKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.deltaWorker} KB), loaded on demand`);
+ok(!workerFiles.some(f=>f.startsWith('hardscapeCatalogue-')),'The option-deltas worker loads the supplier hardscape catalogue with yard features, not with its engine');
 const swatchWorker=files.find(f=>/^swatchMaps\.worker-.*\.js$/.test(f));
 ok(swatchWorker&&!initial.includes(swatchWorker)&&gz(swatchWorker)<=BUDGET_KB.swatchWorker,`Board atlas worker is ${swatchWorker?gz(swatchWorker).toFixed(1):'missing'} KB gzip (budget ${BUDGET_KB.swatchWorker} KB), loaded with the 3D view`);
+const sketchChunks=files.filter(f=>/^(SketchDesigner|sketchToDesign|sketchTypes|sketchGeometry)-.*\.js$/.test(f));
+ok(sketchChunks.some(f=>f.startsWith('SketchDesigner-'))&&sketchChunks.some(f=>f.startsWith('sketchToDesign-')),'Sketch UI and conversion have their own on-demand chunks');
+ok(sketchChunks.every(f=>!initial.includes(f)),'Sketch UI and recognition stay outside the first estimate');
+const sketchKB=sketchChunks.reduce((n,f)=>n+gz(f),0);
+ok(sketchKB<=BUDGET_KB.sketch,`Optional sketch chunks are ${sketchKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.sketch} KB)`);
+// The bidirectional plan adapter is its own lazy tool, separate from stroke recognition.
+// Keep the existing sketch UI/recognition cap; measure this added engine under the same 15 KB tool limit.
+const planSketchChunk=files.find(f=>/^planSketch-.*\.js$/.test(f));
+ok(planSketchChunk&&!initial.includes(planSketchChunk),'The plan/sketch adapter loads only with sketch mode');
+ok(planSketchChunk&&gz(planSketchChunk)<=BUDGET_KB.contractorTool,`Plan/sketch adapter is ${planSketchChunk?gz(planSketchChunk).toFixed(1):'missing'} KB gzip (15 KB optional-tool budget)`);
+for(const tool of ['ContractorPresetDialog','PlanComponentEditor','JobRevisionDialog','NaturalLanguagePanel','EasyEditTools','IssueReviewDialog']){
+  const chunks=files.filter(f=>f.startsWith(`${tool}-`)&&f.endsWith('.js'));
+  ok(chunks.length>0&&chunks.every(f=>!initial.includes(f)),`${tool} controls load on demand`);
+  ok(chunks.reduce((n,f)=>n+gz(f),0)<=BUDGET_KB.contractorTool,`${tool} stays within its 15 KB optional-tool budget`);
+  const styleName=tool==='EasyEditTools'||tool==='IssueReviewDialog'?'easyEditTools':tool;
+  const styles=files.filter(f=>f.startsWith(`${styleName}-`)&&f.endsWith('.css'));
+  ok(styles.length>0&&styles.every(f=>!css.includes(f)),`${tool} styles load with the optional tool`);
+}
+for(const name of ['QuoteReviewPanel','OwnerCostEditor','AssistantTargets','deckAssistantClient','InlayPlanEditor','InlaySketchEditor']){const chunks=files.filter(f=>f.startsWith(name+'-')&&f.endsWith('.js'));ok(chunks.length>0&&chunks.every(f=>!initial.includes(f)),name+' stays outside the initial drawing');ok(chunks.reduce((n,f)=>n+gz(f),0)<=BUDGET_KB.contractorTool,name+' stays within the existing 15 KB optional-tool cap');}
 const headroom=(kb:number,budget:number)=>`${kb.toFixed(1)}/${budget} KB (${(budget-kb).toFixed(1)} KB headroom)`;
-console.log(`DECK BUNDLE OK — route JS ${headroom(routeKB,BUDGET_KB.routeInitial)}, route CSS ${headroom(cssKB,BUDGET_KB.routeCss)}, 3D viewer ${gz(viewer!).toFixed(1)}/${BUDGET_KB.viewer} KB, PDF ${pdfKB.toFixed(1)}/${BUDGET_KB.pdf} KB (jsPDF ${gz(pdf!).toFixed(1)}), delta worker ${gz(deltaWorker!).toFixed(1)}/${BUDGET_KB.deltaWorker} KB gzip, lazy chunks stay lazy; ${checks} checks.`);
+const sectionChunks=files.filter(f=>/^(EdgeSectionEditor|edgeSectionActions)-.*\.(js|css)$/.test(f));
+ok(sectionChunks.some(f=>/^EdgeSectionEditor-.*\.js$/.test(f)),'Railing/screen controls are their own optional chunk');
+ok(sectionChunks.every(f=>!initial.includes(f)&&!css.includes(f)),'Section interaction, actions and styles stay off the initial route');
+ok(sectionChunks.reduce((n,f)=>n+gz(f),0)<=12,'The entire optional section editing pack stays within 12 KB gzip');
+console.log(`DECK BUNDLE OK — route JS ${headroom(routeKB,BUDGET_KB.routeInitial)}, route CSS ${headroom(cssKB,BUDGET_KB.routeCss)}, 3D viewer ${gz(viewer!).toFixed(1)}/${BUDGET_KB.viewer} KB, PDF ${pdfKB.toFixed(1)}/${BUDGET_KB.pdf} KB (jsPDF ${gz(pdf!).toFixed(1)}), delta worker ${workerKB.toFixed(1)}/${BUDGET_KB.deltaWorker} KB gzip, lazy chunks stay lazy; ${checks} checks.`);

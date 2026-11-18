@@ -1,4 +1,5 @@
 import {type DeckData, MATERIAL_TIERS, CREW_DAY_RATES, PERMIT_FEES, DEFAULT_ENGINEERING_FEE, RAILING_COSTS, STAIR_TREAD_COSTS, WASTE_FACTORS} from './types';
+import {CURRENT_BUILD_RULES} from './buildRules';
 export const DEFAULT_DECK: DeckData = {
     houseVisible: true,
     houseWallHeightIn: 120,
@@ -30,13 +31,17 @@ export const DEFAULT_DECK: DeckData = {
     shape: 'Rectangle',
     levels: 1,
     pattern: 'Straight',
-    deckingMaterial: 'tt_prime_plus',
-    deckingColor: 'Coconut Husk',
+    // Square-edge boards (owner 2026-10-15): the picture frame's outer edge needs a solid square shoulder, which the
+    // scalloped EDGE Prime+ (the default until then) does not have. Harvest is listed square-shoulder in Brownstone.
+    deckingMaterial: 'tt_harvest',
+    deckingColor: 'Brownstone',
     framingSize: '2x10',
     boardWidth: 5.5,
     joistSpacing: 16,
     fasteningSystem: 'Face',
-    pictureFrameRows: 0,
+    // No pictureFrameOverhangIn: the frame overhangs the fascia by the most its board allows (finishedFootprint.ts).
+    pictureFrameRows: 1,
+    buildRules: CURRENT_BUILD_RULES,
     hasInlay: false,
     inlayLf: 0,
     railingType: 'Aluminum',
@@ -58,4 +63,8 @@ export const DEFAULT_DECK: DeckData = {
     customerName: '',
     projectAddress: '',
     scopeOfWork: 'Professional installation of a custom outdoor deck system including framing, decking, and finishing as per selected specifications. All work to be completed to local building codes and industry best practices.'};
+/** The deck a new design starts as (owner 2026-11-02): on helical piles, skirted in horizontal boards (skirting.ts
+ * newSkirting), with open stringer stairs landing on a paver pad. A saved design is parsed onto DEFAULT_DECK instead, so a
+ * save without these reopens without them. */
+export const NEW_DECK: DeckData = {...DEFAULT_DECK, foundation: 'Helical Piles', skirting: {style: 'Horizontal boards', clearanceIn: 2, accessPanels: 1}, stairSides: 'Open', stairPad: true};
 export const DECK_SETTINGS={materials:MATERIAL_TIERS,crewRates:CREW_DAY_RATES,permitFees:PERMIT_FEES,engineeringFee:DEFAULT_ENGINEERING_FEE,railingCosts:RAILING_COSTS,stairTreadCosts:STAIR_TREAD_COSTS,wasteFactors:WASTE_FACTORS};

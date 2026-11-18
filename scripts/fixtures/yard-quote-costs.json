@@ -1,0 +1,102 @@
+{
+  "base": {
+    "houseVisible": true,
+    "houseWallHeightIn": 120,
+    "houseDoorOffset": 50,
+    "houseDoorWidthIn": 72,
+    "sceneLighting": "Daylight",
+    "level2Position": "Front",
+    "level2Offset": 50,
+    "stairTurn": "Right",
+    "landingDepthIn": 48,
+    "deckType": "Attached",
+    "municipality": "Barrie",
+    "siteType": "Standard",
+    "soilCondition": "Unknown",
+    "buildSeason": "Spring-Summer",
+    "intendedLoad": "Standard",
+    "foundation": "Concrete Piers",
+    "width": 16,
+    "length": 12,
+    "height": 36,
+    "cutoutWidth": 8,
+    "cutoutLength": 6,
+    "width2": 12,
+    "length2": 10,
+    "height2": 12,
+    "cutoutWidth2": 6,
+    "cutoutLength2": 5,
+    "shape": "Rectangle",
+    "levels": 1,
+    "pattern": "Straight",
+    "deckingMaterial": "tt_prime_plus",
+    "deckingColor": "Coconut Husk",
+    "framingSize": "2x10",
+    "boardWidth": 5.5,
+    "joistSpacing": 16,
+    "fasteningSystem": "Face",
+    "pictureFrameRows": 0,
+    "hasInlay": false,
+    "inlayLf": 0,
+    "railingType": "Aluminum",
+    "railingLf": 0,
+    "stairFlights": 1,
+    "stairWidth": 48,
+    "stairType": "Straight",
+    "stairPosition": "Front",
+    "stairOffset": 50,
+    "lightingSystem": {
+      "selectedItems": [],
+      "wireDistance": 20
+    },
+    "benchLf": 0,
+    "privacySqft": 0,
+    "hasDrainage": false,
+    "hasDemo": false,
+    "pergolaSqft": 0,
+    "projectKind": "deck",
+    "terrainConfig": {
+      "widthFt": 140,
+      "depthFt": 140,
+      "elevationIn": 0,
+      "slopePct": 0
+    }
+  },
+  "wall": {
+    "id": "rear-angular-wall",
+    "kind": "retaining-wall",
+    "name": "rear-angular-wall",
+    "enabled": true,
+    "xFt": 0,
+    "zFt": 0,
+    "widthFt": 38.81665382639197,
+    "depthFt": 0.8169291338582677,
+    "heightIn": 42,
+    "rotationDeg": 0,
+    "productId": "techo-raffinato-wall",
+    "color": "#b2b0ab",
+    "wallPath": [
+      {
+        "x": -144,
+        "y": 612
+      },
+      {
+        "x": 192,
+        "y": 612
+      },
+      {
+        "x": 300,
+        "y": 540
+      }
+    ],
+    "hardscape": {
+      "finishId": "smooth",
+      "colorId": "greyed-nickel",
+      "unitId": "double-sided-397-249-90",
+      "patternId": "running-bond",
+      "angleDeg": 0,
+      "jointMm": 0,
+      "capUnitId": "cap:techo-raffinato-cap:hd2-smooth:greyed-nickel:raffinato-812-356-60"
+    }
+  }
+}

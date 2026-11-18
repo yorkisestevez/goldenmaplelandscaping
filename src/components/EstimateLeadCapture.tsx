@@ -1,13 +1,13 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { Mail, CheckCircle, FileText, Phone } from 'lucide-react';
 import { trackLead } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
-import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
+import { publicContact } from '../data/business';
 import { scoreGoldenMapleLead } from '../utils/leadScoring';
+import { designHash, type EstimatorDeck } from '../features/deckcraft/estimatorHandoff';
 
 const encode = (data: Record<string, string>) =>
   Object.keys(data)
@@ -46,21 +46,22 @@ export interface EstimatePayload {
   preciseSubtotalCents?: number | null;
   preciseHstCents?: number | null;
   preciseGrandTotalCents?: number | null;
+  /** A deck as the deck estimator priced it (already inside
+   *  the totals above). A drawn deck carries the link that reopens it. */
+  deck?: EstimatorDeck | null;
 }
 
 export default function EstimateLeadCapture({
   estimate,
   permalink,
-  onUnlock,
+  onSaved,
 }: {
   estimate: EstimatePayload;
   /** Link that restores this exact build — the thing being traded for, and the
    *  reason this gate isn't withholding anything the customer already earned. */
   permalink?: string;
-  /** Fired once name+email are captured — receives the email so the caller
-   *  can also unlock the estimator vault (saving a build IS giving an email;
-   *  asking again at the repeat gate would be asking twice for the same thing). */
-  onUnlock?: (email: string) => void;
+  /** Fired once the build is saved (name + email captured). */
+  onSaved?: () => void;
 }) {
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -150,6 +151,14 @@ export default function EstimateLeadCapture({
       precise_subtotal: estimate.preciseSubtotalCents != null ? (estimate.preciseSubtotalCents / 100).toFixed(2) : '',
       precise_hst: estimate.preciseHstCents != null ? (estimate.preciseHstCents / 100).toFixed(2) : '',
       precise_total: estimate.preciseGrandTotalCents != null ? (estimate.preciseGrandTotalCents / 100).toFixed(2) : '',
+      // The deck, priced by the deck estimator (its figure is inside the totals above).
+      deck_subtotal: estimate.deck ? (estimate.deck.subtotalCents / 100).toFixed(2) : '',
+      deck_summary: estimate.deck
+        ? `${estimate.deck.source === 'design' ? 'Deck as set' : 'Starter deck'}: ${estimate.deck.label}${estimate.deck.quoteRequired.length ? `. Supplier quote: ${estimate.deck.quoteRequired.join('; ')}` : ''}`
+        : '',
+      // Opens the deck in the deck estimator. Its #d=… part, put after the private 3D designer's address on a local
+      // build, opens the exact deck there.
+      deck_design_link: estimate.deck?.design ? `${window.location.origin}/cost-estimator?type=deck${designHash(estimate.deck.design)}` : '',
     };
 
     if (import.meta.env.DEV) {
@@ -157,7 +166,7 @@ export default function EstimateLeadCapture({
       console.log('[dev] cost-estimator payload (would POST to Netlify):', payload);
       trackLead('cost-estimator', 'high-intent', conversionValue, eventId, { email: form.email, phone: form.phone }, { payload });
       setStatus('success');
-      onUnlock?.(form.email);
+      onSaved?.();
       return;
     }
 
@@ -170,7 +179,7 @@ export default function EstimateLeadCapture({
       if (!res.ok) throw new Error('Network response was not ok');
       trackLead('cost-estimator', 'high-intent', conversionValue, eventId, { email: form.email, phone: form.phone }, { payload });
       setStatus('success');
-      onUnlock?.(form.email);
+      onSaved?.();
     } catch {
       setStatus('error');
       setErrorMsg(`Connection issue. Call ${publicContact.phoneDisplay} to discuss your project.`);
@@ -179,12 +188,7 @@ export default function EstimateLeadCapture({
 
   if (status === 'success') {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 180, damping: 18 }}
-        className="bg-gradient-to-b from-brand-gold/10 to-brand-cream-light backdrop-blur-xl border border-brand-gold/30 rounded-3xl p-9 text-center shadow-[0_20px_60px_-30px_rgba(212,175,99,0.3)]"
-      >
+      <div className="bg-gradient-to-b from-brand-gold/10 to-brand-cream-light backdrop-blur-xl border border-brand-gold/30 rounded-3xl p-9 text-center shadow-[0_20px_60px_-30px_rgba(217,150,106,0.3)]">
         <div className="mx-auto w-14 h-14 rounded-full bg-brand-gold/15 border border-brand-gold/40 flex items-center justify-center mb-5">
           <CheckCircle size={24} className="text-brand-gold-dark" strokeWidth={1.5} />
         </div>
@@ -230,7 +234,7 @@ export default function EstimateLeadCapture({
           <Phone size={15} strokeWidth={1.5} />
           Book a project call
         </Link>
-      </motion.div>
+      </div>
     );
   }
 
@@ -303,14 +307,14 @@ export default function EstimateLeadCapture({
         <button
           type="submit"
           disabled={status === 'submitting'}
-          className="btn-primary !rounded-full w-full py-4 mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_8px_24px_-8px_rgba(212,175,99,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(212,175,99,0.55)] transition-shadow"
+          className="btn-primary !rounded-full w-full py-4 mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_8px_24px_-8px_rgba(217,150,106,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(217,150,106,0.55)] transition-shadow"
         >
           <Mail size={16} strokeWidth={1.5} />
           {status === 'submitting' ? 'Saving…' : 'Save My Build'}
         </button>
 
         <p className="font-sans text-[11px] text-brand-muted/80 text-center font-light pt-2">
-          {publicClaimCopy(BUSINESS.reviews.aggregate, 'Verified Google reviews.')} We never share your info.
+          We use this to save the build and reply about the project. We do not share it.
         </p>
       </form>
     </div>

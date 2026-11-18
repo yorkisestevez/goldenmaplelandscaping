@@ -1,4 +1,5 @@
-import {offsetPolygons,polygonCut,polygonBoard} from './polygonCuts';
+import {insidePolygon,offsetPolygons,polygonCut,polygonBoard,splitBoard} from './polygonCuts';
+import {usesCurrentBuildRules,type BuildRules} from '../buildRules';
 // Shared deck-plan geometry — the single source of truth for the deck's
 // footprint polygon, stair placement, railing runs, and board layout.
 // Consumed by DeckDiagram (2D SVG) and viewer3d/ (three.js).
@@ -19,6 +20,7 @@ import { notchDeckAroundHouse } from '../houseFootprint';
 import { activeWrap, wrapOutline } from './wrapGeometry';
 import { activeCornerChamfers, type ActiveChamfers } from './cornerChamfers';
 import { activeCustomFront, customOutline } from './customOutline';
+import {freeFootprint} from './freeOutline';
 
 export interface PlanPoint { x: number; y: number }
 /** How squarely an edge must face a side to count as that side. A 45° angled corner (0.707) faces no
@@ -39,6 +41,8 @@ export interface FootprintPlan {
   /** Simple polygon, positive shoelace area (interior to the LEFT of edges). */
   outline: PlanPoint[];
   bounds: { w: number; h: number };
+  /** Signed local bounding origin for a freely moved polygon; absent preserves legacy pattern anchoring. */
+  origin?:PlanPoint;
   isCurved: boolean;
   /** Wrap-around outlines name every edge (e.g. 'wingR-end'); other shapes leave this unset. */
   edgeIds?: string[];
@@ -58,11 +62,13 @@ const n = (v: unknown, fallback = 0) => (Number.isFinite(Number(v)) ? Number(v) 
  */
 /** The main deck's outline before any house notching (shape or wrap outline, split at house corners). */
 export function unnotchedMainOutline(data: DeckData): PlanPoint[] {
+  const free=freeFootprint(data,1);if(free)return free.outline;
   const wrap = activeWrap(data);
   return wrap ? wrapOutline(wrap).outline : shapeFootprint(data, 1).outline;
 }
 
 export function getFootprint(data: DeckData, level: 1 | 2 = 1): FootprintPlan {
+  const free=freeFootprint(data,level);if(free)return level===1?{...free,outline:splitAtHouseCorners(data,free.outline)}:free;
   const wrap = level === 1 ? activeWrap(data) : null;
   if (wrap) return notchDeckAroundHouse(data, { ...wrapOutline(wrap), bounds: { w: wrap.W, h: wrap.L }, isCurved: false });
   const fp = shapeFootprint(data, level);
@@ -204,7 +210,8 @@ export function getStairPlacement(data: DeckData, target: { w:number;h:number } 
   const candidates=named?[named]:all.filter(s=>s.outward.x*desired.x+s.outward.y*desired.y>SIDE_DOT&&!contact?.isContactEdge(s.index));
   if(!candidates.length)return null;
   const requested=Math.max(24,n(data.stairWidth,48)),eligible=candidates.filter(s=>s.length>=requested);
-  const chosen=(eligible.length?eligible:candidates).sort((a,b)=>b.length-a.length)[0];
+  // Lengths that differ only by coordinate dust are the same edge. Keep outline order so a tie does not flip.
+  const chosen=(eligible.length?eligible:candidates).sort((a,b)=>Math.abs(a.length-b.length)<=1e-4?a.index-b.index:b.length-a.length)[0];
   const width=Math.min(requested,chosen.length),offset=Math.min(1,Math.max(0,n(data.stairOffset,50)/100));
   // Preserve intuitive left-to-right / back-to-front offsets regardless of winding.
   const reverse=chosen.along.x<-.5||chosen.along.y<-.5;
@@ -235,8 +242,8 @@ export interface RailSegment { a: PlanPoint; b: PlanPoint; edge: EdgeName | 'Not
 
 /**
  * Railing runs around the outline: classifies each polygon edge, drops edges
- * against the house (ledger, no rail), and splits the stair edge around the
- * opening (the skip logic DeckDiagram implements per-edge inline).
+ * against the house wall (a ledger, or a freestanding edge on that wall), and
+ * splits the stair edge around the opening.
  */
 export function getRailingSegments(
   data: DeckData,
@@ -261,7 +268,7 @@ export function getRailingSegments(
     else if (vertical && Math.abs(a.x - fp.bounds.w) < EPS) edge = 'Right';
     else edge = fp.isCurved && a.y > fp.bounds.h - EPS ? 'Curve' : 'Notch';
 
-    if (contact?.isContactEdge(i)) continue; // house side — ledger, no rail
+    if (contact?.isContactEdge(i)) continue; // against the house wall — no automatic guard
 
     // Cut only the physical polygon edge carrying the opening, including notch/arc segments.
     if(stair && (stair.edgeIndex===i || (stair.edgeIndex===undefined && edge===stair.edge))){
@@ -277,6 +284,13 @@ export function getRailingSegments(
 }
 
 export interface BoardRun {
+  /** Stable source identity for a physically edited board, retained through clipping and stock splitting. */
+  layoutId?:string;layoutColour?:string;layoutKind?:'region'|'breaker'|'piece';
+  /** Requested source blank/silhouette for editing an existing explicit piece without anchoring to a clipped tip. */
+  layoutSource?:{cx:number;cy:number;lengthIn:number;widthIn:number;angleDeg:number;polygon?:PlanPoint[];sourceAngleDeg?:number};
+  /** Clipped/notched fragments from one physical stock blank share this identity. Layout-only metadata. */
+  layoutStockId?:string;
+  layoutStockSource?:{cx:number;cy:number;lengthIn:number;widthIn:number;angleDeg:number};
   width?:number;
   polygon?:PlanPoint[];
   role?:'field'|'border'|'breaker'|'inlay'|'inlay-frame'|'inlay-fill';
@@ -292,12 +306,11 @@ export interface BoardRun {
 
 /**
  * Field decking as scanline strips clipped to the outline. Diagonal rotates
- * the polygon -45deg, scans, and rotates run centers back. Long runs split at
- * maxBoardLen (20 ft stock) with alternating half-length stagger so butt
- * joints don't line up — same "breaker" intent as the 2D diagram.
+ * the polygon -45deg, scans, and rotates run centers back. Under the 2026-10
+ * build rules a clipped course splits at the supplied stock length only when it
+ * cannot fit one board; legacy designs keep the alternating half-length stagger
+ * (butt joints that don't line up) they were drawn and priced with.
  */
-/** Even-odd test: is the point inside the polygon? */
-function insidePolygon(pt:PlanPoint,poly:PlanPoint[]){let odd=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>pt.y)!==(b.y>pt.y)&&pt.x<(b.x-a.x)*(pt.y-a.y)/(b.y-a.y)+a.x)odd=!odd;}return odd;}
 
 export function getBoardRows(fp: FootprintPlan, opts: {
   boardWidth: number; gap: number; angleDeg: number; inset: number; maxBoardLen?: number;
@@ -307,6 +320,8 @@ export function getBoardRows(fp: FootprintPlan, opts: {
   /** Line the rows up with the longest field edge they run along (a custom outline's 45° edge), so the board
    * against it is full width and any ripped row falls elsewhere. */
   alignToEdges?: boolean;
+  /** The design's build rules (buildRules.ts): absent or 'legacy' keeps the staggered half-board rows. */
+  buildRules?: BuildRules;
 }): BoardRun[] {
   const {boardWidth,gap,angleDeg,inset}=opts,stock=opts.maxBoardLen??240;
   const field=offsetPolygons([fp.outline],inset);if(!field.length)return [];
@@ -324,13 +339,21 @@ export function getBoardRows(fp: FootprintPlan, opts: {
   }
   else if(opts.anchor==='top')for(let y=top-boardWidth;y+boardWidth>bottom+.001;y-=pitch)rows.push(y);
   else for(let y=bottom;y<top-.001;y+=pitch)rows.push(y);
-  for(const [row,y] of rows.entries()){
+  // Hairline rips (under 1 in) are not installable. Drop them only under the 2026-10 rules. A design
+  // saved before those rules keeps every clipped piece, including a sliver, so its drawings stay put.
+  const keep=(b:BoardRun)=>!usesCurrentBuildRules(opts)||(b.width??boardWidth)>=1;
+  if(!usesCurrentBuildRules(opts))for(const [row,y] of rows.entries()){
     let x=left,first=true;
     while(x<right-.001){
       const length=Math.min(first&&row%2?stock/2:stock,right-x),tile=[world(x,y),world(x+length,y),world(x+length,y+boardWidth),world(x,y+boardWidth)];
-      for(const poly of polygonCut(field,[tile]))runs.push(polygonBoard(poly,angleDeg));
+      for(const poly of polygonCut(field,[tile])){const b=polygonBoard(poly,angleDeg);if(keep(b))runs.push(b);}
       x+=length+gap;first=false;
     }
+  }
+  else for(const y of rows){
+    const tile=[world(left,y),world(right,y),world(right,y+boardWidth),world(left,y+boardWidth)];
+    // Clip first: short courses at diagonal tips and notches can remain single boards.
+    for(const poly of polygonCut(field,[tile])){const b=polygonBoard(poly,angleDeg);if(keep(b))runs.push(...splitBoard(b,boardWidth,stock,gap));}
   }
   return runs;
 }
@@ -439,7 +462,7 @@ function alignHerringbone(fp:FootprintPlan,boardWidth:number,gap:number,outlines
 }
 export function getHerringboneRows(fp:FootprintPlan,boardWidth:number,gap:number,inset:number,align?:{leftLine?:number;rightLine?:number}):BoardRun[]{
   const outlines=offsetPolygons([fp.outline],inset),runs:BoardRun[]=[];
-  let [cx,cy]=[fp.bounds.w/2,fp.bounds.h/2];
+  let [cx,cy]=[(fp.origin?.x??0)+fp.bounds.w/2,(fp.origin?.y??0)+fp.bounds.h/2];
   if(align&&(align.leftLine!==undefined||align.rightLine!==undefined))[cx,cy]=alignHerringbone(fp,boardWidth,gap,outlines,cx,cy,align);
   for(const {tile,angle} of herringboneTiles(fp,boardWidth,gap,cx,cy))for(const poly of polygonCut(outlines,[tile])){
     if(poly.length<3)continue;

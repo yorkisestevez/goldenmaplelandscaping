@@ -14,8 +14,8 @@ import {WAINSCOT_HEIGHT_IN} from '../designPersistence';
 
 /**
  * The exterior studio (loaded on demand): wall finishes for the whole house, a block or one wall (cladding, colour,
- * wainscot and gable accent), the roof, trim, door and window colours, and whole-house looks. Appearance only,
- * never priced: nothing here reaches the estimate (houseConfig sits outside the estimate key).
+ * wainscot and gable accent), the roof, trim, door and window colours, and whole-house looks. Appearance only, except
+ * that brick or stone on a wall the deck fastens to blocks its ledger: only claddings reach the estimate key.
  */
 type Tab='walls'|'roof'|'trim'|'looks';
 /** Wainscot heights offered, 6 in apart. */
@@ -132,7 +132,7 @@ export default function ExteriorStudio({data,update,onClose,selectedOpeningId,on
     return <ColourPicker key={key} label={meta.label} hint={meta.hint} value={value??fallback} groups={meta.follows==='trim'?PALETTE_FOR.trim:PALETTE_FOR.door} onPick={hex=>change({[key]:hex})} reset={{label:meta.follows==='trim'?'Match trim':'Original',active:value===undefined,onReset:()=>change({[key]:undefined})}}/>;};
   const tabButton=(id:Tab,label:string)=><button type="button" aria-pressed={tab===id} onClick={()=>setTab(id)}>{label}</button>;
   return <section ref={ref} className="dd-exterior" aria-label="Exterior finishes">
-    <div className="dd-exterior-head"><h3 tabIndex={-1}>Exterior finishes</h3><span>Appearance only, never priced</span><button type="button" className="dd-secondary" onClick={onClose}>Done</button></div>
+    <div className="dd-exterior-head"><h3 tabIndex={-1}>Exterior finishes</h3><span>Appearance only, except brick or stone where the deck attaches</span><button type="button" className="dd-secondary" onClick={onClose}>Done</button></div>
     <div className="dd-view-toggle" role="group" aria-label="Exterior finish sections">{tabButton('walls','Walls')}{tabButton('roof','Roof')}{tabButton('trim','Trim, doors & windows')}{tabButton('looks','Looks')}</div>
     <div className="dd-exterior-body">
       {tab==='walls'&&<>
@@ -185,7 +185,7 @@ export default function ExteriorStudio({data,update,onClose,selectedOpeningId,on
         </fieldset>}
       </>}
       {tab==='looks'&&<>
-        <p className="dd-note">A look dresses the whole house in one go: walls, roof, trim, doors and windows. It never changes a size, a shape or the price.</p>
+        <p className="dd-note">A look dresses the whole house in one go: walls, roof, trim, doors and windows. It never changes a size or a shape. Brick or stone cladding can change the ledger and its price.</p>
         <div className="dd-exterior-looks" role="group" aria-label="Exterior looks">{EXTERIOR_LOOKS.map(l=><button key={l.id} type="button" aria-label={`${l.name} look`} aria-pressed={wearsLook(house,l)} onClick={()=>update({houseConfig:applyLook(house,l)})}><span className="dd-exterior-swatch" aria-hidden="true" style={lookSwatch(l)}/><strong>{l.name}</strong><span>{l.description}</span></button>)}</div>
         {ownFinishes(house)>0&&<p className="dd-note" role="status">{ownFinishes(house)} {ownFinishes(house)===1?'wall, block, door or window keeps its':'walls, blocks, doors or windows keep their'} own finish over the look. <button type="button" className="dd-linklike" onClick={()=>update({houseConfig:withoutOwnFinishes(house)})}>Reset them to the look</button></p>}
       </>}
