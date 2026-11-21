@@ -1,20 +1,30 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Golden Maple Landscaping production website
 
-# Run and deploy your AI Studio app
+This repository powers [goldenmaplelandscaping.ca](https://goldenmaplelandscaping.ca), the production website for Golden Maple Landscaping in Barrie and Simcoe County, Ontario.
 
-This contains everything you need to run your app locally.
+## Production workflow
 
-View your app in AI Studio: https://ai.studio/apps/d502ea12-b83b-4c4a-9da0-a198a5e694de
+- `main` is the production branch.
+- Pushes to `main` run the existing GitHub Actions deployment workflow.
+- Netlify builds the React Router application with the command defined in `netlify.toml` and publishes `build/client`.
+- The production workflow deploys only to the Netlify site pinned in `.github/workflows/netlify-deploy.yml`.
 
-## Run Locally
+## Local development
 
-**Prerequisites:**  Node.js
+Prerequisites: Node.js 22 and npm.
 
+```bash
+npm ci --legacy-peer-deps
+npm run dev
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Run the same validation gates used by production before proposing a change:
+
+```bash
+npm run lint
+npm run build
+```
+
+## Publication controls
+
+Public business details are centralized in `src/data/business.ts`. Unresolved or conflicting claims are tracked in `BUSINESS_FACTS_REQUIRING_CONFIRMATION.md`. Do not introduce new prices, warranties, credentials, review claims, project claims, service areas or customer statements without traceable approval and evidence.
