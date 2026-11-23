@@ -1,5 +1,5 @@
 {
-  "lastRunAt": "2026-11-16T13:38:49.822Z",
+  "lastRunAt": "2026-11-23T13:24:59.593Z",
   "history": [
     {
       "at": "2026-09-02T11:41:20.325Z",
@@ -803,6 +803,75 @@
         "booking_step from /book Facebook traffic",
         "CRM ingest vs Netlify ham",
         "home_view_* counts for the first full measured week"
+      ]
+    },
+    {
+      "at": "2026-11-23T13:24:59.593Z",
+      "mode": "optimize",
+      "outcome": "noop",
+      "findings": [
+        {
+          "pri": "P0",
+          "what": "Live: /, /cost-estimator/, /contact/, /book/, /sitemap.xml all 200 (0.27-0.44s). Prod sweep (1440 viewport, innerWidth 1440) on /, /cost-estimator/, /contact/, /resources/hpb-vs-limestone-screenings-barrie/, /locations/innisfil/, /book/: 0 console/page errors, 24 images all 200 via in-page fetch. Tracking: analytics-Bk4zMvxu.js carries all 4 IDs. Sitemap 159 URLs, 0 without trailing slash.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "estimator-e2e 42/42 on dev :3011 (listener confirmed by CommandLine; killed, 0 survivors); contrast audit 0 critical across 6 states. lint and build not run: no change was made in the tree this run.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P1",
+          "what": "GA4 week 11-16..11-22 vs prior: sessions 29 vs 31, page_view 49 vs 50, estimator_step 3 vs 18, cta_click 2 vs 1, generate_lead 0 vs 2, chat_open 0 vs 1. generate_lead fell 100% on flat traffic, which meets the >40% rule on paper, but it is 2 events to 0 on 29 sessions; estimator reached step 2 only (3 events).",
+          "decision": "no change: counts too small to call a cliff; forms and estimator pass end to end"
+        },
+        {
+          "pri": "P1",
+          "what": "Netlify ham: contact 24 lifetime, 1 this week (2026-11-21). That one has EMPTY visit_count, session_duration, landing_page, lead_score, home_segment and home_arm, and GA4 shows 0 /contact/ views and 0 generate_lead for the week: the JS-less POST signature. It names a real service option and a 50k-100k budget with an 804-char message, so it could still be a person with scripts blocked. estimate-request 9 lifetime, none in 21 days; all other forms 0.",
+          "decision": "no change; flagged for Yorkis to read in Netlify. Not counted as a homepage lead."
+        },
+        {
+          "pri": "P2",
+          "what": "/book third week running: 15 views, 15 sessions landing there (14 Facebook referral, 1 paid), 0 booking_step. Production still serves the old spacing (h1 at 240px on a 390x664 phone, section pt-48). The fix is PR #241 from 2026-11-16: 1 commit, lint check passed, mergeable CLEAN, no comments or reviews.",
+          "decision": "NOT MERGED: gh pr merge --squash --admin was refused by the session permission classifier (Undermining Oversight), same as 2026-11-16. Not retried or worked around. PR left open for Yorkis."
+        },
+        {
+          "pri": "P2",
+          "what": "Backlog 1, 2, 5 done; 3 retired; 4 (result-page length) still has no evidence: 0 result-step views this week.",
+          "decision": "no change"
+        },
+        {
+          "pri": "INFO",
+          "what": "CRM leads table read-only: 15 rows lifetime, newest 2026-08-13, 0 in 7 days. Unchanged since last run.",
+          "decision": "outside authority; reported"
+        },
+        {
+          "pri": "INFO",
+          "what": "ROUTINE Step 4 item 4 says 43 e2e checks; the suite has 42 and all pass.",
+          "decision": "no change; doc drift only, noted"
+        },
+        {
+          "pri": "3b",
+          "what": "Homepage evolution dry run (week ending 2026-11-22; 0 dry runs left, so the next run applies for real): all 5 segments idle; default/a 7 views, 2 acts, 0 leads; a test needs 60 views.",
+          "decision": "state file committed with this heartbeat"
+        }
+      ],
+      "changes": [
+        {
+          "pr": "https://github.com/yorkisestevez/goldenmaplelandscaping/pull/241",
+          "what": "/book mobile spacing: scheduler onto the first phone screen (carried from 2026-11-16)",
+          "marker": "pt-28 md:pt-48",
+          "liveVerified": false,
+          "merged": false
+        }
+      ],
+      "watch": [
+        "PR #241 merge state: the optimizer cannot merge under the current permission mode (refused 2 runs in a row); after a merge, check /book/ HTML for pt-28 md:pt-48",
+        "booking_step from /book Facebook traffic (0 for 3 weeks)",
+        "The 2026-11-21 contact submission: real person or bot",
+        "generate_lead and estimator_step next week; two weeks at 0 with 30 sessions is worth a manual form test",
+        "Homepage evolution now live (dryRunsRemaining 0); default segment at 7 views/week will stay idle",
+        "CRM ingest vs Netlify ham"
       ]
     }
   ]

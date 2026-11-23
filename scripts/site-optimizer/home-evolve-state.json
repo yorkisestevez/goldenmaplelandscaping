@@ -1,11 +1,42 @@
 {
-  "dryRunsRemaining": 1,
-  "lastWeekEnding": "2026-11-15",
+  "dryRunsRemaining": 0,
+  "lastWeekEnding": "2026-11-22",
   "nextArm": 2,
   "segments": {},
   "log": [
     {
       "weekEnding": "2026-11-15",
+      "dryRun": true,
+      "actions": [
+        {
+          "segment": "default",
+          "action": "idle",
+          "detail": "7 views this week; a test needs 60"
+        },
+        {
+          "segment": "patios",
+          "action": "idle",
+          "detail": "0 views this week; a test needs 60"
+        },
+        {
+          "segment": "decks",
+          "action": "idle",
+          "detail": "0 views this week; a test needs 60"
+        },
+        {
+          "segment": "walls",
+          "action": "idle",
+          "detail": "0 views this week; a test needs 60"
+        },
+        {
+          "segment": "driveways",
+          "action": "idle",
+          "detail": "0 views this week; a test needs 60"
+        }
+      ]
+    },
+    {
+      "weekEnding": "2026-11-22",
       "dryRun": true,
       "actions": [
         {
