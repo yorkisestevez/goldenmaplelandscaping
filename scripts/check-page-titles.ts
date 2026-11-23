@@ -74,7 +74,7 @@ for (const locationKey of LOCATION_KEYS) {
 for (const service of BARRIE_SERVICES) add(`barrie ${service.slug}`, service.title);
 for (const section of LIBRARY_SECTIONS) add(`library ${section.slug}`, `${section.h1} | Barrie & Simcoe County`);
 add('author', `${FOUNDER.name}, ${FOUNDER.role}`);
-for (const project of PROJECTS) add(`project ${project.slug}`, `${project.title} | ${project.category} in ${project.town}`);
+for (const project of PROJECTS) add(`project ${project.slug}`, `${project.title} in ${project.town}`);
 const seen = new Map<string, string>();
 for (const { where, composed } of titles) {
   assert(composed.length <= 60, `${where}: title is ${composed.length} characters (${composed})`);

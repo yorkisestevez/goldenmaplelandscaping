@@ -122,7 +122,7 @@ export default function PaverPatioBarrieAds() {
       <SEO
         title="Custom Paver Patios in Barrie | Paver Patio Installation"
         description="Custom paver patios in Barrie — interlocking patios planned for your property's drainage and soil, with a written scope and workmanship terms. Get a project estimate."
-        canonical="https://goldenmaplelandscaping.ca/paver-patios"
+        canonical="https://goldenmaplelandscaping.ca/services/interlocking-barrie"
         schema={pageSchema}
         image={ogImage}
       />
@@ -144,7 +144,8 @@ export default function PaverPatioBarrieAds() {
                 <span className="italic text-brand-gold-dark">in Barrie</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-10 font-light">
-                Interlocking paver patios planned around your property's drainage, grades, and soil — then built on a proper base.
+                Interlocking paver patios planned around your property's drainage, grades, and soil — then built on a proper base.{' '}
+                <Link to="/services/interlocking-barrie" className="text-brand-gold-dark underline underline-offset-2">See interlocking stone in Barrie</Link>.
               </p>
               <ul className="space-y-4 mb-12">
                 {trustItems.map((item) => (
