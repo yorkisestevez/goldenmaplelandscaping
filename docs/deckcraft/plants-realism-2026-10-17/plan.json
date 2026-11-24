@@ -1,0 +1,1038 @@
+{
+ "title": "DeckCraft placed-plant realism, revised after review. Fix the render and the beds first, gate every phase on a measured performance probe, then add project-owned species models, ranked by how often each plant is used times how wrong it looks today. Plan only; awaiting owner approval.",
+ "thesis": "Most of what looks fake today comes from the render path and the beds, not the meshes. The canvas is created with alpha:true, so the page shows through every alpha-to-coverage leaf edge; the magenta test proved it. Leaves are glossy and their albedo is lifted, the proxy plants are squashed, plants in plain beds are buried 3.05 in under a raised, flat, constant-orange mulch slab, and steel edging stands 7 in above grade.\n\nThe plan therefore opens with three render-only PRs. Data, prices, share links and exports stay byte-identical.\n- **P0:** an opaque canvas, plus a probe that gates every later phase. It measures draws, triangles, texture MiB, overdraw and frame time on each desktop tier and on the owner's iPhone.\n- **P1:** honest, matte foliage.\n- **P2:** plants seated in beds. Mulch sits just below the grass tips with a spade-cut taper. Each plant gets a soil collar with a mulch lip, plus contact shade sized to its form. Edging is near-flush and mulch colours are honest.\n\nAfter that, the shared proxies are replaced by project-owned procedural species models. A model is chosen at render time from speciesRecord.id, with the saved assetId as the fallback. The waves are ranked by estate count times wrongness:\n1. Clipped evergreens.\n2. Herbaceous plants.\n3. Shrubs.\n4. Perennials.\n5. Deciduous trees.\n6. Conifers.\n\nThe models are built in the repo from botany specs and from CC0-derived detail tiles. The tiles are committed, so CI and Netlify never touch the network.\n\nEach wave is gated by contact sheets, screenshots at named cameras and Node checks: LOD silhouette and edge, colour (ΔE00 ≤ 5 plus species ordering), triangles and draws. The browser frame-time probe gates each wave too.\n\nAt the triangle caps:\n- The estate showcase drops from 2.52M to about 0.84M triangles.\n- The constrained estate stays under 45k triangles.\n- Plant texture memory on the high tier falls from about 34 MiB to about 12.4 MiB.\n- All 15 legacy GLBs stay byte-identical.\n- No CC BY asset, KTX2, paid asset or new runtime dependency is used.\n\nSizing new placements at installed versus mature size is a separate, optional last phase. Changing PLANT_LIBRARY envelopes only affects newly placed plants, and the estate generator overrides several of them anyway.",
+ "phases": [
+  {
+   "id": "P0",
+   "name": "Opaque canvas hotfix plus the measurement harness that gates every later phase",
+   "goal": "Stop the page showing through alpha-to-coverage leaf edges (the verified white speckle) with one viewer-line change and no asset, material or data change. Build the fixture, cameras and probe that measure look and performance per pass and per tier, and record today's baseline, including the owner's iPhone.",
+   "work": [
+    "**Canvas.** In Deck3DViewer.tsx:690, add alpha:false to the Canvas gl props. Keep antialias:false, NeutralToneMapping and SCENE_LOOK.exposure.\n- Nothing in src relies on a transparent canvas: there is no setClearAlpha, and the background is a solid Color (Deck3DViewer.tsx:698).\n- A comment at the gl props says why, and that any future transparent overlay must opt back in.",
+    "**No OutputPass patch.** alpha:false alone makes every output path opaque, because they all end on the canvas:\n- Still export encodes the canvas with toBlob (SceneStillExport.tsx:26).\n- The fly-through recorder and the primed and fallback frames (renderPipeline.tsx:149-171) render to the canvas.\n- OutputPass only renders to the screen.\nThe earlier OutputPass patch and its source assertion are dropped, which costs no viewer-chunk bytes.",
+    "**Keep alphaToCoverage** at Landscape3D.tsx:57. Without the leak it gives clean antialiased leaf edges.",
+    "**Fixture.** scripts/fixtures/plants-realism-demo.json holds DEFAULT_DECK plus the 31-plant, 26-species demo bed from docs/deckcraft/plants-realism-2026-10-17/demo-planting.json (untracked, main checkout only). It is rearranged so that bed seating can be seen:\n- Red maple (single trunk) and serviceberry (multi-stem) move into the front third of the bed (z 222-258) at its two ends, with nothing taller in front of them. The front-row perennials they displace shift one slot inward.\n- Dogwood (open, red-stem base) swaps into the front row with a low perennial.\n- Sugar maple, redbud, white pine and blue spruce stay on the lawn at z 420 as lawn-tree subjects.\n- The docs copy is not edited.",
+    "**Cameras**, saved as presentation cameras in the fixture:\n- Bed close-up: eye 60 in high, 120 in in front of the bed centre, aimed 18 in high, fov 38.\n- Bed edge low: eye 30 in, looking along the bed's long front edge.\n- Plant base macro: eye about 30 in, about 4 ft from the red maple trunk, with the dogwood base in frame.\n- Tree in lawn: eye about 30 in, about 5 ft from the sugar maple trunk on the lawn.\nCorner, Overview, Front and Above are also used.",
+    "**Forced tiers without a src change.** A Playwright init script spoofs WEBGL_debug_renderer_info UNMASKED_RENDERER, navigator.deviceMemory and hardwareConcurrency:\n- A SwiftShader string gives constrained.\n- 4 GB and 4 cores give balanced.\n- The real GPU with 8 GB and 8 cores gives high.\nA 390x844 viewport gives narrow. chooseRenderQuality (renderQuality.ts:10-18) is untouched.",
+    "**Probe without a src change.** The init script defines window.__THREE_DEVTOOLS__ as an EventTarget before the 3D view opens. three 0.185.1 then announces its WebGLRenderer and Scenes in the production build (WebGLRenderer.js:3569, Scene.js:115). The probe, scripts/plants-probe/probe.js:\n- Sets gl.info.autoReset=false and resets once per rAF frame. three resets renderer.info on every render() call, so a read after the frame would show only the last full-screen quad.\n- Wraps gl.render and renderBufferDirect, following the releaseDrawnResources pattern. It counts draws and triangles per pass: beauty, each window-reflection pass, shadow map, ground occlusion and post.\n- Counts as 'plant draws' only meshes named /^landscape-.+-lod[0-2]$/. Contact decals and bed bands are counted separately.\n- Computes texture MiB from the bound textures (width × height × bytes per texel × 4/3 when mipmapped), grouped as plant, contact decal or other.\n- Records gl.info.programs.length, and the longest frame in the 2 s after the 1.2 s LOD switch.\n- Counts shadow-map redraws and logs the sun shadow camera's extent and texel size.",
+    "**Frame time.** A 10 s synthetic pointer-drag orbit on the canvas at Corner and Front, on the estate and the demo, at each forced tier on the owner's GPU. It records p50 and p95 rAF intervals, and GPU ms through EXT_disjoint_timer_query_webgl2 where the browser exposes it.",
+    "**Overdraw.** An additive override material on plant meshes at Front and Bed close-up, read back as mean fragments per covered pixel, per tier.",
+    "**iPhone run.** scripts/serve-plants-probe.mjs serves the local production build on a free LAN port in the 4000-4099 build range, checked before binding.\n- It injects the probe into HTML responses on that server only, so the deployed site never contains it.\n- The probe overlays p50/p95, a context-loss count and the tier.\n- The owner opens it on the iPhone in portrait (balanced), runs the orbit and screenshots the overlay.",
+    "**Capture harness.** scripts/capture-plants-realism.ts follows the capture-photo-stills.ts pattern. It covers:\n- Scenes: the demo and the estate.\n- All cameras, at 1600x900 and 390x844.\n- Day and Golden hour, with Realistic look off and on.\n- The three forced tiers.\nIt writes PNGs plus metrics.json to docs/deckcraft/plants-realism-2026-10-17/p0/:\n- Magenta probe: page background #f0f; count the canvas pixels with R>=200, G<=80, B>=200.\n- Canopy crops, with the boxes logged: the placed sugar maple's mean canopy luminance against the nearest context tree (same GLB); % of canopy pixels above sRGB 235.\n- Everything the probe records, per tier, scene and camera.\n- First-paint and resize frames, captured right after mount and right after a resize.",
+    "**Node baseline.** Also recorded in metrics.json: the coverInstances time for the estate's largest bed at the high budget, used by the P2 timing check."
+   ],
+   "files": [
+    "src/features/deckcraft/components/viewer3d/Deck3DViewer.tsx",
+    "scripts/check-deck-realism.ts",
+    "scripts/capture-plants-realism.ts (new)",
+    "scripts/plants-probe/probe.js (new, harness-only; never imported by src)",
+    "scripts/serve-plants-probe.mjs (new)",
+    "scripts/fixtures/plants-realism-demo.json (new)",
+    "docs/deckcraft/plants-realism-2026-10-17/p0/*.png and metrics.json (new)"
+   ],
+   "owner_gates": [
+    "Approve this plan, D1 and D11 (including its offline-verify rule) before P0 starts.",
+    "Review the before/after pairs, plus the first-paint and resize frames for any black flash. Pairs: proof-alpha-leak-magenta.jpg against the after shot, plus Corner, Overview and Front at 1600x900 and 390x844.",
+    "Owner runs the iPhone probe (portrait, balanced) on the P0 build, takes the median of 3 runs, and checks Edge. The owner may accept the Edge capture alone. The iPhone numbers become the phone baseline.",
+    "Owner says 'commit' (one PR, P0 only). Merging needs an explicit OK, because it deploys production."
+   ],
+   "acceptance": [
+    "Magenta probe: 0 magenta pixels inside the canvas rect. Today every placed plant turns magenta.\n- Scenes: the demo bed and the showcase estate.\n- Cameras: Corner, Overview and Front.\n- High tier, with Realistic look off and on.",
+    "Alpha channel minimum is 255 on a 2x PNG still export and on one fly-through frame of the demo bed.",
+    "The house and the context trees look unchanged in the same camera pairs (owner visual check).",
+    "No black flash: the post-mount and post-resize captures show the scene background, or at most one black frame that the owner accepts.",
+    "The baseline metrics.json is complete for the demo and the estate at all three tiers. It records:\n- Plant draws per pass and per frame, and triangles per pass.\n- Plant texture MiB and overdraw.\n- p50/p95 frame ms and program count.\n- The longest frame after the LOD switch.\n- Shadow redraws over the orbit and the sun shadow extent.\n- The coverInstances time.\nLater phases compare against it.",
+    "npm run lint (including check:deck) passes. check-deck-bundle: the Deck3DViewer chunk is at or under 340 KB gzip, with a delta of at most +0.05 KB."
+   ],
+   "checks_moved": [
+    "scripts/check-deck-realism.ts gets one new source assertion: the Canvas gl props carry alpha:false. There is no OutputPass assertion.",
+    "scripts/check-deck-bundle.ts: the viewer chunk is re-measured; the budget is unchanged.",
+    "check-flythrough.ts and check-deck-first-paint.ts must pass unchanged. No goldens move.",
+    "The harness and probe need a GPU, so they are not part of check:deck. Their numbers gate the owner review of each phase."
+   ],
+   "budgets": "- Viewer chunk: +0.05 KB gzip at most (about 335.2 to 335.25 of 340).\n- Landscape3D chunk, triangles, GLB bytes and GPU: 0. The drawing buffer simply loses its alpha channel.\n- Production bundle bytes from the probe: 0, because it is injected only by the local probe server or a Playwright init script.",
+   "effort_days": 1.5,
+   "risks": [
+    "Compositors differ between iOS Safari and Edge. Mitigation: check the phone and Edge captures before merge.",
+    "An alpha:false canvas is opaque black until the first frame and after a resize clears it. Mitigation: if the owner sees a flash, clear to the scene background in onCreated, which costs a few bytes in the viewer chunk.",
+    "EXT_disjoint_timer_query_webgl2 is often not exposed. The rAF-interval p95 is therefore the gating number, and GPU ms is reported only where available.",
+    "Phone runs are noisy. Mitigation: take the median of 3 runs. The iPhone numbers come from an owner action, not CI.",
+    "Once the leak is gone, the remaining 'bleached' look may be smaller than expected. The P0 metrics set how hard P1 pushes.",
+    "Splitting the canvas line into its own tiny PR ahead of the harness is offered in D1, if the owner wants the speckle gone sooner."
+   ]
+  },
+  {
+   "id": "P1",
+   "name": "Foliage honesty and proportions (today's proxies only, no downloads)",
+   "goal": "Make today's proxy plants read as matte leaves with honest colour and undistorted plan proportions, with photo mode matching the live view for both leaves and bloom cards.",
+   "work": [
+    "**Shader key.** In foliageLighting.ts the patch key becomes 'foliage-summer-v2'.",
+    "**Remove the lift.** Delete pow(albedo, 0.8) and the ×(1.04, 1.12, 0.9) gain at :27-29.",
+    "**Remove dead terms (D2a).** These terms are inserted after outgoingLight is already summed (meshphysical.glsl.js:193-198), so the live view does not change. Photo mode applies them, so photo and live disagree today.\n- Delete the translucency, warm-highlight and shade-lift terms at :30-41.\n- Delete the bloom-lift terms at :45-52. If nothing else remains, applyBloomLighting becomes a no-op until P6 deletes it.",
+    "**Photo mode, same PR.** In photoMaterials.ts:\n- Key on 'foliage-summer-v2'.\n- Remove the leafLinear/LEAF_GAIN atlas lift (:139-180), the leafGlow emissive (:182-189, :422-439) and the bloom lift (:333, :437-441).\n- Keep the trace alphaTest cutoffs.",
+    "**Leaf materials.**\n- Set roughnessMap and metalnessMap to null; flat roughness 0.62, metalness 0.\n- Keep normalMap on LOD0 only.\nToday the effective roughness is about 0.26, with 81% of texels below 0.3.",
+    "**Mip-aware alpha.** In the same patch, appended after '#include <color_fragment>' (append, never replace, per the materialPatches contract):\n- diffuseColor.a *= 1.0 + max(0.0, mipLevel) * 0.25, with mipLevel taken from dFdx/dFdy of vMapUv * textureSize(map, 0).\n- The line sits inside #ifdef USE_MAP and is appended only when the material has alphaTest > 0.\n- The map-less fern-clump material (named 'fern-clump', no baseColorTexture, matched by the /fern/i leafy test at foliageLighting.ts:22) therefore gets shader text with no vMapUv or map reference, so it cannot fail to compile.",
+    "**Leaf-only tint.** In Landscape3D.tsx InstancePart, tintPlantInstance applies only to leafy primitives: alphaTest > 0, or /leaf|twig|fern/ in the material name. Bark, trunk and branch primitives get instance colour #ffffff.",
+    "**Proportions.** A new exported helper, plantNormalization(bounds), is used by AssetInstances for kind 'plant' only:\n- x and z are both normalised by 1/max(size.x, size.z), and y by 1/size.y.\n- The maple's per-metre z/x scale goes from 0.68 to 1.00.\n- Furniture and boulders keep the exact envelope fit, and landscapeInstanceMatrix is unchanged.\nY still scales independently to heightIn, so the vertical card stretch remains until each species wave: Smaragd 2.1x until P3, ostrich fern 2.98x until P4, rudbeckia 2.56x until P6. These proxies are named in the P1 review set.",
+    "**Tint retunes.** Retune the per-species PLANT_LIBRARY tints (render-only data) against the context-tree baseline and the per-class windows in the acceptance. Never reintroduce a global lift. The Smaragd tint stays non-white, so check-landscape-objects:94 holds.",
+    "**No fern change by default (D15a).** If the owner picks D15b, a separate new script, scripts/fix-fern-alpha.mjs, rewrites only the three fern-clump GLBs and their manifest entries. build-plant-library-v2.mjs is never edited.",
+    "**Capture.** Capture the p1/ set with the P0 harness, including the perf metrics."
+   ],
+   "files": [
+    "src/features/deckcraft/components/viewer3d/foliageLighting.ts",
+    "src/features/deckcraft/components/viewer3d/Landscape3D.tsx",
+    "src/features/deckcraft/components/viewer3d/photoMaterials.ts",
+    "src/features/deckcraft/landscapeCatalogue.ts (PLANT_LIBRARY tint retunes only)",
+    "scripts/check-plant-foliage.ts (new, Node)",
+    "scripts/check-landscape-objects.ts (new plantNormalization assertions; existing lines unchanged)",
+    "scripts/check-photo-trace.ts",
+    "scripts/check-deck-bundle.ts",
+    "docs/deckcraft/plants-realism-2026-10-17/p1/*.png and metrics.json",
+    "(only if D15b) scripts/fix-fern-alpha.mjs, public/deckcraft/landscape/fern-clump-lod{0,1,2}.glb, the manifest.json fern entries, ATTRIBUTION.md"
+   ],
+   "owner_gates": [
+    "Decide D2 and D15 before the build.",
+    "Look sign-off on Day and Golden-hour screenshots against P0; leaves will be darker and matte. At this gate the owner also picks whether to clamp the y/xz anisotropy of the stretched proxies to 1.25 or leave them until their waves (default).",
+    "Owner says 'commit'; merging needs an explicit OK."
+   ],
+   "acceptance": [
+    "Node: after the patch, every leafy plant material has roughnessMap null, roughness 0.62 and metalness 0. The v2 patch source contains no albedo lift and no dead translucency or bloom-lift terms.",
+    "Node, mip-alpha guard:\n- Every vMapUv and map use in the v2 patch sits inside #ifdef USE_MAP.\n- Patching a map-less material named 'fern' yields shader text that references neither.",
+    "Node, mean leaf albedo (opaque atlas texels × tint), using per-class windows instead of one window:\n- Broadleaf and grass: sRGB G in [70, 115], with G > R and G > B.\n- Dark evergreens (yew, boxwood, Smaragd): G in [40, 95], with G > R.\n- Glaucous species (Colorado spruce, little bluestem) are exempt from G > B.\n- Ninebark and spirea are flagged until D6.\n- From P3, plants rendered by species models are exempt, because their atlases carry the colour and their instance tint is white.",
+    "Node: bark and trunk instance colour is #ffffff for every plant asset.",
+    "Node, plantNormalization:\n- Equal per-metre scale on x and z (within 1e-6).\n- The max(x, z) extent equals max(widthIn, depthIn), and the y extent equals heightIn.\n- The furniture fit is unchanged.",
+    "Node mip simulation: with the 0.25 alpha scale, a box-filtered mip keeps alpha-test coverage at mip 3 within ±15% of mip 0. Tested on the maple atlas (55%), the fir needles (25%) and the shrub atlases.",
+    "Browser, Corner, Day, high tier:\n- The placed sugar maple's mean canopy luminance is within ±12% of the nearest context tree.\n- At most 0.5% of placed-canopy pixels are above sRGB 235.",
+    "The magenta probe stays at 0 at Corner, Overview and Front.",
+    "check-photo-trace:\n- Raster/trace mean-albedo parity (:113-117) holds for instanced plantings with v2.\n- Leaf emissive is 0.\n- A new bloom-card raster/trace parity case passes.",
+    "Perf against P0, per tier, scene and camera: p95 frame time at most 1.15× P0, and plant draws per pass unchanged.",
+    "All 15 legacy GLB sha256 values and manifest.json are unchanged, unless D15b was chosen.",
+    "Screenshots: Corner, Overview, Front and Bed close-up; Day and Golden hour; 1600x900 and 390x844. The still-stretched proxies are labelled. Owner sign-off."
+   ],
+   "checks_moved": [
+    "check-photo-trace.ts:108-111 and the restore assertion are re-baselined: v2 key, no LEAF_GAIN lift, leaf emissive 0, instance colour no longer lifted. There is no existing bloom test in this file, so a new bloom-card parity case is added rather than 'kept'.",
+    "check-landscape-objects.ts gets new plantNormalization assertions. :40 and :94 are unchanged and must pass.",
+    "New check-plant-foliage.ts covers roughness, no lift, the USE_MAP guard, per-class albedo windows, bark tint and mip coverage. It joins check:landscape, and check:deck if D11 is approved.",
+    "check-deck-realism.ts:71-72 ('Golden hour leaves green foliage green') is unchanged and must pass. check-furniture-facing.ts is unchanged and must pass.",
+    "check-deck-bundle.ts gets an explicit Landscape3D chunk budget of 36 KB gzip, stated up front with the worst case:\n- About 23.8 KB today; +1 (P1), +3 (P2), +4.5 (P3), +0.5 (P4), +0.5 (P5), -2.5 (P6).\n- Peak about 33.3 KB at P5, leaving 2.7 KB of headroom.\n- The generated species table gets its own lazy chunk with a 3 KB cap (P3)."
+   ],
+   "budgets": "- Triangles: 0.\n- GLB bytes: 0, or at most +0.25 MB if D15b.\n- GPU, placed plants only: leaf ARM maps are no longer bound, saving up to -1.33 MiB per deciduous LOD0 group, and leaf normal maps are off at LOD1/LOD2 (-0.33 / -0.08 MiB).\n- These savings hold only when the context tree line is off. The context trees share the same cached Texture objects and keep their maps (ShowcaseContext3D.tsx:145), so with Realistic look on at high tier those textures stay resident. The harness reports bound-texture MiB at Corner with Realistic look on and off.\n- Landscape3D chunk: +1 KB gzip at most.\n- Viewer chunk: 0.",
+   "effort_days": 2,
+   "risks": [
+    "Removing the lift darkens plants by about 15-25%. Mitigation: retune per-species tints against the per-class windows and the context-tree luminance target. Never reintroduce a global lift.",
+    "The mip alpha scale can fatten distant canopies. k is tunable from 0.15 to 0.30, guarded by the coverage simulation.",
+    "Every existing customer design changes look at once. This is render-only, and the owner sees the before/after set. Asymmetric source crowns become oval in plan; the maple renders 74x108 in.",
+    "Vertically stretched proxies remain until their wave. They are stated and shown in the review set, with an optional 1.25 clamp at the gate.",
+    "The photo path could drift from raster. Mitigation: check-photo-trace parity for leaves and the new bloom case."
+   ]
+  },
+  {
+   "id": "P2",
+   "name": "Plants sit in beds",
+   "goal": "Plants sit in the mulch with their stems clear. Mulch sits just below the grass tips and tapers to grade like a spade cut. Edging sits nearly flush, mulch colours are honest, and every plant gets a contact cue sized to its form on every tier. All of this is render-only: quantities, exports, links, prices, picking and selection behave exactly as before.",
+   "work": [
+    "**Visual plateau (D8).** Non-raised mulch and aggregate beds render a viewer-only top sheet at grade + 1.0 in, below the lawn tuft tips (1.3-2.4 in tall, lawnTufts.ts:21-22). Today the sheet is at grade + 3.05 in.\n- Real Ontario beds finish about level with the lawn, with mulch at the cut about 25 mm below the turf (Waterloo CW-711). They do not stand as a slab 3 in above it.\n- mulchDepthIn, landscapeSurfaceDepth, the takeoff, landscapeBedGeometry and the designExports bed y are unchanged, so quantities and OBJ/DXF exports are identical.",
+    "**plantSeat** (new plantSeating.ts, lazy and Node-safe). plantSeat(data, o) returns:\n- In an enabled non-raised bed: the rendered surface at the plant minus a per-form sink. The rendered surface is the plateau, or the band height within 4 in of a banded outline segment. Bed membership uses the same landscapeBedAreas polygons that Beds renders, not the outline-only raisedSupport rule. Those polygons apply fillSeed ordering and the seed-connected region, and clip out pools and, for groundCoverOnly beds, structures.\n- In a raised bed: the landscapePlacement y minus the sink.\n- On lawn: grade.",
+    "**Per-form values (D8).** A render table keyed by species form, with the asset form as the fallback:\n- Trees: sink 0, mulch pulled back 3 in beyond the base radius.\n- Shrubs and hull evergreens: sink 0.5 in, pull-back 2 in.\n- Perennials and grasses: sink 0.75 in, pull-back 1.5 in.\nBase radius defaults until P3 (after that, the species spec field baseRadiusIn from the generated stem cluster at y=0):\n- Tree: 1.25 in, for a 2.5 in caliper.\n- Multi-stem tree: 4 in.\n- Shrub: 0.15 × widthIn, capped at 6 in.\n- Perennial and grass: 0.2 × widthIn, capped at 4 in.",
+    "**Seat wiring.**\n- The seat is premultiplied in InstancePart, so landscapeInstanceMatrix is unchanged.\n- The PlantBlooms anchors (plantBlooms.tsx:111) and the MatureSpread ring (Landscape3D.tsx:89) also use plantSeat.\n- landscapePlacement and its other callers are untouched: landscapeEdits.ts:31 and Deck3DViewer.tsx:661.",
+    "**Mulch colour.** In landscapeSurfaceMaterial.ts, patch key 'mulch-shred-fiber-v3':\n- Albedo = linear(swatch) × fibre modulation (normalised to mean 1.0) × clamp(scanLuma / meanScanLuma, 0.6, 1.4).\n- Swatches: brown #73503a, black #34302b, cedar #a97548.\n- The swatch is a per-material uniform set when the material is created, so brown, black and cedar can share one program without sharing a colour. The loadPhotos completion callback updates the swatch and meanScanLuma on every material in resource.materials, which stays correct during the procedural DataTexture fallback.\n- The shader divides out material.color, so the pinned multipliers (#ffffff, #2a2622, #ffce99) stay.\n- The SurfaceDetail.tsx:35 chip colours derive from the same swatches.\n- photoMaterials gives mulch beds the same albedo in the trace; today it has none.",
+    "**Bed edge** (new bedEdgeGeometry.ts, viewer-only), for non-raised mulch and aggregate beds.\nTop sheet:\n- Built from the landscapeBedAreas polygons at the plateau.\n- Inset by 4 in only along banded segments. It runs to the outline on segments that have no band: shared with another enabled bed, or within 3 in of a house, deck, patio or wall footprint. That leaves no strip of bare lawn ground against a foundation or between beds.\nTaper band:\n- Runs from the outline at grade + 0.4 in up to the inset line at the plateau, following the TIN.\n- Split at TIN triangle edges, and kept at least 0.25 in above the sampled ground.\n- Sits entirely above grade, because the lawn ground mesh runs on under beds (groundDisplayCuts excludes beds).\n- Its lower third is vertex-coloured soil (#3b2f25), which reads as the spade-cut line.\nBoth meshes:\n- uv1 is built from occlusionUv.\n- They carry the bed's pick metadata, {pickPartId:'landscape/'+id, landscapeIds:[id]}, so clicks on the sheet or the band select the bed.\n- The band has its own userData flag, never renderOnly, because photoSkip hides renderOnly meshes in traced stills.\nUnchanged: landscapeBedGeometry, landscapeCellTriangles and designExports. Raised, turf and putting-green beds keep their current geometry.",
+    "**Steel edging.**\n- Only when raisedBedTop is undefined, Bed passes the ribbon base at grade - 3.5 in, so the unchanged steelEdgingGeometry (4 in rise) tops out at grade + 0.5 in. Raised-bed edging keeps its on-top placement.\n- Edging segments are split at TIN triangle edges, as the band is, so a 0.5 in reveal neither sinks nor floats mid-span on a sloped TIN.\n- Material: the raised-bed weathered steel (#4a3b32, roughness .78), per D9.\n- With edging on, the band's outer edge sits within 0.25 in of the edging top.",
+    "**Soil collar and mulch lip** (new plantContactDecals.tsx), for bed plants only.\nSoil collar:\n- One InstancedMesh of opaque, lit, irregular 14-gon soil discs (#3b2f25 with vertex noise).\n- Radius: base radius + the per-form pull-back.\n- y is the rendered bed surface at the plant + 0.04 in, never the sunk seat, so it cannot hide under the sheet. polygonOffset is applied.\nMulch lip:\n- A second InstancedMesh: an annulus 1.75 in wide in the bed's mulch material.\n- It rises from the surface at its outer edge to +0.6 in at its inner edge, so the soil reads as a dip whose rim catches light.\nBoth meshes:\n- Opaque with no alpha, so the path tracer traces them as they are.\n- raycast is a no-op and userData.coversGround is false.",
+    "**AO ring** (plantContactDecals.tsx), for every placed plant, on beds and on lawn.\n- One InstancedMesh with an unlit radial texture. The texture is built lazily inside the component, so the module top level stays DOM-free: 256 px on high and balanced, 128 px on constrained.\n- Material: MultiplyBlending with premultipliedAlpha:true and a premultiplied texture. three 0.185 leaves the blend state undefined otherwise (WebGLState.js:686-688).\n- Sizing by form:\n  - Foliage-to-ground forms (shrubs, hedges, hull evergreens, perennials, grasses, hosta, fern): radius 0.45 × widthIn, capped at 30 in.\n  - Trees and multi-stem trees: base radius + 10 in. Canopy shade is left to shadows and the aoMap.\n- Tilted to the local grade slope, with depthWrite false and polygonOffset -2.\n- Strength scales with sun and ambient, so night does not show a stain.\n- Drawn on every tier, including constrained.\n- raycast is a no-op and coversGround is false.\n- userData.photoSkip = true, so photoMaterials.tuneMaterial (:394) does not turn it into an opaque cutout; the tracer computes its own contact shade.",
+    "**Contact shade (D10a).** Non-raised bed materials take the shared GroundOcclusion texture as aoMap through uv1, as lawnSurface and finishedGrade already do.\n- No new shadow casters: LOD2 plants still do not cast. This keeps fitSun's frustum and the house and deck shadow texel density as they are.\n- groundOcclusion.ts and shadowCache.ts are not edited.",
+    "**Chips.** groundCoverDetail.ts and SurfaceDetail.tsx keep mulch chips clear of the 4 in band and of every collar and lip.\n- A per-bed spatial hash of collars is built once per data change, so the per-chip test is O(1). Today coverInstances reruns on every 3 ft camera move with up to 65,000 chips.",
+    "**Fixture and capture.**\n- Add three side-by-side beds (brown, black, cedar), one with edging on.\n- Capture the p2/ set, including Above, Bed edge low, Plant base macro and Tree in lawn, on all three tiers, plus Night."
+   ],
+   "files": [
+    "src/features/deckcraft/components/viewer3d/plantSeating.ts (new)",
+    "src/features/deckcraft/components/viewer3d/bedEdgeGeometry.ts (new)",
+    "src/features/deckcraft/components/viewer3d/plantContactDecals.tsx (new)",
+    "src/features/deckcraft/components/viewer3d/Landscape3D.tsx (Bed, MatureSpread, InstancePart seat, edging base and segment split)",
+    "src/features/deckcraft/components/viewer3d/plantBlooms.tsx (seat anchor)",
+    "src/features/deckcraft/components/viewer3d/landscapeSurfaceMaterial.ts",
+    "src/features/deckcraft/components/viewer3d/SurfaceDetail.tsx",
+    "src/features/deckcraft/components/viewer3d/groundCoverDetail.ts",
+    "src/features/deckcraft/components/viewer3d/photoMaterials.ts (mulch albedo mirror)",
+    "scripts/check-bed-edges.ts (new)",
+    "scripts/check-landscape-surfaces.ts",
+    "scripts/check-ground-cover-detail.ts",
+    "scripts/check-photo-trace.ts",
+    "e2e/deckcraft.spec.ts (sampler-unit assertion extended to a night scene with beds)",
+    "scripts/fixtures/plants-realism-demo.json",
+    "docs/deckcraft/plants-realism-2026-10-17/p2/*.png and metrics.json"
+   ],
+   "owner_gates": [
+    "Decide D8 (plateau, seat, pull-back and lip values), D9 (edging look), D10 (contact-shade scope) and D17 (no lawn mulch rings) before the build.",
+    "Look sign-off on all three tiers and at Night:\n- The three-colour mulch comparison.\n- The edge close-ups, with edging on and off.\n- Bed edge low, Plant base macro and Tree in lawn.",
+    "Owner says 'commit'; merging needs an explicit OK."
+   ],
+   "acceptance": [
+    "Node, plant base y. Today the base is 3.05 in under the mulch top in plain beds.\n- Plain beds: plateau minus the per-form sink (±0.01 in); band height minus the sink within 4 in of a banded outline.\n- Raised beds: landscapePlacement y minus the sink.\n- Lawn: grade.\n- Bed membership follows landscapeBedAreas, including a fillSeed bed and a groundCoverOnly bed.",
+    "Node, plateau: at least grade + 0.75 in and at most the 90th-percentile lawn tuft tip.",
+    "Node, nothing moves in data:\n- landscapePlacement output deep-equals the pre-change snapshot for every object in the estate and the demo.\n- landscapeTakeoff and the quote sections deep-equal before and after.\n- The estate quote-resolution fingerprint is unchanged, and the estate link payload stays 98,422 bytes.\n- OBJ/DXF exports of the demo are byte-identical.\n- Re-saving demo-planting.json and the estate gives byte-identical JSON.",
+    "Node, picking: a ray cast down through a plant's AO ring and collar onto a bed, and a ray through the band, both resolve through objectPick and the pickAt walk to 'landscape/<bedId>'. A ray through a lawn plant's AO ring never stops on the ring.",
+    "Node, mulch: computed mean albedo is within ±8% per linear channel of #73503a, #34302b and #a97548. This holds with the photo bound and with the procedural fallback bound. Three materials with different swatches compile to one program yet keep distinct uniforms. Chip colours derive from the same swatches.",
+    "Screenshot at Above, Day, three adjacent beds: bed-interior mean sRGB orders black < brown < cedar, with ΔE00 >= 15 for each pair. Today the three are within about 10% of each other.",
+    "Node, edging, for beds without a raised top:\n- Top at grade + 0.5 in (±0.05) and base at grade - 3.5 in along the whole outline, including mid-span on a sloped, broken TIN.\n- Raised-bed edging is unchanged.\nToday it stands about 7 in above grade.",
+    "Node, check-bed-edges:\n- Outer band vertices at grade + 0.4 in, and at least 0.25 in above the sampled ground. Inner vertices at the plateau, inset 4 in.\n- Projected area of top sheet plus band equals the rendered bed area within ±0.5%. This is tested on a 64-point curved outline, a bed with a hole, a bed against a house wall and two beds sharing an edge.\n- No band on shared or hardscape-adjacent segments, and no bare strip there.\n- Raised and turf beds are unchanged.",
+    "Node, contact meshes:\n- Exactly one collar and one lip instance per enabled bed plant, and one AO instance per enabled plant.\n- All are present on the constrained tier.\n- AO ring blend params: premultipliedAlpha true and MultiplyBlending.\n- The AO ring carries photoSkip. Collar, lip and band are traced (check-photo-trace).",
+    "Screenshot, Plant base macro, high and constrained tiers: at least 25% of the pixels in the annulus between stem radius and collar radius classify as soil around the red maple trunk and the dogwood base.",
+    "Screenshot, AO ring: mean luminance inside the ring is at least 45% of open mulch or lawn 1 ft beyond it. Measured at Plant base macro, Tree in lawn and Corner, on high and constrained.",
+    "Screenshot, Bed edge low: tuft tips rise above the mulch edge line along at least half the visible outline.",
+    "Node timing: coverInstances for the estate's largest bed at the high budget is at most 1.10× the P0 measurement.",
+    "Perf against P0, per tier, scene and camera:\n- p95 frame time at most 1.15× P0.\n- Shadow redraws over the orbit at most P0.\n- Sun shadow extent within ±5% of P0.\nThe magenta probe stays at 0.",
+    "e2e sampler-unit assertion (the 16-texture-unit iOS limit) passes on the demo fixture at night, with beds and plants.",
+    "Screenshots: Bed close-up, Bed edge low (edging on and off), Plant base macro, Tree in lawn, Corner and Above, at 1600x900 and 390x844. Owner sign-off."
+   ],
+   "checks_moved": [
+    "New check-bed-edges.ts covers:\n- Plateau, taper and inset area.\n- Edging y and segment splits.\n- Collar, lip and AO counts, blend params and pick passthrough.\n- The hardscape skip.\n- Export byte-identity and data invariance.",
+    "check-landscape-surfaces.ts:28 is a deliberate update. The material still owns and disposes map, normalMap and roughnessMap; the shared aoMap is not owned or disposed by the bed material.",
+    "check-ground-cover-detail.ts:\n- :18-25 edge clearance becomes chip radius + the 4 in band, and chips avoid collars and lips.\n- :28-29 (pinned colours and swatches) are unchanged.\n- New swatch-albedo assertions and the timing assertion.",
+    "check-photo-trace.ts: raster/trace mulch albedo parity; the AO ring is skipped; collar, lip and band are traced.",
+    "check-landscape-objects.ts:38-40 and :96 are unchanged, because landscapeBedGeometry, landscapeInstanceMatrix and steelEdgingGeometry are untouched.",
+    "check-raised-beds.ts:94, :114-116 and :175, check-site-concepts.ts:182 and check-curved-landscape-editing.ts:54 are unchanged and must pass.",
+    "e2e/deckcraft.spec.ts: the sampler-unit assertion is extended to a night scene with beds and plants."
+   ],
+   "budgets": "- Triangles:\n  - AO ring: +2 per plant (estate +546).\n  - Collar plus lip: about +42 per bed plant (estate about +11.5k).\n  - Band: at most 260 per bed.\n  - These are counted separately from the plant budgets.\n- Draw calls: +3 for the decal meshes (AO, collar, lip), plus +1 per bed for the band.\n- GLB bytes: 0.\n- GPU: AO texture +0.33 MiB on high and balanced, +0.08 MiB on constrained. The bed aoMap reuses the lawn's 512^2 occlusion target.\n- Shadows: no new casters.\n- Landscape3D and SurfaceDetail lazy chunks: +3 KB gzip at most.\n- Viewer chunk: 0.",
+   "effort_days": 4.5,
+   "risks": [
+    "The band edge sits on lawn ground at grade + 0.4 in, and could z-fight or poke through on sloped TINs. Mitigation: sample the same ground, keep at least 0.25 in of clearance, apply polygonOffset, and test a sloped fixture.",
+    "Taper robustness on concave or curved outlines, holes, fillSeed beds and beds against the house. Mitigation: mitred strips clipped by siteClip, banding only on free segments, and the listed fixtures.",
+    "The lower plateau and the mulch colour fix change every existing bed. This is intended (honest bed height and colour), and the owner sees the comparison set.",
+    "Stacked darkening at plant bases (aoMap, collar, AO ring and shadows) could crush bases to black. Mitigation: the ≥45% luminance criterion on high and constrained, plus Night screenshots.",
+    "Rebuttal: the review also asked that no tree ring be wider than twice the trunk-clump diameter. For a 2.5 in trunk that caps the ring at about 2.5 in radius, which contradicts its own 'base radius + 8-12 in' sizing. The plan keeps base radius + 10 in.",
+    "The 0.5-0.75 in sink hides the lowest proxy cards. This is intended; from P3, species models put y=0 at the crown with stems running 2 in below it."
+   ]
+  },
+  {
+   "id": "P3",
+   "name": "Species pipeline, render-time species path and clipped evergreens (Smaragd, boxwood, yew)",
+   "goal": "Build the reproducible, offline-verifiable species pipeline and the render-time species path, then use them to replace the most-used and most-wrong proxy. Smaragd is 76 of the 273 estate plants, and today it is built from fir needles and stretched 2.1x. Boxwood and yew share the hull-and-shell technique and ship in the same phase. Every performance gate starts applying in this phase.",
+   "work": [
+    "**Day-1 spike** on a scratch branch, never committed. It tests:\n- (i) A geometry-only GLB with KHR_mesh_quantization and EXT_meshopt_compression, written with meshoptimizer encodeGltfBuffer and loaded through drei useGLTF.\n- (ii) A shared external WebP atlas with alpha in Chrome and Edge, and on the owner's iPhone Safari through the P0 LAN probe server. Playwright WebKit is not used; it would need an unlisted 62.7 MB browser download.\n- (iii) A2C plus the P1 mip-alpha scale on species cards at MSAA 0, 2 and 4.\n- (iv) Optional: Castano coverage-preserving mip strips uploaded as texture.mipmaps.\nThe results go in the PR. If (iv) misbehaves anywhere, ship generated mips plus the P1 shader scale (D14).",
+    "**Sourcing (D20).** New scripts/plant-species/fetch-sources.mjs runs only on the owner's machine, after the owner approves that phase's dry-run list.\n- --dry-run prints, for each photo: taxon, the rule applied (species-level research-grade, genus-level research-grade, or casual-grade cultivated), iNaturalist photo id, observer, license_code (re-read from the API and required to be 'cc0'), URL and bytes (from HEAD).\n- For casual-grade photos it also prints the agent's identification check.\n- Raw photos go to a cache outside the repo and are never committed.",
+    "**Derived inputs, committed.** New scripts/plant-species/extract-inputs.mjs turns each approved photo into:\n- A small contrast-limited, high-passed luminance detail tile (grayscale, mean 1.0, at most 40 KB).\n- Hue and chroma statistics.\nBoth are committed under scripts/plant-species/inputs/. CC0 allows this. Each entry in sources.lock.json records the photo id, observer, licence-snapshot hash, raw sha256 and derived sha256.\nplants:build and plants:verify read only these committed inputs, so no CI job, Netlify build or check script ever needs the network.",
+    "**Spec table.** New scripts/plant-species/specs.mjs. The schema covers all 26 species; 3 are filled in this phase. Fields:\n- Botany citations.\n- Reference envelope and crown form.\n- Stems and baseRadiusIn.\n- Leaf or scale size in cm.\n- Colour target: hue and chroma from the photo statistics; linear luminance from a per-class foliage-albedo band. Photo pixels are lit and white-balanced, so they are never used as albedo. The bands are calibrated at this gate against the Poly Haven scanned leaf reference (sRGB about 101,117,58), with a darker band for yew.\n- Roughness class: glossy about 0.5 (Smaragd, boxwood, later hosta and redbud), default about 0.68, matte about 0.8 (later hairy perennials and catmint).\n- Seat params: sinkIn, stemBuryIn 2, pullbackIn, flare.\n- Per-LOD triangle caps.\n- Variant count, and seed = hash(species id).",
+    "**Sprites and atlases** (sprites.mjs and atlas.mjs, per D4).\n- SVG botanical masks rasterised by sharp at 4x, then box-filtered.\n- RGB = target albedo × the committed detail tile × a venation overlay, plus edge noise.\n- 16 px push-pull colour dilation, 6-8 px gutters and a deterministic shelf packer that fails the build if an allotment overflows.\nTwo shared atlas roles; every species uses at most one of each:\n- Cutout atlases (alpha-tested). P3 creates the scale/needle atlas at 1024x512, 512x256 and 256x128.\n- One shared opaque atlas for hull mass textures, bark, stems and flower-head textures. It is created now at its final size (1024x512, 512x256, 256x128), with allotments reserved for later waves.\nAll atlas files are content-hashed: <atlas>-<tier>.<sha8>.webp.",
+    "**Hull and shell** (forms/hullShell.mjs).\n- An opaque low-poly hull of about 300 triangles; its mass texture lives in the opaque atlas.\n- Shell cards: Smaragd vertical fan sprays 8-12 cm; boxwood clusters 6-10 cm with leaves drawn at 0.8-2.5 cm; flat two-ranked yew sprays.\n- Normals bent 75% toward the hull normal.\n- AO baked into COLOR_0 RGB only (at most 1.0). Never a vec4 colour, because three multiplies vertex alpha into the alpha test.\n- LOD1/LOD2 by card retention, with kept cards enlarged by sqrt(1/retention). Edge cards are kept preferentially so the LOD2 silhouette stays fuzzy.\n- Two seeded variants for Smaragd, at LOD0 and LOD1 only (D22).",
+    "**GLB writer.** New scripts/plant-species/glb.mjs writes geometry-only GLBs with KHR_mesh_quantization and EXT_meshopt_compression and no images. Each species-LOD GLB has at most two primitives, with materials named plant:opaque and plant:cutout. build-plant-library-v2.mjs is untouched.",
+    "**Node rasteriser** (scripts/plant-species/raster.mjs, moved here from P7). A deterministic, DOM-free software rasteriser of silhouettes and flat-light albedo. check-plant-species uses it for:\n- LOD silhouette IoU at 8 azimuths.\n- LOD1 coverage from 10 ft.\n- Edge roughness E = silhouette perimeter / convex-hull perimeter - 1.\n- Flat-light mean albedo and colour ordering.\n- Instance-pair IoU, and sky-gap fraction (used in P7 and P8).\nContact sheets in headless Chromium remain preview-only docs.",
+    "**Build.** scripts/plant-species/build.mjs, run as npm run plants:build [--only=id], writes:\n- public/deckcraft/plants/<id>[-v<n>]-lod{0,1,2}.<sha8>.glb and the content-hashed atlases. Every file under /deckcraft/plants/ is content-hashed.\n- scripts/plant-species/species-manifest.json, which is not served and has its own 8,000,000 B cap.\n- src/features/deckcraft/components/viewer3d/plantModels.generated.ts, imported only by plantModels.ts through a dynamic import, so it lands in its own lazy chunk (3 KB cap). It holds URLs, triangle counts, authored size, base radius, roughness class and seat params.\n- With --preview, LOD contact sheets in docs only.",
+    "**Verify (offline).** npm run plants:verify regenerates everything in memory from committed inputs only.\n- Geometry bytes must match exactly.\n- Decoded RGBA must match within a tolerance (max |Δ| 2/255, mean 0.25/255), never WebP bytes, so libvips SIMD differences across machines cannot fail it.\n- It stubs globalThis.fetch, http and https and fails on any network call.\n- It fails above 120 s.",
+    "**Runtime** (new plantModels.ts, in the lazy Landscape3D chunk).\nresolvePlantModel(o) = PLANT_MODELS[o.speciesRecord?.id] ?? landscapeAsset(o.assetId), so imported or unknown species fall back to the proxy. The species table chunk loads under the same Suspense as the GLBs, so no proxy flashes first.\nspeciesInstanceMatrix:\n- Uniform s = heightIn / authoredHeight, and XZ = clamp(widthIn / authoredWidth, 0.8s, 1.25s).\n- Render-only per-instance variation from plantColorHash (D22): height ±5%, width ±7%, lean up to 3 degrees, plus yaw jitter.\n- The variant is picked by object-id hash at LOD0/LOD1.\n- Plus the P2 seat.\n- It multiplies source.matrixWorld, which carries the quantization dequantization (Landscape3D.tsx:26-32, :54).\nGrouping:\n- Group key modelKey:variant:lod.\n- Mesh names stay 'landscape-' + modelId + '-lodN' for PhotoTracer. The pickPartIds order is unchanged.\n- renderOrder puts opaque parts (hull, stems) before cutout cards.",
+    "**Failure fallback.** Each species group and the atlas hook sit inside an error boundary. If a GLB or atlas fails to load or decode, the boundary renders the saved assetId proxy and logs once. Causes include a 404, an SPA-fallback HTML response and a WebP decode failure. Today Landscape3D has Suspense only (Deck3DViewer.tsx:566), so such a failure could take down the 3D view.",
+    "**Atlases and materials** (new plantAtlases.ts).\n- Tier-sized shared textures, loaded inside hooks, so there is no DOM access at module top level.\n- One shared material per role per roughness class per tier. addMaterialPatch must be idempotent.\n- Species materials are precompiled with gl.compileAsync once the atlases load, so the 1.2 s LOD switch does not hitch.\n- Instance colour is jitter around white only. PLANT_LIBRARY tints stay untouched as the proxy fallback.",
+    "**Species shader patch** ('foliage-species-v1') and its photoMaterials mirror.\n- No lift; roughness comes from the class material; no normal maps.\n- Baked AO applies to indirect light only.\n- Bent normals hold because the patch appends a line after '#include <normal_fragment_begin>' that restores the unflipped interpolated normal.\n- Mip-alpha uses the P1 USE_MAP and alphaTest guard.\n- Optional live translucency per D2b.",
+    "**LOD stability.**\n- landscapeRenderLods gains an optional costs(o) callback and an optional previous-LOD map. With previous LODs it applies hysteresis: upgrade above 1.15× the pixel threshold, downgrade below 0.85×. Without them, results are identical to today, so check-landscape-objects:43-45 holds.\n- Landscape3D keeps group item arrays stable per key and membership.\n- InstancePart sets instanceMatrix.needsUpdate only when its matrices actually changed. Today every Landscape3D render bumps every group's version, which changes shadowKey and forces a full shadow and occlusion redraw.",
+    "**Blooms.** PlantBlooms skips any plant whose species resolves to a model.",
+    "**Shadows.** Species LOD0/LOD1 cast shadows as proxies do today. LOD2 does not cast (D10a).",
+    "**Estate-mix projection.** check-plant-species computes estate and demo totals per LOD from built counts, plus caps for species not yet built. Every wave must still project inside the P9 budgets.",
+    "**Gate and provenance.**\n- Per D11: check:plants and plants:verify join check:deck, and public/deckcraft/** and scripts/plant-species/** join the deckcraft-e2e path filter.\n- New e2e/deckcraft-plant-species.spec.ts, with test.setTimeout 240 s. Its measured CI duration is reported in the PR. It covers:\n  - Load the demo at constrained tier and assert every species GLB and WebP request returns 200 with a non-HTML content type and no page error.\n  - Load the demo once at a forced high tier (renderer-string override), so the A2C, LOD0/LOD1 and shadow-depth programs compile in CI.\n  - Route one species GLB to 404 and assert that the proxy GLB is requested and no page error occurs.\n- ATTRIBUTION.md gets a project-owned plant section, labelled per D12, listing the CC0 inputs."
+   ],
+   "files": [
+    "scripts/plant-species/fetch-sources.mjs (new, local-only)",
+    "scripts/plant-species/extract-inputs.mjs (new)",
+    "scripts/plant-species/inputs/* (new, committed CC0-derived detail tiles and colour stats)",
+    "scripts/plant-species/sources.lock.json (new)",
+    "scripts/plant-species/specs.mjs (new)",
+    "scripts/plant-species/sprites.mjs, atlas.mjs (new)",
+    "scripts/plant-species/forms/hullShell.mjs (new)",
+    "scripts/plant-species/glb.mjs, raster.mjs (new)",
+    "scripts/plant-species/build.mjs, verify.mjs (new)",
+    "scripts/plant-species/species-manifest.json (new, generated, not served)",
+    "public/deckcraft/plants/*.<sha8>.glb and *.<sha8>.webp (new, generated)",
+    "src/features/deckcraft/components/viewer3d/plantModels.generated.ts (new, generated; own lazy chunk)",
+    "src/features/deckcraft/components/viewer3d/plantModels.ts (new)",
+    "src/features/deckcraft/components/viewer3d/plantAtlases.ts (new)",
+    "src/features/deckcraft/components/viewer3d/Landscape3D.tsx (species groups, error boundary, stable groups, renderOrder)",
+    "src/features/deckcraft/components/viewer3d/foliageLighting.ts (foliage-species-v1)",
+    "src/features/deckcraft/components/viewer3d/photoMaterials.ts",
+    "src/features/deckcraft/components/viewer3d/plantBlooms.tsx (skip modelled species)",
+    "src/features/deckcraft/landscapeModelRuntime.ts (optional costs callback and hysteresis only)",
+    "public/deckcraft/landscape/ATTRIBUTION.md (project-owned plant section)",
+    "package.json and package-lock.json (meshoptimizer 1.1.1 devDependency per D13; plants:build, plants:verify and check:plants scripts)",
+    ".github/workflows/deckcraft-e2e.yml (path filter, per D11)",
+    "e2e/deckcraft-plant-species.spec.ts (new)",
+    "scripts/check-plant-species.ts (new)",
+    "scripts/check-landscape-objects.ts (explicit sha256 pins for all 15 legacy GLBs)",
+    "scripts/check-photo-trace.ts",
+    "scripts/check-deck-bundle.ts",
+    "docs/deckcraft/plants-realism-2026-10-17/p3/* (spike notes, contact sheets, screenshots, metrics)"
+   ],
+   "owner_gates": [
+    "Decide D3, D4, D5, D6 (yew form), D12, D13, D14, D20, D21, D22 and D23 before the build.",
+    "Approve the dry-run list of 6 CC0 iNaturalist photos (2 each for Smaragd, boxwood and yew) under the D20 rule, before any fetch.",
+    "Owner opens the spike page on the iPhone over LAN, or accepts the Chrome and Edge results plus the shader-mip fallback.",
+    "Sign off the hull-and-shell look on contact sheets before runtime integration, including the LOD2 sheet. Decide D2b from golden-hour before/after shots.",
+    "Owner phone gate on the iPhone:\n- The balanced-tier orbit on the estate.\n- With Showcase quality on, a 10 s fly-through of the estate. Pass means no WebGL context loss, with frame time and memory recorded (D21).",
+    "Look sign-off on the screenshots, including the constrained 390x844 hedge row. Owner says 'commit'; merging needs an explicit OK."
+   ],
+   "acceptance": [
+    "Saved data untouched:\n- The demo, the estate and every e2e fixture load with landscapeObjects deep-equal, and the validators are unchanged.\n- check-plant-species deep-freezes landscapeObjects, runs every render-path function on them (resolvePlantModel, speciesInstanceMatrix, plantSeat, landscapeRenderLods, bedEdgeGeometry) and asserts byte-identical JSON before and after. This replaces a fixed estate hash pin, which unrelated showcase edits would break.\n- The estate link stays 98,422 bytes, and quote fingerprints are unchanged.",
+    "Resolution:\n- Smaragd, boxwood and yew render species models resolved from speciesRecord.id.\n- resolvePlantModel unit cases cover an imported id on grass-clump, an unknown id, no speciesRecord, and an edited record that keeps a library id.",
+    "check-plant-species, licence and format:\n- Project-owned outputs only, built from committed CC0-derived inputs. Each has provenance: photo id, observer, licence-snapshot hash and sha256.\n- No embedded images.\n- extensionsRequired limited to KHR_mesh_quantization and EXT_meshopt_compression.\n- At most 2 primitives per species-LOD GLB.\n- Every file under public/deckcraft/plants matches /\\.[0-9a-f]{8}\\.(glb|webp)$/.\n- The manifest equals the generated module, and species ids are a subset of the PLANT_LIBRARY ids.",
+    "check-plant-species, size and shape:\n- Triangles at or under 2,500 / 750 / 160 (LOD0 / LOD1 / LOD2).\n- Sprite world size at the reference envelope: scale sprays at or under 15 cm; boxwood clusters at or under 10 cm. Today the cards are 7-15 in.\n- Model aspect within 10% of the authored botany aspect. Today Smaragd is stretched 2.1x.",
+    "Node GLTFLoader with MeshoptDecoder loads every species LOD. Its world-space bounds under speciesInstanceMatrix (with variation off) match the envelope within ±2%, following the check-furniture-facing pattern.",
+    "Node rasteriser, LOD fidelity over 8 azimuths:\n- Silhouette IoU at least 0.85 at LOD1 and 0.75 at LOD2.\n- Edge roughness at LOD1 and LOD2 at least 70% of LOD0's.\n- LOD1 coverage from 10 ft at least 95%.\n- LOD mean-albedo ΔE00 at most 5.",
+    "Colour:\n- Flat-light mean foliage albedo within ΔE00 5 of each species' spec target.\n- L*(yew) < L*(boxwood) < L*(Smaragd), both in Node and in-scene (Day; Front and Bed close-up crops logged by the harness).\n- Glossy roughness class on all three, with at most 0.5% of their canopy pixels above sRGB 235.",
+    "Repetition: adjacent same-species instance pairs in the estate hedge rows, rasterised with their real variants and instance transforms, have front-view silhouette IoU at or below 0.92.",
+    "plants:verify passes offline (network stubbed) in under 120 s, on Windows and on CI Linux.",
+    "e2e: the species smoke, the forced-high compile load and the missing-file fallback all pass within their timeouts.",
+    "Perf, harness against P0, per tier, scene and camera:\n- Plant draws per scene pass within the P9 budgets (estate 45/100/150, demo 60/120/180 for constrained/balanced/high).\n- The estate-mix projection is inside the P9 triangle budgets.\n- Overdraw at Front and Bed close-up at most 1.10× P0.\n- p95 frame time at most 1.15× P0.\n- Programs at most +6 per tier against P2.\n- Longest frame after the LOD switch at most 100 ms on the owner's GPU at high tier.\n- Shadow redraws over the orbit at most P0, and sun shadow extent within ±5% of P0.",
+    "Perf, iPhone (balanced, portrait):\n- p95 at most max(33 ms, 1.15× the P0 iPhone baseline).\n- The Showcase-quality fly-through shows no context loss. If it fails, D21 applies.",
+    "Bundle and probe:\n- Landscape3D chunk at or under 36 KB gzip; species table chunk at or under 3 KB; viewer chunk unchanged.\n- The magenta probe stays at 0.",
+    "Screenshots at 1600x900 and 390x844:\n- Front and Bed close-up of the Smaragd pair, the boxwood pair and the yew.\n- Plant base macro on boxwood.\n- Estate Overview of the Smaragd hedge row, including the constrained-tier capture.\nOwner sign-off."
+   ],
+   "checks_moved": [
+    "New check-plant-species.ts (npm run check:plants) covers:\n- Licence, provenance and sha256; triangle caps per class; primitives per GLB; bytes; extensions; hashed filenames.\n- Sprite world size, aspect, world bounds, atlas memory.\n- LOD IoU, edge roughness, coverage, ΔE and colour order; instance-pair IoU.\n- The resolvePlantModel cases, deep-freeze data invariance and the estate-mix projection.\n- The 8 MB species cap.\n- No network, and a 120 s time box.",
+    "check-landscape-objects.ts:\n- :80-98 legacy pins are unchanged, plus explicit sha256 pins for all 15 legacy GLBs.\n- :43-45 keep the deciduous-tree LOD tests (no previous-LOD map, so the results are identical).\n- :94 is unchanged.",
+    "check-photo-trace.ts: foliage-species-v1 assertions, -lodN names, and raster/trace parity for a species planting.",
+    "check-deck-bundle.ts: Landscape3D chunk at or under 36 KB gzip, and the species table chunk at or under 3 KB.",
+    "check-deck-realism.ts:71-72: golden-hour foliage rerun.",
+    "e2e: the new deckcraft-plant-species spec (smoke, forced-high compile, missing-file fallback).\n- deckcraft-landscape-library.spec is unchanged, since its button names come from LANDSCAPE_ASSETS.\n- e2e/static-server.mjs is unchanged; it already maps .webp and .glb.",
+    "Rerun unchanged: check-curved-landscape-editing:47 and check-editing-audit:44 (pick by index), check-project-bundle:45 and check-deck-quote-loader:29. These test data round-trips; render resolution is tested in check-plant-species."
+   ],
+   "budgets": "- Triangles (LOD0 / LOD1 / LOD2): clipped evergreen 2,500 / 750 / 160.\n- Estate LOD2: about -24.3k (76 × (480 - 160)).\n- Estate-mix projection at the caps of all waves: LOD0 about 841k (target 1.0M); LOD2 about 39.5k (target 45k).\n- New static bytes: at most 1.2 MB, covering:\n  - the scale/needle atlas and the opaque atlas at 3 sizes, about 0.7 MB WebP;\n  - 9 GLBs plus 2 Smaragd variants, about 0.2 MB.\n- Committed derived inputs: at most 0.3 MB.\n- GPU (high / balanced / constrained):\n  - Scale/needle atlas: 2.67 / 0.67 / 0.17 MiB.\n  - Opaque atlas: 2.67 / 0.67 / 0.17 MiB.\n- Draws: at most 2 per species-variant-LOD group. Variants exist only at LOD0/LOD1.\n- Landscape3D chunk: +4.5 KB gzip at most, which covers the species path, error boundary, hysteresis, stable groups and variation. That stays within the 36 KB cap.\n- Species table chunk: 3 KB at most.\n- Viewer chunk: 0.",
+   "effort_days": 7,
+   "risks": [
+    "Hull and shell can read as topiary or plastic. Mitigation: bent normals, jitter, baked AO, photo-derived luminance detail, the edge-roughness gate, and contact-sheet sign-off before integration.",
+    "A 160-triangle LOD2 might not keep 70% of LOD0's edge roughness. The packer keeps edge cards first. If the gate still fails, the cap rises to 200 within the 45k projection, which has 12% headroom.",
+    "iOS Safari may mishandle explicit mip uploads or WebP alpha. The spike decides; the fallback is generated mips plus the P1 shader scale.",
+    "Draw calls now scale with species × variants × LODs, not with plant count. Mitigation: per-pass draw budgets, the overdraw and frame-time gates, and the D23 contingencies (drop LOD1 variants, then BatchedMesh per role).",
+    "Pipeline scope creep. P3 builds only the hull-and-shell form; the other generators arrive with their waves.",
+    "Cross-platform reproducibility. Geometry is compared exactly, pixels within tolerance, sharp is pinned in the lockfile, and inputs are committed.",
+    "Render-only height jitter means a plant can appear up to 5% taller than its saved heightIn. Saved data, the MatureSpread ring and quotes are unchanged (D22)."
+   ]
+  },
+  {
+   "id": "P4",
+   "name": "Geometry-leaf plants: feather reed grass, hosta, switchgrass, daylily, ostrich fern, little bluestem",
+   "goal": "Replace alpha-card proxies with real leaf geometry for the next most-used group: Karl Foerster (24 in the estate, plus AI concepts), hosta (21, today made of 15.7 in tree-leaf cards), switchgrass, little bluestem (AI concepts), daylily and ostrich fern (today untextured flat brown).",
+   "work": [
+    "**Grasses** (forms/bladeClump.mjs): geometry blades with no alpha test, using vertex colour plus an opaque-atlas strip. Blade count, width, segments, curvature and stiffness are set per species. Little bluestem gets a red-purple vertex tip tint.",
+    "**Hosta** (forms/rosette.mjs): 15-40 individually bent cordate leaves (8-16 triangles each), with the parallel-vein texture in the opaque atlas. 2-4 scapes carry pale bells. Two seeded variants (D22).",
+    "**Daylily** (forms/strapFountain.mjs): fans of folded, arching strap leaves, plus scapes with 6-tepal trumpet geometry. The tepal texture is in the opaque atlas.",
+    "**Ostrich fern** (forms/frondVase.mjs):\n- 8-12 frond strips (6-8 segments), widest above the middle.\n- A pinnae cutout sprite.\n- 2-3 brown fertile fronds in the centre.\nThis supersedes the proxy fern and any D15b stop-gap.",
+    "**Plume/petal cutout atlas** at 512, 256 and 128 px, content-hashed. It holds the Karl Foerster plumes, the switchgrass panicle haze (at most 24 cards per plant) and the fern pinnae. Karl Foerster gets two seeded variants.",
+    "**AI concept plants.** siteDesignMoves.ts:589-592 places Karl Foerster and little bluestem on grass-clump. They now render species models through speciesRecord, with no data change.",
+    "PlantBlooms skips hemerocallis automatically, through the P3 rule.",
+    "**Dry-run:** 15 CC0 photos under the D20 rule.\n- Karl Foerster: genus-level research-grade Calamagrostis for blade detail, plus casual-grade cultivated 'Karl Foerster' photos for plume colour.\n- The others: species-level research-grade CC0.\n- Extracted to committed derived inputs."
+   ],
+   "files": [
+    "scripts/plant-species/specs.mjs",
+    "scripts/plant-species/forms/bladeClump.mjs, rosette.mjs, strapFountain.mjs, frondVase.mjs (new)",
+    "scripts/plant-species/sprites.mjs, atlas.mjs",
+    "scripts/plant-species/inputs/* (derived tiles)",
+    "public/deckcraft/plants/* (regenerated, content-hashed)",
+    "src/features/deckcraft/components/viewer3d/plantModels.generated.ts",
+    "src/features/deckcraft/components/viewer3d/plantAtlases.ts",
+    "scripts/plant-species/sources.lock.json",
+    "scripts/check-plant-species.ts",
+    "e2e/deckcraft-plant-species.spec.ts",
+    "docs/deckcraft/plants-realism-2026-10-17/p4/*"
+   ],
+   "owner_gates": [
+    "Approve the dry-run list of 15 CC0 photos.",
+    "Settle the D6 defaults for hosta, daylily and switchgrass.",
+    "Contact-sheet sign-off, then screenshot sign-off.",
+    "Owner says 'commit'; merging needs an explicit OK."
+   ],
+   "acceptance": [
+    "No alpha-tested material on hosta, daylily or any grass blade. Alpha is allowed only on the switchgrass panicle haze, the Karl Foerster plumes and the fern pinnae.",
+    "Karl Foerster:\n- Culms within 10 degrees of vertical.\n- Plume width:height at or under 0.45.\n- Plume within ΔE00 5 of its spec target (tan, about #c9b07a class).\n- Plume b* above foliage b*.",
+    "Hosta: 15-40 overlapping leaves; dome height:spread 0.5-0.65; veins visible at Plant base macro; glossy roughness class.",
+    "Fern: a vase widest above the middle, with no untextured material anywhere.",
+    "Colour: every species within ΔE00 5 of its target. Little bluestem must read bluer (lower b*) than switchgrass.",
+    "LOD IoU (at least 0.85 at LOD1, 0.75 at LOD2), edge roughness (at least 70%) and LOD ΔE (at most 5). The LOD2 contact sheet still identifies each species.",
+    "Triangle caps met. Hosta's rise from 192 to at most 800 at LOD0 is intended; grasses and fern fall. The estate-mix projection stays inside the P9 budgets.",
+    "Perf gates as in P3: draws per pass, overdraw at most 1.10× P0, p95 at most 1.15× P0, programs, shadow redraws.",
+    "The e2e smoke is extended to these species. Magenta probe 0. The data-invariance assertions hold.",
+    "Screenshots: Front, Bed close-up, Plant base macro and Corner, at 1600x900 and 390x844. Owner sign-off."
+   ],
+   "checks_moved": [
+    "check-plant-species.ts: grass, hosta, daylily and fern classes; plume/petal atlas memory; colour-order assertions.",
+    "check-photo-trace.ts: the bloom-card parity case still passes with hemerocallis skipped.",
+    "check-site-concepts.ts:172 is unchanged (concept assetIds are kept) and must pass.",
+    "check-landscape-objects.ts: the fern-clump proxy becomes fallback-only; its assertions are unchanged."
+   ],
+   "budgets": "- Triangles (LOD0 / LOD1 / LOD2):\n  - Grass: 1,500 / 500 / 64.\n  - Hosta: 800 / 300 / 48.\n  - Daylily: 1,500 / 500 / 64.\n  - Fern: 1,500 / 500 / 64.\n- New static bytes: at most 0.6 MB. Derived inputs: at most 0.6 MB.\n- GPU, plume/petal atlas: 1.33 MiB high, 0.33 MiB balanced, 0.08 MiB constrained. The opaque atlas is already counted in P3.\n- Draws: at most 2 per group.\n- Landscape3D chunk: +0.5 KB gzip at most.",
+   "effort_days": 3.5,
+   "risks": [
+    "Thin blade triangles alias at MSAA 0 on the constrained tier. Mitigation: fewer, wider blades at LOD2.",
+    "Geometry hosta can look plasticky. Mitigation: a vein texture with photo-derived detail, baked AO, and the glossy-class roughness tuned at the contact-sheet gate.",
+    "The switchgrass haze and KF plumes add alpha overdraw. They are capped at 24 cards per plant and held to the overdraw gate."
+   ]
+  },
+  {
+   "id": "P5",
+   "name": "Broadleaf shrubs with baked flower heads",
+   "goal": "Replace the six shrubs that today share one tree-leaf 'rounded-shrub' mound with leaves about 12x too large:\n- Annabelle (19 in the estate).\n- Red-osier dogwood (15).\n- Panicle hydrangea (12).\n- Lilac (9).\n- Ninebark (4, plus AI concepts).\n- Spirea (AI concepts and the demo bed).",
+   "work": [
+    "**Stem and cane skeletons** (forms/caneShrub.mjs), in four forms:\n- Arching fountain: ninebark.\n- Upright vase: panicle hydrangea, lilac.\n- Thicket: dogwood.\n- Low mound: spirea, Annabelle.\nStems converge into a crown at y=0 and run 2 in below it. baseRadiusIn is measured from the stem cluster at y=0 and feeds the P2 collar.",
+    "**Leaf-cluster cards at botanical size:** 3-7 true-size leaves per cluster, 10-25 cm across.",
+    "**Broadleaf cutout atlas** at 1024, 512 and 256 px, content-hashed, with these cells:\n- Ovate-serrate (hydrangeas).\n- Ovate with arcuate veins (dogwood).\n- Cordate (lilac).\n- 3-5-lobed crenate (ninebark).\n- Small lanceolate (spirea).\nThe P7 tree cells are reserved now.",
+    "**Stems, bark and heads go in the shared opaque atlas**, so each shrub stays at 2 draws: opaque plus cutout.\n- Procedural bark cells only, no download: peeling ninebark, grey lilac, smooth stems.\n- Dogwood stems get red vertex colour (#8a2a22).",
+    "**Baked heads** (opaque geometry with a floret texture from the opaque atlas):\n- Annabelle: 8-15 white globes, 20-30 cm.\n- Panicle hydrangea: 6-12 cones, 25-30 cm.\n- Spirea: flat pink corymbs.\n- Lilac: brown seed panicles (summer state).\n- Ninebark: red seed clusters.\nHeads are kept at LOD2, simplified to 4 globes, so phones show flowers for the first time.",
+    "Cultivar colours per D6 live in the atlas, not in a tint. Annabelle and dogwood get two seeded variants each.",
+    "**Dry-run:** 15 CC0 photos under the D20 rule.\n- Panicle hydrangea: species-level research-grade CC0 returns 0, so casual-grade cultivated photos are used for both detail and the 'Limelight' colour.\n- The cultivar colour targets for 'Diabolo' and 'Goldmound' also come from casual-grade photos.\n- The rest: species-level research-grade CC0."
+   ],
+   "files": [
+    "scripts/plant-species/specs.mjs",
+    "scripts/plant-species/forms/caneShrub.mjs (new)",
+    "scripts/plant-species/sprites.mjs, atlas.mjs",
+    "scripts/plant-species/inputs/* (derived tiles)",
+    "public/deckcraft/plants/* (regenerated, content-hashed)",
+    "src/features/deckcraft/components/viewer3d/plantModels.generated.ts",
+    "src/features/deckcraft/components/viewer3d/plantAtlases.ts",
+    "scripts/plant-species/sources.lock.json",
+    "scripts/check-plant-species.ts",
+    "e2e/deckcraft-plant-species.spec.ts",
+    "docs/deckcraft/plants-realism-2026-10-17/p5/*"
+   ],
+   "owner_gates": [
+    "Approve the dry-run list of 15 CC0 photos.",
+    "Settle the D6 defaults for ninebark, spirea and panicle hydrangea.",
+    "Contact-sheet sign-off, then screenshot sign-off.",
+    "Owner says 'commit'; merging needs an explicit OK."
+   ],
+   "acceptance": [
+    "Leaf world size at the reference envelope falls in each species' botany range: for example, ninebark leaves 2.5-10 cm and every card at or under 25 cm. Today the median card edge is 16 in.",
+    "Dogwood: at least 150 red-band stem pixels at its base in Plant base macro at 1600x900, where the P0 fixture puts it in the front row.",
+    "Annabelle: 8-15 heads, each 20-30 cm across, present at LOD2.",
+    "Panicle hydrangea: heads are conical (height:width at least 1.5) and visibly different from Annabelle's balls in the same shot.",
+    "Colour: foliage and heads within ΔE00 5 of their targets. Ninebark has a* > 0 under the default 'Diabolo'.",
+    "LOD IoU, edge roughness and ΔE gates met. The LOD2 far colour carries the head hue.",
+    "At most 2 primitives per species-LOD GLB (opaque plus cutout).",
+    "Triangle caps met; the estate-mix projection stays inside the P9 budgets.",
+    "Perf gates as in P3. e2e smoke extended. Magenta probe 0. Data invariance holds.",
+    "Screenshots: Front, Bed close-up, Plant base macro and Corner, at 1600x900 and 390x844. Owner sign-off."
+   ],
+   "checks_moved": [
+    "check-plant-species.ts: the shrub class, the broadleaf atlas memory, the opaque-atlas allotments and the reserved P7 tree cells.",
+    "check-photo-trace.ts: the bloom-card parity case passes with the two hydrangeas skipped.",
+    "check-site-concepts.ts:172 is unchanged and must pass."
+   ],
+   "budgets": "- Triangles (LOD0 / LOD1 / LOD2): deciduous shrub including heads, 3,000 / 1,000 / 160.\n- New static bytes: at most 1.0 MB. Derived inputs: at most 0.6 MB.\n- GPU, broadleaf atlas: 5.33 MiB high, 1.33 MiB balanced, 0.33 MiB constrained. The opaque atlas is already counted.\n- Draws: at most 2 per group.\n- Landscape3D chunk: +0.5 KB gzip at most (peak about 33.3 of 36 KB).",
+   "effort_days": 4.5,
+   "risks": [
+    "Leaf clusters can still read as cards up close. Mitigation: true-size multi-leaf sprites, photo-derived detail and bent normals.",
+    "Head geometry cost in the estate (19 Annabelle). Mitigation: heads merged into the opaque primitive, and LOD2 heads simplified to 4 globes.",
+    "Cultivar choices (D6) set what clients see first. The quote copy keeps 'visual proxy, not a nursery SKU'.",
+    "Casual-grade photos carry identification risk. Mitigation: the agent's ID check is shown in the dry-run, and they are used for hue and chroma only."
+   ]
+  },
+  {
+   "id": "P6",
+   "name": "Flowering perennials; retire the runtime bloom cards",
+   "goal": "Model the perennials with real flower heads, then remove the canvas-blob bloom cards:\n- Echinacea (14 in the estate).\n- Rudbeckia (13).\n- Nepeta (4).\n- Salvia (3).\n- Monarda (demo bed).",
+   "work": [
+    "**Generators** (forms/uprightPerennial.mjs and forms/moundPerennial.mjs):\n- Echinacea: 12-16 drooping ray strips plus a domed cone, about 60 triangles, no alpha. Ray and cone textures are in the opaque atlas.\n- Rudbeckia: 10-20 flat golden rays plus a dark dome, with many heads on branching stems.\n- Monarda: shaggy pompoms of radial tube strips on square stems, opaque.\n- Nepeta and salvia: spike cards in the plume/petal cutout atlas.\nRoughness classes: matte for the hairy rudbeckia and echinacea and the grey catmint.",
+    "**Delete plantBlooms.tsx** and its mount in Landscape3D. Also delete the now-unused applyBloomLighting, the photoMaterials bloom branch and the P1 bloom-card parity case.",
+    "**Dry-run:** 15 CC0 photos (2 foliage plus 1 flower per taxon) under the D20 rule; the 'May Night' colour comes from casual-grade photos."
+   ],
+   "files": [
+    "scripts/plant-species/specs.mjs",
+    "scripts/plant-species/forms/uprightPerennial.mjs, moundPerennial.mjs (new)",
+    "scripts/plant-species/inputs/* (derived tiles)",
+    "public/deckcraft/plants/* (regenerated, content-hashed)",
+    "src/features/deckcraft/components/viewer3d/plantModels.generated.ts",
+    "src/features/deckcraft/components/viewer3d/plantBlooms.tsx (deleted)",
+    "src/features/deckcraft/components/viewer3d/Landscape3D.tsx (PlantBlooms unmounted)",
+    "src/features/deckcraft/components/viewer3d/foliageLighting.ts (applyBloomLighting removed)",
+    "src/features/deckcraft/components/viewer3d/photoMaterials.ts (bloom branch removed)",
+    "scripts/plant-species/sources.lock.json",
+    "scripts/check-plant-species.ts",
+    "scripts/check-photo-trace.ts",
+    "scripts/check-deck-bundle.ts",
+    "docs/deckcraft/plants-realism-2026-10-17/p6/*"
+   ],
+   "owner_gates": [
+    "Approve the dry-run list of 15 CC0 photos.",
+    "Contact-sheet sign-off, then screenshot sign-off.",
+    "Owner says 'commit'; merging needs an explicit OK."
+   ],
+   "acceptance": [
+    "Heads stand clear above the leaves at the reference height. Echinacea rays reflex 20-40 degrees.",
+    "Flower and foliage colours within ΔE00 5 of their targets.",
+    "Flowers are visible at LOD2 on the constrained tier for all 8 former bloom species. Today LOD2 and phones show none (plantBlooms.tsx:133).",
+    "No module imports plantBlooms or applyBloomLighting.",
+    "The Landscape3D chunk shrinks by about 2.5 KB gzip net.",
+    "LOD IoU, edge roughness and ΔE gates met. Perf gates as in P3. Magenta probe 0. Data invariance holds.",
+    "Screenshots: Front, Bed close-up and Plant base macro, at 1600x900 and 390x844. Owner sign-off."
+   ],
+   "checks_moved": [
+    "check-plant-species.ts: the perennial class.",
+    "check-photo-trace.ts: the P1 bloom-card parity case is removed with the cards. Raster/trace parity is added for the perennial models.",
+    "check-deck-bundle.ts: the Landscape3D chunk is re-measured (smaller)."
+   ],
+   "budgets": "- Triangles (LOD0 / LOD1 / LOD2): perennial 1,500 / 500 / 64.\n- New static bytes: at most 0.4 MB. Derived inputs: at most 0.6 MB.\n- GPU: uses the existing opaque and plume/petal atlases, so +0 MiB.\n- Landscape3D chunk: about -2.5 KB gzip net.",
+   "effort_days": 3,
+   "risks": [
+    "Small heads alias at distance. Mitigation: LOD1/LOD2 merge heads into larger single cards.",
+    "Imported or unknown species lose nothing, because BLOOMS was keyed by species id. Verify with the imported-species fixture."
+   ]
+  },
+  {
+   "id": "P7",
+   "name": "Deciduous trees: sugar maple, red maple, serviceberry, redbud",
+   "goal": "Give each broadleaf tree a crown, trunk and leaf scale that reads as an installed tree of its species, with the root flare visible above the mulch. This replaces the shared 65k-triangle African-tree proxy; the context-tree GLBs stay untouched.",
+   "work": [
+    "**Generator.** An in-repo space-colonisation generator (scripts/plant-species/spaceColonisation.mjs, Runions 2007), seeded and deterministic. It grows inside per-species crown envelopes at installed size:\n- Sugar maple: young oval, h:w about 1.3, opposite twigs, some sky showing through.\n- Red maple: upright oval, branches at 30-45 degrees.\n- Serviceberry: 3-5 stems, irregular upright oval.\n- Redbud: 2-4 stems split below 2 ft, flat-topped crown wider than tall.",
+    "**Trunks** (installed-size cues; the botany research gives ANSI Type 1 2-2.5 in caliper at 12-14 ft, and Oshawa and Toronto specify 1.8-2.0 m of clear stem):\n- Pipe-model radii normalised so that, at the 180 in reference, the trunk diameter 6 in above the soil line is 2.0-2.5 in. This scales with height.\n- Lowest scaffold branch at least 48-60 in up. Redbud and serviceberry are exempt.\n- Root flare ×1.4 over the bottom 6 in, with y=0 at the soil line and the trunk running 2 in below it. baseRadiusIn feeds the P2 collar.",
+    "**New broadleaf atlas cells** (in the reserved allotment):\n- A 5-lobed U-sinus maple leaf.\n- A 3-lobed serrate maple leaf, with red petioles through vertex colour and grey-white undersides through the back-face blend.\n- A cordate redbud leaf.\n- A small elliptic serviceberry leaf.",
+    "**Bark, procedural only.** The trident_maple_bark download is dropped: its flaky, plated bark reads old on a 2.5 in trunk.\n- Opaque-atlas cells: smooth light-grey bark with lenticels for the young maples and serviceberry, and a dark scaly tile for redbud.",
+    "**LOD2.** Retained cluster cards are enlarged by sqrt(1/retention).\n- If LOD2 fails the IoU gate, fall back to a billboard cloud: 6-16 k-means planes, including at least 2 near-horizontal planes for the Above camera.\n- The billboard cloud is baked by the P3 Node rasteriser into a far atlas that carries the leaf hue.",
+    "**Variants:** two seeded variants for serviceberry (D22).",
+    "**Capture:** add a 'Tree row' camera (the demo trees side by side at equal distance). Plant base macro already frames the in-bed red maple.",
+    "**Dry-run:** 8 CC0 photos under the D20 rule. No bark download."
+   ],
+   "files": [
+    "scripts/plant-species/spaceColonisation.mjs (new)",
+    "scripts/plant-species/forms/canopyTree.mjs, multiStemTree.mjs (new)",
+    "scripts/plant-species/specs.mjs, sprites.mjs, atlas.mjs, raster.mjs (billboard-cloud bake only if needed)",
+    "scripts/plant-species/inputs/* (derived tiles)",
+    "public/deckcraft/plants/* (regenerated, content-hashed)",
+    "src/features/deckcraft/components/viewer3d/plantModels.generated.ts",
+    "scripts/plant-species/sources.lock.json",
+    "scripts/check-plant-species.ts",
+    "scripts/capture-plants-realism.ts (Tree row camera)",
+    "docs/deckcraft/plants-realism-2026-10-17/p7/*"
+   ],
+   "owner_gates": [
+    "Approve the dry-run list of 8 CC0 photos.",
+    "Contact-sheet sign-off for all four trees, then screenshot sign-off, including Realistic-look stills.",
+    "Owner says 'commit'; merging needs an explicit OK."
+   ],
+   "acceptance": [
+    "Installed-tree cues at the 180 in reference, scaling with height:\n- Trunk diameter 6 in above the soil line is 2.0-2.5 in.\n- Lowest scaffold branch is at least 48 in up on the maples.\n- Side-view sky-gap fraction is 8-25% for the maples and serviceberry (Node rasteriser).",
+    "Root flare on screen, measured in Plant base macro on the in-bed red maple: trunk width at the mulch line is at least 1.3x the width at 12 in. Soil-collar pixels are visible around the trunk, as in the P2 criterion.",
+    "Silhouette height:width within ±15% of spec: sugar maple about 1.3, red maple about 1.5, serviceberry about 1.4, redbud about 0.85. Pairwise front-view IoU between the four trees at LOD1 is at or under 0.80.",
+    "Leaf-cluster world size within the botany ranges: maple 30-40 cm, serviceberry 15-20 cm. Foliage within ΔE00 5 of its targets. Red maple reads redder at the crown edge (higher mean a* in the edge band) than sugar maple.",
+    "LOD IoU (at least 0.85 at LOD1, 0.75 at LOD2), edge roughness and LOD ΔE (at most 5) met, with or without the billboard-cloud fallback.",
+    "Demo-bed deciduous trees, all at LOD0: at or under 40k triangles (36k at caps; today about 261k). The estate-mix projection stays inside the P9 budgets.",
+    "Unchanged: the context trees, and the sha256 of the deciduous-tree, conifer-tree and grass-clump GLBs. check-landscape-objects:59-61 (context LOD1 under 900k) is unchanged.",
+    "Perf gates as in P3. Magenta probe 0. Data invariance holds.",
+    "Screenshots: Corner, Overview, Front, Tree row, Plant base macro, Tree in lawn and Realistic-look stills, at 1600x900 and 390x844. Owner sign-off."
+   ],
+   "checks_moved": [
+    "check-plant-species.ts: tree classes; caliper, scaffold and sky-gap assertions; broadleaf and opaque atlas totals; the far atlas if used.",
+    "check-landscape-objects.ts:43-45: the 300-tree dense LOD test stays on the deciduous proxy.",
+    "check-photo-trace.ts: parity with tree species meshes."
+   ],
+   "budgets": "- Triangles (LOD0 / LOD1 / LOD2):\n  - Canopy tree: 10,000 / 3,000 / 300.\n  - Small multi-stem tree: 8,000 / 2,500 / 300.\n- New static bytes: at most 1.0 MB. Derived inputs: at most 0.3 MB. Download bytes: 0 (no bark download).\n- GPU: broadleaf and opaque atlases are already counted.\n- If the billboard-cloud fallback is used: far atlas +2.67 MiB high, +0.67 MiB balanced, +0.17 MiB constrained.\n- Landscape3D chunk: +0.5 KB gzip at most.",
+   "effort_days": 4.5,
+   "risks": [
+    "Generator tuning time. Mitigation: seeded RNG, contact sheets, and IoU, caliper and sky-gap metrics keep it reviewable.",
+    "If the enlarged clusters fail the LOD2 IoU, the billboard-cloud fallback adds about 1.5 days and the far atlas.",
+    "Placed trees will no longer match the out-of-scope context trees (the Burkea proxy) in wide shots. Accepted.",
+    "Procedural bark may look too clean. Mitigation: lenticel noise and photo-derived luminance detail from the trunk crops in the approved photos."
+   ]
+  },
+  {
+   "id": "P8",
+   "name": "Conifers: eastern white pine, Colorado blue spruce",
+   "goal": "Finish all 26 species with whorled conifers that read as their species:\n- White pine (13 in the estate): open tiers with soft plumes.\n- Blue spruce: dense, silver-blue, branched to the ground.",
+   "work": [
+    "**Generator** (forms/whorlConifer.mjs):\n- White pine: open whorls of 5 branches with sky gaps; branches tip up; soft 5-needle plume tufts (7-12 cm needles) at the tips.\n- Blue spruce: a dense pyramid branched to the ground, 4-6 branches per tier, with bottle-brush sprays of stiff needles under 1 in.",
+    "**Spruce inner hull.** An opaque inner cone hull with renderOrder before the cutout cards; check-plant-species asserts the order. It cuts alpha overdraw on phone tile GPUs and guarantees at least 95% opacity.",
+    "**Needle sprites** go into the P3 scale/needle atlas. The packer fails the build if the allotment overflows.",
+    "**Bark.** Poly Haven pine_sapling_small bark (CC0; downloaded only after owner approval at this phase's gate) for white pine's smooth, greenish young bark.\n- The raw JPGs stay in the out-of-repo cache.\n- A downsampled 256 px derived tile is committed under scripts/plant-species/inputs/ and packed into the opaque atlas.\n- Spruce bark is hidden.",
+    "**Envelope fit.** Models are authored at true proportions; saved envelopes are not changed (that is P10). The P3 species matrix clamps the XZ stretch to 0.8-1.25.",
+    "**Dry-run:** 4 CC0 photos under the D20 rule, plus the bark download."
+   ],
+   "files": [
+    "scripts/plant-species/forms/whorlConifer.mjs (new)",
+    "scripts/plant-species/specs.mjs, sprites.mjs, fetch-sources.mjs (bark entry)",
+    "scripts/plant-species/inputs/* (derived tiles, pine bark tile)",
+    "public/deckcraft/plants/* (regenerated, content-hashed)",
+    "public/deckcraft/landscape/ATTRIBUTION.md (Poly Haven bark line)",
+    "src/features/deckcraft/components/viewer3d/plantModels.generated.ts",
+    "scripts/plant-species/sources.lock.json",
+    "scripts/check-plant-species.ts",
+    "e2e/deckcraft-plant-species.spec.ts",
+    "docs/deckcraft/plants-realism-2026-10-17/p8/*"
+   ],
+   "owner_gates": [
+    "Approve the pine_sapling_small bark download and the dry-run list of 4 CC0 photos.",
+    "Contact-sheet sign-off, then screenshot sign-off, including the estate Realistic-look stills.",
+    "Owner says 'commit'; merging needs an explicit OK."
+   ],
+   "acceptance": [
+    "White pine, side contact sheet: sky pixels between tiers make up at least 10% of the crown area.",
+    "Blue spruce:\n- At most 3% sky through the crown, and at least 95% opacity.\n- It reads silver-blue (#8aa3a8 class) from the atlas, not from a tint.\n- Its b* is lower (bluer) than white pine's, both in Node and in-scene.",
+    "check-plant-species asserts that the species-table ids equal the PLANT_LIBRARY ids (all 26).",
+    "Estate showcase, all at LOD0: at or under 1.0M triangles (about 0.84M at caps; today 2,517,270). Demo bed, all at LOD0: at or under 120k (about 102k at caps; today 376,330). Constrained estate projection at or under 45k (about 39.5k).",
+    "LOD IoU, edge roughness and ΔE gates met. The e2e smoke loads every species at LOD2 with no 404s, no SPA-fallback responses and no page errors.",
+    "Perf gates as in P3, including overdraw at Front with the spruce in frame. Unchanged context trees. Magenta probe 0. Data invariance holds.",
+    "Screenshots: Corner, Overview, Front and Tree row, at 1600x900 and 390x844. Owner sign-off."
+   ],
+   "checks_moved": [
+    "check-plant-species.ts: the conifer class; the ids-parity check becomes equality; the estate showcase total; the renderOrder assertion.",
+    "The e2e species spec covers all 26 species at LOD2.",
+    "check-photo-trace.ts: a parity case for the opaque inner hull plus cutout cards."
+   ],
+   "budgets": "- Triangles (LOD0 / LOD1 / LOD2): conifer 8,000 / 2,500 / 300.\n- New static bytes: at most 0.6 MB.\n- Downloads: 1,742,114 B of bark into the local cache; the committed derived tile is at most 60 KB.\n- GPU: uses the P3 atlases, so +0 MiB.\n- After all waves, plant textures (the 4 atlases plus the contact decal) total at most 12.4 MiB on high and showcase, 3.4 MiB on balanced and 0.85 MiB on constrained, plus the far atlas only if the P7 fallback was used. Today all LOD0 plant textures total about 34 MiB.\n- Landscape3D chunk: +0.5 KB gzip at most.",
+   "effort_days": 2.5,
+   "risks": [
+    "Spruce needle sprays at 25% atlas coverage could vanish at distance. Mitigation: the mip coverage guard plus the opaque inner hull.",
+    "A dense spruce costs fill rate on the high tier. Mitigation: the inner hull draws first by renderOrder, under the overdraw gate."
+   ]
+  },
+  {
+   "id": "P9",
+   "name": "Estate-scale hardening, CI reproducibility, phone showcase and caching",
+   "goal": "Prove the full library at estate scale (273 plants) and on the 26-species demo in a real browser, on every tier and on the owner's iPhone. Make CI fail on generator drift without any network access, and, if approved, serve species files with immutable caching.",
+   "work": [
+    "**Budget pass.** capture-plants-realism runs on the estate and the demo bed at high, balanced and constrained, and on a showcase still. It asserts per-pass plant draws, per-frame totals across beauty, reflection, shadow and occlusion passes, triangles, plant texture MiB, overdraw and frame time against the stated budgets.",
+    "**CI.** Per D11, add a plants:verify step to .github/workflows/pr-lint.yml: offline, using the P3 tolerance rules, and time-boxed at 120 s.",
+    "**Caching (D16).** A netlify.toml rule for /deckcraft/plants/*: Cache-Control public, max-age=31536000, immutable, and Content-Type model/gltf-binary for .glb.\n- Every file there is content-hashed; the manifest lives in scripts/ and is not served.\n- Verified with curl -I on a deploy preview only, never on production.",
+    "**Phone showcase gate.** Owner, on the iPhone: open the estate, turn on Showcase quality and record a 10 s fly-through. The run records context loss, frame time and memory. D21 decides the cap if it fails.",
+    "**Photo stills.** Run capture-photo-stills.ts on the estate: raster and path-trace mean albedo per species group must be within the existing tolerance.",
+    "**Final set.** Capture the final review screenshot set and complete ATTRIBUTION.md. Confirm that 'foliage-summer-v2' is used only by the generic fallbacks.",
+    "**Contingencies.** If any gate fails, apply the D23 steps in order inside this PR, with before/after metrics."
+   ],
+   "files": [
+    "scripts/capture-plants-realism.ts",
+    "scripts/check-plant-species.ts",
+    ".github/workflows/pr-lint.yml",
+    "netlify.toml (only if D16 is approved)",
+    "public/deckcraft/landscape/ATTRIBUTION.md",
+    "docs/deckcraft/plants-realism-2026-10-17/p9/*"
+   ],
+   "owner_gates": [
+    "Decide D16 (a deploy-config change) and confirm the D11 CI step.",
+    "Owner runs the iPhone showcase fly-through and the balanced orbit.",
+    "Final look review: all cameras and tiers, plus the estate showcase stills.",
+    "Owner says 'commit'; merging needs an explicit OK."
+   ],
+   "acceptance": [
+    "Estate triangles:\n- Showcase still, all LOD0: at or under 1.0M (about 0.84M at caps).\n- Constrained, all LOD2: at or under 45k of plant meshes (about 39.5k at caps; contact decals and bands are counted separately).\n- High-tier editor: within the existing landscapeRenderLods budgets.",
+    "Plant draws per scene pass (meshes named landscape-*-lodN), excluding decals and bands:\n- Estate: at or under 45 constrained, 100 balanced, 150 high.\n- 26-species demo: at or under 60, 120 and 180.\nPer-frame totals across all passes are reported.",
+    "Measured plant texture memory (the 4 atlases plus the contact decal; excluding bed surfaces, the occlusion target and the environment): at or under 12.4 / 3.4 / 0.85 MiB (high / balanced / constrained), plus the far atlas only if P7 used the fallback.",
+    "Desktop perf on the owner's GPU, per tier, scene and camera: p95 at most 1.15× P0, and overdraw at most 1.10× P0.",
+    "iPhone, balanced orbit: p95 at most max(33 ms, 1.15× the P0 iPhone baseline).",
+    "iPhone, Showcase-quality fly-through: no context loss. If it fails, the D21 cap is in place and the run passes with the cap.",
+    "Session downloads: constrained demo bed at or under 0.6 MB (today 0.83 MB); showcase demo bed at or under 4.5 MB (today 8.19 MB).",
+    "plants:verify is green in CI on Linux and locally on Windows: offline, under 120 s.",
+    "If D16 is approved: curl -I on a deploy-preview species GLB shows immutable and model/gltf-binary.",
+    "Magenta probe 0. The data-invariance suite is green."
+   ],
+   "checks_moved": [
+    "check-plant-species.ts: estate and demo budget assertions, and a netlify rule assertion if D16.",
+    "pr-lint.yml: a new plants:verify step, about 60-90 s, capped at 120 s.",
+    "check-photo-trace.ts: estate-scale parity, rerun via capture-photo-stills."
+   ],
+   "budgets": "- Estate showcase LOD0: at most 1.0M triangles.\n- Constrained estate: at most 45k triangles.\n- Plant draws per pass, constrained / balanced / high: estate 45 / 100 / 150; demo 60 / 120 / 180.\n- GPU plant textures: 12.4 / 3.4 / 0.85 MiB (high / balanced / constrained).\n- Species library on disk: at most 8 MB.\n- Viewer chunk: unchanged.",
+   "effort_days": 1.5,
+   "risks": [
+    "Draw calls or frame time may exceed budget. The D23 contingencies apply in order: drop LOD1 variants, then exclude LOD2 plants from window-reflection passes, then BatchedMesh per role (three core, lazy chunk).",
+    "Immutable caching of an unhashed URL would serve stale files. Mitigation: everything under /deckcraft/plants/ is content-hashed and asserted, and the manifest is not served.",
+    "The showcase fly-through on a phone may still lose context because of house reflections and 4096 shadows, outside plant code. Phone results are reported per pass, so the cause is visible."
+   ]
+  },
+  {
+   "id": "P10",
+   "name": "Optional: sizes for newly placed plants (installed vs mature)",
+   "goal": "Act on the botany finding without touching any saved design. Today's PLANT_LIBRARY envelopes are mature-ish rather than as-installed. Changing them affects only newly placed plants. The run-time-generated showcase estate overrides several envelopes in showcaseSample.ts, so D18 must say whether those overrides change too.",
+   "work": [
+    "**Envelope corrections (D18).** Batched once into PLANT_LIBRARY. Recommended option (a) fixes only proportions that are wrong at any age:\n- Smaragd 96x36 to 96x24.\n- Maples 180x108 to 180x90.\n- White pine 168x96 to 108x66.\n- Blue spruce 144x72 to 96x56.",
+    "**Estate overrides (D18).** showcaseSample.ts:286-309 overrides several envelopes, so library changes do not reach those rows:\n- Smaragd at 112x34 in three rows, and 140x48 in the mixed Smaragd/pine row.\n- Maples and pines at 240x120, 230x110 and 200x100.\nThe recommendation also corrects the Smaragd rows from 112x34 to 112x28 (the same digit count, so link bytes barely move). The mixed 140x48 row and the tree rows stay as they are.",
+    "**Growth stage (D18b only).** Generate an installed growth stage per species: same seed, fewer iterations. Pick the stage at render time by argmin |log(heightIn / stage height)|, so old saves keep the established look and new placements show nursery stock.",
+    "**Species change (D19).** Move applySpecies out of LandscapeEditor.tsx, which imports CSS at top level and cannot be loaded by Node checks, into the Node-safe landscapeEdits.ts. On that user action only, it resets heightIn, widthIn and depthIn to the new species' PLANT_LIBRARY size. No migration.",
+    "**Re-measure once:** the estate link bytes, showcaseSampleIssues and the showcase stills."
+   ],
+   "files": [
+    "src/features/deckcraft/landscapeCatalogue.ts (PLANT_LIBRARY sizes only)",
+    "src/features/deckcraft/showcaseSample.ts (Smaragd row widths, only if D18 includes them)",
+    "src/features/deckcraft/landscapeEdits.ts (applySpecies, only if D19)",
+    "src/features/deckcraft/LandscapeEditor.tsx (imports applySpecies, only if D19)",
+    "scripts/plant-species/specs.mjs and build.mjs (only if D18b)",
+    "src/features/deckcraft/components/viewer3d/plantModels.ts (stage pick, only if D18b)",
+    "public/deckcraft/plants/* (only if D18b)",
+    "scripts/check-landscape-library.ts",
+    "scripts/check-deck-links.ts",
+    "scripts/check-plant-species.ts",
+    "docs/deckcraft/plants-realism-2026-10-17/p10/*"
+   ],
+   "owner_gates": [
+    "Decide D18 (including the estate overrides) and D19 before the build.",
+    "Review the regenerated estate stills.",
+    "Owner says 'commit'; merging needs an explicit OK."
+   ],
+   "acceptance": [
+    "Saved-design fixtures (demo, e2e) re-save byte-identical, and their quote fingerprints are unchanged.",
+    "Estate link payload at or under 100,000 bytes and 40,000 chars (check-deck-links:166-176). showcaseSampleIssues is empty.",
+    "check-landscape-objects:93-95 green; assetIds unchanged.",
+    "If D19: changing species resets the envelope, asserted in check-landscape-library by importing applySpecies from landscapeEdits.ts. Loading a saved design changes nothing.",
+    "If D18b: each species shows the nearer stage at both the old and the new envelope sizes, and the leaf-size bands hold at both."
+   ],
+   "checks_moved": [
+    "check-deck-links.ts:166-176: the estate is re-measured.",
+    "check-plant-species.ts: the deep-freeze invariance test is unchanged, because it does not pin estate content. Stage rows are added if D18b.",
+    "check-landscape-library.ts: the envelope reset (D19)."
+   ],
+   "budgets": "- Triangles: unchanged per class.\n- Bytes: +0, or about +1-2 MB of stage geometry if D18b (within the 8 MB species cap).\n- GPU: unchanged, because the atlases are shared.\n- Landscape3D chunk: +0.3 KB gzip at most.",
+   "effort_days": 2,
+   "risks": [
+    "The estate looks younger or sparser, which needs owner sign-off.",
+    "Link bytes move by a few digits against about 1.6 KB of headroom. This is checked."
+   ]
+  }
+ ],
+ "species_matrix": [
+  {
+   "species": "thuja-occidentalis-smaragd ('Smaragd' emerald cedar), 76 in the estate",
+   "approach": "Hull and shell:\n- An opaque narrow-cone hull (about 300 triangles; its mass texture is in the opaque atlas).\n- 700-900 vertical fan-spray cards, 8-12 cm, with normals bent to the hull.\nTwo seeded variants at LOD0/LOD1, plus render-only height, width and lean variation. Edge cards are kept at LOD2.\nAuthored at a true 4:1 proportion (96x24 in). Saved 96x36 envelopes render at most 1.25x wider under the XZ clamp. Replaces fir needles stretched 2.1x. Glossy roughness class.",
+   "source": "Procedural (scripts/plant-species). An SVG scale-spray mask filled with committed luminance detail tiles derived from approved CC0 photos (D4, D20):\n- Detail: species-level research-grade Thuja occidentalis.\n- Colour: hue and chroma from casual-grade cultivated 'Smaragd' photos; luminance from the dark-evergreen class band.\nForm from KPU and ANSI Type 6.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- Pencil column about 4:1.\n- Glossy emerald (approx. #2f5a2a), lighter than boxwood and yew.\n- Vertical fan sprays with no visible needles.\n- Rounded-pointed top.\n- Hedge units about 24 in on centre, with no two adjacent units identical.",
+   "phase": "P3"
+  },
+  {
+   "species": "buxus-microphylla (boxwood)",
+   "approach": "Hull and shell:\n- An ellipsoid hull.\n- 600-900 small-leaf cluster cards (6-10 cm, with leaves drawn at 0.8-2.5 cm).\nGlossy roughness class. Replaces the fir-needle evergreen-shrub.",
+   "source": "A procedural SVG notched-elliptic leaf cluster:\n- Detail: genus-level research-grade CC0 Buxus. Species-level research-grade returns 0 (479 at genus level).\n- Colour: hue and chroma from casual-grade cultivated B. microphylla photos.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- Small, dense, clean-edged ball.\n- Very fine, uniform deep green (approx. #2f4f22), darker than Smaragd and lighter than yew.\n- Leaves unreadable at 5 m.\n- No stems or needles visible.",
+   "phase": "P3"
+  },
+  {
+   "species": "taxus-media (yew)",
+   "approach": "Hull and shell in the 'Hicksii' broad-upright form (D6), with flat two-ranked needle-spray cards (needles 25-30 mm) and a few red arils.",
+   "source": "A procedural SVG flat-needle spray:\n- Detail: genus-level research-grade CC0 Taxus. Taxus × media has 0 CC0 photos at any grade; 2,508 exist at genus level.\n- Colour: hue and chroma from casual-grade cultivated Taxus photos.\n- Luminance from the darkest class band.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- The darkest near-black green in the library (approx. #1f3a1c); L* is asserted below boxwood's.\n- Lighter undersides at the edges.\n- Soft layered texture.\n- Sheared column or block at the foundation.",
+   "phase": "P3"
+  },
+  {
+   "species": "calamagrostis-karl-foerster (feather reed grass), 24 in the estate",
+   "approach": "- 90-120 geometry blades (4-5 segments, about 1 cm wide, no alpha).\n- 25-40 upright culms carrying narrow plume strips to full height.\nTwo seeded variants.",
+   "source": "Procedural blade geometry, with the plume sprite in the plume/petal atlas:\n- Blade detail: genus-level research-grade CC0 Calamagrostis. C. × acutiflora has 1 research-grade photo; 2,447 exist at genus level.\n- Plume colour: casual-grade cultivated 'Karl Foerster' photos.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- Bolt-upright, narrow wheat-tan plumes (approx. #c9b07a; plume b* above foliage b*) over a narrow green fountain (approx. #5b7a3c).\n- The most vertical plant in the library.",
+   "phase": "P4"
+  },
+  {
+   "species": "hosta, 21 in the estate",
+   "approach": "- 15-40 individually bent cordate leaf meshes (8-16 triangles each; real geometry, no alpha test) in an overlapping rosette dome.\n- Parallel veins in the opaque-atlas texture.\n- 2-4 scapes with pale bells.\nTwo seeded variants. Glossy (waxy) roughness class.",
+   "source": "A procedural cordate leaf texture with parallel veins, detailed from approved CC0 iNaturalist hosta photos. Cultivar colour per D6, taken from casual-grade cultivated photos.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- Low, symmetrical dome of broad overlapping leaves.\n- Ribbed parallel veins.\n- White-margin green by default (approx. #4f7a3a).\nToday it is built from 15.7 in tree-leaf cards.",
+   "phase": "P4"
+  },
+  {
+   "species": "panicum-virgatum (switchgrass)",
+   "approach": "- 100-140 upright blades with a midrib (1-1.5 cm wide).\n- An airy panicle haze of at most 24 cutout cards.",
+   "source": "Procedural blades, with the panicle sprite in the plume atlas. Detail and colour from species-level research-grade CC0 photos of foliage and panicle.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- An upright column of blue-green blades (approx. #6c8a5f).\n- A pink-tinged airy cloud about 1 ft above the foliage.",
+   "phase": "P4"
+  },
+  {
+   "species": "hemerocallis (daylily)",
+   "approach": "- 4-8 fans of folded, arching strap leaves (6-segment strips).\n- 3-6 scapes with 6-tepal trumpet geometry baked in, textured from the opaque atlas.\nBloom cards are skipped automatically.",
+   "source": "Procedural strap and tepal textures, detailed from approved CC0 photos of foliage and flower. The default 'Stella de Oro' yellow per D6 comes from casual-grade cultivated photos.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- A fountain of arching straps.\n- Saturated yellow trumpets (approx. #f4c21c) on bare stalks just above the leaves.",
+   "phase": "P4"
+  },
+  {
+   "species": "matteuccia-struthiopteris (ostrich fern)",
+   "approach": "- A vase of 8-12 frond strips (6-8 segments), widest above the middle.\n- An SVG pinnae cutout sprite.\n- 2-3 brown fertile fronds in the centre.\nThe flat-brown proxy fern is fixed here, not by a stop-gap (unless D15b).",
+   "source": "A procedural pinnatifid mask, detailed from species-level research-grade CC0 iNaturalist photos (843 CC0 observations available).",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- A symmetrical, bright-green shuttlecock (approx. #5f8f32).\n- Fine lacy texture.\n- Fronds tapering to the base.",
+   "phase": "P4"
+  },
+  {
+   "species": "schizachyrium-scoparium (little bluestem)",
+   "approach": "- 120-160 fine blades (6 mm wide), narrow and upright.\n- A red-purple vertex-colour tint toward the tips.\n- A few seed tufts.",
+   "source": "Procedural blades and raceme sprite, with colour from species-level research-grade CC0 photos. Glaucous species, so exempt from the G > B proxy window.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- A small, narrow, steel blue-green clump (approx. #7f9a92; b* asserted below switchgrass).\n- Shorter and bluer than switchgrass.\n- Fine texture.",
+   "phase": "P4"
+  },
+  {
+   "species": "hydrangea-arborescens-annabelle, 19 in the estate",
+   "approach": "- 15-25 floppy, arching stems from the crown.\n- Opposite leaf-pair cluster cards (leaves 5-15 cm).\n- 8-15 white globe heads (20-30 cm) as low-poly opaque geometry with a floret texture, kept at LOD2.\nTwo seeded variants.",
+   "source": "A procedural ovate-serrate atlas cell and floret texture, detailed from approved CC0 photos of foliage and flower (casual-grade cultivated for 'Annabelle' head colour).",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- Big white balls (approx. #f2f1e6) over a low mound about 1 m tall, nodding outward.\n- Coarse, dark-green toothed leaves (approx. #3f6030).",
+   "phase": "P5"
+  },
+  {
+   "species": "cornus-sericea (red-osier dogwood), 15 in the estate",
+   "approach": "- 15-30 upright red stems as geometry with vertex colour, visible at the base and through gaps.\n- Ovate opposite leaf clusters with arcuate veins.\nTwo seeded variants. In the front row of the demo fixture, so the stem base is visible.",
+   "source": "A procedural broadleaf atlas cell and opaque-atlas stem cells, with colour from species-level research-grade CC0 photos.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- Red stems at the base (approx. #8a2a22).\n- A loose, rounded, mid-green thicket (approx. #4d6a35), wider than tall.",
+   "phase": "P5"
+  },
+  {
+   "species": "hydrangea-paniculata (panicle hydrangea), 12 in the estate",
+   "approach": "- An upright-arching vase of 8-14 stems.\n- Ovate-serrate leaf clusters.\n- 6-12 cone panicles (25-30 cm) baked in as opaque geometry.",
+   "source": "Procedural. Species-level research-grade CC0 returns 0, so detail and the 'Limelight' colour (D6) both come from casual-grade cultivated CC0 photos (171 available), with the agent's identification check shown in the dry-run.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- Cone-shaped cream-lime panicles (approx. #efeedd / #d4dfa0), not balls.\n- An arching vase outline.\n- Dark-green leaves (approx. #3c5a2c).",
+   "phase": "P5"
+  },
+  {
+   "species": "syringa-vulgaris (lilac), 9 in the estate",
+   "approach": "- An upright vase of grey canes (3-5 when installed).\n- Heart-shaped leaf clusters.\n- Small brown seed panicles at the tips (summer state, D7).",
+   "source": "A procedural cordate atlas cell and grey cane bark cell, with colour from species-level research-grade CC0 photos.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- A tall, upright cluster of grey stems.\n- Heart-shaped blue-green leaves (approx. #3f5a3c).\n- Brown seed heads at the tips.\n- A coarse vase outline.",
+   "phase": "P5"
+  },
+  {
+   "species": "physocarpus-opulifolius (ninebark), 4 in the estate plus AI concepts",
+   "approach": "- A fountain of arching canes from a crown.\n- 3-5-lobed crenate leaf clusters.\n- Red seed clusters.\nCultivar colour is in the atlas, not the tint (D6).",
+   "source": "A procedural lobed mask, detailed from species-level research-grade CC0 iNaturalist photos (324 CC0 observations). The 'Diabolo' colour target comes from casual-grade cultivated photos.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- An arching fountain, wider at the top.\n- Near-black purple 'Diabolo' (approx. #3d1f26; a* > 0 asserted) by default. Today's tint is gold.\n- Lobed, currant-like leaves.",
+   "phase": "P5"
+  },
+  {
+   "species": "spiraea-japonica (spirea), AI concepts and the demo bed",
+   "approach": "- A low, tidy mound of wiry twigs.\n- Small lanceolate leaf clusters.\n- Flat pink corymbs baked over the top.",
+   "source": "Procedural, detailed from approved CC0 photos of foliage and flower. The gold 'Goldmound' or green colour (D6) comes from casual-grade cultivated photos. No CC BY model is offered: the maksm Sketchfab model is excluded (see D5).",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- A small, rounded mound under 1 m at the bed front.\n- Flat pink plates (approx. #d36a9a).\n- Gold foliage (approx. #b9c24a) by default.\n- Fine, twiggy texture.",
+   "phase": "P5"
+  },
+  {
+   "species": "echinacea-purpurea (purple coneflower), 14 in the estate",
+   "approach": "- A basal rosette of coarse leaves.\n- 6-15 stiff stems.\n- Opaque geometry heads: 12-16 drooping ray strips plus a domed cone, about 60 triangles, no alpha.\nMatte roughness class.",
+   "source": "Procedural opaque-atlas ray and cone textures, detailed from species-level research-grade CC0 photos of foliage and flower.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- Drooping mauve-pink rays (approx. #c7709f) around a raised orange-brown cone (approx. #8a4a1e).\n- Heads held singly, well above the leaves.",
+   "phase": "P6"
+  },
+  {
+   "species": "rudbeckia-hirta (black-eyed Susan), 13 in the estate",
+   "approach": "- Branching, hairy stems.\n- Many 2-3 in heads: 10-20 flat golden rays plus a dark dome.\nMatte roughness class. Replaces celandine stretched 2.56x.",
+   "source": "Procedural, detailed from species-level research-grade CC0 photos of foliage and flower.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- A carpet of golden daisies (approx. #f2b31c) with near-black centres (approx. #3a2414).\n- Many heads per plant.\n- Dull, hairy leaves.",
+   "phase": "P6"
+  },
+  {
+   "species": "nepeta-faassenii (catmint)",
+   "approach": "- A billowy, sprawling mound of small grey-green leaf clusters.\n- Many lavender-blue spike cards from the plume/petal cutout atlas, forming a haze that spills over the bed edge.\nMatte roughness class.",
+   "source": "Procedural, detailed from approved CC0 photos of foliage and flower. N. × faassenii is a garden hybrid, so casual-grade cultivated photos are used under D20.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- A soft lavender-blue cloud (approx. #8e86c9) over a low grey-green mound (approx. #8a9a7e).\n- Spills onto the edge.",
+   "phase": "P6"
+  },
+  {
+   "species": "salvia-nemorosa (salvia)",
+   "approach": "- A compact, upright clump with wrinkled basal leaves.\n- Dense, vertical violet-blue spike cards on dark stems.",
+   "source": "Procedural. Detail from species-level research-grade CC0 photos; the 'May Night' colour (D6) from casual-grade cultivated photos.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- A pincushion of stiff, saturated violet-blue spikes (approx. #4b3a8f), about 45 cm tall.",
+   "phase": "P6"
+  },
+  {
+   "species": "monarda-fistulosa (wild bergamot), demo bed",
+   "approach": "- Square stems with paired grey-green leaves.\n- Shaggy lavender pompom heads: radial tube strips around a small dome, opaque.",
+   "source": "Procedural; no models exist anywhere. Detailed from species-level research-grade CC0 photos of foliage and flower.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- Shaggy lavender pompoms (approx. #b99ccc) over grey-green leaves (approx. #6b7f5a).\n- A loose meadow clump 0.6-1 m tall.",
+   "phase": "P6"
+  },
+  {
+   "species": "acer-saccharum (sugar maple), 11 in the estate",
+   "approach": "Space colonisation in a young oval envelope (h:w about 1.3).\n- A single straight trunk: 2.0-2.5 in diameter 6 in above the soil at the 180 in reference, with ×1.4 root flare.\n- First scaffold branch at least 48 in up.\n- Opposite twigs.\n- 5-lobed U-sinus leaf clusters (30-40 cm).\n- A side-view sky gap of 8-25%.",
+   "source": "Procedural, with procedural smooth light-grey bark with lenticels. No bark download: trident_maple_bark was dropped because it reads old. Detailed from species-level research-grade CC0 iNaturalist photos (1,822 CC0 observations).",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- A full, even oval crown, still showing some sky at installed size.\n- Mid-dark green palmate leaves (approx. #3f5f2a) with paler undersides.\n- A smooth grey young trunk.\n- Flare visible above the mulch.",
+   "phase": "P7"
+  },
+  {
+   "species": "acer-rubrum (red maple)",
+   "approach": "An upright-oval envelope with branches at 30-45 degrees.\n- The same caliper and scaffold rules as sugar maple.\n- 3-lobed serrate leaf clusters with grey-white undersides (back-face blend).\n- Red petioles and twigs through vertex colour.\nPlaced in the front third of the demo bed, so its flare and soil collar are measured at Plant base macro.",
+   "source": "Procedural, with procedural smooth pale-grey bark. Detailed from species-level research-grade CC0 photos.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- A reddish cast at the crown edge from the petioles (approx. #8b2a24; higher edge a* than sugar maple).\n- Toothed, angular 3-lobed leaves (approx. #4a6b32).\n- A smooth pale-grey trunk.\n- Less dense than sugar maple.",
+   "phase": "P7"
+  },
+  {
+   "species": "amelanchier-canadensis (serviceberry), 16 in the estate",
+   "approach": "Space colonisation with 3-5 slender, smooth grey stems.\n- An irregular upright-oval envelope.\n- Small elliptic leaf clusters (15-20 cm).\n- A sky gap of 8-25%.\n- Two seeded variants.\nPlaced in the front third of the demo bed as the multi-stem specimen. Replaces the 65k-triangle African-tree proxy.",
+   "source": "Procedural, with procedural smooth grey bark with lenticels. Detailed from species-level research-grade CC0 photos.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- A clump of 3-5 smooth grey stems rising from one soil collar.\n- A fine-textured canopy of small oval leaves (approx. #56723a).\n- A loose vase-to-rounded outline.",
+   "phase": "P7"
+  },
+  {
+   "species": "cercis-canadensis (eastern redbud)",
+   "approach": "- 2-4 stems split below 2 ft.\n- A flat-topped, spreading crown wider than tall.\n- Heart-shaped leaves hanging like shingles.\n- Late-summer pods.\n- Leaves only, no spring bloom (D7).\nGlossy roughness class.",
+   "source": "Procedural, with a procedural dark scaly bark tile. Detailed from species-level research-grade CC0 iNaturalist photos (1,589 CC0 observations).",
+   "licence": "Project-owned build output from CC0 inputs (label per D12)",
+   "key_cues": "- A broad, low umbrella crown.\n- Large heart-shaped, lustrous dark-green leaves (approx. #3e6430).\n- Dark zig-zag branches.\n- Hanging pod clusters.",
+   "phase": "P7"
+  },
+  {
+   "species": "pinus-strobus (eastern white pine), 13 in the estate",
+   "approach": "- A whorl generator with open tiers of 5 branches and sky gaps (at least 10% sky between tiers).\n- Soft 5-needle plume tufts (7-12 cm needles) at the twig tips.\nReplaces 52 in fir cards.",
+   "source": "Procedural needle tufts. Bark: Poly Haven pine_sapling_small (CC0), downloaded only after owner approval, with a derived 256 px tile committed. Colour from species-level research-grade CC0 photos.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12); bark input CC0 (Poly Haven)",
+   "key_cues": "- Soft, feathery blue-green tufts (approx. #4f6b55).\n- Distinct horizontal tiers with sky between them.\n- Open, airy texture.\n- Smooth, greenish young bark.",
+   "phase": "P8"
+  },
+  {
+   "species": "picea-pungens (Colorado blue spruce)",
+   "approach": "- A dense, narrow pyramid branched to the ground.\n- Stiff, horizontal whorled tiers.\n- Bottle-brush needle sprays (needles under 1 in).\n- An opaque inner cone hull drawn first by renderOrder, before the cutout cards.\nThe PlantCatalog Koster model is used only if D5 = (b).",
+   "source": "Procedural, with the bark hidden. Glaucous hue and chroma from species-level research-grade CC0 photos; exempt from the G > B proxy window.\nCC BY alternative (owner opt-in only): PlantCatalog 'Colorado Blue spruce Koster (12/43)', 57,131,704 B.",
+   "licence": "Project-owned build output from CC0 inputs (label per D12); CC BY 4.0 only if D5 = (b)",
+   "key_cues": "- A perfect, opaque pyramid with a glaucous silver-blue cast (approx. #8aa3a8 to #9bb3bb; b* below white pine), coming from the atlas, not a tint.\n- Stiff, bristly, stacked tiers.",
+   "phase": "P8"
+  }
+ ],
+ "owner_decisions": [
+  {
+   "question": "D1: Approve the plan and its order?",
+   "options": "(a) Fix first (P0 canvas plus harness, P1 foliage, P2 beds), then the species waves ranked by estate count × wrongness:\n- P3 Smaragd, boxwood, yew.\n- P4 grasses, hosta, daylily, fern.\n- P5 broadleaf shrubs.\n- P6 flowering perennials.\n- P7 deciduous trees.\n- P8 conifers.\nThen P9 hardening and the optional P10 sizes.\n(a') The same, but ship the one-line canvas fix as its own tiny PR (P0a) before the harness (P0b).\n(b) The same as (a), but trees (P7-P8) right after P3.\n(c) Only P0-P2 for now.",
+   "recommendation": "(a). Use (a') if you want the speckle gone within hours rather than after the 1.5-day harness. P1 already removes the worst tree defects (gloss, lift, z-squash), so trees can wait until the pipeline is proven."
+  },
+  {
+   "question": "D2: Several foliage terms never render in the live view, because they are added after outgoingLight is summed. Photo mode applies them anyway. They are the translucency, warm-highlight and shade-fill terms, plus the bloom lift. What should happen?",
+   "options": "(a) In P1, delete them in both the raster shader and photoMaterials, so photo matches live, and add a bloom-card parity case. The live view does not change.\n(b) Also, from P3, make translucency live for species materials only:\n- Appended after '#include <lights_fragment_begin>' with its own getShadow for light 0.\n- Divided by pi and thickness-weighted.\n- Mirrored in photoMaterials.\n- Judged on golden-hour before/after shots at the P3 gate.",
+   "recommendation": "(a) now. Decide (b) at the P3 gate from the screenshots, and keep it off unless backlit leaves are clearly better and show no glow."
+  },
+  {
+   "question": "D3: Are procedural SVG sprites, preview contact sheets and any baked LOD or billboard images deterministic build-code output, rather than 'image generation' under the browser-flow approval rule?",
+   "options": "(a) Yes: code output, reproducible from the spec table and the committed inputs by plants:verify, with no AI model involved.\n(b) No: route them through a separate browser image-generation approval.",
+   "recommendation": "(a)."
+  },
+  {
+   "question": "D4: Where does species leaf, needle and flower detail come from?",
+   "options": "(a) Procedural SVG botanical masks filled with contrast-limited, high-pass luminance detail tiles (mean 1.0), derived from approved CC0 iNaturalist photo crops, plus a venation overlay and edge noise.\n- Photos supply hue and chroma only. Luminance comes from per-class albedo bands.\n- Raw photos stay in a cache outside the repo and are never committed or shipped.\n- The small derived tiles (at most 40 KB each) and colour statistics are committed under scripts/plant-species/inputs/ with provenance, so builds and CI work offline. CC0 allows this.\n(b) Pure SVG, with photos used only to measure colour targets. Nothing photo-derived is committed or shipped, and the look risks being vector-clean.\n(c) CC0 photogrammetry bakes (ffishAsia via Sketchfab): large owner-performed downloads and manual cut-outs.",
+   "recommendation": "(a). It avoids the vector-clean look at Bed close-up, stays CC0-only, keeps downloads small and keeps CI offline."
+  },
+  {
+   "question": "D5: Accept CC BY 4.0 assets?",
+   "options": "(a) No CC BY in this plan.\n(b) PlantCatalog blue spruce Koster 12/43 only (57,131,704 B; CC BY 4.0, 'Commercial use is allowed', official e-on account). This adds:\n- An owner-performed Sketchfab download, verified by sha256.\n- Check-enforced attribution fields {title, author, sourceURL, licenceURL, changes}.\n- CREDITS.html.\nThe maksm Spiraea japonica model is not offered. Its description says it was made for the University of Ljubljana APPLAUSE / 3D Virtual Wood Collection 'For educational purposes only', which conflicts with commercial use on a public business site. It stays blocked unless the owner obtains written commercial-use clearance from the author. The owner contacts authors; the agent drafts the message only if asked.",
+   "recommendation": "(a). The procedural pipeline covers all 26 species, and this keeps accounts, outreach and attribution UI off the critical path."
+  },
+  {
+   "question": "D6: Visual cultivar defaults where the cultivar sets the colour or form. Species records stay unchanged, and the copy keeps 'visual proxy, not a nursery SKU'.",
+   "options": "- Ninebark: purple 'Diabolo' / green / gold (today's tint).\n- Spirea: gold 'Goldmound' / green 'Little Princess'.\n- Hosta: white-margin 'Francee' / green / blue.\n- Daylily: yellow 'Stella de Oro' / orange fulva.\n- Yew: 'Hicksii' column / 'Densiformis' mound.\n- Panicle hydrangea: 'Limelight' / white.\n- Switchgrass: species blue-green / 'Heavy Metal' blue.\n- Salvia: 'May Night'.\nCultivar colour targets come from casual-grade cultivated CC0 photos under D20.",
+   "recommendation": "Diabolo, Goldmound, Francee-type, Stella de Oro, Hicksii, Limelight, species blue-green switchgrass and May Night salvia: the Ontario staples. Each is an atlas row and can be switched later with no data change."
+  },
+  {
+   "question": "D7: Which season and state do the models show?",
+   "options": "(a) Mid-July summer:\n- Spring bloomers (redbud, serviceberry, lilac) in leaf, with seed heads or pods.\n- Annabelle white; Karl Foerster plumes tan.\n- Summer perennials in bloom.\n(b) Add spring bloom states, which needs a viewer toggle.",
+   "recommendation": "(a). Seasonal states are out of scope."
+  },
+  {
+   "question": "D8: Bed seating and bed-height values (render-only)?",
+   "options": "Recommended:\n- Visual plateau of non-raised mulch and aggregate beds at grade + 1.0 in (range 0.75-1.25), below the lawn tuft tips. mulchDepthIn, the takeoff and exports are unchanged.\n- Sink below the rendered surface: trees 0; shrubs and hull evergreens 0.5 in; perennials and grasses 0.75 in.\n- Mulch pulled back beyond the base radius: trees 3 in; shrubs 2 in; perennials and grasses 1.5 in.\n- A soil collar at the surface, with a 1.75 in mulch lip rising 0.6 in, so the pull-back reads as a dip.\n- Stems authored 2 in below the soil line, nothing more than 4 in below it, and no leaf part below -0.5 in.\n- A 4 in taper down to grade + 0.4 in.\n- Edging top at grade + 0.5 in.\nAlternatives:\n- Keep the true-thickness plateau at grade + 3.05 in (reads as a raised mulch pad).\n- A single 0.75 in sink with a 2.5 in collar.\n- Plants exactly on the surface.",
+   "recommendation": "The recommended values. They match the Toronto, Oshawa, Mississauga and Waterloo details: mulch about 25 mm below turf at the cut, flare at or just above grade, mulch held 40-75 mm off stems, and edging about 1/2 in proud."
+  },
+  {
+   "question": "D9: Flat-bed steel edging look?",
+   "options": "(a) Weathered steel matching the raised beds (#4a3b32, roughness .78).\n(b) Black powder-coat.\n(c) Mill aluminium.",
+   "recommendation": "(a). The quote note 'steel ribbon' stays true, and both bed types match."
+  },
+  {
+   "question": "D10: How far should contact shade go?",
+   "options": "(a) Beds take the existing shared GroundOcclusion texture as aoMap, plus the P2 decals on every tier. No new shadow casters: LOD2 plants still do not cast, so the sun's shadow frustum and the house and deck shadow sharpness stay as they are. groundOcclusion.ts and shadowCache.ts are not edited.\n(b) Also make LOD2 plants cast on the high tier, and change fitSun (shadowCache.ts) to fit only non-plant casters plus LOD0/LOD1 plants, so the frustum does not widen.\n(c) Also admit every plant LOD on every tier into the occlusion cover pass (userData.occludesSky). This edits groundOcclusion.ts in the viewer chunk and darkens lawn under phone-tier plants, which is a lawn look change.\n(d) Decals only.",
+   "recommendation": "(a). Decals already cover far plants and the constrained tier. (b) and (c) wait for a later lawn or shadow phase."
+  },
+  {
+   "question": "D11: Put the plant checks in the deploy gate, and how do they stay offline?",
+   "options": "(a) Add checks to check:deck as each phase lands:\n- check:landscape.\n- check-landscape-surfaces, check-ground-cover-detail, check-curved-landscape-editing.\n- check-plant-foliage (P1) and check-bed-edges (P2).\n- check-plant-species and plants:verify (P3).\nAlso add public/deckcraft/** and scripts/plant-species/** to the deckcraft-e2e path filter.\nThe offline rule:\n- plants:verify rebuilds geometry exactly and atlas pixels within tolerance from committed derived inputs only.\n- It stubs fetch, http and https and fails on any network call.\n- It fails above 120 s.\n- No CI job, Netlify build or check script ever fetches from iNaturalist, S3 or Poly Haven.\n- fetch-sources.mjs runs only on the owner's machine after each phase's dry-run approval.\nThis adds about 60-90 s to lint and the Netlify build.\n(b) Keep the checks manual.",
+   "recommendation": "(a). Today an asset-only PR runs no GLB, licence or bed check. The offline rule means production deploys never depend on third-party sites or on an observer later changing a photo licence."
+  },
+  {
+   "question": "D12: How are the generated plant assets labelled in species-manifest.json and ATTRIBUTION.md?",
+   "options": "(a) A new label: 'Project-owned, derived from CC0-1.0 inputs', with per-input provenance.\n- It is modelled on, not copied from, original-furniture-manifest.json. That file says 'Project-owned original assets; no external license or attribution dependency' and declares no third-party input.\n- The repo has no LICENSE file, so the published outputs default to all rights reserved, which (a) intends.\n(b) Dedicate the outputs CC0-1.0.",
+   "recommendation": "(a)."
+  },
+  {
+   "question": "D13: Promote meshoptimizer to an explicit devDependency?",
+   "options": "(a) Yes: 1.1.1, already in node_modules and package-lock via @types/three, so no new download is expected.\n(b) Use the transitive copy.\n(c) Write uncompressed float32 GLBs.",
+   "recommendation": "(a). The decoder chunk already ships (5.1 KB gzip), so the runtime cost is zero."
+  },
+  {
+   "question": "D14: Texture delivery?",
+   "options": "(a) Shared WebP atlases (RGBA8), content-hashed and sized by tier. Build-time coverage-preserving mip strips only if the P3 spike passes on the owner's iPhone Safari; otherwise generated mips plus the P1 shader mip-alpha scale. The spike uses Chrome, Edge and the iPhone. Playwright WebKit (an extra 62.7 MB browser download) is not used unless approved.\n(b) KTX2 now: about 29 KB of lazy loader JS plus a 245 KB self-hosted wasm, and the sharp-based checks must change.",
+   "recommendation": "(a). Revisit KTX2 only if the P9 measurements miss the budgets."
+  },
+  {
+   "question": "D15: The proxy fern renders flat brown today. Fix it early?",
+   "options": "(a) Wait for the procedural ostrich fern in P4. No download, and all 15 legacy GLBs stay frozen.\n(b) P1 stop-gap: download Poly Haven fern_02_alpha_1k.png (114,589 B, CC0) and merge it into the three fern-clump GLBs with a new script. This unfreezes 3 legacy pins; build-plant-library-v2.mjs is never edited.",
+   "recommendation": "(a). Only 5 estate ferns are affected, and P4 replaces them properly."
+  },
+  {
+   "question": "D16: Caching for species files (a deploy-config change, in P9)?",
+   "options": "(a) A netlify.toml rule for /deckcraft/plants/*: immutable Cache-Control and Content-Type model/gltf-binary.\n- Every file there is content-hashed (GLBs and atlases, asserted by check-plant-species).\n- species-manifest.json lives in scripts/ and is not served.\n- Verified with curl -I on a deploy preview, never on production.\n(b) Keep max-age=0 revalidation.",
+   "recommendation": "(a). Today GLBs are served as octet-stream with max-age=0."
+  },
+  {
+   "question": "D17: Mulch rings for trees planted in the lawn?",
+   "options": "(a) None: an AO contact decal only (base radius + 10 in).\n(b) A visual ring labelled 'not quoted'.\n(c) An explicit 'add mulch ring' action that creates a real, quoted bed object.",
+   "recommendation": "(a). A visual ring would show mulch that is not in the takeoff. The estate is at 279 of 300 objects and 98.4 of 100 KB."
+  },
+  {
+   "question": "D18: Sizes for newly placed plants (optional P10)?\nBotany finds today's PLANT_LIBRARY envelopes are mature-ish, not as-installed:\n- Trees: 180x108 in, against Ontario 50-60 mm caliper stock about 144-168 in tall with a 60-96 in crown.\n- White pine: 168x96 in, against 60-80 in stock.\n- Smaragd: 36 in wide, against 12-21 in.\n- Shrubs: 36-48 in, against 18-30 in for #2-#3 pots.\n- Perennials: 16-30 in, against 6-10 in for #1 pots.\nChanging an envelope affects only newly placed plants. The showcase estate overrides several envelopes in showcaseSample.ts:286-309:\n- Smaragd at 112x34 in three rows, and 140x48 in the mixed Smaragd/pine row.\n- Maples and pines at 240x120, 230x110 and 200x100.\nLibrary changes alone do not reach those rows.",
+   "options": "(a) Keep the established look, and correct once only the proportions that are wrong at any age:\n- Smaragd 96x36 to 96x24; maples 180x108 to 180x90; white pine 168x96 to 108x66; blue spruce 144x72 to 96x56.\n- Also change the estate's Smaragd rows from 112x34 to 112x28. The mixed 140x48 row and the tree rows stay.\n(a-lib) Same as (a), but leave the estate overrides untouched.\n(b) Ontario installed sizes for new placements, plus an installed growth-stage model chosen at render time by the nearest saved heightIn.\n(c) No change.",
+   "recommendation": "(a). Plans read as gardens rather than bare mulch, and the showcase stops displaying a too-fat Smaragd. Keep (b)'s growth stage as a later option."
+  },
+  {
+   "question": "D19: When a user changes a plant's species, should its size reset to the new species' default? Today a hosta switched to sugar maple stays a 16x28 in maple.",
+   "options": "(a) Yes, on that user action only, with no migration (P10). applySpecies moves to the Node-safe landscapeEdits.ts so it can be tested.\n(b) No.",
+   "recommendation": "(a)."
+  },
+  {
+   "question": "D20: The photo sourcing rule for iNaturalist CC0 inputs. Garden cultivars are graded casual (captive/cultivated), so research-grade alone finds nothing for several taxa. The review queried the API on 2026-10-17:\n- Buxus microphylla: research 0, casual 55.\n- Taxus × media: 0 at every grade.\n- Hydrangea paniculata: research 0, casual 171.\n- Calamagrostis × acutiflora: research 1.",
+   "options": "(a) A per-taxon rule. The licence must be CC0 per photo, re-read at fetch time.\n- Leaf and needle detail: species-level research-grade where at least 20 CC0 photos exist. Otherwise genus-level research-grade (Buxus 479, Taxus 2,508, Calamagrostis 2,447).\n- H. paniculata, and every D6 cultivar colour target: casual-grade cultivated CC0, with the agent's identification check shown in the dry-run listing.\n- Photos supply hue and chroma only.\n(b) Research-grade species-level only. This fails for boxwood, yew, panicle hydrangea, Karl Foerster and every cultivar colour.\n(c) No photos (D4b).",
+   "recommendation": "(a). The owner still approves each phase's exact list."
+  },
+  {
+   "question": "D21: Live showcase on phones. 'Phones never see LOD0' holds only outside Showcase quality. The live 'Showcase quality' checkbox, the fly-through recorder and still export all force tier high (DPR 2, MSAA 4, 4096 shadows) and LOD0 for every plant, on any device.",
+   "options": "(a) Gate only. Run the iPhone Showcase-quality fly-through at P3 and P9. If it loses context or its p95 is over 50 ms, apply a cap on narrow or touch devices: live showcase gives LOD0 to the nearest 40 plants and LOD1 to the rest. Still export is unchanged.\n(b) Apply that cap now.\n(c) No cap.",
+   "recommendation": "(a). The species models cut LOD0 to about 0.84M triangles with shared atlases, so the cap may never be needed. The gate proves it either way."
+  },
+  {
+   "question": "D22: Variation between same-species plants (render-only). The estate has 76 Smaragd, 24 Karl Foerster, 21 hosta and 19 Annabelle.",
+   "options": "(a) Render-only per-instance variation from plantColorHash: height ±5%, width ±7%, lean up to 3 degrees, plus yaw.\n- Plus 2 seeded model variants at LOD0/LOD1 for Smaragd, Karl Foerster, hosta, Annabelle, serviceberry and dogwood, picked by object-id hash.\n- On screen a plant can be up to 5% taller than its saved height; saved data, the MatureSpread ring and quotes are unchanged.\n(b) Yaw and colour jitter only.\n(c) Per-instance variation without extra model variants.",
+   "recommendation": "(a). Copy-paste repetition is the first CG tell a homeowner notices. The variants cost draws only at LOD0/LOD1, inside the P9 budgets."
+  },
+  {
+   "question": "D23: Pre-approved performance contingencies, applied only when a phase's draw, overdraw or frame-time gate fails.",
+   "options": "(a) Within that phase's PR, the agent may apply these steps in order, each shown with before/after metrics for owner review:\n1. Drop the LOD1 variants.\n2. Exclude LOD2 plant meshes from window-reflection passes. This edits windowReflections.ts but changes only which plants appear in reflections.\n3. Merge per-role draws with BatchedMesh (three core, lazy chunk).\n(b) Stop and ask the owner at each failure.",
+   "recommendation": "(a). It keeps a failed gate from stalling a wave, while every change is still reviewed before merge."
+  }
+ ],
+ "downloads_to_approve": [
+  "P0 and P2: no downloads. P1: none by default.\nOnly if D15 = (b): Poly Haven fern_02_alpha_1k.png, 114,589 B, CC0, https://polyhaven.com/a/fern_02 (file list at https://api.polyhaven.com/files/fern_02). Recorded in manifest originalDownloads with its sha256.",
+  "P3-P8: iNaturalist observation photos, CC0 only, under the D20 sourcing rule. 'Large' 1024 px JPEGs come from the inaturalist-open-data bucket.\nThe rule:\n- Species-level research-grade where at least 20 CC0 photos exist.\n- Otherwise genus-level research-grade (Buxus 479, Taxus 2,508, Calamagrostis 2,447).\n- Casual-grade cultivated photos for H. paniculata and every D6 cultivar colour target, with the agent's identification check shown in the dry-run.\nlicense_code is re-read from the API at fetch time and must equal 'cc0'.\nVolume: about 63 photos in total, estimated at 150-400 KB each, about 15-25 MB overall. Per phase: P3 6, P4 15, P5 15, P6 15, P7 8, P8 4.\nBefore each phase, `node scripts/plant-species/fetch-sources.mjs --dry-run` prints the exact taxon, rule, photo id, observer, URL and byte size for approval.\nFetching runs only on the owner's machine, never in CI or Netlify. Raw photos go to a cache outside the repo and are never committed. Only the derived high-pass detail tiles (at most 40 KB each, about 2.5 MB in total) and colour statistics are committed, under scripts/plant-species/inputs/, with photo id, observer, licence-snapshot hash, raw sha256 and derived sha256 in sources.lock.json.",
+  "P8: Poly Haven pine_sapling_small 1k bark, CC0 (https://polyhaven.com/a/pine_sapling_small): bark diffuse 725,265 B and bark nor_gl 1,016,849 B, 1,742,114 B in total. Download only after owner approval at the P8 gate.\n- The raw JPGs go to the same out-of-repo cache.\n- A downsampled 256 px derived tile (at most 60 KB) is committed and used for white pine's smooth greenish young bark.",
+  "P3, if D13 = (a): npm meshoptimizer@1.1.1 (MIT), pinned as an explicit devDependency. No network download is expected; the same version is already in node_modules and package-lock via @types/three.",
+  "Dry runs make metadata-only reads (Poly Haven and iNaturalist API JSON, plus HEAD requests for sizes), locally, at each phase start. No asset bytes.",
+  "Optional, not needed by default: Playwright WebKit r2359 for Windows, 62,672,093 B, from cdn.playwright.dev (redirects to playwright.download.prss.microsoft.com), via `npx playwright install webkit`. Only if the owner wants a WebKit run in the P3 spike in addition to the iPhone check. The installed webkit-2248 does not match playwright-core 1.63.0.",
+  "Only if D5 = (b), performed by the owner through the owner's Sketchfab account and verified by sha256: PlantCatalog 'Realistic HD Colorado Blue spruce Koster (12/43)' GLB, 57,131,704 B, CC BY 4.0, https://sketchfab.com/3d-models/8c114e3b958e48298a97cc5da6efb1f0.",
+  "Blocked, not offered: maksm 'Spiraea japonica - Japanese meadowsweet' (14,496,160 B, labelled CC BY 4.0). Its description says 'For educational purposes only' (APPLAUSE / University of Ljubljana 3D Virtual Wood Collection). It stays blocked unless the owner obtains written commercial-use clearance from the author; outreach is an owner action.",
+  "No longer requested: Poly Haven trident_maple_bark (1,878,272 B). It was dropped for procedural smooth young bark.\nNot needed and not requested:\n- Sketchfab or BlenderKit accounts (unless D5 = (b)).\n- ffishAsia scans, and ambientCG or cgbookcase zips.\n- ez-tree, @gltf-transform, KTX-Software, Blender add-ons.\n- Any CC BY asset by default, any paid asset or API, and any image generation."
+ ],
+ "out_of_scope": [
+  "Sky, lawn and grass blades:\n- Turf.tsx and its blade mask, and lawnTufts.ts.\n- The lawn ground mesh and groundDisplayCuts. The bed taper and plateau are built entirely above grade, so the lawn is not touched.\n- The groundOcclusion.ts cover-pass predicate and shadowCache.ts sun fitting, unless D10 = (b) or (c).",
+  "Context and background trees, the neighbourhood and SHOWCASE_TREES. All 15 legacy GLBs and manifest.json stay byte-identical, including deciduous-tree, conifer-tree and grass-clump and the shrub atlases derived from them. The only exception is the three fern-clump files, if D15 = (b).",
+  "build-plant-library-v2.mjs (never edited or re-run), the missing v1 pipeline, and recompressing or rebuilding the legacy proxies. They remain the fallback for imported or unknown species, for the generic library buttons, and for species-model load failures.",
+  "House and construction-material realism, which belong to other phases. windowReflections.ts is touched only if the D23 contingency 2 fires. Photo-mode and fly-through polish beyond the mirrors that colour honesty needs: foliage v2, the bloom parity, the species patch, mulch albedo, and the decal, collar, lip and band trace flags.",
+  "Boulder and furniture seating. Boulders in plain beds sit at grade, so the lower plateau buries them less, but they are not re-seated.",
+  "Any persisted field, new assetId, saved-data migration, validator or agent-schema change, cultivar or growth-stage field, edging-kind field, or auto-created mulch-ring object. Also the LandscapeTakeoff default shape (check-deck-legacy-parity:55).",
+  "Price and takeoff changes. Plants stay unpriced (amountCents null). Bed quantities, mulchDepthIn, OBJ/DXF exports, the permit set and quote copy stay identical.",
+  "Wind or sway animation: frameloop='demand' would become continuous rendering on phones.",
+  "Seasonal states (spring bloom, autumn colour, winter) and a 'fresh install vs established' toggle.",
+  "KTX2/Basis textures and octahedral impostors. BatchedMesh is used only as the D23 contingency. A billboard-cloud LOD2 is used only as the P7 fallback.",
+  "Changing the LOD tier policy. Balanced stays at most LOD1 and constrained stays LOD2. Showcase quality (live checkbox, fly-through, still export) still forces LOD0 for every plant on any device; the only exception is the D21 phone cap, if it is triggered or chosen. The P3 LOD hysteresis only stabilises the existing policy.",
+  "CC BY assets unless D5 = (b), and the maksm Spiraea model in any case without written clearance. Also anything NC, ND, SA, Royalty-Free, Free-Standard, Grove, SpeedTree, Megascans or paid. Also image generation (separate browser-flow approval), and new npm dependencies such as ez-tree or gltf-transform.",
+  "Any network access from CI, the Netlify build or a check script. Committing raw iNaturalist photos or Poly Haven originals.",
+  "AI site-designer planting logic. siteDesignMoves keeps its assetIds and only renders better through species resolution.",
+  "Plant symbols on the 2D plan and in the designer plan editor, and the permit-set A-0 site plan.",
+  "Raising the 16 MB legacy manifest cap, the 300-object limit or the share-link byte cap."
+ ]
+}

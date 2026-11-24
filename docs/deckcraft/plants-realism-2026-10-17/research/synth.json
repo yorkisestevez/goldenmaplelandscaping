@@ -1,0 +1,396 @@
+{
+ "verdict": "PLAIN ANSWER. A homeowner will not be able to tell DeckCraft plants from a photo only in Photo-mode stills, and possibly in a still desktop frame at the Corner and Front cameras. Phones (balanced at most LOD1, constrained LOD2) and orbiting live views will stay recognisably 3D on every asset route, paid ones included. The render sweep estimates the ceilings with good assets as: phone about 6/10 on a still frame and 4-5/10 while orbiting; desktop live about 7-8/10 on a still frame; Photo mode about 8-9/10 on the current WebGL tracer, about 9/10 on the WebGPU tracer, and 9-9.5/10 with server-side Cycles. Reaching that bar needs four things together. Better assets alone will not do it.\n\n(1) RENDER FIXES. These apply to every route, and no asset passes without them:\n- opaque canvas (alpha:false);\n- honest foliage shading: live translucency that actually renders (today it is injected after outgoingLight), matte leaves (roughness 0.5-0.85, not 0.26), no back-face normal flip, crown/bent normals, baked canopy AO, no pow(0.8) lift or green gain;\n- coverage-preserving alpha mips, plus idle 8-16-frame accumulation so no frame shows shimmer;\n- PCSS sized to a 0.53 deg sun, and a 0.265 deg Photo-mode sun radius in place of 0.9 deg;\n- bed seating and contact shade (P2);\n- colour calibrated against ColorChecker photos;\n- in Photo mode, real leaf transmission in place of the emissive glow.\n(2) SPECIES-TRUE PHOTOGRAPHIC TEXTURE: real leaf, needle, petal and bark texels of the exact cultivar.\n(3) SPECIES-TRUE GEOMETRY: true leaf scale, crown envelopes and porosity measured from real specimens, opaque leaf meshes for hosta, daylily and grasses, and LOD2 impostors that keep the silhouette.\n(4) Higher LOD0 budgets for showcase stills only, on desktop.\n\nRECOMMENDED MIX:\n- Keep the in-repo procedural geometry plan (P3-P8). Change its texture source from SVG masks plus CC0 detail to OWNER-CAPTURED photo atlases: light pad, cross-polarised, ColorChecker. That is the only route that is species- and cultivar-true for all 26, licence-clean for a public repo, and cheap (about C$350-700 of gear).\n- Capture evergreens and autumn-state grasses now, before hard frost. Deciduous summer foliage and blooms can only be shot May-Aug 2027; use the plan's CC0 detail until then, with approved browser-AI sheets only as labelled stopgaps.\n- Use the PlantCatalog CC BY 4.0 Picea pungens for blue spruce.\n- Use free Bentley PlantFactory, through an artist, wherever the bake-off shows the in-repo generator cannot reach the bar. Trees are the most likely case.\n- Buy paid assets only if the bake-off shows a visible win and the owner accepts their conditions. Maxtree is the best species fit: about 17 of the 26 at species level, US$26/78/156 per species by Indie/Pro/Enterprise tier, about US$650/1,950/3,900 for 25. No paid licence allows a public repo. Every one needs a non-public origin, extraction protection, Terms of Use and, for Maxtree, Fab, Unity and SpeedTree, written vendor confirmation that a homeowner design tool is not a prohibited editor or modelling tool.\n- Fill genuine gaps (ninebark, red-osier dogwood, the two hydrangeas, 'Smaragd', 'Karl Foerster') by commission with a copyright assignment, never by stock purchase.\n- Reject runtime Gaussian splats, AI image-to-3D and AI whole-plant billboards.\n\nBEFORE COMMITTING the 34.5-day programme or any spend, run a 6-7-agent-day LOOK BAKE-OFF:\n- Species: Smaragd, Annabelle and sugar maple.\n- Routes: the plan's procedural build, the same build with owner-captured atlases, Maxtree rebuilt to DeckCraft budgets, and Megascans free scans as a ceiling reference.\n- Rendering: identical render fixes, cameras, tiers and Photo mode, judged blind against real photos.\n- Paid and Fab assets can be evaluated privately (Maxtree EULA s.2.1(1), Fab EULA s.3(a)), provided they never enter git or a deployed URL.",
+ "ranked_routes": [
+  {
+   "route": "Renderer foundation (mandatory under every route; not a substitute for assets)",
+   "rank": 1,
+   "realism_ceiling": "It creates no realism on its own, but it removes the CG tells that defeat every asset: page bleeding through A2C edges, glossy speckle (effective roughness about 0.26), translucency that never renders (foliageLighting.ts injects after outgoingLight), faceted cards, blobby or vanishing alpha mips, shimmer (no temporal AA; SHOWCASE_STILL_SAMPLES=1), penumbras 3.4x too soft in Photo mode, buried plants, bleached colour, and the emissive glow on leaves in shade. Without it, even Megascans-grade assets read as CG.",
+   "coverage": "All 26 species, all tiers, live view and Photo mode.",
+   "licence_status": "In-house code on three.js (MIT) and three-gpu-pathtracer (MIT). Optional agargaro/octahedral-impostor is MIT. Nothing to license. Public-repo OK.",
+   "cost": "$0 cash. Optional ColorChecker: Classic US$74.25 sale / US$99 list (https://calibrite.com/us/product/colorchecker-classic/), Passport Photo 2 US$89.25 sale / US$119 list. GPU cost (estimates): foliage shader v2 +0.1-0.3 ms desktop, +0.3-1 ms phone. PCSS +0.3-1 ms desktop (high and showcase only). Idle accumulation runs only when the camera is still: 0.05-0.1 s desktop, 0.2-0.4 s phone, about 52 MB extra on high tier. KTX2 transcoder about 260 KB gzip, lazy, if KTX2 is adopted.",
+   "time": "P0 1.5 d + P1 2 d + P2 4.5 d (already planned). Add about 3-5 d for idle accumulation, coverage mips, the shadow customDepthMaterial, the PCSS sun size, and the Photo-mode transmission patch with sun radius. A WebGPU path-tracer port is a further 3-6 d (optional).",
+   "owner_actions": "Approve D1/D2 (make the terms live, physically scaled). Approve the idle-refine behaviour. Give look sign-offs at Corner, Front, Bed close-up, Plant base macro and Tree in lawn, Day and Golden hour. Optionally buy the ColorChecker.",
+   "why": "Ranked first because it is the precondition for any route to read as real. The P0 magenta probe already proved the speckle is a canvas leak. Every bake-off variant must sit on top of it, or the comparison measures renderer bugs rather than assets."
+  },
+  {
+   "route": "Owner-captured species atlases on the in-repo procedural geometry (PLAN.md P3-P8), with crown envelopes measured from real specimens. AI is used only as processing tools: BiRefNet MIT matting, Meshroom photometric-stereo normals, Marigold albedo.",
+   "rank": 2,
+   "realism_ceiling": "Highest licence-clean ceiling. Every leaf, needle, petal and bark texel is a photograph of the exact cultivar, colour-calibrated. Estimates (render sweep): Photo mode about 8-9/10 at Corner and Front, about 7-8/10 at macro (about 9/10 on the WebGPU tracer). Desktop live still about 7-8/10. Phone still about 6/10. Plant-level realism still depends on the generator's silhouette and branching, especially for canopy trees, so the bake-off tests that.",
+   "coverage": "All 26 species, at cultivar level ('Smaragd', 'Annabelle', 'Karl Foerster', the owner's hosta, daylily, ninebark and other cultivars). Seasons: evergreens (pine, spruce, Smaragd, yew, boxwood before bronzing), bark, grasses in autumn state, and autumn leaf variants can be shot NOW, before hard frost. Deciduous summer leaves and blooms: June-Aug 2027 (serviceberry, redbud and lilac bloom late Apr-May 2027). The plan's CC0 detail serves in the meantime.",
+   "licence_status": "Project-owned photos (Golden Maple copyright). Public repo and web OK; add an all-rights-reserved or CC0 notice for the asset folder and keep RAW masters off the repo, with EXIF/GPS stripped. Licence-clean tools: darktable GPL-3, Meshroom MPL-2.0, COLMAP BSD, BiRefNet MIT, Depth Anything V2 Small Apache-2.0, RealityScan free under US$1M group revenue (EULA s.6 claims no rights in output, https://www.realityscan.com/eula). Excluded tools: rembg's default bria RMBG-2.0 (needs a commercial agreement), INRIA 3DGS/2DGS/SuGaR (non-commercial), Postshot Free, Metashape trial, Depth Anything V2 Base/Large (CC-BY-NC).",
+   "cost": "Gear about C$350-700, each purchase owner-approved: ColorChecker Passport Photo 2 US$89.25-119; A3 LED light pad about C$40-90; linear polariser film about US$15-40 (or salvaged from an old LCD); phone CPL US$15-75; Neewer blue/green backdrop US$69.99; two CRI 95+ LED panels about US$40-100 each; turntable C$20-200. Software $0, or Metashape Standard US$179 optional; RealityScan US$1,250/seat/yr only above US$1M revenue. Plants $0 if captured from stock bought for client jobs.",
+   "time": "Owner shooting about 1-1.5 h per species per season visit: about 45-70 h over Oct 2026-Aug 2027. Processing about 1-2 h per species once the scripts exist. Agent build is the plan's about 34.5 d plus about 3-4 d for the capture-processing chain and a check-landscape-objects.ts provenance change (it hard-codes Poly Haven today). Evergreens can ship this winter; deciduous summer looks in summer 2027.",
+   "owner_actions": "Approve the gear. Shoot, or delegate to crew. Get nursery permission (Connon Waterdown, Sheridan) and client consent on job sites (outreach is the owner's); RBG needs a paid professional-photography permit. Pick the representative cultivars. Approve installs (darktable, Meshroom, RealityScan via an Epic account, BiRefNet weights). Choose the asset rights notice. Set the default season (summer) and whether autumn variants ship.",
+   "why": "The only route that is at once species- and cultivar-true for all 26, licence-clean for a PUBLIC repo and web app, and cheap. It also turns the owner's real advantage (nursery and job-site access) into honest marketing: 'what you see is what we plant'. Its risks are seasonal timing and whether procedural geometry can match an archviz tree, which the bake-off measures directly."
+  },
+  {
+   "route": "Bentley e-on PlantFactory (freeware since May 2024) used by an artist to author species geometry, textured with the owner-captured atlases. This is a drop-in geometry engine for route 2 where the in-repo generator falls short.",
+   "rank": 3,
+   "realism_ceiling": "Capable of PlantCatalog-level, VFX-grade realism (examples: https://sketchfab.com/3d-models/8c114e3b958e48298a97cc5da6efb1f0). It has a photo cut-out leaf builder, leaf-cluster and translucency baking, and LOD export. The real limit is the artist's skill and the textures. Likely beats a first-generation in-repo space-colonisation tree at LOD0.",
+   "coverage": "Any of the 26, including cultivars, but each is authored from scratch. PlantCatalog's free library has only Picea pungens among the targets. Which species are in the stock content is unverified.",
+   "licence_status": "e-on EULA (https://www.bentley.com/globalassets/content/eula-for-e-on-products.pdf): s.1.9 defines User Made Assets; s.2.2 permits sharing or selling user-made assets created in VUE or PlantFactory, provided they are not derived from PlantCatalog assets, materials or textures. Public repo and web are OK for scratch-built models. Keep PlantCatalog metanodes and textures out.",
+   "cost": "$0 software. The cost is artist time: about 0.5-2 days per species (estimate). Hiring a PlantFactory artist is a spend needing approval; rates not researched.",
+   "time": "Weeks for 26 species. It is a GUI tool, so agents cannot drive it. There is no glTF export: FBX/OBJ/USD goes through Blender 5.2 (installed) to GLB, then meshopt and KTX2.",
+   "owner_actions": "Approve downloading and running the Bentley Windows installers and accepting the EULA (https://www.bentley.com/software/e-on-software-free-downloads/). Approve an artist (in-house or hired). Optionally ask Bentley to confirm the position in writing.",
+   "why": "A free, licence-clean upgrade path for the hardest geometry (canopy trees, lilac, hydrangea heads) if the bake-off shows the in-repo generator below the bar. Ranked below route 2 because it is discontinued, GUI-only and artist-dependent."
+  },
+  {
+   "route": "Commissioned work-for-hire species models with copyright assignment, or an explicit public-repo plus web-runtime licence. Candidates: Globe Plants Custom Requests, Maxtree Custom Service, or a freelancer working in PlantFactory or Blender, never SpeedTree or The Grove, whose output terms restrict redistribution.",
+   "rank": 4,
+   "realism_ceiling": "Archviz grade if the studio is good (Globe and Maxtree are). Realism at LOD1/LOD2 still comes from our own baking unless real-time LODs are specified in the contract.",
+   "coverage": "All 26, including 'Smaragd', 'Annabelle', 'Karl Foerster', and Ontario-accurate forms from the owner's reference photos.",
+   "licence_status": "Clean ONLY if the contract says so. Default EULAs keep the IP: Globe EULA s.4 bars redistribution and s.5 keeps rights with Globe (https://globeplants.com/pages/end-user-license-agreement-eula); Maxtree EULA s.2.3 and s.3.2 (https://maxtree.org/eula/). Require an assignment, or a perpetual licence naming public git and browser delivery.",
+   "cost": "Quote-only, no published rates. Globe: about 5-7 business days for fewer than 5 species, no volume discount.",
+   "time": "Weeks, per quote. The deliverable spec is glTF 2.0 with LOD0 15-25k triangles for a tree and 2-8k for a perennial, LOD1 at about 30%, an LOD2 billboard, 1-2k KTX2 atlases and botanical-scale dimensions.",
+   "owner_actions": "Approve outreach for quotes (forms and emails are owner actions). Negotiate the IP term. Approve the spend. Supply the reference photos.",
+   "why": "The only paid route that can be licence-clean for a public repo. It is best reserved for species where neither the in-repo generator nor PlantFactory passes, or where no stock model exists (ninebark; red-osier dogwood; both hydrangeas at species level)."
+  },
+  {
+   "route": "Maxtree paid library (single-species packs or volumes), rebuilt to DeckCraft budgets and served from a NON-PUBLIC origin in an obfuscated or encrypted container, with site Terms of Use forbidding extraction",
+   "rank": 5,
+   "realism_ceiling": "High at source: GrowFX archviz models with scanned leaf and bark, 200k-3M polys per variant (Thuja V122: 204,508-726,764). After decimation to web budgets, LOD1 and LOD2 realism comes mostly from our own baking. Maxtree itself says its Low Poly editions are not game-optimised.",
+   "coverage": "About 17 at species level: Acer saccharum (V17/26/48/50/142), A. rubrum V65, Pinus strobus V67/V126, Cercis canadensis V2/V55/V144, Picea pungens V63/V157, Thuja occidentalis V122 (species, not 'Smaragd'), Buxus microphylla V10, Spiraea japonica V66 (plus a Low Poly edition), Syringa vulgaris V44, Echinacea purpurea V34/V145, Hosta (several cultivars), Matteuccia V82, Hemerocallis V28/V145, Salvia nemorosa V175, Calamagrostis 'Overdam' V65 (variegated, not 'Karl Foerster'), Schizachyrium V161, Panicum virgatum V49. About 8 at genus level only: Amelanchier lamarckii, Taxus cuspidata and baccata, Cornus (not sericea on page 1), Hydrangea macrophylla only, Rudbeckia laciniata, Monarda didyma, Nepeta nervosa. No ninebark found.",
+   "licence_status": "Unclear for DeckCraft; NO for the public repo. Maxtree EULA (https://maxtree.org/eula/): s.2.2(3) allows distribution to end users only in object code, with reasonable measures such as encryption or access control against extraction. s.2.3 bars standalone distribution. s.3.2(3) bars letting third parties use the content in their own projects (level editors and modelling tools are the example), and DeckCraft is a design tool, though it exports only stills, video and PDF. s.3.2(4) bars any export channel. s.2.1(1) permits private use and modification, so a private bake-off is OK. Shipping needs Maxtree's written confirmation.",
+   "cost": "Single species, 6 variants, FBX: Indie US$26 / Pro US$78 / Enterprise US$156; Mesh US$36/109/218. Volumes: Vol 122 FBX US$125/375/750; Low Poly Vol 49 FBX US$105/315/630. About 25 species bought singly: about US$650 Indie / US$1,950 Pro / US$3,900 Enterprise. Tiers by total revenue: Indie up to US$100k, Pro up to US$250k, Enterprise above. Superhive Blender editions US$175 per volume. Plus about 0.5-1 artist-day per species to rebuild, and an estimated 2-4 dev-days to build the private-origin container and loader.",
+   "time": "Purchase is immediate. Rebuild about 12-25 artist-days for 25 species. Vendor confirmation: unknown.",
+   "owner_actions": "Confirm the revenue tier. Approve the account, EULA and spend. Approve outreach to Maxtree quoting s.3.2(3) and s.2.2(3). Approve a non-public asset origin, never in git or git history (54 GLBs sit in public/deckcraft/landscape today), plus Terms of Use. Optionally request a Custom Service quote for the gaps.",
+   "why": "The best paid species fit and the fastest route to archviz-grade trees, which makes it the right paid comparator in the bake-off. Ranked below routes 2-4 because the licence is unconfirmed for a design tool, a public repo is impossible, extraction protection in a browser is only 'reasonable', cultivars mismatch ('Overdam', no 'Smaragd', macrophylla for both hydrangeas), and the realism must survive our own decimation."
+  },
+  {
+   "route": "Free licence-safe models (CC BY 4.0 or CC0) where they exist at species level",
+   "rank": 6,
+   "realism_ceiling": "High for the official PlantCatalog spruce (an HD export at 40%). Variable for the others. All are heavy and need decimation, LODs and atlasing.",
+   "coverage": "Species-level and licence-clean: Picea pungens only, via PlantCatalog CC BY 4.0 'Koster' 12/43 (44,675 faces, 57 MB GLB, https://sketchfab.com/3d-models/8c114e3b958e48298a97cc5da6efb1f0) and 'Glauca Globosa'. Provenance unverified (author must confirm it is not SpeedTree or Grove output): Thuja occidentalis (Gerhald, 64k), Pinus strobus saplings (ASMA3D), Spiraea japonica (maksm, 291k), lilac (LOLIPOP), Acer rubrum 'October Glory' (UESReseach, 1.14M faces, untextured). ffishAsia CC0 Hemerocallis scans and Poly Haven CC0 bark and twigs are texture and bake sources only.",
+   "licence_status": "CC BY 4.0: public repo and web OK with attribution and an indication of changes (https://creativecommons.org/licenses/by/4.0/). CC0: unrestricted. PlantCatalog free exports under the e-on EULA are NOT public-repo-safe (s.6), so use the CC BY uploads instead.",
+   "cost": "$0.",
+   "time": "About 1 day per model to decimate, atlas and build LODs.",
+   "owner_actions": "Sketchfab login and downloads, each listed with source and size first. Ask authors about provenance for the unverified items (outreach). Add ATTRIBUTION.md entries.",
+   "why": "Covers blue spruce cleanly and cheaply. Too thin to be a programme on its own."
+  },
+  {
+   "route": "Server-side Photo-mode stills: headless Blender Cycles on a rented GPU, rebuilding the saved design. Only pixels reach the browser, so private or paid assets never ship.",
+   "rank": 7,
+   "realism_ceiling": "Highest still ceiling: about 9-9.5/10. Translucent BSDF leaves, unlimited instancing, 4K textures and OIDN. With scan-grade assets and calibrated colour it is indistinguishable at Corner and Front. Does nothing for the live view.",
+   "coverage": "Whatever is licensed, including paid libraries whose terms allow rendered images. Assets must still stay private.",
+   "licence_status": "Blender output is the user's property (https://www.blender.org/about/license/). Pixels-only delivery removes the extraction problem. Each asset licence must still allow commercial rendering, and asset files must stay private. Privacy: homeowner designs and addresses go to a server.",
+   "cost": "RunPod RTX 4090 US$0.34/h community, US$0.89/h secure, US$1.10/h serverless; L4 US$0.44-0.59/h (https://www.runpod.io/pricing). About US$0.01-0.06 per still, plus idle and cold-start overhead. Engineering is multi-week: every deck, house, hardscape and light must be mirrored in Blender.",
+   "time": "Several weeks. Minutes of latency per still.",
+   "owner_actions": "Approve a metered GPU cloud account and a spend cap. Approve privacy wording for sending designs to a server. Approve any asset purchases.",
+   "why": "The cleanest way to get paid photoreal assets into homeowner-facing images without licence or extraction risk. It is a phase-2 option for Photo mode only, because two renderers drift apart and it costs real money per still."
+  },
+  {
+   "route": "SpeedTree (Unity): Modeler subscription plus the Library add-on",
+   "rank": 8,
+   "realism_ceiling": "High (AAA and film). The best LOD, atlas, billboard and wind pipeline for hitting phone budgets.",
+   "coverage": "Library confirmed via legacy listings: Sugar Maple, Red Maple, Eastern White Pine, Colorado Blue Spruce. The other 22 are unverified (catalogue behind login). The Modeler can author any of the 26.",
+   "licence_status": "Unclear for the web; NO for a public repo. Unity Professional Artistry Additional Terms (https://unity.com/legal/professional-artistry-additional-terms): s.2.1.3 allows Created Assets only to create and distribute a Licensed Production named in the Order Form; s.2.1.3.1 requires them to be embedded, not a substantial portion; s.2.1.3.2 allows distribution only as embedded. The FAQ says no resale or redistribution of trees.",
+   "cost": "Indie US$19/mo (under US$100k); Pro US$899/yr (under US$1M); Library US$999/yr extra; Pro plus Library US$1,898/yr. The trial randomises exported polygons.",
+   "time": "Ongoing subscription. Authoring weeks.",
+   "owner_actions": "Confirm the revenue band. Approve the subscription and Unity ID. Approve outreach to licensing@speedtree.com about naming DeckCraft as the Licensed Production, browser delivery, the 'substantial portion' clause, and what happens to assets after lapse.",
+   "why": "The best tooling, but a recurring cost, named-production licensing and the subscription dependency put it below a free PlantFactory or commission route for a public web app."
+  },
+  {
+   "route": "Quixel Megascans and Fab Standard listings: REFERENCE ONLY (bake-off ceiling), not shippable",
+   "rank": 9,
+   "realism_ceiling": "Best-in-class photogrammetry: the bar for 'reads as a photo' at close range.",
+   "coverage": "Very thin for Ontario. Boxwood (Buxus), Bigleaf Hydrangea (H. macrophylla; free), Norway Maple (free), Norway Spruce, Lady Fern and others. No hosta, daylily, coneflower, Thuja, pine, redbud, serviceberry, dogwood, ninebark, spirea, catmint, salvia, bergamot or the three grasses.",
+   "licence_status": "NO for DeckCraft without a written exception. Fab EULA (https://www.fab.com/eula): s.4(c) requires stopping end users extracting Content; s.5(a) bars standalone distribution, so no public repo; s.6(b)(iii) bars world- or level-editing or modelling tools that allow export; s.2(a) Personal tier only under US$100k digital-content revenue. s.3(a) private use is fine for evaluation.",
+   "cost": "Megascans plants about $1.40-7.05 Personal (displayed without currency; matches CAD conversions of US$0.99-4.99), Professional about 10x. Boxwood $7.05 / $70.70. Bigleaf Hydrangea and Norway Maple free. Boxwood raw zip 384 MB.",
+   "time": "Immediate download. About 1 day per asset to rebuild to budgets for the bake-off.",
+   "owner_actions": "Epic account and Fab EULA acceptance. Approve the boxwood purchase if wanted. Shipping would need written Epic confirmation, which is not recommended.",
+   "why": "Use it in the bake-off to show the owner what the best photogrammetry looks like inside DeckCraft's own budgets and renderer. If even this is not 'real enough' on a phone, the bottleneck is the renderer and budget, not the assets."
+  },
+  {
+   "route": "Xfrog libraries (via CGTrader, not TurboSquid)",
+   "rank": 10,
+   "realism_ceiling": "Good at mid-distance; an older generation and less convincing close up. Each library includes 800x800 alpha billboards, useful for LOD2.",
+   "coverage": "Species level: Acer rubrum, Pinus strobus, Picea pungens var. glauca, Thuja occidentalis, Syringa vulgaris. Genus level: boxwood, yew, redbud (C. siliquastrum), dogwood, hydrangea. No perennials or grasses.",
+   "licence_status": "Governed by the marketplace. CGTrader s.21A (https://www.cgtrader.com/pages/terms-and-conditions) allows apps where users cannot download the product, with encryption (s.21A.3) and no public repo (s.21A.1, s.21A.6). TurboSquid bans three.js-style open formats without prior approval (s.II.7). No Xfrog EULA found (xfrog.net/license returns 404).",
+   "cost": "US$99 per library (US$79 on sale); regional US$199; XFROG WORLD US$599.",
+   "time": "Rebuild about 0.5-1 d per species.",
+   "owner_actions": "Approve the CGTrader account and purchase. Approve outreach to Xfrog to confirm which licence applies.",
+   "why": "A narrow, dated fallback for 5 species. Maxtree dominates it on coverage and look."
+  },
+  {
+   "route": "Browser-generated AI atlas sheets (Gemini or ChatGPT): interim fill only, with per-batch owner approval",
+   "rank": 11,
+   "realism_ceiling": "A single leaf or flower can look photographic at 1-2K. Botanical fidelity is weak: in the only expert study (Theidel, JoDLA 11-2026, https://gispoint.de/fileadmin/user_upload/paper_gis_open/DLA_2026/537770002.pdf) botany and geometry scored 2.21/5 and trustworthiness 1.57/5. Lighting is baked in, there is no seed, colour drifts between runs, and alpha is not real (use white and black difference mattes).",
+   "coverage": "All 26 can be prompted. Expected to be weak on 'Smaragd' sprays, 'Karl Foerster' plumes, 5-needle pine fascicles, Picea pungens' glaucous cast, yew and boxwood needles and leaves, catmint and salvia spikes, and switchgrass and little bluestem panicles.",
+   "licence_status": "The user owns outputs: Google Terms (https://policies.google.com/terms) and OpenAI Terms of Use, 1 Jan 2026. Public repo OK. Probably not copyrightable (USCO Part 2, 2025), so others can reuse them. Google bars presenting AI content as human-made to deceive; label it in the manifest.",
+   "cost": "Google AI Pro about US$19.99 or CA$26.99/mo; ChatGPT Plus US$20/mo. One month covers about 150-250 images. Higgsfield gpt_image_2 is metered and excluded unless approved.",
+   "time": "About 1-2 h per species to matte, de-light, calibrate and review.",
+   "owner_actions": "Approve each generation batch (browser-flow rule). Give botanical sign-off. Approve the provenance label and the rule to replace these with owner photos in 2027.",
+   "why": "Useful only to bridge deciduous summer textures until the June-Aug 2027 capture, and only if the bake-off shows it beats CC0 detail. Never the primary source for a landscaping business whose credibility is plant accuracy."
+  },
+  {
+   "route": "Photo view-set impostors from turntable photos, and Gaussian-splat captures, as REFERENCES and LOD2 sources (not runtime splats)",
+   "rank": 12,
+   "realism_ceiling": "Literally a photograph from the captured angles. Fails on orbit, from above, and under DeckCraft's sun, because lighting is baked. Splats are the most photographic capture for fine foliage.",
+   "coverage": "Potted shrubs, perennials and grasses on a turntable. Trees only partially (wind, unreachable crowns).",
+   "licence_status": "Owner-owned captures. Brush and gsplat Apache-2.0, SuperSplat and Spark MIT, octahedral-impostor MIT. Avoid INRIA-based trainers, Postshot Free, and Scaniverse if the Niantic s.6.3 AI-training licence is unacceptable.",
+   "cost": "$0 software. Backdrop US$59.99-69.99; turntable C$20-200.",
+   "time": "15-20 min per specimen.",
+   "owner_actions": "Capture sessions with permission. Approve the Brush install.",
+   "why": "Best used offline: for crown-envelope and porosity measurement, photo-match QA at the bake-off cameras, and impostor baking. Not as shipped plants."
+  },
+  {
+   "route": "AI image-to-3D (Meshy, Tripo, Hyper3D Rodin, TRELLIS.2, Hunyuan3D 2.1, Stable Fast 3D, SPAR3D): REJECT",
+   "rank": 13,
+   "realism_ceiling": "Thin leaves, needles and blades fuse into lumpy shells with baked shadows. Reads as topiary at Corner and fails at Bed close-up. No vendor publishes foliage results.",
+   "coverage": "At most opaque hulls for boxwood, yew and Smaragd, which the procedural plan already builds in about 300 triangles, plus hydrangea or coneflower heads.",
+   "licence_status": "Mixed and risky. Meshy free tier is CC BY and owned by Meshy (ToS s.3.2); Meshy s.2.4 forbids stripping AI identifiers, which conflicts with our metadata stripping. Hunyuan3D 2.1 requires conspicuous 'machine-generated' labels (Exhibit A item 12) and excludes the EU and UK. TRELLIS.2 depends on non-commercial nvdiffrast (s.3.3). Tripo and Rodin terms are not verified first-hand.",
+   "cost": "Meshy Pro US$20/mo, Premium US$40; Tripo Pro US$19.90/mo; Rodin Creator US$30/mo; TRELLIS.2 needs a 24 GB+ GPU (RunPod A100 about US$1.19-1.89/h).",
+   "time": "n/a",
+   "owner_actions": "None. Do not pursue.",
+   "why": "Adds nothing over procedural hulls, and carries licence and labelling traps."
+  },
+  {
+   "route": "Runtime Gaussian-splat plant library (Spark 2.x or three r186 native): REJECT for the yard; at most a later 'see the real plant' viewer",
+   "rank": 14,
+   "realism_ceiling": "Photographic from captured views, but lighting is baked. Splats receive no sun shadows, do not follow the time of day, are absent from path-traced Photo mode (three-gpu-pathtracer has no splat primitive), conflict with MSAA and depth, and cause sort artefacts with the glass railing.",
+   "coverage": "Whatever is captured. Trees only partially.",
+   "licence_status": "Spark MIT; captures are owner-owned.",
+   "cost": "Spark 2.3.1 is about 910 KB gzip. About 2-25 MB per plant. Phone budgets are 1-1.5M splats per frame in total, which means 4-9k splats per plant across the 273-plant showcase.",
+   "time": "n/a",
+   "owner_actions": "None now.",
+   "why": "Breaks relighting, shadows and Photo mode, which together are the photoreal bar inside a lit 3D yard."
+  },
+  {
+   "route": "Cloud pixel streaming (Unreal 5.7 Nanite Foliage or Twinmotion Cloud): reference ceiling only",
+   "rank": 15,
+   "realism_ceiling": "Highest live interactive realism, with video-compression artefacts and latency.",
+   "coverage": "Any licensed UE or Fab asset; the assets stay on the server.",
+   "licence_status": "Pixels only. Unreal EULA not reviewed.",
+   "cost": "Arcware Lite €10/mo + €0.15/min; Core €89/mo + up to €0.10/min; Vagon US$0.025-0.047/min + US$0.67/day; Twinmotion about US$445/yr. A 15-min session costs about €1.50-2.25 or US$0.38-0.71.",
+   "time": "Months: a full rewrite of the 3D view.",
+   "owner_actions": "A strategic decision to abandon the in-browser renderer, plus metered spend.",
+   "why": "Per-visitor cost, a complete rewrite and mobile latency. It only marks what is possible."
+  },
+  {
+   "route": "Excluded by licence: Chaos Cosmos (incl. Globe library and partner Maxtree/Evermotion content), Botaniq, The Grove, Geo-Scatter/Biome packs, TurboSquid (without written WebGL pre-approval), Unity Asset Store and Book of the Dead (public repo), UE-only samples (Electric Dreams, Valley of the Ancient), Laubwerk/Maxon Capsules (subscription-bound and revocable), Evermotion (licence text not readable)",
+   "rank": 16,
+   "realism_ceiling": "High for most, but irrelevant.",
+   "coverage": "Varies.",
+   "licence_status": "Chaos EULA s.3.3 internal use only (https://www.chaos.com/eula). Botaniq FAQ: renders only, no asset redistribution. The Grove clause 2: the product must not be a tool and trees must not be extractable (https://www.thegrove3d.com/license/). TurboSquid s.II.7(b),(c) ban open formats and open systems. Maxon EULA s.13.3(c) and s.13.4 (revocation). Evermotion licence page blocked by Cloudflare, so unverified.",
+   "cost": "Enscape Solo US$574.80/yr; Maxon One US$1,799/yr; The Grove €99-799; Botaniq US$39.99-299.99.",
+   "time": "n/a",
+   "owner_actions": "None, except Chaos Cosmos may still serve Golden Maple's own offline marketing renders.",
+   "why": "Cannot legally ship in a public browser design tool."
+  }
+ ],
+ "per_species": [
+  {
+   "species": "Sugar maple (Acer saccharum)",
+   "best_route": "In-repo space-colonisation tree (P7) with an installed-size crown envelope measured from owner photos. Owner-captured summer leaf atlas (June 2027), with autumn leaves shot now for an autumn variant. Bark from owner capture or Poly Haven CC0 trident_maple_bark. If the bake-off shows the procedural canopy below the bar: PlantFactory artist-authored geometry with the same atlases.",
+   "fallback": "Maxtree Acer saccharum single-species pack (V17/V26/V48/V50/V142; FBX US$26/78/156 by tier), private origin, only after Maxtree's written OK. Interim until summer 2027: the plan's CC0 iNaturalist detail (1,822 CC0 observations). LOLIPOP CC BY maple pack with a swapped leaf atlas, only after the author confirms provenance."
+  },
+  {
+   "species": "Red maple (Acer rubrum)",
+   "best_route": "P7 procedural (upright-oval envelope, red petioles in vertex colour). Owner-captured summer leaf atlas (June 2027); autumn red leaves now; flowers Mar-Apr 2027.",
+   "fallback": "Maxtree V65 Acer rubrum (species level), private origin. Xfrog 'USA East'. UESReseach CC BY 'October Glory' (1.14M faces, untextured) as a structure donor."
+  },
+  {
+   "species": "Eastern white pine (Pinus strobus)",
+   "best_route": "P8 procedural with an owner-captured 5-needle fascicle and spray atlas, shot NOW (green outer sprigs laid flat under glass), plus bark capture.",
+   "fallback": "Maxtree V67/V126 (species level). ASMA3D CC BY saplings (provenance unverified). Xfrog USA East and USA Conifers."
+  },
+  {
+   "species": "Serviceberry (Amelanchier canadensis)",
+   "best_route": "P7 multi-stem procedural. Owner capture: autumn leaves now, summer leaves June 2027, bloom late Apr-early May 2027; smooth grey bark now.",
+   "fallback": "Commission (no species-level stock found). Maxtree Amelanchier lamarckii V94/V144 (genus level). The Grove serviceberry twig is excluded."
+  },
+  {
+   "species": "Eastern redbud (Cercis canadensis)",
+   "best_route": "P7 procedural with an owner-captured heart-leaf atlas (June 2027; yellow autumn leaves and pods now), bloom mid-May 2027.",
+   "fallback": "Maxtree Cercis canadensis V2/V55/V144 (species level), private origin."
+  },
+  {
+   "species": "Colorado blue spruce (Picea pungens)",
+   "best_route": "PlantCatalog CC BY 4.0 'Koster' or 'Glauca Globosa' from the official Sketchfab account, decimated to about 10-20k triangles, LOD1, billboard and 1k KTX2, with attribution. Owner-captured glaucous needle atlas (shot now) for colour consistency with the other conifers.",
+   "fallback": "P8 procedural with the owner needle atlas. Maxtree V63/V157 (species level)."
+  },
+  {
+   "species": "Emerald cedar (Thuja occidentalis 'Smaragd'), 76 of 273 estate plants",
+   "best_route": "P3 hull-plus-shell procedural (narrow pyramid, porosity about 0) with an owner-captured 'Smaragd' flat scale-spray atlas shot NOW (the easiest atlas of all 26), backlit for translucency. Optional RealityScan shell of a clipped specimen as a bake source. Two seeded variants (D22).",
+   "fallback": "Superhive 'Thuja Smaragd Collection vol 138' (US$7, exact cultivar, 346k polys; licence needs the creator's written web permission). Maxtree V122_Thuja_occidentalis_01 (species form, FBX US$26/78/156; needs reshaping to a 'Smaragd' habit). Gerhald CC BY Thuja occidentalis (provenance unverified)."
+  },
+  {
+   "species": "Boxwood (Buxus)",
+   "best_route": "P3 hull-plus-shell with an owner-captured sprig atlas shot NOW, before winter bronzing.",
+   "fallback": "Maxtree Buxus microphylla V10 or B. sempervirens V55. Megascans Boxwood is the realism reference only (Fab EULA blocks shipping)."
+  },
+  {
+   "species": "Yew (Taxus x media)",
+   "best_route": "P3 hull-plus-shell with an owner-captured two-ranked needle spray atlas shot NOW (red arils on female plants are optional detail).",
+   "fallback": "Maxtree Taxus cuspidata V110 or T. baccata V85 (the parents of the hybrid). ffishAsia CC0 Torreya and Cephalotaxus scans as texture stand-ins."
+  },
+  {
+   "species": "Ninebark (Physocarpus opulifolius)",
+   "best_route": "P5 procedural with an owner-captured leaf atlas of the cultivar Golden Maple installs (e.g. purple 'Diabolo' or a green form). Autumn leaves now, summer leaves and flowers June 2027; peeling bark Nov-Mar.",
+   "fallback": "Commission with copyright assignment: no species model exists in any library searched (Maxtree, Megascans, Xfrog, CC0, CC BY)."
+  },
+  {
+   "species": "Red-osier dogwood (Cornus sericea)",
+   "best_route": "P5 procedural: red stem geometry in vertex colour, plus an owner-captured leaf atlas (June 2027). Red stems at their peak Nov-Mar for stem colour.",
+   "fallback": "Commission (no species-level model found; Maxtree has other Cornus only). Interim: CC0 iNaturalist detail."
+  },
+  {
+   "species": "Annabelle hydrangea (Hydrangea arborescens 'Annabelle')",
+   "best_route": "P5 procedural with baked globe heads. Owner-captured leaf and floret atlas: green leaves June 2027, white heads late June-Aug 2027. Tan dried heads now give an autumn variant.",
+   "fallback": "Commission at cultivar level. Maxtree Hydrangea macrophylla (wrong species; recolour the heads), private origin. Interim: CC0 detail, or an approved Gemini sheet labelled AI in the manifest."
+  },
+  {
+   "species": "Panicle hydrangea (Hydrangea paniculata)",
+   "best_route": "P5 procedural with conical baked panicles. Owner capture: rose and tan autumn heads now, white or lime heads July-Aug 2027, leaves June 2027. Cultivar to be named by the owner.",
+   "fallback": "Commission. Maxtree H. macrophylla is a poor stand-in because the head shape differs."
+  },
+  {
+   "species": "Japanese spirea (Spiraea japonica)",
+   "best_route": "P5 procedural with an owner-captured leaf and flower atlas of the installed cultivar (autumn leaves now, flowers June 2027).",
+   "fallback": "Maxtree V66 (species level; Low Poly edition exists). maksm CC BY Spiraea japonica (291k faces) as a bake source."
+  },
+  {
+   "species": "Common lilac (Syringa vulgaris)",
+   "best_route": "P5 procedural with an owner-captured cordate leaf atlas (June 2027) and panicles (mid-late May 2027; about a 2-week window). PlantFactory if the procedural shrub form fails.",
+   "fallback": "Maxtree V44 (species level). Xfrog Shrubs library. LOLIPOP CC BY lilac (species unstated)."
+  },
+  {
+   "species": "Purple coneflower (Echinacea purpurea)",
+   "best_route": "P6 geometry flower heads (opaque petals and cone) with an owner-captured petal, cone and leaf atlas (July-Aug 2027; seed cones now).",
+   "fallback": "Maxtree V34/V145 (species level)."
+  },
+  {
+   "species": "Black-eyed Susan (Rudbeckia)",
+   "best_route": "P6 geometry heads with owner capture (July-Aug 2027; seed domes now). Confirm R. hirta or R. fulgida 'Goldsturm'.",
+   "fallback": "Procedural with CC0 iNaturalist detail. Maxtree has only R. laciniata, the wrong species. Botaniq has R. hirta and fulgida but is excluded by licence."
+  },
+  {
+   "species": "Wild bergamot (Monarda fistulosa)",
+   "best_route": "P6 geometry whorled heads with owner capture in July, before mildew (seed heads now).",
+   "fallback": "Maxtree Monarda didyma V170 (genus level, red flowers; recolour)."
+  },
+  {
+   "species": "Hosta",
+   "best_route": "P4 opaque leaf geometry (no alpha) with an owner-captured leaf atlas of the cultivar(s) Golden Maple installs, in June 2027 before slug damage. The leaves are already yellowing now.",
+   "fallback": "Maxtree hosta (several cultivars at species level: 'Justine', 'Francee', 'Blue Mouse Ears', H. plantaginea). ffishAsia CC0 hosta scans as bake sources."
+  },
+  {
+   "species": "Ostrich fern (Matteuccia struthiopteris)",
+   "best_route": "P4 opaque frond geometry with owner-captured pinnae (June 2027; fertile fronds now). Fix the flat-brown proxy early (D15).",
+   "fallback": "Maxtree V82 (species level). PlantCatalog CC BY male fern (Dryopteris) as a vase-form stand-in."
+  },
+  {
+   "species": "Daylily (Hemerocallis)",
+   "best_route": "P4 opaque strap-leaf geometry plus a flower atlas from owner capture (June-Aug 2027) of the installed cultivar.",
+   "fallback": "Maxtree V28 H. fulva / V145 hybridus. ffishAsia CC0 Hemerocallis scans as bake sources (public-repo safe)."
+  },
+  {
+   "species": "Catmint (Nepeta 'Walker's Low' or as installed)",
+   "best_route": "P6 procedural spikes with owner capture: June first flush, or whatever is still in flower now.",
+   "fallback": "Maxtree Nepeta nervosa V106 (genus level). Interim CC0 detail."
+  },
+  {
+   "species": "Salvia nemorosa",
+   "best_route": "P6 procedural spikes with owner capture (June flush, Aug rebloom) of the installed cultivar (e.g. 'May Night').",
+   "fallback": "Maxtree V175 (species level)."
+  },
+  {
+   "species": "Karl Foerster feather reed grass (Calamagrostis x acutiflora 'Karl Foerster'), 24 in estate",
+   "best_route": "P4 opaque blade and plume geometry with owner-captured tan plumes and blades shot NOW. Pink June plumes are a later variant.",
+   "fallback": "Maxtree Calamagrostis 'Overdam' V65 (variegated, the wrong cultivar; recolour) or acutiflora V109. Commission if exactness matters."
+  },
+  {
+   "species": "Little bluestem (Schizachyrium scoparium)",
+   "best_route": "P4 geometry with owner capture: copper autumn stems and silver tufts now, blue summer foliage July-Aug 2027.",
+   "fallback": "Maxtree V161 (species level)."
+  },
+  {
+   "species": "Switchgrass (Panicum virgatum)",
+   "best_route": "P4 geometry with owner capture: gold foliage and open panicles now, summer haze Aug 2027.",
+   "fallback": "Maxtree V49 (species level; Low Poly edition 5,146-25,694 polys exists)."
+  }
+ ],
+ "bakeoff": {
+  "species": [
+   "Emerald cedar 'Smaragd' (clipped evergreen; 76 of 273 estate plants; capturable now)",
+   "Annabelle hydrangea (broadleaf shrub with bloom heads; 19 in estate)",
+   "Sugar maple (canopy tree; the lawn subject at the Tree in lawn camera)"
+  ],
+  "variants": [
+   {
+    "name": "V0 Control: today's proxies with the shared render fixes",
+    "how": "P0 opaque canvas plus P1 honest foliage applied to the existing proxy models. It shows how much of 'not real enough' was the renderer.\n\nShared render fixes, applied identically to EVERY variant:\n- alpha:false (opaque canvas);\n- foliage shader v2: translucency injected before totalDiffuse, roughness 0.5-0.85, no back-face normal flip, crown normals, AO-gated;\n- no albedo lift or green gain;\n- coverage-preserving alpha mips;\n- a shadow customDepthMaterial at the visible alpha cutoff;\n- a minimal bed-seating stub on the demo bed (mulch level fix and contact decal);\n- idle 8-16-frame accumulation;\n- Photo mode with the emissive leaf glow removed, thin-wall transmission 0.1-0.25 at roughness about 0.6, transmissiveBounces 12 and sun radius 0.265 deg.",
+    "needs": "Owner approval of P0/P1 work on a local branch (no commit or merge without OK). No downloads."
+   },
+   {
+    "name": "V1 Plan as reviewed: in-repo procedural geometry with SVG leaf masks and CC0 photo detail",
+    "how": "Prototype the plan's builders for the three species only:\n- P3 hull-plus-shell for 'Smaragd';\n- P5 shrub with baked globe heads for Annabelle;\n- P7 space-colonisation tree for sugar maple.\nEach gets LOD0 at the plan cap (clipped evergreen 3k, shrub 3.5k, tree 12k triangles) plus a raised stills-only LOD0 (about 12k / 15k / 60k) to test whether triangles buy realism. LOD1 and the LOD2 billboard cloud follow the plan. Shared atlases, and the same per-instance variation turned off so every variant is compared like for like.",
+    "needs": "Owner approval of the CC0 iNaturalist photo list (D20 rule; 6-15 photos, each listed with source and size). About 2.5 agent-days."
+   },
+   {
+    "name": "V2 Same procedural geometry, re-textured with OWNER-CAPTURED photo atlases",
+    "how": "Reuse the V1 meshes unchanged and swap only the atlases, which isolates the texture route.\n- 'Smaragd': cut scale sprays shot within 1-2 h of cutting on an LED light pad. Frames: backlit (alpha and translucency), cross-polarised (albedo), parallel-polarised (gloss), 4-8 raking lights with a chrome ball (photometric-stereo normals in Meshroom), and a ColorChecker per lighting setup.\n- Sugar maple: green leaves if still obtainable (shaded saplings or nursery container stock). Otherwise the bake-off renders BOTH V1 and V2 maples in an autumn state, from fallen leaves shot now, so the comparison stays fair.\n- Annabelle: green leaves from nursery stock if obtainable. Otherwise one approved Gemini/ChatGPT leaf-and-floret sheet, labelled AI. That also tests the interim AI-fill route.\nAll three species also get whole-plant reference photos from the exact Bed close-up, Front and Tree in lawn eye positions, for blind photo-match. Processing: darktable calibration against the ColorChecker, BiRefNet (MIT) or backlight-key matting, packed into 1-2k atlases.",
+    "needs": "Owner shoot of about 3 h (cuttings plus matched-view reference photos; nursery or client permission). Gear approval: ColorChecker Passport Photo 2 US$89.25-119 or Classic Mini about US$74; A3 LED light pad about C$40-90; polariser film about US$15-40. Install approvals: darktable, Meshroom, BiRefNet weights. About 1.5 agent-days."
+   },
+   {
+    "name": "V3 Paid archviz library rebuilt to the same DeckCraft budgets (private evaluation only)",
+    "how": "Buy single-species packs:\n- Maxtree V122_Thuja_occidentalis_01 (reshaped toward a 'Smaragd' habit), or the exact-cultivar Superhive 'Thuja Smaragd Collection vol 138' (US$7);\n- a Maxtree Acer saccharum single-species pack;\n- a Maxtree Hydrangea macrophylla pack, with heads recoloured white as the Annabelle stand-in.\nIn Blender 5.2: decimate to the same caps as V1, bake 1-2k leaf and bark atlases, and build LOD1 and an LOD2 billboard cloud with the shared shader. Files live in a folder OUTSIDE the repo and are never committed, deployed or put on a public URL. Phone testing goes only through the plan's LAN probe server. Maxtree EULA s.2.1(1) permits private use and modification.",
+    "needs": "Owner approval of a Maxtree account, EULA and purchase. FBX price per species is US$26 Indie / US$78 Pro / US$156 Enterprise, so US$78 / US$234 / US$468 for three, plus optionally US$7 on Superhive. Owner confirms the revenue tier. About 2 agent- or artist-days for the rebuilds."
+   },
+   {
+    "name": "V4 Photogrammetry ceiling reference: Megascans on Fab (NOT shippable)",
+    "how": "Free Bigleaf Hydrangea (Annabelle reference), free Norway Maple (sugar-maple reference) and Megascans Boxwood (clipped-evergreen reference; there is no Thuja). Rebuilt to the same caps with the same pipeline and evaluated privately under Fab EULA s.3(a), with the same storage rules as V3. Its job is to answer one question: if even scan-grade assets are not 'real enough' at DeckCraft budgets on a phone, the bottleneck is the renderer and budget, not the asset source. Drop V4 if the owner declines an Epic account.",
+    "needs": "Owner approval of an Epic account and the Fab EULA. Boxwood costs $7.05 Personal (displayed without currency; probably CAD); the hydrangea and maple are free. About 1.5 agent-days."
+   }
+  ],
+  "cameras_and_modes": "The P0 fixture (31-plant demo bed plus lawn trees), with each variant swapped in by species id at render time; no saved data changes.\n\nCAMERAS:\n- Corner;\n- Front;\n- Bed close-up (eye 60 in, 120 in from the bed centre, aimed at 18 in, fov 38);\n- Bed edge low (eye 30 in);\n- Plant base macro (for the shrub);\n- Tree in lawn (eye about 30 in, about 5 ft from the maple);\n- Overview, for context.\nThe 273-plant estate at Corner is used only for the perf check of the winning variant.\n\nLIVE VIEW, per variant, in Day and Golden hour with Realistic look on:\n- desktop 1600x900 at forced high tier (MSAA 4, LOD0/LOD1, 4096 shadows, PCSS);\n- phone 390x844 at forced balanced (LOD1, MSAA 2, DPR 1.25);\n- phone 390x844 at forced constrained (LOD2, no MSAA, no plant shadows).\nEach is captured as a still after idle accumulation AND as a 10 s orbit clip, because shimmer and LOD pops while orbiting are judged by eye. The owner also opens every variant on his iPhone in portrait through the LAN probe server (balanced tier) and records p50/p95 frame times and context loss.\n\nSHOWCASE STILL EXPORT: forced LOD0 at both the plan cap and the raised stills cap.\n\nPHOTO MODE: the WebGL tracer with the leaf-transmission fixes, 384 spp plus denoise, at Corner, Front, Bed close-up and Tree in lawn, Day and Golden hour.\n\nMETRICS from the P0 probe, per variant and tier:\n- triangles and draws per pass;\n- plant texture MiB;\n- p95 frame time;\n- overdraw at Front and Bed close-up;\n- canopy luminance and % of pixels above sRGB 235;\n- ColorChecker ΔE2000 of the mean sunlit-leaf colour against the owner's calibrated reference photo.",
+  "judge": "The owner, by eye, in a blind session. For each species × camera × tier/mode, a contact sheet shows the variants under randomised letters, beside the owner's REAL reference photo taken from the matching viewpoint. The owner marks each tile 'real enough / not', ranks them, and plays the orbit clips side by side.\n\nOptional second gate: 5-10 homeowners (staff, clients, friends; recruiting them is the owner's outreach) get 10 render/photo crop pairs at Corner and Front from Photo mode and the desktop still, and say which is the photo. Target: no better than 60% correct identification.\n\nObjective guardrails reported alongside:\n- ΔE2000 of about 5 or less against calibrated photos;\n- silhouette porosity within ±10% of the reference at equal pixel height;\n- no shimmer after 8+ accumulated samples;\n- p95 at most 1.15× P0 on balanced and constrained;\n- constrained tier under 45k triangles;\n- texture MiB within the tier budgets.\n\nDECISION RULE:\n- If V2 is 'real enough' in Photo mode and the desktop still at Corner and Front, and is not visibly worse than V3 on phones, adopt route 2 for all 26 and skip paid assets.\n- If V3 or V4 clearly beat V2 while V1/V2 fail, the gap is geometry. Next steps are a PlantFactory or commission pilot for trees, and only then Maxtree licence confirmation.\n- If every variant fails on phones but passes in Photo mode, accept the phone ceiling and invest in Photo mode (WebGPU tracer, then optionally server-side Cycles), not assets.",
+  "effort_days": 7,
+  "approvals_needed": [
+   "Run the bake-off before committing to P3-P8 (this changes the plan order, D1).",
+   "P0 (opaque canvas plus harness) and P1 (honest foliage) work on a local branch. Nothing is committed or merged without an explicit OK; merging deploys production.",
+   "Foliage shader v2 and Photo-mode leaf-transmission changes (D2), applied to all variants.",
+   "CC0 iNaturalist photo download list for V1 (D20), each with source and size.",
+   "Gear purchases for V2: ColorChecker (Classic Mini about US$74, or Passport Photo 2 US$89.25 sale / US$119 list), A3 LED light pad (about C$40-90), linear polariser film (about US$15-40); optional phone CPL (US$15-75).",
+   "Owner capture session (about 3 h): 'Smaragd' cuttings, any obtainable green Annabelle and sugar maple leaves (or fallen autumn maple leaves), and matched-view reference photos of real specimens. Nursery or client permission is the owner's outreach.",
+   "Local installs: darktable, Meshroom, BiRefNet weights (MIT), gltf-transform/meshoptimizer dev tools; Blender 5.2 is already installed. List each download with source and size first.",
+   "Optional: one Gemini/ChatGPT browser batch for an Annabelle interim leaf and floret sheet (separate approval under the browser-flow rule).",
+   "Maxtree account, EULA acceptance and purchase of up to three single-species FBX packs at the owner's revenue tier (US$78 Indie / US$234 Pro / US$468 Enterprise in total), and optionally the US$7 Superhive 'Smaragd' collection.",
+   "Epic account, Fab EULA acceptance, and the Megascans Boxwood purchase ($7.05 Personal); Bigleaf Hydrangea and Norway Maple are free.",
+   "A storage rule: paid and Fab files stay in a folder outside the repo, are never committed or deployed, and reach the iPhone only via the LAN probe server.",
+   "Owner time for the blind review session, and optionally recruiting 5-10 homeowners for the photo-vs-render test."
+  ]
+ },
+ "rendering_upgrades": [
+  "Opaque canvas: alpha:false in the Deck3DViewer Canvas gl props (P0). It removes the verified page-through-leaf speckle on every route. Zero cost.",
+  "Foliage shader v2, injected at <aomap_fragment> before totalDiffuse (today's translucency, warm-highlight and shade-fill terms are added after outgoingLight is summed, so they never render). Contents:\n- a diffuse-transmission lobe T·albedo_t·max(0,-N·L)·shadow/π plus a small irradiance term from -N, scaled by baked thickness and AO, and multiplied by the sun shadow so beds do not go neon;\n- upper-side roughness 0.5-0.65 and under-side 0.7-0.85, F0 0.04;\n- no back-face normal flip for leaf cards;\n- crown or proxy-sphere normals blended 50-80% into the card normals;\n- a per-vertex AO attribute driving specular occlusion;\n- Toksvig or geometric specular AA;\n- removal of the pow(0.8) albedo lift and the green gain.\nAbout 1-1.5 KB gzip in the lazy Landscape3D chunk and 2 B/vertex. GPU estimate +0.1-0.3 ms desktop, +0.3-1 ms phone. Mirror every change in photoMaterials.ts so the live view and Photo mode agree.",
+  "Alpha pipeline:\n- coverage-preserving mips baked offline (Castaño bisection per mip) so maple canopies do not blob and needle atlases do not vanish at distance;\n- an optional mip-level alpha scale (about 4 ALU ops);\n- a customDepthMaterial at the visible cutoff for plant shadows (three forces alphaTest 0.5 for A2C in WebGLShadowMap.js:482, against the visible 0.3-0.4);\n- alphaHash on the constrained tier only, and only together with accumulation.",
+  "Idle progressive supersampling in the live view: 8-16 sub-pixel-jittered frames once the camera stops, reusing the jitter and blend code in renderPipeline.tsx:75-84 (dead today because SHOWCASE_STILL_SAMPLES=1). Samples are weighted in tone-mapped space (Karis 1/(1+luma)), and the buffer resets on any invalidate. Cost: 0.05-0.1 s desktop and 0.2-0.4 s phone after the camera stops; about 52 MB on high tier and about 5 MB on a phone. It removes shimmer, A2C quantisation and PCSS/GTAO noise on every tier, including constrained phones with no MSAA.",
+  "Shadows and grounding:\n- PCSS sized to the real 0.53 deg sun (penumbra about 0.0093 × occluder distance) on the high and showcase tiers only (+0.3-1 ms desktop);\n- Photo-mode sun radius 0.265 deg in place of 0.9 deg (photoGrade.ts:26), so penumbrae and sun flecks are not 3.4x too soft;\n- an instanced radial contact decal under every plant on all tiers (constrained phones have no plant shadows; about 0.05 ms);\n- the GroundOcclusion texture fed to bed materials;\n- per-vertex canopy AO on top of GTAO.\nShadow texel size (150 ft frustum): 0.44 in at 4096, 0.88 in at 2048, 1.76 in at 1024. Leaf-scale dapple is therefore plausible only on high and showcase.",
+  "Bed seating (P2): mulch just below the grass tips, tapering to grade; a soil collar and mulch kept off each stem; contact shade sized to each plant; near-flush steel edging; honest brown, black and cedar mulch. This fixes the 3 in burial and the flat orange slab that betray every route.",
+  "Colour calibration and grade:\n- ColorChecker-referenced RAW photos per species, with a virtual ColorChecker in the scene;\n- per-species mean sunlit-leaf ΔE2000 of about 5 or less, and 2-4 ΔE variation per plant;\n- summer foliage linear albedo about 0.09-0.12;\n- a phone-camera-like curve (S-curve plus highlight roll-off) for Realistic look and Photo mode, with Neutral kept for editor swatches;\n- the Neutral (live) versus AgX (Photo mode) green divergence resolved.",
+  "Geometry and density policy:\n- true-size twig-cluster cards (shrub cards are about 12x real leaf size today);\n- species crown envelopes with real porosity (10-30% sky gaps for deciduous crowns, about 0 for clipped evergreens);\n- opaque leaf meshes for hosta, daylily, grasses and hero flower heads;\n- uniform or XZ-isotropic scaling;\n- LOD1 enlarges the retained cards by sqrt(1/retention);\n- LOD2 as a billboard cloud or a hemi-octahedral impostor with baked normals and depth (agargaro/octahedral-impostor, MIT), so it relights with the sun;\n- per-instance variation plus 2 seeded variants (D22).",
+  "LOD0 budget for showcase stills: the plan's 0.84M-triangle estate cap is right for live use. Photoreal stills may want higher caps (render sweep: canopy tree 40-120k, shrub 10-40k, perennial 3-15k, grass 3-8k, about 5-10M for 273 plants), on desktop only, with LOD0 clamped to the frustum or near plants. The bake-off tests whether this buys visible realism. D21's phone showcase cap stays.",
+  "Texture policy and KTX2: LOD0 at 16-32 texels per inch of leaf (2048 atlas per leaf family; 4096 or per-leaf sprites only for the macro cameras), LOD1 at 1024, LOD2 at 512 or an impostor sheet. Four families × two maps at 2048 are 179 MB as RGBA8 against about 45 MB compressed, so photoreal LOD0 effectively requires KTX2 (UASTC for albedo/alpha and normal; ETC1S where acceptable). The transcoder is about 260 KB gzip, lazy (basis_transcoder.wasm 245,397 B gzip). PLAN.md D14 currently says no KTX2; revisit it if the bake-off favours higher-resolution atlases. The WebGL path tracer cannot read compressed textures, so keep uncompressed sources for Photo mode.",
+  "Photo mode on the current WebGLPathTracer (three-gpu-pathtracer 0.0.27):\n- drop the shadow-unaware emissive leaf glow and the albedo lift (photoMaterials.ts:183-189, 422-436);\n- thin-wall transmission 0.1-0.25 at roughness about 0.6, or better a roughly 50-line GLSL Lambertian transmission lobe applied only to thin-film, rough transmissive materials so glass stays specular;\n- transmissiveBounces 10-16 (alpha skips starve shadow rays and over-darken canopies);\n- sun radius 0.265 deg;\n- textureSize 2048 only for close-up stills (16 MB per layer, applies to every scene texture);\n- baked LOD0 limited to plants in or near the frustum.\nPin 0.0.27, because the WebGL tracer was deprecated in 0.0.25.",
+  "Optional: port Photo mode to WebGPUPathTracer (same package; 3-6 dev-days). It gives per-instance BVH for InstancedMesh and BatchedMesh (26 unique species meshes instead of 273 baked copies), native-resolution atlas pages instead of 1024 layers, maxTransparentBounces kept separate from maxBounces, an in-browser OIDN denoiser, an FSR upscaler and SunLight. The same diffuse-transmission patch is needed in WGSL. Keep the WebGL tracer as the fallback and for CI (SwiftShader has no WebGPU).",
+  "Optional phase 2: server-side Cycles Photo-mode stills on a rented GPU (RunPod RTX 4090 US$0.34-1.10/h, about US$0.01-0.06 per still; multi-week build). Only pixels leave the server, which is the one way to use private or paid plant assets in homeowner images without extraction risk. Needs a metered-spend approval and a privacy decision.",
+  "Not recommended now: migrating the live renderer to WebGPURenderer with TRAA, SSGI and screen-space shadows (three r185 TSL nodes). It is about +1 point on desktop live, but means rewriting every onBeforeCompile patch in TSL. Also not recommended: runtime splats, or a pixel-streaming rewrite."
+ ],
+ "open_questions": [
+  "Will the owner accept paid plant assets living OUTSIDE the public repo, on a non-public origin with obfuscated or encrypted containers and site Terms of Use forbidding extraction? This is a hard prerequisite for every paid stock route (Maxtree, Fab/Megascans, SpeedTree, Xfrog, CGTrader). If not, only routes 2, 3, 4, 6 and 7 remain.",
+  "Golden Maple's revenue band. It sets Maxtree's tier (Indie up to US$100k, Pro up to US$250k, Enterprise above; by total revenue) and SpeedTree's (Indie under US$100k, Pro under US$1M). Fab Personal eligibility is measured on DIGITAL-CONTENT revenue only (s.2(a)). RealityScan is free under US$1M group revenue, and Stable Fast 3D likewise.",
+  "Will Maxtree (EULA s.3.2(3)), Epic/Fab (s.6(b)(iii)) and Unity/SpeedTree confirm in writing that a homeowner yard-design web tool, which exports only images, video and PDF, is not a prohibited editor or modelling tool, and that browser-delivered, encrypted runtime meshes count as 'embedded'? This is owner outreach.",
+  "Can green, summer-state Annabelle and sugar maple leaves still be obtained this month (nursery greenhouse or container stock, shaded saplings), or must the bake-off compare deciduous variants in an autumn state, or use an approved AI interim sheet for Annabelle?",
+  "Does the owner have archived summer job or nursery photos of the 26 species, ideally RAW, for crown-envelope measurement and photo-match references before the 2027 capture season?",
+  "Which cultivars represent hosta, daylily, ninebark (purple 'Diabolo' or green), spirea, panicle hydrangea, catmint, salvia, switchgrass and little bluestem? This decides both the capture targets and any commission specs.",
+  "What counts as 'real enough' on phones? Recommendation: judge the photo bar in Photo-mode stills and the desktop still, and hold phones to 'clearly better, no CG tells' (about 6/10 on a still frame). Every sweep agrees no route makes phone live views indistinguishable from a photo.",
+  "Should showcase stills and Photo mode get raised LOD0 caps (render sweep: about 5-10M triangles for 273 plants, desktop only, frustum-clamped) beyond the plan's 0.84M estate cap? Should KTX2 (currently 'no' under D14) be adopted for higher-resolution atlases?",
+  "Default render season (summer) and whether autumn variants ship. Autumn captures are available now; summer deciduous captures only May-Aug 2027.",
+  "Asset rights notice for owner-captured textures in the public repo: the repo has no LICENSE file today, so they default to all rights reserved. Option: dedicate them CC0. Also, GitHub ToS s.D.4 lets GitHub use public content for its AI features.",
+  "Commission quotes and IP terms from Globe Plants Custom Requests and the Maxtree Custom Service (quote-only). Freelancers must not use SpeedTree or The Grove, whose output terms restrict redistribution.",
+  "Is sending homeowner designs to a server acceptable (privacy wording) if server-side Cycles Photo-mode stills are pursued later?",
+  "Unfinished verification from the sweeps:\n- the Evermotion licence (Cloudflare-blocked);\n- Megascans LODs and polycounts;\n- SpeedTree Library contents for 22 species;\n- Maxtree search pages beyond page 1 for Cornus, Hydrangea, Calamagrostis and Syringa;\n- CGTrader and TurboSquid species-by-species searches;\n- the Florasynth export licence;\n- the Postshot Indie price;\n- Tripo and Rodin ToS ownership wording;\n- PlantFactory stock-content species;\n- Bentley's written position on public-repo use of PlantCatalog exports (EULA s.6 against its FAQ);\n- whether Fab prices are displayed in CAD.",
+  "Superhive 'Thuja Smaragd Collection vol 138' (US$7, exact cultivar): seller identity is inconsistent on the page, quality is unknown, and redistribution needs the creator's written permission. Is it worth asking the creator if V3 'Smaragd' wins?"
+ ]
+}

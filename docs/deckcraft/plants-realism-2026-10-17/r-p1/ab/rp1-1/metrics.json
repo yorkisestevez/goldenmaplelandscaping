@@ -1,0 +1,300 @@
+{
+ "url": "http://127.0.0.1:4031/deck-designer/",
+ "at": "2026-10-17T22:59:21.621Z",
+ "results": [
+  {
+   "tier": "high",
+   "scene": "demo",
+   "quality": "high",
+   "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 (0x00002F04) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+   "frames": 608,
+   "frameMs": {
+    "p50": 22,
+    "p95": 43.5
+   },
+   "cpuMs": {
+    "p50": 3.2,
+    "p95": 7
+   },
+   "gpuMs": {
+    "p50": 3.91,
+    "p95": 7.66,
+    "frames": 608
+   },
+   "drawCalls": {
+    "p50": 283,
+    "max": 407
+   },
+   "triangles": {
+    "p50": 3618710,
+    "max": 3814143
+   },
+   "shadowRedrawsPerFrame": 0.04,
+   "programs": 104,
+   "geometries": 165,
+   "textures": 114,
+   "sceneTextures": 78,
+   "textureMB": 98.98,
+   "meshes": 148,
+   "shadowCasters": 108,
+   "instances": 25388,
+   "sun": {
+    "mapSize": 4096,
+    "extent": [
+     -49.93,
+     48.03,
+     35.15,
+     -58.07
+    ]
+   },
+   "magentaPixels": 0,
+   "blackShare": 0.003,
+   "problems": []
+  },
+  {
+   "tier": "balanced",
+   "scene": "demo",
+   "quality": "balanced",
+   "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 (0x00002F04) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+   "frames": 597,
+   "frameMs": {
+    "p50": 21.5,
+    "p95": 43.3
+   },
+   "cpuMs": {
+    "p50": 2.8,
+    "p95": 5.6
+   },
+   "gpuMs": {
+    "p50": 2.84,
+    "p95": 5.57,
+    "frames": 596
+   },
+   "drawCalls": {
+    "p50": 260,
+    "max": 360
+   },
+   "triangles": {
+    "p50": 1902505,
+    "max": 2066096
+   },
+   "shadowRedrawsPerFrame": 0.01,
+   "programs": 69,
+   "geometries": 152,
+   "textures": 83,
+   "sceneTextures": 52,
+   "textureMB": 66.69,
+   "meshes": 138,
+   "shadowCasters": 104,
+   "instances": 14731,
+   "sun": {
+    "mapSize": 2048,
+    "extent": [
+     -49.93,
+     48.03,
+     36.29,
+     -58.07
+    ]
+   },
+   "magentaPixels": 0,
+   "blackShare": 0,
+   "problems": []
+  },
+  {
+   "tier": "constrained",
+   "scene": "demo",
+   "quality": "constrained",
+   "gpu": "Google SwiftShader (probe)",
+   "frames": 595,
+   "frameMs": {
+    "p50": 21.7,
+    "p95": 41.7
+   },
+   "cpuMs": {
+    "p50": 2.7,
+    "p95": 4.7
+   },
+   "gpuMs": {
+    "p50": 2.05,
+    "p95": 3.78,
+    "frames": 594
+   },
+   "drawCalls": {
+    "p50": 256,
+    "max": 256
+   },
+   "triangles": {
+    "p50": 659109,
+    "max": 659415
+   },
+   "shadowRedrawsPerFrame": 0,
+   "programs": 66,
+   "geometries": 145,
+   "textures": 72,
+   "sceneTextures": 51,
+   "textureMB": 61.04,
+   "meshes": 136,
+   "shadowCasters": 94,
+   "instances": 5045,
+   "sun": {
+    "mapSize": 1024,
+    "extent": [
+     -25.77,
+     48.03,
+     36.29,
+     -58.07
+    ]
+   },
+   "magentaPixels": 0,
+   "blackShare": 0,
+   "problems": []
+  },
+  {
+   "tier": "high",
+   "scene": "estate",
+   "quality": "high",
+   "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 (0x00002F04) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+   "frames": 642,
+   "frameMs": {
+    "p50": 69.5,
+    "p95": 218.5
+   },
+   "cpuMs": {
+    "p50": 20.6,
+    "p95": 35.3
+   },
+   "gpuMs": {
+    "p50": 20.88,
+    "p95": 35.33,
+    "frames": 642
+   },
+   "drawCalls": {
+    "p50": 1046,
+    "max": 1394
+   },
+   "triangles": {
+    "p50": 6122740,
+    "max": 9414754
+   },
+   "shadowRedrawsPerFrame": 0.35,
+   "programs": 156,
+   "geometries": 567,
+   "textures": 160,
+   "sceneTextures": 93,
+   "textureMB": 151.2,
+   "meshes": 535,
+   "shadowCasters": 264,
+   "instances": 6139,
+   "sun": {
+    "mapSize": 4096,
+    "extent": [
+     -128.87,
+     84.95,
+     61,
+     -98.1
+    ]
+   },
+   "magentaPixels": 0,
+   "blackShare": 0.0236,
+   "problems": []
+  },
+  {
+   "tier": "balanced",
+   "scene": "estate",
+   "quality": "balanced",
+   "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 (0x00002F04) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+   "frames": 639,
+   "frameMs": {
+    "p50": 55,
+    "p95": 180.5
+   },
+   "cpuMs": {
+    "p50": 17.6,
+    "p95": 26.4
+   },
+   "gpuMs": {
+    "p50": 16.91,
+    "p95": 26.48,
+    "frames": 639
+   },
+   "drawCalls": {
+    "p50": 983,
+    "max": 1304
+   },
+   "triangles": {
+    "p50": 2176751,
+    "max": 3484693
+   },
+   "shadowRedrawsPerFrame": 0.22,
+   "programs": 114,
+   "geometries": 536,
+   "textures": 114,
+   "sceneTextures": 68,
+   "textureMB": 92.92,
+   "meshes": 517,
+   "shadowCasters": 251,
+   "instances": 4503,
+   "sun": {
+    "mapSize": 2048,
+    "extent": [
+     -108.53,
+     86.42,
+     66.88,
+     -86.54
+    ]
+   },
+   "magentaPixels": 0,
+   "blackShare": 0.0042,
+   "problems": []
+  },
+  {
+   "tier": "constrained",
+   "scene": "estate",
+   "quality": "constrained",
+   "gpu": "Google SwiftShader (probe)",
+   "frames": 554,
+   "frameMs": {
+    "p50": 45.2,
+    "p95": 168.5
+   },
+   "cpuMs": {
+    "p50": 11.3,
+    "p95": 17.3
+   },
+   "gpuMs": {
+    "p50": 9.67,
+    "p95": 15.61,
+    "frames": 553
+   },
+   "drawCalls": {
+    "p50": 678,
+    "max": 871
+   },
+   "triangles": {
+    "p50": 1456487,
+    "max": 1575427
+   },
+   "shadowRedrawsPerFrame": 0,
+   "programs": 99,
+   "geometries": 517,
+   "textures": 95,
+   "sceneTextures": 56,
+   "textureMB": 89.51,
+   "meshes": 510,
+   "shadowCasters": 241,
+   "instances": 3110,
+   "sun": {
+    "mapSize": 1024,
+    "extent": [
+     -85.54,
+     86.42,
+     66.88,
+     -86.54
+    ]
+   },
+   "magentaPixels": 0,
+   "blackShare": 0.0107,
+   "problems": []
+  }
+ ]
+}

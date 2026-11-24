@@ -1,0 +1,662 @@
+[
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "frame p95 ms",
+  "before": 40.1,
+  "after": 39.7,
+  "ratio": 0.99,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "cpu p95 ms",
+  "before": 4.1,
+  "after": 4.1,
+  "ratio": 1,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "gpu p95 ms",
+  "before": 5.34,
+  "after": 5.29,
+  "ratio": 0.991,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "draw calls p50",
+  "before": 273,
+  "after": 283,
+  "ratio": 1.037,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "triangles p50",
+  "before": 3614714,
+  "after": 3618710,
+  "ratio": 1.001,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "shadow redraws/frame",
+  "before": 0.04,
+  "after": 0.04,
+  "ratio": 1,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "shadow casters",
+  "before": 108,
+  "after": 108,
+  "ratio": 1,
+  "limit": 1,
+  "pass": true
+ },
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "sun extent (L-R)",
+  "before": 97.96,
+  "after": 97.96,
+  "ratio": 1,
+  "limit": 1.05,
+  "pass": true
+ },
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "programs",
+  "before": 101,
+  "after": 104,
+  "ratio": 1.03,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "texture MB",
+  "before": 98.98,
+  "after": 98.98,
+  "ratio": 1,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "high",
+  "scene": "demo",
+  "metric": "magenta px",
+  "before": 0,
+  "after": 0,
+  "ratio": null,
+  "limit": 0,
+  "pass": true
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "frame p95 ms",
+  "before": 40.8,
+  "after": 39.4,
+  "ratio": 0.966,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "cpu p95 ms",
+  "before": 4.4,
+  "after": 3.1,
+  "ratio": 0.705,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "gpu p95 ms",
+  "before": 4.39,
+  "after": 3.76,
+  "ratio": 0.856,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "draw calls p50",
+  "before": 250,
+  "after": 260,
+  "ratio": 1.04,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "triangles p50",
+  "before": 1898509,
+  "after": 1902505,
+  "ratio": 1.002,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "shadow redraws/frame",
+  "before": 0.01,
+  "after": 0.01,
+  "ratio": 1,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "shadow casters",
+  "before": 104,
+  "after": 104,
+  "ratio": 1,
+  "limit": 1,
+  "pass": true
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "sun extent (L-R)",
+  "before": 97.96,
+  "after": 97.96,
+  "ratio": 1,
+  "limit": 1.05,
+  "pass": true
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "programs",
+  "before": 65,
+  "after": 68,
+  "ratio": 1.046,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "texture MB",
+  "before": 66.69,
+  "after": 66.69,
+  "ratio": 1,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "balanced",
+  "scene": "demo",
+  "metric": "magenta px",
+  "before": 0,
+  "after": 0,
+  "ratio": null,
+  "limit": 0,
+  "pass": true
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "frame p95 ms",
+  "before": 40.1,
+  "after": 41.7,
+  "ratio": 1.04,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "cpu p95 ms",
+  "before": 3.7,
+  "after": 4.7,
+  "ratio": 1.27,
+  "limit": 1.15,
+  "pass": false
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "gpu p95 ms",
+  "before": 3.33,
+  "after": 3.78,
+  "ratio": 1.135,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "draw calls p50",
+  "before": 246,
+  "after": 256,
+  "ratio": 1.041,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "triangles p50",
+  "before": 655369,
+  "after": 659109,
+  "ratio": 1.006,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "shadow redraws/frame",
+  "before": 0,
+  "after": 0,
+  "ratio": null,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "shadow casters",
+  "before": 94,
+  "after": 94,
+  "ratio": 1,
+  "limit": 1,
+  "pass": true
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "sun extent (L-R)",
+  "before": 73.8,
+  "after": 73.8,
+  "ratio": 1,
+  "limit": 1.05,
+  "pass": true
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "programs",
+  "before": 63,
+  "after": 66,
+  "ratio": 1.048,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "texture MB",
+  "before": 61.04,
+  "after": 61.04,
+  "ratio": 1,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "constrained",
+  "scene": "demo",
+  "metric": "magenta px",
+  "before": 0,
+  "after": 0,
+  "ratio": null,
+  "limit": 0,
+  "pass": true
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "frame p95 ms",
+  "before": 86.4,
+  "after": 105.1,
+  "ratio": 1.216,
+  "limit": 1.15,
+  "pass": false
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "cpu p95 ms",
+  "before": 17.9,
+  "after": 19.3,
+  "ratio": 1.078,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "gpu p95 ms",
+  "before": 19.42,
+  "after": 20.44,
+  "ratio": 1.053,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "draw calls p50",
+  "before": 1030,
+  "after": 1047,
+  "ratio": 1.017,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "triangles p50",
+  "before": 6081772,
+  "after": 6126042,
+  "ratio": 1.007,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "shadow redraws/frame",
+  "before": 0.36,
+  "after": 0.35,
+  "ratio": 0.972,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "shadow casters",
+  "before": 264,
+  "after": 264,
+  "ratio": 1,
+  "limit": 1,
+  "pass": true
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "sun extent (L-R)",
+  "before": 213.82,
+  "after": 213.82,
+  "ratio": 1,
+  "limit": 1.05,
+  "pass": true
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "programs",
+  "before": 154,
+  "after": 155,
+  "ratio": 1.006,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "texture MB",
+  "before": 151.2,
+  "after": 151.2,
+  "ratio": 1,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "high",
+  "scene": "estate",
+  "metric": "magenta px",
+  "before": 0,
+  "after": 0,
+  "ratio": null,
+  "limit": 0,
+  "pass": true
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "frame p95 ms",
+  "before": 87.1,
+  "after": 70.5,
+  "ratio": 0.809,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "cpu p95 ms",
+  "before": 16,
+  "after": 12.7,
+  "ratio": 0.794,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "gpu p95 ms",
+  "before": 16.55,
+  "after": 13.76,
+  "ratio": 0.831,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "draw calls p50",
+  "before": 968,
+  "after": 985,
+  "ratio": 1.018,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "triangles p50",
+  "before": 2136559,
+  "after": 2177135,
+  "ratio": 1.019,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "shadow redraws/frame",
+  "before": 0.23,
+  "after": 0.23,
+  "ratio": 1,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "shadow casters",
+  "before": 251,
+  "after": 251,
+  "ratio": 1,
+  "limit": 1,
+  "pass": true
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "sun extent (L-R)",
+  "before": 194.95,
+  "after": 194.95,
+  "ratio": 1,
+  "limit": 1.05,
+  "pass": true
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "programs",
+  "before": 112,
+  "after": 114,
+  "ratio": 1.018,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "texture MB",
+  "before": 92.92,
+  "after": 92.92,
+  "ratio": 1,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "balanced",
+  "scene": "estate",
+  "metric": "magenta px",
+  "before": 0,
+  "after": 0,
+  "ratio": null,
+  "limit": 0,
+  "pass": true
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "frame p95 ms",
+  "before": 44.7,
+  "after": 43.4,
+  "ratio": 0.971,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "cpu p95 ms",
+  "before": 8.5,
+  "after": 7.7,
+  "ratio": 0.906,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "gpu p95 ms",
+  "before": 7.59,
+  "after": 6.8,
+  "ratio": 0.896,
+  "limit": 1.15,
+  "pass": true
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "draw calls p50",
+  "before": 663,
+  "after": 678,
+  "ratio": 1.023,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "triangles p50",
+  "before": 1418877,
+  "after": 1456487,
+  "ratio": 1.027,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "shadow redraws/frame",
+  "before": 0,
+  "after": 0,
+  "ratio": null,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "shadow casters",
+  "before": 241,
+  "after": 241,
+  "ratio": 1,
+  "limit": 1,
+  "pass": true
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "sun extent (L-R)",
+  "before": 171.96,
+  "after": 171.96,
+  "ratio": 1,
+  "limit": 1.05,
+  "pass": true
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "programs",
+  "before": 98,
+  "after": 99,
+  "ratio": 1.01,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "texture MB",
+  "before": 89.51,
+  "after": 89.51,
+  "ratio": 1,
+  "limit": null,
+  "pass": null
+ },
+ {
+  "tier": "constrained",
+  "scene": "estate",
+  "metric": "magenta px",
+  "before": 0,
+  "after": 0,
+  "ratio": null,
+  "limit": 0,
+  "pass": true
+ }
+]
