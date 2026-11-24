@@ -359,6 +359,44 @@ const VERIFIED_DISPLAY:Record<string,Partial<LightingCatalogueProduct>>={
     "colorTemperatureK": 3000.0,
     "voltage": "12 volt"
   },
+  "paver_40": {
+    "sourceUrl": "https://pros.techo-bloc.com/how-to-add-lights-to-pavers",
+    "sourceVerified": true,
+    "specificationStatus": "verified-family",
+    "compatibilityNotes": [
+      "Drilled-in round paver light, about 40 mm (1.5 in), set flush in the stone. The Techo-Bloc paver guide uses the 22 mm In-Lite ground light and a larger 1 W size; this is that larger round."
+    ],
+    "finish": "StainlessSteel",
+    "watts": 1.0,
+    "colorTemperatureK": 2700.0,
+    "voltage": "12 volt",
+    "description": "40 mm drilled-in round paver light"
+  },
+  "inground_2ss": {
+    "sourceUrl": "https://pros.techo-bloc.com/how-to-add-lights-to-pavers",
+    "sourceVerified": true,
+    "specificationStatus": "verified-family",
+    "compatibilityNotes": [
+      "Modelled on a 2 in round stainless recessed in-ground light (WAC 2022-27SS / Legend LR76V): a 2.75 in face plate and a honeycomb louver, set flush. Used on the onyx band and the pool coping."
+    ],
+    "finish": "StainlessSteel",
+    "watts": 1.0,
+    "colorTemperatureK": 2700.0,
+    "voltage": "12 volt",
+    "description": "2 in stainless in-ground light, 2.75 in honeycomb face"
+  },
+  "pool_niche_led": {
+    "sourceUrl": "https://hayward.com/media/akeneo_connector/asset_files/G/0/G092791_RevD_c52b.pdf",
+    "sourceVerified": true,
+    "specificationStatus": "verified-family",
+    "compatibilityNotes": [
+      "Modelled on a 12 V LED wet-niche pool light (Hayward ColorLogic / CrystaLogic, Pentair IntelliBrite, Jandy WaterColors class): a round lens about 8 in across in a 10 in face ring, set in the pool wall. Lights go in the wall nearest the house and shine away from it, about 12-14 ft apart, all at one depth."
+    ],
+    "finish": "StainlessSteel",
+    "colorTemperatureK": 3000.0,
+    "voltage": "12 volt",
+    "description": "12 V LED underwater pool light, warm white, in a wet niche"
+  },
   "big_nero": {
     "sourceUrl": "https://in-lite.com/en-US/big-nero",
     "sourceVerified": true,

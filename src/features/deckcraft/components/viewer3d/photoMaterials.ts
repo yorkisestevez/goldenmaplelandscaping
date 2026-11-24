@@ -544,8 +544,15 @@ export function applyPhotoScene(scene:THREE.Scene,look:PhotoLook,sun:{color:[num
    object.localToWorld(lens);fill.position.copy(lens);fill.position.y=Math.max(0.05,fill.position.y);
    fill.name=step?'photo-step':'photo-fill';added.push(fill);
   });
-  // Underwater-looking wash: a few lamps just above the surface, so the coping catches a soft pool light and the floor is not a flat slab.
-  scene.traverse(object=>{
+  // Real underwater lights: a lamp a foot out from each niche lens, under the water, so the pool glows from its walls.
+  const niches:THREE.Object3D[]=[];
+  scene.traverse(object=>{if(/^pool_niche_led-\d+$/.test(object.name))niches.push(object);});
+  for(const niche of niches){
+   const lamp=new THREE.PointLight('#d8f4ee',PHOTO_LIGHT.poolLightCandela,22,2),at=new THREE.Vector3(0,0,12);
+   niche.localToWorld(at);lamp.position.copy(at);lamp.name='photo-pool-light';added.push(lamp);
+  }
+  // Without them, an underwater-looking wash: a few lamps just above the surface, so the coping catches a soft pool light and the floor is not a flat slab.
+  if(!niches.length)scene.traverse(object=>{
    if(roleOf(object)!=='water')return;
    const box=new THREE.Box3().setFromObject(object),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
    if(size.x+size.z<0.2)return;
