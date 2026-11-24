@@ -1,0 +1,10 @@
+[project]
+name = "deal-scout"
+version = "0.1.0"
+description = "Local resale deal scout using allowed public feeds and a Home Depot SKU watchlist."
+requires-python = ">=3.11"
+readme = "README.md"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
